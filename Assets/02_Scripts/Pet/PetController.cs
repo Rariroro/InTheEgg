@@ -31,6 +31,8 @@ public class PetController : MonoBehaviour
     public float affection;
     [Range(0, 100)]
     public float hunger;
+    [Range(0, 100)]
+    public float sleepiness;
 
     [Header("Pet Information")]
     public string petName = "Buddy";
@@ -52,6 +54,8 @@ public class PetController : MonoBehaviour
     private PetAnimationController animationController;
     private PetInteractionController interactionController;
     private PetFeedingController feedingController;
+    private PetSleepingController sleepingController; // 추가: 수면 컨트롤러
+
      // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
 
@@ -140,7 +144,8 @@ public class PetController : MonoBehaviour
 
         feedingController = gameObject.AddComponent<PetFeedingController>();
         feedingController.Init(this);
-
+sleepingController = gameObject.AddComponent<PetSleepingController>();
+sleepingController.Init(this);
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
         StartCoroutine(EnsureNavMeshPlacement());
     }
@@ -204,6 +209,7 @@ public class PetController : MonoBehaviour
     private void Update()
     {
         feedingController.UpdateFeeding();
+    sleepingController.UpdateSleeping(); // 추가: 수면 상태 업데이트
 
         // 상호작용 중이 아닐 때만 움직임 업데이트
         if (!isInteracting)
