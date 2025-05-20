@@ -9,7 +9,7 @@ TagManager:
   - Fence
   - Pet
   - SleepingArea
-  - FoodingArea
+  - FeegingArea
   layers:
   - Default
   - TransparentFX
