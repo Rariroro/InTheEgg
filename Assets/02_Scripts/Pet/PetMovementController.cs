@@ -9,13 +9,35 @@ public class PetMovementController : MonoBehaviour
     private float wanderTimer = 0f;     // 랜덤한 위치로 이동하는 주기를 결정하는 타이머
 
     // PetController 초기화 함수
-    public void Init(PetController controller)
+ public void Init(PetController controller)
+{
+    petController = controller;
+    
+    // 초기화 시점에 NavMeshAgent 설정
+    if (petController.agent != null)
     {
-        petController = controller;
-        // 초기화 시점에 바로 SetRandomDestination을 호출하지 않고
-        // 지연 호출하도록 변경
-        StartCoroutine(DelayedSetDestination());
+        // Water 영역 인덱스 가져오기
+        int waterAreaIndex = NavMesh.GetAreaFromName("Water");
+        
+        // habitat 속성에 따라 물 영역 cost 조정
+        if (petController.habitat == PetAIProperties.Habitat.Water)
+        {
+            // Water habitat 펫은 물 구역 비용을 0.5로 낮춰서 선호하게 함
+            petController.agent.SetAreaCost(waterAreaIndex, 0.5f);
+            Debug.Log($"{petController.petName}(은)는 물 속성 동물로, 물 구역을 선호합니다.");
+        }
+        else
+        {
+            // 물 속성이 아닌 펫은 물 구역 비용을 10배로 높여서 피하게 함
+            petController.agent.SetAreaCost(waterAreaIndex, 10f);
+            Debug.Log($"{petController.petName}(은)는 물 속성 동물이 아니어서, 물 구역을 피합니다.");
+        }
     }
+    
+    // 초기화 시점에 바로 SetRandomDestination을 호출하지 않고
+    // 지연 호출하도록 변경
+    StartCoroutine(DelayedSetDestination());
+}
     private IEnumerator DelayedSetDestination()
     {
         // NavMeshAgent가 준비될 때까지 대기
@@ -90,28 +112,67 @@ public class PetMovementController : MonoBehaviour
 
 
     // 랜덤 목적지 설정 (NavMesh 사용)
-    public void SetRandomDestination()
+  public void SetRandomDestination()
+{
+    // NavMeshAgent 상태 확인
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
     {
-        // NavMeshAgent 상태 확인 추가
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        Debug.LogWarning($"펫 '{petController.petName}'의 NavMeshAgent가 준비되지 않았습니다.");
+        return;
+    }
+
+    // Water 영역 인덱스와 마스크 가져오기
+    int waterAreaIndex = NavMesh.GetAreaFromName("Water");
+    int waterAreaMask = 1 << waterAreaIndex;
+    int normalAreaMask = NavMesh.AllAreas & ~waterAreaMask; // 물 영역을 제외한 마스크
+
+    Vector3 randomDirection = Random.insideUnitSphere * 30f;
+    randomDirection += transform.position;
+    NavMeshHit hit;
+    Vector3 finalPosition = transform.position;
+    
+    // 물 속성 펫은 70% 확률로 물 영역을 목표로 설정
+    if (petController.habitat == PetAIProperties.Habitat.Water && Random.value < 0.7f)
+    {
+        // 물 영역만 샘플링
+        if (NavMesh.SamplePosition(randomDirection, out hit, 30f, waterAreaMask))
         {
-            Debug.LogWarning($"펫 '{petController.petName}'의 NavMeshAgent가 준비되지 않았습니다. 랜덤 목적지 설정을 건너뜁니다.");
-            return; // 조건을 만족하지 않으면 함수 종료
+            finalPosition = hit.position;
+            Debug.Log($"{petController.petName}(이)가 물 영역으로 이동합니다.");
         }
-
-        // 기존 코드는 그대로 유지
-        Vector3 randomDirection = Random.insideUnitSphere * 30f;
-        randomDirection += transform.position;
-
-        NavMeshHit hit;
-        Vector3 finalPosition = transform.position;
-
-        if (NavMesh.SamplePosition(randomDirection, out hit, 10f, NavMesh.AllAreas))
+        else
+        {
+            // 물 영역을 찾지 못하면 일반 영역 사용
+            if (NavMesh.SamplePosition(randomDirection, out hit, 30f, NavMesh.AllAreas))
+            {
+                finalPosition = hit.position;
+            }
+        }
+    }
+    // 물 속성이 아닌 펫 또는 물 속성 펫이 물 영역을 선택하지 않은 경우
+    else
+    {
+        // 물 속성이 아닌 펫은 가능한 물 외 영역으로 이동
+        int targetMask = (petController.habitat == PetAIProperties.Habitat.Water) 
+            ? NavMesh.AllAreas // 물 속성 펫은 모든 영역 허용
+            : normalAreaMask;  // 물 속성 아닌 펫은 물 제외 영역만 허용
+        
+        if (NavMesh.SamplePosition(randomDirection, out hit, 30f, targetMask))
         {
             finalPosition = hit.position;
         }
-        petController.agent.SetDestination(finalPosition);
+        else
+        {
+            // 적절한 영역을 찾지 못하면 모든 영역으로 시도
+            if (NavMesh.SamplePosition(randomDirection, out hit, 30f, NavMesh.AllAreas))
+            {
+                finalPosition = hit.position;
+            }
+        }
     }
+    
+    petController.agent.SetDestination(finalPosition);
+}
     // 펫의 성격에 따라 랜덤 이동 간격(시간)을 반환하는 함수
     private float GetWanderInterval()
     {
