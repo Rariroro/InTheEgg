@@ -16,7 +16,14 @@ public class PetAnimationController : MonoBehaviour
             lastPosition = petController.petModelTransform.position;
     }
 
-  public void UpdateAnimation()
+ // PetAnimationController.cs의 수정사항
+
+// 1. 애니메이션 상태를 추적하는 변수 추가
+private bool isContinuousAnimationPlaying = false;
+private int continuousAnimationIndex = -1;
+
+// 2. UpdateAnimation 메서드 수정
+public void UpdateAnimation()
 {
     // 현재 agent의 속도에 비례해서 애니메이션 속도를 조정합니다.
     if (petController.animator != null && petController.agent != null)
@@ -24,7 +31,8 @@ public class PetAnimationController : MonoBehaviour
         petController.animator.speed = petController.agent.speed / petController.baseSpeed;
     }
 
-    if (isSpecialAnimationPlaying)
+    // 특별 애니메이션이나 연속 애니메이션이 재생 중이면 기본 애니메이션 로직 건너뛰기
+    if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
         return;
 
     if (petController.petModelTransform != null)
@@ -58,6 +66,71 @@ public class PetAnimationController : MonoBehaviour
     }
 }
 
+// 3. 연속적인 애니메이션 설정 메서드 수정
+public void SetContinuousAnimation(int animationNumber)
+{
+    if (petController.animator != null)
+    {
+        petController.animator.SetInteger("animation", animationNumber);
+        isContinuousAnimationPlaying = true;
+        continuousAnimationIndex = animationNumber;
+    }
+}
+
+// 4. 연속적인 애니메이션 종료 메서드 수정
+public void StopContinuousAnimation()
+{
+    if (petController.animator != null)
+    {
+        petController.animator.SetInteger("animation", 0);
+        isContinuousAnimationPlaying = false;
+        continuousAnimationIndex = -1;
+    }
+}
+
+// 5. PlayAnimationWithCustomDuration 메서드 수정
+public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float duration, bool returnToIdle = true, bool resumeMovementAfter = true)
+{
+    isSpecialAnimationPlaying = true;
+    
+    if (petController.animator != null)
+    {
+        // 현재 애니메이션 상태 저장
+        int previousAnimation = petController.animator.GetInteger("animation");
+        
+        // 새 애니메이션 설정
+        petController.animator.SetInteger("animation", animationNumber);
+        
+        // 지정된 시간만큼 대기
+        yield return new WaitForSeconds(duration);
+        
+        // 기본 애니메이션으로 돌아갈지 여부
+        if (returnToIdle)
+        {
+            petController.animator.SetInteger("animation", 0);
+        }
+        else
+        {
+            // 연속 애니메이션으로 전환
+            isContinuousAnimationPlaying = true;
+            continuousAnimationIndex = animationNumber;
+        }
+    }
+    else
+    {
+        yield return new WaitForSeconds(duration);
+    }
+    
+    isSpecialAnimationPlaying = false;
+    
+    // 이동을 재개할지 여부
+    if (resumeMovementAfter && petController.agent != null && 
+        petController.agent.enabled && petController.agent.isOnNavMesh)
+    {
+        petController.ResumeMovement();
+    }
+}
+
 
   public IEnumerator PlaySpecialAnimation(int animationNumber)
 {
@@ -82,56 +155,5 @@ public class PetAnimationController : MonoBehaviour
     }
 }
 
-// 커스텀 지속 시간과 애니메이션 후 행동을 지정할 수 있는 메서드
-public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float duration, bool returnToIdle = true, bool resumeMovementAfter = true)
-{
-    isSpecialAnimationPlaying = true;
-    
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", animationNumber);
-        
-        // 지정된 시간만큼 대기
-        yield return new WaitForSeconds(duration);
-        
-        // 기본 애니메이션으로 돌아갈지 여부
-        if (returnToIdle)
-        {
-            petController.animator.SetInteger("animation", 0);
-        }
-    }
-    else
-    {
-        yield return new WaitForSeconds(duration);
-    }
-    
-    isSpecialAnimationPlaying = false;
-    
-    // 이동을 재개할지 여부
-    if (resumeMovementAfter && petController.agent != null && 
-        petController.agent.enabled && petController.agent.isOnNavMesh)
-    {
-        petController.ResumeMovement();
-    }
 
-    
-}
-
-// 연속적인 애니메이션 설정 메서드 (특별 애니메이션 플래그 없이 계속 이동하며 애니메이션 유지)
-public void SetContinuousAnimation(int animationNumber)
-{
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", animationNumber);
-    }
-}
-
-// 연속적인 애니메이션 종료 메서드
-public void StopContinuousAnimation()
-{
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", 0);
-    }
-}
 }
