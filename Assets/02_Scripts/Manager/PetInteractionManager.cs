@@ -64,8 +64,8 @@ public class PetInteractionManager : MonoBehaviour
     public float interactionCooldown = 30f;
     
     [Header("성능 최적화 설정")]
-    public float interactionCheckInterval = 0.1f; // 상호작용 체크 간격 (초)
-    public int maxChecksPerFrame = 5; // 프레임당 최대 체크 수
+    public float interactionCheckInterval = 0.1f;  // 체크 간격 (낮을수록 반응 빠름)
+    public int maxChecksPerFrame = 5;  // 프레임당 체크 수 (높을수록 처리 빠름)
     
     // 씬 시작 후 상호작용 체크 시작 전 지연 시간
     public float startDelay = 3.0f;
