@@ -132,7 +132,7 @@ public class PetMovementController : MonoBehaviour
     Vector3 finalPosition = transform.position;
     
     // 물 속성 펫은 70% 확률로 물 영역을 목표로 설정
-    if (petController.habitat == PetAIProperties.Habitat.Water && Random.value < 0.7f)
+    if (petController.habitat == PetAIProperties.Habitat.Water && Random.value < 0.9f)
     {
         // 물 영역만 샘플링
         if (NavMesh.SamplePosition(randomDirection, out hit, 30f, waterAreaMask))

@@ -1,0 +1,59 @@
+# Scene Hierarchy Export
+Scene Name: PetVillge
+Export Date: 5/22/2025 11:48:16 AM
+--------------------------------------------
+
+GameObject: Canvas (Active: True)
+
+  GameObject: PetCamera Button (Active: True)
+
+    GameObject: Text (TMP) (Active: True)
+
+      GameObject: TMP SubMeshUI [NanumGothic SDF Material + LiberationSans SDF Atlas] (Active: True)
+
+  GameObject: Gathering Button (Active: True)
+
+    GameObject: Text (TMP) (Active: True)
+
+      GameObject: TMP SubMeshUI [NanumGothic SDF Material + LiberationSans SDF Atlas] (Active: True)
+
+  GameObject: info (TMP) (Active: True)
+
+GameObject: EventSystem (Active: True)
+
+GameObject: CameraObject (Active: True)
+
+  GameObject: Main Camera (Active: True)
+
+GameObject: Directional Light (Active: True)
+
+GameObject: Terrain (Active: True)
+
+  GameObject: Terrain_(-701.00, 0.00, -150.00) (Active: True)
+
+  GameObject: Terrain_(-301.00, 0.00, 250.00) (Active: True)
+
+  GameObject: Terrain_(99.00, 0.00, -150.00) (Active: True)
+
+  GameObject: Terrain_(-301.00, 0.00, -550.00) (Active: True)
+
+  GameObject: Terrain_(-701.00, 0.00, -550.00) (Active: True)
+
+  GameObject: Terrain_(-701.00, 0.00, 250.00) (Active: True)
+
+  GameObject: Terrain_(99.00, 0.00, 250.00) (Active: True)
+
+  GameObject: Terrain_(99.00, 0.00, -550.00) (Active: True)
+
+GameObject: Managers (Active: True)
+
+  GameObject: EmotionManager (Active: True)
+
+  GameObject: #ButtonManager (Active: True)
+
+  GameObject: #Pet&EnvironmentManager (Active: True)
+
+  GameObject: #PetInteractionSystem (Active: True)
+
+GameObject: EmotionBubbleCanvas (Active: True)
+
