@@ -56,7 +56,7 @@ public class PetController : MonoBehaviour
     private PetFeedingController feedingController;
     private PetSleepingController sleepingController; // 추가: 수면 컨트롤러
 
-     // 현재 활성화된 감정 말풍선
+    // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
 
     [Header("Pet Type")]
@@ -144,8 +144,8 @@ public class PetController : MonoBehaviour
 
         feedingController = gameObject.AddComponent<PetFeedingController>();
         feedingController.Init(this);
-sleepingController = gameObject.AddComponent<PetSleepingController>();
-sleepingController.Init(this);
+        sleepingController = gameObject.AddComponent<PetSleepingController>();
+        sleepingController.Init(this);
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
         StartCoroutine(EnsureNavMeshPlacement());
     }
@@ -209,7 +209,7 @@ sleepingController.Init(this);
     private void Update()
     {
         feedingController.UpdateFeeding();
-    sleepingController.UpdateSleeping(); // 추가: 수면 상태 업데이트
+        sleepingController.UpdateSleeping(); // 추가: 수면 상태 업데이트
 
         // 상호작용 중이 아닐 때만 움직임 업데이트
         if (!isInteracting)
@@ -234,7 +234,7 @@ sleepingController.Init(this);
             agent.isStopped = false;
         }
     }
-      // 감정 표현 메서드
+    // 감정 표현 메서드
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
         // 기존 말풍선 처리
@@ -244,14 +244,14 @@ sleepingController.Init(this);
             EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
             activeBubble = null;
         }
-        
+
         // 새 말풍선 표시
         if (EmotionManager.Instance != null)
         {
             activeBubble = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
         }
     }
-    
+
     // 감정 말풍선 숨기기
     public void HideEmotion()
     {
@@ -261,7 +261,7 @@ sleepingController.Init(this);
             activeBubble = null;
         }
     }
-    
+
     // 상호작용에 따른 감정 표현 (PetInteractionController에서 호출)
     // public void ShowInteractionEmotion(InteractionType interactionType, bool isInitiator = true)
     // {
@@ -270,40 +270,40 @@ sleepingController.Init(this);
     //         case InteractionType.Fight:
     //             ShowEmotion(isInitiator ? EmotionType.Angry : EmotionType.Scared);
     //             break;
-                
+
     //         case InteractionType.WalkTogether:
     //             ShowEmotion(EmotionType.Happy);
     //             break;
-                
+
     //         case InteractionType.RestTogether:
     //             ShowEmotion(EmotionType.Sleepy);
     //             break;
-                
+
     //         case InteractionType.Race:
     //             ShowEmotion(EmotionType.Surprised);
     //             break;
-                
+
     //         case InteractionType.ChaseAndRun:
     //             ShowEmotion(isInitiator ? EmotionType.Angry : EmotionType.Scared);
     //             break;
-                
+
     //         case InteractionType.SleepTogether:
     //             ShowEmotion(EmotionType.Sleepy);
     //             break;
-                
+
     //         case InteractionType.RideAndWalk:
     //             ShowEmotion(isInitiator ? EmotionType.Happy : EmotionType.Surprised);
     //             break;
-                
+
     //         default:
     //             ShowEmotion(EmotionType.Confused);
     //             break;
     //     }
     // }
-    
+
     // 상호작용 결과에 따른 감정 표현
-        // public void ShowResultEmotion(bool isWinner)
-        // {
-        //     ShowEmotion(isWinner ? EmotionType.Victory : EmotionType.Defeat);
-        // }
+    // public void ShowResultEmotion(bool isWinner)
+    // {
+    //     ShowEmotion(isWinner ? EmotionType.Victory : EmotionType.Defeat);
+    // }
 }
