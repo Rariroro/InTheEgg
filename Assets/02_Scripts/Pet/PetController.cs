@@ -148,6 +148,31 @@ public class PetController : MonoBehaviour
         sleepingController.Init(this);
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
         StartCoroutine(EnsureNavMeshPlacement());
+
+        // PetInteractionManager에 이 펫 등록
+        if (PetInteractionManager.Instance != null)
+        {
+            // 약간의 지연 후 등록 (매니저가 완전히 초기화된 후)
+            StartCoroutine(RegisterToPetManager());
+        }
+    }
+    private IEnumerator RegisterToPetManager()
+    {
+        // 프레임 하나 대기
+        yield return null;
+
+        if (PetInteractionManager.Instance != null)
+        {
+            PetInteractionManager.Instance.RegisterPet(this);
+        }
+    }
+    private void OnDestroy()
+    {
+        // PetInteractionManager에서 이 펫 제거
+        if (PetInteractionManager.Instance != null)
+        {
+            PetInteractionManager.Instance.UnregisterPet(this);
+        }
     }
     private IEnumerator EnsureNavMeshPlacement()
     {

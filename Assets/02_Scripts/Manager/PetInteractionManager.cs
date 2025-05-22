@@ -59,15 +59,22 @@ public class PetInteractionManager : MonoBehaviour
     // 싱글톤 패턴 구현
     public static PetInteractionManager Instance { get; private set; }
 
-    // 상호작용 규칙 리스트
-    // public List<InteractionRule> interactionRules = new List<InteractionRule>();
-
-    // 상호작용 거리 설정
+    [Header("상호작용 설정")]
     public float interactionDistance = 5f;
-
-    // 상호작용 쿨다운 시간
     public float interactionCooldown = 30f;
+    
+    [Header("성능 최적화 설정")]
+    public float interactionCheckInterval = 0.1f; // 상호작용 체크 간격 (초)
+    public int maxChecksPerFrame = 5; // 프레임당 최대 체크 수
+    
+    // 씬 시작 후 상호작용 체크 시작 전 지연 시간
+    public float startDelay = 3.0f;
+    private bool canStartInteractions = false;
 
+    // 캐싱된 펫 리스트 (성능 최적화)
+    private List<PetController> allPets = new List<PetController>();
+    private Dictionary<PetController, int> petToIndexMap = new Dictionary<PetController, int>();
+    
     // 상호작용 중인 펫 쌍을 추적하는 딕셔너리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
 
@@ -77,13 +84,21 @@ public class PetInteractionManager : MonoBehaviour
     // 등록된 상호작용 컴포넌트 목록
     private List<BasePetInteraction> registeredInteractions = new List<BasePetInteraction>();
 
-    // 초기화 시 실행되는 함수
+    // 상호작용 체크 최적화를 위한 변수들
+    private int currentCheckIndex = 0;
+    private int currentPairIndex = 0;
+    private Coroutine interactionCheckCoroutine;
+    
+    // 거리 계산 최적화 (제곱 거리 사용)
+    private float interactionDistanceSquared;
+
     private void Awake()
     {
         // 싱글톤 패턴 구현부
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 유지
         }
         else
         {
@@ -91,11 +106,31 @@ public class PetInteractionManager : MonoBehaviour
             return;
         }
 
-        // 상호작용 규칙 설정 메서드 호출
-        // SetupInteractionRules();
-
+        // 거리 제곱값 미리 계산
+        interactionDistanceSquared = interactionDistance * interactionDistance;
+        
         // 상호작용 컴포넌트 등록
         RegisterInteractions();
+    }
+
+    private void Start()
+    {
+        // 초기 펫 리스트 구축
+        RefreshPetList();
+        
+        // 지정된 시간 후에 상호작용 체크 활성화
+        StartCoroutine(EnableInteractionsAfterDelay());
+    }
+
+    private IEnumerator EnableInteractionsAfterDelay()
+    {
+        Debug.Log("[PetInteractionManager] 상호작용 체크 지연 중...");
+        yield return new WaitForSeconds(startDelay);
+        canStartInteractions = true;
+        
+        // 최적화된 상호작용 체크 코루틴 시작
+        interactionCheckCoroutine = StartCoroutine(OptimizedInteractionCheck());
+        Debug.Log("[PetInteractionManager] 상호작용 체크 활성화!");
     }
 
     // 상호작용 컴포넌트 등록 메서드
@@ -111,99 +146,202 @@ public class PetInteractionManager : MonoBehaviour
         }
     }
 
-    // 상호작용 규칙 초기화
-    // private void SetupInteractionRules()
-    // {
-    //     // (기존 코드 그대로 유지)
-    //     // 다양한 펫 간 상호작용 규칙 추가
-    //     interactionRules.Add(new InteractionRule(PetType.Leopard, PetType.Tiger, InteractionType.Fight));
-    //     interactionRules.Add(new InteractionRule(PetType.Rabbit, PetType.Turtle, InteractionType.Race));
-    //     // ... 기타 규칙들 ...
-    // }
-    // 씬 시작 후 상호작용 체크 시작 전 지연 시간 추가
-    public float startDelay = 3.0f;
-    private bool canStartInteractions = false;
-
-    private void Start()
+    // 펫 리스트 새로고침 (펫이 동적으로 생성/삭제될 때 호출)
+    public void RefreshPetList()
     {
-        // 지정된 시간 후에 상호작용 체크 활성화
-        StartCoroutine(EnableInteractionsAfterDelay());
-    }
-
-    private IEnumerator EnableInteractionsAfterDelay()
-    {
-        Debug.Log("[PetInteractionManager] 상호작용 체크 지연 중...");
-        yield return new WaitForSeconds(startDelay);
-        canStartInteractions = true;
-        Debug.Log("[PetInteractionManager] 상호작용 체크 활성화!");
-    }
-    // 매 프레임마다 실행되는 함수 - 상호작용 가능성을 지속적으로 체크
-    private void Update()
-    {
-        // 준비가 됐을 때만 상호작용 체크
-        if (canStartInteractions)
+        allPets.Clear();
+        petToIndexMap.Clear();
+        
+        // 현재 존재하는 모든 펫을 한 번만 찾아서 캐싱
+        PetController[] foundPets = FindObjectsOfType<PetController>();
+        
+        for (int i = 0; i < foundPets.Length; i++)
         {
-            CheckForPetInteractions();
+            if (foundPets[i] != null)
+            {
+                allPets.Add(foundPets[i]);
+                petToIndexMap[foundPets[i]] = i;
+            }
+        }
+        
+        Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
+    }
+
+    // 펫을 리스트에 등록 (새 펫이 생성될 때 호출)
+    public void RegisterPet(PetController pet)
+    {
+        if (pet != null && !allPets.Contains(pet))
+        {
+            int index = allPets.Count;
+            allPets.Add(pet);
+            petToIndexMap[pet] = index;
+            Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
         }
     }
 
-    // 펫 간 상호작용 가능성 확인하는 메서드
-    private void CheckForPetInteractions()
+    // 펫을 리스트에서 제거 (펫이 삭제될 때 호출)
+    public void UnregisterPet(PetController pet)
     {
-        // 현재 존재하는 모든 펫을 가져옴
-        PetController[] allPets = FindObjectsOfType<PetController>();
-
-        // 각 펫 쌍마다 상호작용 가능성 확인 (이중 반복문으로 모든 가능한 펫 쌍 검사)
-        for (int i = 0; i < allPets.Length; i++)
+        if (pet != null && allPets.Contains(pet))
         {
-            for (int j = i + 1; j < allPets.Length; j++) // i+1부터 시작해 중복 검사 방지
+            allPets.Remove(pet);
+            petToIndexMap.Remove(pet);
+            
+            // 상호작용 중이었다면 정리
+            if (interactingPets.ContainsKey(pet))
             {
-                // 이미 상호작용 중인 펫은 건너뛰기
-                if (IsInteracting(allPets[i]) || IsInteracting(allPets[j]))
+                PetController partner = interactingPets[pet];
+                interactingPets.Remove(pet);
+                if (partner != null && interactingPets.ContainsKey(partner))
                 {
-                    continue;
-                }
-
-                // 상호작용 쿨다운 체크 - 최근에 상호작용한 펫은 쿨다운 기간 동안 건너뛰기
-                if (IsOnCooldown(allPets[i]) || IsOnCooldown(allPets[j]))
-                {
-                    continue;
-                }
-
-                // 두 펫 사이의 거리 확인
-                float distance = Vector3.Distance(allPets[i].transform.position, allPets[j].transform.position);
-
-                // 상호작용 거리 이내인 경우만 처리
-                if (distance <= interactionDistance)
-                {
-                    // 디버그용 펫 이름 가져오기
-                    string pet1Name = allPets[i].petName;
-                    string pet2Name = allPets[j].petName;
-
-                    // 두 펫의 종류 가져오기
-                    PetType type1 = allPets[i].PetType;
-                    PetType type2 = allPets[j].PetType;
-
-                    // 적합한 상호작용 찾기
-                    BasePetInteraction suitableInteraction = FindSuitableInteraction(allPets[i], allPets[j]);
-
-                    if (suitableInteraction != null)
-                    {
-                        Debug.Log($"[PetInteractionManager] {pet1Name}와(과) {pet2Name} 사이에 {suitableInteraction.InteractionName} 상호작용 발견. 상호작용 시작!");
-
-                        // 상호작용 시작
-                        StartInteraction(allPets[i], allPets[j], suitableInteraction);
-
-                        // 상호작용 쿨다운 설정
-                        lastInteractionTime[allPets[i]] = Time.time;
-                        lastInteractionTime[allPets[j]] = Time.time;
-
-                        // 상호작용 기록 등록
-                        interactingPets[allPets[i]] = allPets[j];
-                        interactingPets[allPets[j]] = allPets[i];
-                    }
+                    interactingPets.Remove(partner);
                 }
             }
+            
+            // 쿨다운 정보도 제거
+            lastInteractionTime.Remove(pet);
+            
+            Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
+        }
+    }
+
+    // 최적화된 상호작용 체크 코루틴
+    private IEnumerator OptimizedInteractionCheck()
+    {
+        while (canStartInteractions)
+        {
+            // 펫 리스트가 비어있거나 2마리 미만이면 체크하지 않음
+            if (allPets.Count < 2)
+            {
+                yield return new WaitForSeconds(interactionCheckInterval);
+                continue;
+            }
+
+            // 프레임당 제한된 수만큼만 체크
+            int checksThisFrame = 0;
+            
+            while (checksThisFrame < maxChecksPerFrame && allPets.Count >= 2)
+            {
+                // null 체크 및 리스트 정리
+                if (currentCheckIndex >= allPets.Count)
+                {
+                    CleanupNullPets();
+                    currentCheckIndex = 0;
+                    currentPairIndex = 0;
+                    break;
+                }
+
+                PetController pet1 = allPets[currentCheckIndex];
+                
+                // null 체크
+                if (pet1 == null)
+                {
+                    allPets.RemoveAt(currentCheckIndex);
+                    continue;
+                }
+
+                // 두 번째 펫 인덱스 계산
+                int pet2Index = currentCheckIndex + 1 + currentPairIndex;
+                
+                if (pet2Index >= allPets.Count)
+                {
+                    // 현재 펫의 모든 쌍 체크 완료, 다음 펫으로
+                    currentCheckIndex++;
+                    currentPairIndex = 0;
+                    continue;
+                }
+
+                PetController pet2 = allPets[pet2Index];
+                
+                // null 체크
+                if (pet2 == null)
+                {
+                    allPets.RemoveAt(pet2Index);
+                    continue;
+                }
+
+                // 상호작용 체크 수행
+                CheckPetPairInteraction(pet1, pet2);
+                
+                currentPairIndex++;
+                checksThisFrame++;
+            }
+
+            // 다음 프레임까지 대기
+            yield return new WaitForSeconds(interactionCheckInterval);
+        }
+    }
+
+    // 두 펫 간의 상호작용 가능성 체크
+    private void CheckPetPairInteraction(PetController pet1, PetController pet2)
+    {
+        // 이미 상호작용 중인 펫은 건너뛰기
+        if (IsInteracting(pet1) || IsInteracting(pet2))
+        {
+            return;
+        }
+
+        // 상호작용 쿨다운 체크
+        if (IsOnCooldown(pet1) || IsOnCooldown(pet2))
+        {
+            return;
+        }
+
+        // 거리 체크 (제곱 거리 사용으로 최적화)
+        Vector3 pos1 = pet1.transform.position;
+        Vector3 pos2 = pet2.transform.position;
+        float distanceSquared = (pos1 - pos2).sqrMagnitude;
+
+        // 상호작용 거리 이내인 경우만 처리
+        if (distanceSquared <= interactionDistanceSquared)
+        {
+            // 적합한 상호작용 찾기
+            BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
+
+            if (suitableInteraction != null)
+            {
+                Debug.Log($"[PetInteractionManager] {pet1.petName}와(과) {pet2.petName} 사이에 {suitableInteraction.InteractionName} 상호작용 시작!");
+
+                // 상호작용 시작
+                StartInteraction(pet1, pet2, suitableInteraction);
+
+                // 상호작용 쿨다운 설정
+                lastInteractionTime[pet1] = Time.time;
+                lastInteractionTime[pet2] = Time.time;
+
+                // 상호작용 기록 등록
+                interactingPets[pet1] = pet2;
+                interactingPets[pet2] = pet1;
+            }
+        }
+    }
+
+    // null인 펫들을 리스트에서 제거
+    private void CleanupNullPets()
+    {
+        for (int i = allPets.Count - 1; i >= 0; i--)
+        {
+            if (allPets[i] == null)
+            {
+                allPets.RemoveAt(i);
+            }
+        }
+        
+        // 딕셔너리도 정리
+        var keysToRemove = new List<PetController>();
+        foreach (var key in petToIndexMap.Keys)
+        {
+            if (key == null)
+            {
+                keysToRemove.Add(key);
+            }
+        }
+        
+        foreach (var key in keysToRemove)
+        {
+            petToIndexMap.Remove(key);
+            interactingPets.Remove(key);
+            lastInteractionTime.Remove(key);
         }
     }
 
@@ -219,33 +357,8 @@ public class PetInteractionManager : MonoBehaviour
             }
         }
 
-        // 혹은 이전 방식대로 규칙 기반 검색 (새 컴포넌트가 없는 경우를 위해)
-        // InteractionType? interactionType = GetInteractionType(pet1.PetType, pet2.PetType);
-        // if (interactionType.HasValue)
-        // {
-        // 여기에는 이전 방식의 상호작용 선택 로직이 들어갈 수 있음
-        // 하지만 컴포넌트 기반으로 전환됐으므로 이 부분은 점차 사라질 것임
-        // }
-
-        // 적합한 상호작용이 없는 경우
-        return null;
+        return null; // 적합한 상호작용이 없는 경우
     }
-
-    // 두 펫 타입에 대한 상호작용 규칙 찾기 (이전 방식 유지)
-    // private InteractionType? GetInteractionType(PetType type1, PetType type2)
-    // {
-    //     // 모든 상호작용 규칙 검사
-    //     foreach (var rule in interactionRules)
-    //     {
-    //         // 두 펫 타입이 규칙에 정의된 타입과 일치하는지 확인 (순서 무관)
-    //         if ((rule.pet1 == type1 && rule.pet2 == type2) || (rule.pet1 == type2 && rule.pet2 == type1))
-    //         {
-    //             return rule.interactionType; // 일치하는 상호작용 타입 반환
-    //         }
-    //     }
-
-    //     return null; // 일치하는 규칙이 없으면 null 반환
-    // }
 
     // 상호작용 시작 메서드
     private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
@@ -257,34 +370,18 @@ public class PetInteractionManager : MonoBehaviour
     // 펫이 상호작용 중인지 확인하는 메서드
     private bool IsInteracting(PetController pet)
     {
-        return interactingPets.ContainsKey(pet); // 상호작용 중인 펫 딕셔너리에 존재하는지 확인
+        return interactingPets.ContainsKey(pet);
     }
 
-    // 펫이 쿨다운 중인지 확인하는 메서드
-    // private bool IsOnCooldown(PetController pet)
-    // {
-    //     if (lastInteractionTime.TryGetValue(pet, out float lastTime))
-    //     {
-    //         return Time.time - lastTime < interactionCooldown; // 마지막 상호작용 후 쿨다운 시간이 지났는지 확인
-    //     }
-    //     return false; // 처음 상호작용하는 경우 쿨다운 없음
-    // }
     // 펫이 쿨다운 중인지 확인하는 메서드
     private bool IsOnCooldown(PetController pet)
     {
         if (lastInteractionTime.TryGetValue(pet, out float lastTime))
         {
-            bool onCooldown = Time.time - lastTime < interactionCooldown;
-            if (onCooldown)
-            {
-                float remainingTime = interactionCooldown - (Time.time - lastTime);
-                Debug.Log($"[PetInteractionManager] {pet.petName}의 쿨다운 중. 남은 시간: {remainingTime:F1}초");
-            }
-            return onCooldown;
+            return Time.time - lastTime < interactionCooldown;
         }
         return false; // 처음 상호작용하는 경우 쿨다운 없음
     }
-
 
     // 상호작용 종료 알림 수신 메서드 (BasePetInteraction에서 호출)
     public void NotifyInteractionEnded(PetController pet1, PetController pet2)
@@ -292,5 +389,43 @@ public class PetInteractionManager : MonoBehaviour
         // 상호작용 기록 제거
         if (pet1 != null) interactingPets.Remove(pet1);
         if (pet2 != null) interactingPets.Remove(pet2);
+        
+        Debug.Log($"[PetInteractionManager] 상호작용 종료: {pet1?.petName} - {pet2?.petName}");
     }
+
+    // 강제로 펫 리스트 새로고침 (디버그용)
+    [ContextMenu("펫 리스트 새로고침")]
+    public void ForceRefreshPetList()
+    {
+        RefreshPetList();
+    }
+
+    // 현재 상태 출력 (디버그용)
+    [ContextMenu("현재 상태 출력")]
+    public void PrintCurrentStatus()
+    {
+        Debug.Log($"[PetInteractionManager] 현재 상태:");
+        Debug.Log($"  - 총 펫 수: {allPets.Count}");
+        Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
+        Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
+        Debug.Log($"  - 체크 간격: {interactionCheckInterval}초");
+        Debug.Log($"  - 프레임당 최대 체크: {maxChecksPerFrame}");
+    }
+
+    private void OnDestroy()
+    {
+        // 코루틴 정리
+        if (interactionCheckCoroutine != null)
+        {
+            StopCoroutine(interactionCheckCoroutine);
+        }
+        
+        // 싱글톤 정리
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
+    // Update 메서드 제거 - 이제 코루틴으로 처리
 }
