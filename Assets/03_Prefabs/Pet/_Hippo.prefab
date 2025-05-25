@@ -53,11 +53,12 @@ MonoBehaviour:
   stoppingDistance: 0.5
   rotationSpeed: 5
   smoothTime: 0.3
-  personality: 1
+  personality: 2
   dietType: 1
   habitat: 0
   affection: 0
   hunger: 0
+  sleepiness: 0
   petName: Hippo
   agent: {fileID: 0}
   animator: {fileID: 0}
