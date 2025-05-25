@@ -178,22 +178,58 @@ public class PetController : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
 
-        // NavMesh에 없는 경우 배치 시도
-        if (agent != null && !agent.isOnNavMesh)
+        // NavMeshAgent가 존재하는지 확인
+        if (agent == null)
         {
+            Debug.LogWarning($"[PetController] {petName}: NavMeshAgent가 없습니다.");
+            yield break;
+        }
+
+        // NavMesh에 없는 경우 배치 시도
+        if (!agent.isOnNavMesh)
+        {
+            Debug.Log($"[PetController] {petName}: NavMesh 위에 배치 시도 중...");
+            
             NavMeshHit hit;
             if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
             {
+                // Agent를 일시적으로 비활성화하고 위치 조정
+                bool wasEnabled = agent.enabled;
+                agent.enabled = false;
                 transform.position = hit.position;
                 yield return new WaitForSeconds(0.1f);
+                
+                // Agent 다시 활성화
+                agent.enabled = wasEnabled;
+                yield return new WaitForSeconds(0.1f);
+                
+                Debug.Log($"[PetController] {petName}: NavMesh 위치로 이동 완료 - {hit.position}");
+            }
+            else
+            {
+                Debug.LogWarning($"[PetController] {petName}: 적절한 NavMesh 위치를 찾을 수 없습니다.");
             }
         }
 
-        // 컨트롤러 초기화
-        movementController.Init(this);
-        animationController.Init(this);
-        interactionController.Init(this);
-        feedingController.Init(this);
+        // NavMeshAgent가 활성화되고 NavMesh 위에 있는지 최종 확인
+        if (agent.enabled && agent.isOnNavMesh)
+        {
+            Debug.Log($"[PetController] {petName}: NavMeshAgent 준비 완료");
+            
+            // 이제 안전하게 컨트롤러들을 초기화
+            if (movementController != null)
+                movementController.Init(this);
+            if (animationController != null)
+                animationController.Init(this);
+            if (interactionController != null)
+                interactionController.Init(this);
+            if (feedingController != null)
+                feedingController.Init(this);
+        }
+        else
+        {
+            Debug.LogError($"[PetController] {petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.");
+        }
     }
     // 펫 이름에서 타입 유추하는 메서드 (개선된 버전)
     private void SetPetTypeFromName()
@@ -246,17 +282,34 @@ public class PetController : MonoBehaviour
         animationController.UpdateAnimation();
     }
 
-    // 외부에서 이동을 제어하기 위한 메서드들
+    // 외부에서 이동을 제어하기 위한 메서드들 (안전하게 수정됨)
     public void StopMovement()
     {
-        if (agent != null) agent.isStopped = true;
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        {
+            try
+            {
+                agent.isStopped = true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
+            }
+        }
     }
 
     public void ResumeMovement()
     {
         if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            agent.isStopped = false;
+            try
+            {
+                agent.isStopped = false;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
+            }
         }
     }
     // 감정 표현 메서드
