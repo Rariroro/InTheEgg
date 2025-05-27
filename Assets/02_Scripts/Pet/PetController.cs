@@ -298,13 +298,13 @@ public class PetController : MonoBehaviour
             animationController.UpdateAnimation();
         }
         
-        // ★ 모이기 방향 오버라이드 중이 아닐 때만 모델 위치 동기화
-        if (!isGatheringRotationOverride && petModelTransform != null)
-        {
-            petModelTransform.position = transform.position;
-            // 일반 상태에서는 부모 오브젝트 회전 따라가기
-            petModelTransform.rotation = transform.rotation;
-        }
+        // // ★ 모이기 방향 오버라이드 중이 아닐 때만 모델 위치 동기화
+        // if (!isGatheringRotationOverride && petModelTransform != null)
+        // {
+        //     petModelTransform.position = transform.position;
+        //     // 일반 상태에서는 부모 오브젝트 회전 따라가기
+        //     petModelTransform.rotation = transform.rotation;
+        // }
     }
 
 // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
