@@ -46,7 +46,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isGathering = false; // 추가: 모이기 중인지 확인하는 플래그
     [HideInInspector] public int gatherCommandVersion = 0; // 추가: 모으기 명령 버전 추적
     [HideInInspector] public bool isGatheringAnimationOverride = false; // 추가: 모이기 애니메이션 오버라이드 플래그
-    [HideInInspector] public bool isGatheringRotationOverride = false; // ★ 추가: 모이기 방향 오버라이드 플래그
+    // [HideInInspector] public bool isGatheringRotationOverride = false; // ★ 추가: 모이기 방향 오버라이드 플래그
 
     [HideInInspector] public float baseSpeed;
     [HideInInspector] public float baseAngularSpeed;

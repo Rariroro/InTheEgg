@@ -185,7 +185,7 @@ void Update()
                     pet.agent.isStopped = false;
 
                     pet.isGatheringAnimationOverride = true;
-                    pet.isGatheringRotationOverride = true;
+                    // pet.isGatheringRotationOverride = true;
 
                     if (pet.animator != null)
                     {
@@ -438,7 +438,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
             {
                 Debug.Log($"{pet.petName}의 모이기 명령이 취소되었습니다.");
                 pet.isGatheringAnimationOverride = false;
-                pet.isGatheringRotationOverride = false; // ★ 방향 오버라이드 해제
+                // pet.isGatheringRotationOverride = false; // ★ 방향 오버라이드 해제
                 yield break;
             }
 
@@ -447,7 +447,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
             {
                 Debug.LogWarning($"{pet.petName}의 NavMeshAgent가 비활성화되어 모이기를 중단합니다.");
                 pet.isGatheringAnimationOverride = false;
-                pet.isGatheringRotationOverride = false;
+                // pet.isGatheringRotationOverride = false;
                 yield break;
             }
 
@@ -547,7 +547,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
         {
             Debug.Log($"{pet.petName}의 모이기 명령이 취소되었습니다.");
             pet.isGatheringAnimationOverride = false;
-            pet.isGatheringRotationOverride = false;
+            // pet.isGatheringRotationOverride = false;
             yield break;
         }
 
@@ -593,7 +593,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
                         {
                             Debug.Log($"{pet.petName}의 모이기 명령이 취소되었습니다.");
                             pet.isGatheringAnimationOverride = false;
-                            pet.isGatheringRotationOverride = false;
+                            // pet.isGatheringRotationOverride = false;
                             yield break;
                         }
 
@@ -611,7 +611,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
                         if (pet.gatherCommandVersion != currentGatherVersion)
                         {
                             pet.isGatheringAnimationOverride = false;
-                            pet.isGatheringRotationOverride = false;
+                            // pet.isGatheringRotationOverride = false;
                             yield break;
                         }
 
@@ -624,7 +624,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
 
         // ★ 모든 처리 완료 후 오버라이드 해제
         pet.isGatheringAnimationOverride = false;
-        pet.isGatheringRotationOverride = false;
+        // pet.isGatheringRotationOverride = false;
 
         Debug.Log($"{pet.petName}: 카메라 바라보기 완료. 애니메이션/방향 제어 해제.");
     }
@@ -636,7 +636,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
 
         // 제자리 대기 설정
         pet.isGatheringAnimationOverride = true;
-        pet.isGatheringRotationOverride = true; // ★ 방향 오버라이드 활성화
+        // pet.isGatheringRotationOverride = true; // ★ 방향 오버라이드 활성화
 
         if (pet.animator != null)
         {
@@ -659,7 +659,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
         if (pet.gatherCommandVersion != currentGatherVersion)
         {
             pet.isGatheringAnimationOverride = false;
-            pet.isGatheringRotationOverride = false;
+            // pet.isGatheringRotationOverride = false;
             yield break;
         }
 
@@ -682,7 +682,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
                         if (pet.gatherCommandVersion != currentGatherVersion)
                         {
                             pet.isGatheringAnimationOverride = false;
-                            pet.isGatheringRotationOverride = false;
+                            // pet.isGatheringRotationOverride = false;
                             yield break;
                         }
 
@@ -698,7 +698,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
                         if (pet.gatherCommandVersion != currentGatherVersion)
                         {
                             pet.isGatheringAnimationOverride = false;
-                            pet.isGatheringRotationOverride = false;
+                            // pet.isGatheringRotationOverride = false;
                             yield break;
                         }
 
@@ -711,7 +711,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
 
         // ★ 오버라이드 해제
         pet.isGatheringAnimationOverride = false;
-        pet.isGatheringRotationOverride = false;
+        // pet.isGatheringRotationOverride = false;
 
         Debug.Log($"{pet.petName}: 제자리 모이기 완료. 애니메이션/방향 제어 해제.");
     }
@@ -736,7 +736,7 @@ private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> o
                 pet.isGathered = false;
                 pet.isGathering = false;
                 pet.isGatheringAnimationOverride = false;
-                pet.isGatheringRotationOverride = false; // ★ 방향 오버라이드 해제
+                // pet.isGatheringRotationOverride = false; // ★ 방향 오버라이드 해제
 
                 if (pet.agent != null)
                 {
