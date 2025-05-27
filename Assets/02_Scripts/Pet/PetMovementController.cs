@@ -125,6 +125,7 @@ public class PetMovementController : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     public void UpdateMovement()
     {
+        Debug.Log("#PetMovementController/UpdateMovement");
         // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
         if (petController.isGathered)
         {
@@ -174,6 +175,9 @@ public class PetMovementController : MonoBehaviour
     // 행동 전환 시 호출: 가중치 기반 랜덤으로 다음 행동 선정
     private void DecideNextBehavior()
     {
+
+                Debug.Log("#PetMovementController/DecideNextBehavior");
+
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
             return;
 
@@ -193,7 +197,8 @@ public class PetMovementController : MonoBehaviour
 
     // 행동 상태 전환: NavMeshAgent 속성·애니메이션 적용 :contentReference[oaicite:8]{index=8}
     private void SetBehavior(BehaviorState state)
-    {
+    {                Debug.Log("#PetMovementController/SetBehavior");
+
         // 모으기 상태면 행동 변경하지 않음
         if (petController.isGathering) return;
 
