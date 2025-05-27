@@ -274,7 +274,6 @@ public class PetController : MonoBehaviour
         }
     }
 
-    // PetController.cs의 Update 메서드 수정
   // PetController.cs의 Update 메서드 수정
   private void Update()
     {

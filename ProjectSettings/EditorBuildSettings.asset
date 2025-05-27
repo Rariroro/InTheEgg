@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/01_Scenes/PetVillge.unity
     guid: 141d8df3d21474fada53904e1ccd90c9
+  - enabled: 0
+    path: Assets/01_Scenes/TestInteraction.unity
+    guid: e34b9f187c09841b585649aeb914610c
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
