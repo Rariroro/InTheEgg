@@ -164,28 +164,24 @@ public class PetMovementController : MonoBehaviour
     /// 모이기 상태일 때는 이동 로직 무시
     /// </summary>
     public void UpdateMovement()
+{
+    // 모이기 중이거나 이미 모였을 때는 일반 움직임 로직을 실행하지 않음
+    if (petController.isGathering || petController.isGathered) return;
+    if (petController.agent==null||!petController.agent.isOnNavMesh||!petController.agent.enabled) return;
+
+    behaviorTimer+=Time.deltaTime;
+    if(behaviorTimer>=nextBehaviorChange) DecideNextBehavior();
+
+    if(!petController.agent.isStopped)
     {
-        // 모이기 중이거나 모임 완료 상태면 이동 로직 건너뜀
-        if (petController.isGathering || petController.isGathered) return;
-        if (petController.agent == null || !petController.agent.isOnNavMesh || !petController.agent.enabled) return;
-
-        // 행동 타이머 갱신
-        behaviorTimer += Time.deltaTime;
-        if (behaviorTimer >= nextBehaviorChange)
-            DecideNextBehavior();
-
-        // NavMeshAgent가 멈춰있지 않으면 걷기/뛰기로 이동 처리
-        if (!petController.agent.isStopped)
-        {
-            if (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running)
-                HandleMovement();
-        }
-
-        // 실제 모델 트랜스폼 위치 동기화
-        if (petController.petModelTransform != null)
-            petController.petModelTransform.position = transform.position;
+        if(currentBehaviorState==BehaviorState.Walking) HandleMovement();
+        else if(currentBehaviorState==BehaviorState.Running) HandleMovement();
     }
-
+    
+    // ★ 모이기 방향 오버라이드 중이 아닐 때만 모델 위치 동기화
+    if(!petController.isGatheringRotationOverride && petController.petModelTransform != null)
+        petController.petModelTransform.position = transform.position;
+}
     /// <summary>
     /// 다음 행동 상태를 확률 기반으로 결정하여 SetBehavior 호출
     /// </summary>

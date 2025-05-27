@@ -45,6 +45,8 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isGathered = false;
     [HideInInspector] public bool isGathering = false; // 추가: 모이기 중인지 확인하는 플래그
     [HideInInspector] public int gatherCommandVersion = 0; // 추가: 모으기 명령 버전 추적
+    [HideInInspector] public bool isGatheringAnimationOverride = false; // 추가: 모이기 애니메이션 오버라이드 플래그
+    [HideInInspector] public bool isGatheringRotationOverride = false; // ★ 추가: 모이기 방향 오버라이드 플래그
 
     [HideInInspector] public float baseSpeed;
     [HideInInspector] public float baseAngularSpeed;
@@ -274,27 +276,37 @@ public class PetController : MonoBehaviour
 
     // PetController.cs의 Update 메서드 수정
   // PetController.cs의 Update 메서드 수정
-private void Update()
-{
-    feedingController.UpdateFeeding();
-    sleepingController.UpdateSleeping();
-
-    // ★ 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
-    // 모이기 중에는 절대 일반 움직임 로직이 실행되지 않도록 보장
-    if (!isGathering && !isInteracting)
+  private void Update()
     {
-        movementController.UpdateMovement();
-    }
+        feedingController.UpdateFeeding();
+        sleepingController.UpdateSleeping();
 
-    // ★ 모이기 중이 아닐 때만 상호작용 처리
-    // 모이기 중에는 새로운 상호작용을 시작하지 않음
-    if (!isGathering)
-    {
-        interactionController.HandleInput();
+        // 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
+        if (!isGathering && !isInteracting)
+        {
+            movementController.UpdateMovement();
+        }
+
+        // 모이기 중이 아닐 때만 상호작용 처리
+        if (!isGathering)
+        {
+            interactionController.HandleInput();
+        }
+        
+        // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
+        if (!isGatheringAnimationOverride)
+        {
+            animationController.UpdateAnimation();
+        }
+        
+        // ★ 모이기 방향 오버라이드 중이 아닐 때만 모델 위치 동기화
+        if (!isGatheringRotationOverride && petModelTransform != null)
+        {
+            petModelTransform.position = transform.position;
+            // 일반 상태에서는 부모 오브젝트 회전 따라가기
+            petModelTransform.rotation = transform.rotation;
+        }
     }
-    
-    animationController.UpdateAnimation();
-}
 
 // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
 public void StopMovement()
