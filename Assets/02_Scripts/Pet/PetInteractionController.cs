@@ -76,6 +76,24 @@ public class PetInteractionController : MonoBehaviour
     // 사용자 입력을 처리하는 함수입니다.
     public void HandleInput()
     {
+        // 모이기 중이거나 이미 모였을 때는 일반적인 상호작용을 제한
+        if (petController.isGathering || petController.isGathered)
+        {
+            // 펫을 들고 있었다면 강제로 놓기
+            if (isHolding)
+            {
+                ForceStopHolding();
+            }
+            
+            // 선택되어 있었다면 선택 해제
+            if (isSelected)
+            {
+                Deselect();
+            }
+            
+            return; // 모이기 중에는 새로운 상호작용 입력을 받지 않음
+        }
+        
         // 터치 카운트 리셋 (마지막 터치 이후 일정 시간이 지나면 터치 카운트 초기화)
         if (Time.time - lastTouchTime > touchResetTime)
             touchCount = 0;
@@ -152,246 +170,281 @@ public class PetInteractionController : MonoBehaviour
         }
     }
 
-   private void HandleShortTouch()
-{
-    // 화면 터치 위치에서 레이캐스트
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    RaycastHit hit;
-    bool didHit = Physics.Raycast(ray, out hit, Mathf.Infinity);
-
-    if (didHit)
+    private void HandleShortTouch()
     {
-        // 펫 카메라 모드가 활성화된 상태라면
-        if (PetCameraSwitcher.Instance != null && PetCameraSwitcher.Instance.petCameraModeActivated)
+        // 화면 터치 위치에서 레이캐스트
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        bool didHit = Physics.Raycast(ray, out hit, Mathf.Infinity);
+
+        if (didHit)
         {
-            // 터치한 오브젝트가 이 펫이라면
+            // 펫 카메라 모드가 활성화된 상태라면
+            if (PetCameraSwitcher.Instance != null && PetCameraSwitcher.Instance.petCameraModeActivated)
+            {
+                // 터치한 오브젝트가 이 펫이라면
+                if (hit.collider.gameObject == petController.gameObject)
+                {
+                    // 펫의 3D모델의 자식 중 "CameraPoint"를 찾습니다.
+                    Transform cameraPoint = petController.petModelTransform.Find("CameraPoint");
+                    if (cameraPoint != null)
+                    {
+                        PetCameraSwitcher.Instance.SwitchToPetCamera(cameraPoint);
+                    }
+                    return; // 일반 선택 로직을 실행하지 않음
+                }
+            }
+            
+            // 일반 터치(펫 선택) 처리
             if (hit.collider.gameObject == petController.gameObject)
             {
-                // 펫의 3D모델의 자식 중 "CameraPoint"를 찾습니다.
-                Transform cameraPoint = petController.petModelTransform.Find("CameraPoint");
-                if (cameraPoint != null)
-                {
-                    PetCameraSwitcher.Instance.SwitchToPetCamera(cameraPoint);
-                }
-                return; // 일반 선택 로직을 실행하지 않음
+                Select();
             }
-        }
-        
-        // 일반 터치(펫 선택) 처리
-        if (hit.collider.gameObject == petController.gameObject)
-        {
-            Select();
-        }
-        else if (isSelected)
-        {
-            Deselect();
-        }
-    }
-}
-
-
-  
-// 펫을 들고 이동하는 함수 (수정된 카메라 이동 속도 적용)
-private void HandleHoldingMovement()
-{
-    Vector3 currentTouchPosition = Input.mousePosition; // 현재 터치 위치
-
-    // 현재 터치 위치에서 레이를 발사하여 지형과 충돌 체크
-    Ray ray = Camera.main.ScreenPointToRay(currentTouchPosition);
-    RaycastHit terrainHit;
-    NavMeshHit navHit;
-    if (Physics.Raycast(ray, out terrainHit, Mathf.Infinity, terrainLayer))
-    {
-        if (NavMesh.SamplePosition(terrainHit.point, out navHit, 10f, NavMesh.AllAreas))
-        {
-            float targetHeight = terrainHit.point.y + holdHeight;
-            targetPosition = new Vector3(navHit.position.x, targetHeight, navHit.position.z);
-            petController.transform.position = targetPosition;
-
-            if (petController.petModelTransform != null && Camera.main != null)
+            else if (isSelected)
             {
-                Vector3 directionToCamera = Camera.main.transform.position - petController.petModelTransform.position;
-                directionToCamera.y = 0;
-                if (directionToCamera != Vector3.zero)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
-                    petController.petModelTransform.rotation = Quaternion.Lerp(
-                        petController.petModelTransform.rotation,
-                        targetRotation,
-                        Time.deltaTime * petController.rotationSpeed
-                    );
-                }
+                Deselect();
             }
         }
     }
 
-    // 화면 가장자리 스크롤 처리 (이전보다 2배 빠르게)
-    Vector2 screenPosition = currentTouchPosition;
-    Vector3 cameraMovement = Vector3.zero;
-
-    if (screenPosition.x < edgeScrollThreshold)
-        cameraMovement.x = -1;
-    else if (screenPosition.x > Screen.width - edgeScrollThreshold)
-        cameraMovement.x = 1;
-    if (screenPosition.y < edgeScrollThreshold)
-        cameraMovement.z = -1;
-    else if (screenPosition.y > Screen.height - edgeScrollThreshold)
-        cameraMovement.z = 1;
-
-    if (cameraMovement != Vector3.zero)
+    // 펫을 들고 이동하는 함수 (수정된 카메라 이동 속도 적용)
+    private void HandleHoldingMovement()
     {
-        float fastEdgeScrollSpeed = edgeScrollSpeed * 2f; // 두 배 빠르게
-        Camera.main.transform.parent.Translate(cameraMovement * fastEdgeScrollSpeed * Time.deltaTime, Space.World);
-    }
-}
+        Vector3 currentTouchPosition = Input.mousePosition; // 현재 터치 위치
 
-// PetInteractionController.cs 내의 수정이 필요한 부분
-
-private void StartHolding()
-{
-    isHolding = true;
-    petController.StopMovement();
-
-    // NavMeshAgent 비활성화
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = false;
-        // 현재 회전값 저장
-        if (petController.petModelTransform != null)
+        // 현재 터치 위치에서 레이를 발사하여 지형과 충돌 체크
+        Ray ray = Camera.main.ScreenPointToRay(currentTouchPosition);
+        RaycastHit terrainHit;
+        NavMeshHit navHit;
+        if (Physics.Raycast(ray, out terrainHit, Mathf.Infinity, terrainLayer))
         {
-            petController.petModelTransform.rotation = petController.transform.rotation;
+            if (NavMesh.SamplePosition(terrainHit.point, out navHit, 10f, NavMesh.AllAreas))
+            {
+                float targetHeight = terrainHit.point.y + holdHeight;
+                targetPosition = new Vector3(navHit.position.x, targetHeight, navHit.position.z);
+                petController.transform.position = targetPosition;
+
+                if (petController.petModelTransform != null && Camera.main != null)
+                {
+                    Vector3 directionToCamera = Camera.main.transform.position - petController.petModelTransform.position;
+                    directionToCamera.y = 0;
+                    if (directionToCamera != Vector3.zero)
+                    {
+                        Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                        petController.petModelTransform.rotation = Quaternion.Lerp(
+                            petController.petModelTransform.rotation,
+                            targetRotation,
+                            Time.deltaTime * petController.rotationSpeed
+                        );
+                    }
+                }
+            }
+        }
+
+        // 화면 가장자리 스크롤 처리 (이전보다 2배 빠르게)
+        Vector2 screenPosition = currentTouchPosition;
+        Vector3 cameraMovement = Vector3.zero;
+
+        if (screenPosition.x < edgeScrollThreshold)
+            cameraMovement.x = -1;
+        else if (screenPosition.x > Screen.width - edgeScrollThreshold)
+            cameraMovement.x = 1;
+        if (screenPosition.y < edgeScrollThreshold)
+            cameraMovement.z = -1;
+        else if (screenPosition.y > Screen.height - edgeScrollThreshold)
+            cameraMovement.z = 1;
+
+        if (cameraMovement != Vector3.zero)
+        {
+            float fastEdgeScrollSpeed = edgeScrollSpeed * 2f; // 두 배 빠르게
+            Camera.main.transform.parent.Translate(cameraMovement * fastEdgeScrollSpeed * Time.deltaTime, Space.World);
         }
     }
 
-    // CameraController 비활성화
-    CameraController camController = FindObjectOfType<CameraController>();
-    if (camController != null)
+    // PetInteractionController.cs 내의 수정이 필요한 부분
+    private void StartHolding()
     {
-        camController.enabled = false;
+        isHolding = true;
+        petController.StopMovement();
+
+        // NavMeshAgent 비활성화
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = false;
+            // 현재 회전값 저장
+            if (petController.petModelTransform != null)
+            {
+                petController.petModelTransform.rotation = petController.transform.rotation;
+            }
+        }
+
+        // CameraController 비활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = false;
+        }
+
+        // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
+        {
+            Vector3 surfacePoint = hit.position;
+            targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
+            petController.transform.position = targetPosition;
+        }
+
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
     }
 
-    // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
-    NavMeshHit hit;
-    if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
+    private void StopHolding()
     {
-        Vector3 surfacePoint = hit.position;
-        targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
-        petController.transform.position = targetPosition;
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+        }
+
+        isHolding = false;
+
+        // 현재 회전값 저장
+        Quaternion currentRotation = petController.petModelTransform != null 
+            ? petController.petModelTransform.rotation 
+            : petController.transform.rotation;
+
+        // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainLayer))
+        {
+            StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
+        }
+        else
+        {
+            Vector3 groundPoint = new Vector3(
+                petController.transform.position.x,
+                0,
+                petController.transform.position.z
+            );
+            StartCoroutine(SmoothlyPlacePet(groundPoint, currentRotation));
+        }
     }
 
-    if (nameTextObject != null)
-        nameTextObject.SetActive(false);
-}
-
-private void StopHolding()
-{
-    if (petController.animator != null)
+    // 모이기 중에 강제로 펫 들기 중단
+    private void ForceStopHolding()
     {
-        petController.animator.SetInteger("animation", 0);
-    }
-
-    isHolding = false;
-
-    // 현재 회전값 저장
-    Quaternion currentRotation = petController.petModelTransform != null 
-        ? petController.petModelTransform.rotation 
-        : petController.transform.rotation;
-
-    // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    RaycastHit hit;
-    if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainLayer))
-    {
-        StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
-    }
-    else
-    {
-        Vector3 groundPoint = new Vector3(
-            petController.transform.position.x,
-            0,
-            petController.transform.position.z
-        );
-        StartCoroutine(SmoothlyPlacePet(groundPoint, currentRotation));
-    }
-}
-
-private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
-{
-    Vector3 startPosition = petController.transform.position;
-    float startY = startPosition.y;
-    float targetY = groundPoint.y;
-    
-    float duration = 0.8f;
-    float elapsed = 0f;
-    
-    Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
-    Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
-
-    // 시작할 때 원래 회전값 유지
-    if (petController.petModelTransform != null)
-    {
-        petController.petModelTransform.rotation = originalRotation;
-    }
-
-    while (elapsed < duration)
-    {
-        elapsed += Time.deltaTime;
-        float t = elapsed / duration;
+        if (!isHolding) return;
         
-        // 이징 함수 적용
-        float easeT = 1f - Mathf.Pow(1f - t, 3f);
-        
-        // 수평 이동과 수직 하강을 분리하여 계산
-        Vector3 horizontalPosition = Vector3.Lerp(horizontalStart, horizontalEnd, easeT);
-        float currentY = Mathf.Lerp(startY, targetY, easeT);
-        
-        Vector3 newPosition = new Vector3(
-            horizontalPosition.x,
-            currentY,
-            horizontalPosition.z
-        );
-        
-        petController.transform.position = newPosition;
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+        }
 
-        // 회전값 유지
+        isHolding = false;
+        isTouchingPet = false;
+        holdTimer = 0f;
+
+        // NavMeshAgent 재활성화
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = true;
+        }
+
+        // CameraController 재활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = true;
+        }
+
+        // 펫을 지면에 즉시 배치
+        NavMeshHit navHit;
+        if (NavMesh.SamplePosition(petController.transform.position, out navHit, 10f, NavMesh.AllAreas))
+        {
+            petController.transform.position = navHit.position;
+        }
+
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
+            
+        Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
+    }
+
+    private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
+    {
+        Vector3 startPosition = petController.transform.position;
+        float startY = startPosition.y;
+        float targetY = groundPoint.y;
+        
+        float duration = 0.8f;
+        float elapsed = 0f;
+        
+        Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
+        Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
+
+        // 시작할 때 원래 회전값 유지
         if (petController.petModelTransform != null)
         {
             petController.petModelTransform.rotation = originalRotation;
         }
 
-        yield return null;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            // 이징 함수 적용
+            float easeT = 1f - Mathf.Pow(1f - t, 3f);
+            
+            // 수평 이동과 수직 하강을 분리하여 계산
+            Vector3 horizontalPosition = Vector3.Lerp(horizontalStart, horizontalEnd, easeT);
+            float currentY = Mathf.Lerp(startY, targetY, easeT);
+            
+            Vector3 newPosition = new Vector3(
+                horizontalPosition.x,
+                currentY,
+                horizontalPosition.z
+            );
+            
+            petController.transform.position = newPosition;
+
+            // 회전값 유지
+            if (petController.petModelTransform != null)
+            {
+                petController.petModelTransform.rotation = originalRotation;
+            }
+
+            yield return null;
+        }
+
+        // 최종 위치 설정
+        petController.transform.position = groundPoint;
+        
+        // 최종 회전값 설정
+        if (petController.petModelTransform != null)
+        {
+            petController.petModelTransform.rotation = originalRotation;
+            petController.transform.rotation = originalRotation;
+        }
+
+        yield return new WaitForSeconds(0.1f); // 약간의 지연 추가
+
+        // NavMeshAgent 재활성화
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = true;
+            petController.agent.updateRotation = true;
+        }
+
+        // CameraController 재활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = true;
+        }
+
+        CompletePetPlacement();
     }
-
-    // 최종 위치 설정
-    petController.transform.position = groundPoint;
-    
-    // 최종 회전값 설정
-    if (petController.petModelTransform != null)
-    {
-        petController.petModelTransform.rotation = originalRotation;
-        petController.transform.rotation = originalRotation;
-    }
-
-    yield return new WaitForSeconds(0.1f); // 약간의 지연 추가
-
-    // NavMeshAgent 재활성화
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = true;
-        petController.agent.updateRotation = true;
-    }
-
-    // CameraController 재활성화
-    CameraController camController = FindObjectOfType<CameraController>();
-    if (camController != null)
-    {
-        camController.enabled = true;
-    }
-
-    CompletePetPlacement();
-}
-
-
 
     // 펫 배치를 완료하는 함수
     private void CompletePetPlacement()

@@ -43,12 +43,14 @@ public class PetController : MonoBehaviour
     [HideInInspector] public Animator animator;
     [HideInInspector] public Transform petModelTransform;
     [HideInInspector] public bool isGathered = false;
+    [HideInInspector] public bool isGathering = false; // 추가: 모이기 중인지 확인하는 플래그
     [HideInInspector] public int gatherCommandVersion = 0; // 추가: 모으기 명령 버전 추적
 
     [HideInInspector] public float baseSpeed;
     [HideInInspector] public float baseAngularSpeed;
     [HideInInspector] public float baseAcceleration;
     [HideInInspector] public float baseStoppingDistance;
+    
     // 각 기능별 컨트롤러 참조
     private PetMovementController movementController;
     private PetAnimationController animationController;
@@ -156,6 +158,7 @@ public class PetController : MonoBehaviour
             StartCoroutine(RegisterToPetManager());
         }
     }
+    
     private IEnumerator RegisterToPetManager()
     {
         // 프레임 하나 대기
@@ -166,6 +169,7 @@ public class PetController : MonoBehaviour
             PetInteractionManager.Instance.RegisterPet(this);
         }
     }
+    
     private void OnDestroy()
     {
         // PetInteractionManager에서 이 펫 제거
@@ -174,6 +178,7 @@ public class PetController : MonoBehaviour
             PetInteractionManager.Instance.UnregisterPet(this);
         }
     }
+    
     private IEnumerator EnsureNavMeshPlacement()
     {
         yield return new WaitForSeconds(0.2f);
@@ -231,6 +236,7 @@ public class PetController : MonoBehaviour
             Debug.LogError($"[PetController] {petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.");
         }
     }
+    
     // 펫 이름에서 타입 유추하는 메서드 (개선된 버전)
     private void SetPetTypeFromName()
     {
@@ -267,51 +273,66 @@ public class PetController : MonoBehaviour
     }
 
     // PetController.cs의 Update 메서드 수정
-    private void Update()
+  // PetController.cs의 Update 메서드 수정
+private void Update()
+{
+    feedingController.UpdateFeeding();
+    sleepingController.UpdateSleeping();
+
+    // ★ 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
+    // 모이기 중에는 절대 일반 움직임 로직이 실행되지 않도록 보장
+    if (!isGathering && !isInteracting)
     {
-        feedingController.UpdateFeeding();
-        sleepingController.UpdateSleeping(); // 추가: 수면 상태 업데이트
+        movementController.UpdateMovement();
+    }
 
-        // 상호작용 중이 아닐 때만 움직임 업데이트
-        if (!isInteracting)
-        {
-            movementController.UpdateMovement();
-        }
-
+    // ★ 모이기 중이 아닐 때만 상호작용 처리
+    // 모이기 중에는 새로운 상호작용을 시작하지 않음
+    if (!isGathering)
+    {
         interactionController.HandleInput();
-        animationController.UpdateAnimation();
     }
+    
+    animationController.UpdateAnimation();
+}
 
-    // 외부에서 이동을 제어하기 위한 메서드들 (안전하게 수정됨)
-    public void StopMovement()
+// ★ 외부에서 이동을 제어하기 위한 메서드들 개선
+public void StopMovement()
+{
+    if (agent != null && agent.enabled && agent.isOnNavMesh)
     {
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        try
         {
-            try
-            {
-                agent.isStopped = true;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
-            }
+            agent.isStopped = true;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
         }
     }
+}
 
-    public void ResumeMovement()
+public void ResumeMovement()
+{
+    // ★ 모이기 중일 때는 움직임 재개하지 않음
+    if (isGathering) 
     {
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        return;
+    }
+    
+    if (agent != null && agent.enabled && agent.isOnNavMesh)
+    {
+        try
         {
-            try
-            {
-                agent.isStopped = false;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
-            }
+            agent.isStopped = false;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
         }
     }
+}
+    
     // 감정 표현 메서드
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
@@ -339,49 +360,4 @@ public class PetController : MonoBehaviour
             activeBubble = null;
         }
     }
-
-    // 상호작용에 따른 감정 표현 (PetInteractionController에서 호출)
-    // public void ShowInteractionEmotion(InteractionType interactionType, bool isInitiator = true)
-    // {
-    //     switch (interactionType)
-    //     {
-    //         case InteractionType.Fight:
-    //             ShowEmotion(isInitiator ? EmotionType.Angry : EmotionType.Scared);
-    //             break;
-
-    //         case InteractionType.WalkTogether:
-    //             ShowEmotion(EmotionType.Happy);
-    //             break;
-
-    //         case InteractionType.RestTogether:
-    //             ShowEmotion(EmotionType.Sleepy);
-    //             break;
-
-    //         case InteractionType.Race:
-    //             ShowEmotion(EmotionType.Surprised);
-    //             break;
-
-    //         case InteractionType.ChaseAndRun:
-    //             ShowEmotion(isInitiator ? EmotionType.Angry : EmotionType.Scared);
-    //             break;
-
-    //         case InteractionType.SleepTogether:
-    //             ShowEmotion(EmotionType.Sleepy);
-    //             break;
-
-    //         case InteractionType.RideAndWalk:
-    //             ShowEmotion(isInitiator ? EmotionType.Happy : EmotionType.Surprised);
-    //             break;
-
-    //         default:
-    //             ShowEmotion(EmotionType.Confused);
-    //             break;
-    //     }
-    // }
-
-    // 상호작용 결과에 따른 감정 표현
-    // public void ShowResultEmotion(bool isWinner)
-    // {
-    //     ShowEmotion(isWinner ? EmotionType.Victory : EmotionType.Defeat);
-    // }
 }

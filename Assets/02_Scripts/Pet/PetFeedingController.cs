@@ -120,6 +120,9 @@ public class PetFeedingController : MonoBehaviour
 
     public void UpdateFeeding()
     {
+        // 모이기 중이거나 이미 모였을 때는 먹이 행동을 하지 않음
+        if (petController.isGathering || petController.isGathered) return;
+        
         if (!isEating)
         {
             // 배고픔 증가
@@ -336,6 +339,9 @@ public class PetFeedingController : MonoBehaviour
 
     private void UpdateBehaviorBasedOnHunger()
     {
+        // 모이기 중일 때는 배고픔 행동을 하지 않음
+        if (petController.isGathering || petController.isGathered) return;
+        
         if (petController.agent != null && petController.agent.enabled)
         {
             if (petController.hunger >= extremeHungryThreshold && !isSitting)
@@ -400,6 +406,13 @@ public class PetFeedingController : MonoBehaviour
 
         while (petController.hunger >= extremeHungryThreshold)
         {
+            // 모이기 명령이 오면 앉기 중단
+            if (petController.isGathering)
+            {
+                StopSitting();
+                yield break;
+            }
+            
             if (Time.time - lastHungryEmotionTime > hungryEmotionInterval * 0.5f)
             {
                 petController.ShowEmotion(EmotionType.Hungry, 5f);
