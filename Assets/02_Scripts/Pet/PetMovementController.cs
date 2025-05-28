@@ -124,143 +124,149 @@ public class PetMovementController : MonoBehaviour
     // 3) 매 프레임 호출: 행동 지속 타이머 & 행동별 처리 & 모델 위치 동기화
     // ────────────────────────────────────────────────────────────────────
     public void UpdateMovement()
+{
+    // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
+    if (petController.isGathered)
     {
-        Debug.Log("#PetMovementController/UpdateMovement");
-        // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
-        if (petController.isGathered)
+        if (petController.petModelTransform != null && Camera.main != null)
         {
-            if (petController.petModelTransform != null && Camera.main != null)
+            Vector3 dir = Camera.main.transform.position - petController.petModelTransform.position;
+            dir.y = 0f;
+            if (dir.magnitude > 0.1f)
             {
-                Vector3 dir = Camera.main.transform.position - petController.petModelTransform.position;
-                dir.y = 0f;
-                if (dir.magnitude > 0.1f)
-                {
-                    Quaternion target = Quaternion.LookRotation(dir);
-                    petController.petModelTransform.rotation = Quaternion.Slerp(
-                        petController.petModelTransform.rotation,
-                        target,
-                        petController.rotationSpeed * Time.deltaTime
-                    );
-                }
+                Quaternion target = Quaternion.LookRotation(dir);
+                petController.petModelTransform.rotation = Quaternion.Slerp(
+                    petController.petModelTransform.rotation,
+                    target,
+                    petController.rotationSpeed * Time.deltaTime
+                );
             }
-            return;
         }
-
-        // NavMeshAgent 준비 상태가 아니면 종료
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-            return;
-
-        behaviorTimer += Time.deltaTime;  // 행동 지속 시간 누적
-
-        // 현재 행동에 따른 처리
-        if (!petController.agent.isStopped &&
-            (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
-        {
-            HandleMovement();  // 목적지 도착 시 새 목적지 설정 :contentReference[oaicite:6]{index=6}
-        }
-
-        // 행동 전환 시점 도달 체크
-        if (behaviorTimer >= nextBehaviorChange)
-        {
-            DecideNextBehavior();  // 다음 행동 결정 :contentReference[oaicite:7]{index=7}
-        }
-
-        // 모델 위치를 NavMeshAgent 위치와 동기화
-        if (petController.petModelTransform != null)
-        {
-            petController.petModelTransform.position = transform.position;
-        }
+        return;
     }
 
-    // 행동 전환 시 호출: 가중치 기반 랜덤으로 다음 행동 선정
-    private void DecideNextBehavior()
+    // ★ 상호작용 중일 때는 일반 움직임 로직 실행하지 않음
+    if (petController.isInteracting)
     {
-
-                Debug.Log("#PetMovementController/DecideNextBehavior");
-
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-            return;
-
-        behaviorTimer = 0f;
-        float total = pb.idleWeight + pb.walkWeight + pb.runWeight +
-                      pb.jumpWeight + pb.restWeight + pb.lookWeight + pb.playWeight;
-        float r = Random.Range(0, total), sum = 0;
-
-        if ((sum += pb.idleWeight) >= r)      { SetBehavior(BehaviorState.Idle);    return; }
-        if ((sum += pb.walkWeight) >= r)      { SetBehavior(BehaviorState.Walking); return; }
-        if ((sum += pb.runWeight) >= r)       { SetBehavior(BehaviorState.Running); return; }
-        if ((sum += pb.jumpWeight) >= r)      { SetBehavior(BehaviorState.Jumping); return; }
-        if ((sum += pb.restWeight) >= r)      { SetBehavior(BehaviorState.Resting); return; }
-        if ((sum += pb.lookWeight) >= r)      { SetBehavior(BehaviorState.Looking); return; }
-                                              { SetBehavior(BehaviorState.Playing);              }
+        return;
     }
 
-    // 행동 상태 전환: NavMeshAgent 속성·애니메이션 적용 :contentReference[oaicite:8]{index=8}
-    private void SetBehavior(BehaviorState state)
-    {                Debug.Log("#PetMovementController/SetBehavior");
+    // NavMeshAgent 준비 상태가 아니면 종료
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        return;
 
-        // 모으기 상태면 행동 변경하지 않음
-        if (petController.isGathering) return;
+    behaviorTimer += Time.deltaTime;  // 행동 지속 시간 누적
 
-        // Agent 준비 확인
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-        {
-            Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
-            return;
-        }
-
-        currentBehaviorState = state;
-        nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
-
-        // 이동 일시정지
-        try { petController.agent.isStopped = true; }
-        catch { /* 예외 무시 */ }
-
-        var anim = petController.GetComponent<PetAnimationController>();
-        switch (state)
-        {
-            case BehaviorState.Idle:
-                anim?.SetContinuousAnimation(0);
-                break;
-            case BehaviorState.Walking:
-                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
-                SetRandomDestination();
-                anim?.SetContinuousAnimation(1);
-                break;
-            case BehaviorState.Running:
-                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
-                SetRandomDestination();
-                anim?.SetContinuousAnimation(2);
-                break;
-            case BehaviorState.Jumping:
-                StartCoroutine(PerformJump());
-                break;
-            case BehaviorState.Resting:
-                anim?.SetContinuousAnimation(5);
-                break;
-            case BehaviorState.Looking:
-                StartCoroutine(LookAround());
-                break;
-            case BehaviorState.Playing:
-                StartCoroutine(PerformPlay());
-                break;
-        }
-    }
-
-    // NavMeshAgent 속도·정지 상태를 안전하게 설정 (모으기 상태 무시) :contentReference[oaicite:9]{index=9}
-    private void SafeSetAgentMovement(float speed, bool isStopped)
+    // 현재 행동에 따른 처리
+    if (!petController.agent.isStopped &&
+        (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
     {
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-            return;
-        if (petController.isGathering) return;
-
-        try
-        {
-            petController.agent.speed = speed;
-            petController.agent.isStopped = isStopped;
-        }
-        catch { /* 예외 무시 */ }
+        HandleMovement();  // 목적지 도착 시 새 목적지 설정
     }
+
+    // 행동 전환 시점 도달 체크
+    if (behaviorTimer >= nextBehaviorChange)
+    {
+        DecideNextBehavior();  // 다음 행동 결정
+    }
+
+    // 모델 위치를 NavMeshAgent 위치와 동기화
+    if (petController.petModelTransform != null)
+    {
+        petController.petModelTransform.position = transform.position;
+    }
+}
+
+// 2. DecideNextBehavior 메서드에 isInteracting 체크 추가
+private void DecideNextBehavior()
+{
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        return;
+
+    // ★ 상호작용 중일 때는 행동 변경하지 않음
+    if (petController.isInteracting)
+        return;
+
+    behaviorTimer = 0f;
+    float total = pb.idleWeight + pb.walkWeight + pb.runWeight +
+                  pb.jumpWeight + pb.restWeight + pb.lookWeight + pb.playWeight;
+    float r = Random.Range(0, total), sum = 0;
+
+    if ((sum += pb.idleWeight) >= r)      { SetBehavior(BehaviorState.Idle);    return; }
+    if ((sum += pb.walkWeight) >= r)      { SetBehavior(BehaviorState.Walking); return; }
+    if ((sum += pb.runWeight) >= r)       { SetBehavior(BehaviorState.Running); return; }
+    if ((sum += pb.jumpWeight) >= r)      { SetBehavior(BehaviorState.Jumping); return; }
+    if ((sum += pb.restWeight) >= r)      { SetBehavior(BehaviorState.Resting); return; }
+    if ((sum += pb.lookWeight) >= r)      { SetBehavior(BehaviorState.Looking); return; }
+                                          { SetBehavior(BehaviorState.Playing);              }
+}
+
+// 3. SetBehavior 메서드에 isInteracting 체크 추가
+private void SetBehavior(BehaviorState state)
+{
+    // 모으기 상태나 상호작용 중이면 행동 변경하지 않음
+    if (petController.isGathering || petController.isInteracting) return;
+
+    // Agent 준비 확인
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+    {
+        Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
+        return;
+    }
+
+    currentBehaviorState = state;
+    nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
+
+    // 이동 일시정지
+    try { petController.agent.isStopped = true; }
+    catch { /* 예외 무시 */ }
+
+    var anim = petController.GetComponent<PetAnimationController>();
+    switch (state)
+    {
+        case BehaviorState.Idle:
+            anim?.SetContinuousAnimation(0);
+            break;
+        case BehaviorState.Walking:
+            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
+            SetRandomDestination();
+            anim?.SetContinuousAnimation(1);
+            break;
+        case BehaviorState.Running:
+            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
+            SetRandomDestination();
+            anim?.SetContinuousAnimation(2);
+            break;
+        case BehaviorState.Jumping:
+            StartCoroutine(PerformJump());
+            break;
+        case BehaviorState.Resting:
+            anim?.SetContinuousAnimation(5);
+            break;
+        case BehaviorState.Looking:
+            StartCoroutine(LookAround());
+            break;
+        case BehaviorState.Playing:
+            StartCoroutine(PerformPlay());
+            break;
+    }
+}
+
+// 4. SafeSetAgentMovement 메서드에 isInteracting 체크 추가
+private void SafeSetAgentMovement(float speed, bool isStopped)
+{
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        return;
+    // ★ 모으기 상태나 상호작용 중일 때는 속도 변경하지 않음
+    if (petController.isGathering || petController.isInteracting) return;
+
+    try
+    {
+        petController.agent.speed = speed;
+        petController.agent.isStopped = isStopped;
+    }
+    catch { /* 예외 무시 */ }
+}
 
     // 목적지 도착 시 새 랜덤 목적지 설정 :contentReference[oaicite:10]{index=10}
     private void HandleMovement()
