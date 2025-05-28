@@ -40,6 +40,8 @@ public class PetMovementController : MonoBehaviour
         public float speedMultiplier;    // 기본 속도 배율
     }
     private PersonalityBehavior pb;       // 현재 펫의 성향별 설정 저장 객체 :contentReference[oaicite:2]{index=2}
+public bool IsRestingOrIdle => currentBehaviorState == BehaviorState.Resting || 
+                               currentBehaviorState == BehaviorState.Idle;
 
     /// <summary>
     /// 물 속성 펫이 물 vs 육지 목적지를 고를 확률 (0~1).
@@ -123,54 +125,76 @@ public class PetMovementController : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     // 3) 매 프레임 호출: 행동 지속 타이머 & 행동별 처리 & 모델 위치 동기화
     // ────────────────────────────────────────────────────────────────────
-    public void UpdateMovement()
+    // UpdateMovement() 메서드의 마지막 부분 수정
+public void UpdateMovement()
+{
+    Debug.Log("#PetMovementController/UpdateMovement");
+    // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
+    if (petController.isGathered)
     {
-        Debug.Log("#PetMovementController/UpdateMovement");
-        // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
-        if (petController.isGathered)
+        if (petController.petModelTransform != null && Camera.main != null)
         {
-            if (petController.petModelTransform != null && Camera.main != null)
+            Vector3 dir = Camera.main.transform.position - petController.petModelTransform.position;
+            dir.y = 0f;
+            if (dir.magnitude > 0.1f)
             {
-                Vector3 dir = Camera.main.transform.position - petController.petModelTransform.position;
-                dir.y = 0f;
-                if (dir.magnitude > 0.1f)
-                {
-                    Quaternion target = Quaternion.LookRotation(dir);
-                    petController.petModelTransform.rotation = Quaternion.Slerp(
-                        petController.petModelTransform.rotation,
-                        target,
-                        petController.rotationSpeed * Time.deltaTime
-                    );
-                }
+                Quaternion target = Quaternion.LookRotation(dir);
+                petController.petModelTransform.rotation = Quaternion.Slerp(
+                    petController.petModelTransform.rotation,
+                    target,
+                    petController.rotationSpeed * Time.deltaTime
+                );
             }
-            return;
         }
+        return;
+    }
 
-        // NavMeshAgent 준비 상태가 아니면 종료
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-            return;
+    // NavMeshAgent 준비 상태가 아니면 종료
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        return;
 
-        behaviorTimer += Time.deltaTime;  // 행동 지속 시간 누적
+    behaviorTimer += Time.deltaTime;  // 행동 지속 시간 누적
 
-        // 현재 행동에 따른 처리
-        if (!petController.agent.isStopped &&
-            (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+    // 현재 행동에 따른 처리
+    if (!petController.agent.isStopped &&
+        (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+    {
+        HandleMovement();  // 목적지 도착 시 새 목적지 설정
+    }
+
+    // 행동 전환 시점 도달 체크
+    if (behaviorTimer >= nextBehaviorChange)
+    {
+        DecideNextBehavior();  // 다음 행동 결정
+    }
+
+    // ★ 모델 위치와 회전을 NavMeshAgent와 동기화 (수정된 부분)
+    if (petController.petModelTransform != null)
+    {
+        // 위치 동기화
+        petController.petModelTransform.position = transform.position;
+        
+        // ★ 회전 동기화 - 이동 중이고 쉬는/대기 상태가 아닐 때만 NavMeshAgent 회전 따라가기
+        if (!petController.agent.isStopped && 
+            petController.agent.hasPath && 
+            petController.agent.remainingDistance > 0.1f &&
+            currentBehaviorState != BehaviorState.Resting &&  // ★ 쉬는 상태 제외
+            currentBehaviorState != BehaviorState.Idle)       // ★ 대기 상태도 제외
         {
-            HandleMovement();  // 목적지 도착 시 새 목적지 설정 :contentReference[oaicite:6]{index=6}
-        }
-
-        // 행동 전환 시점 도달 체크
-        if (behaviorTimer >= nextBehaviorChange)
-        {
-            DecideNextBehavior();  // 다음 행동 결정 :contentReference[oaicite:7]{index=7}
-        }
-
-        // 모델 위치를 NavMeshAgent 위치와 동기화
-        if (petController.petModelTransform != null)
-        {
-            petController.petModelTransform.position = transform.position;
+            // NavMeshAgent의 velocity 방향으로 회전
+            Vector3 moveDirection = petController.agent.velocity.normalized;
+            if (moveDirection.magnitude > 0.1f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                petController.petModelTransform.rotation = Quaternion.Slerp(
+                    petController.petModelTransform.rotation,
+                    targetRotation,
+                    petController.rotationSpeed * Time.deltaTime
+                );
+            }
         }
     }
+}
 
     // 행동 전환 시 호출: 가중치 기반 랜덤으로 다음 행동 선정
     private void DecideNextBehavior()
@@ -291,14 +315,14 @@ public class PetMovementController : MonoBehaviour
             // 오른쪽 90도 회전
             float t = 0f;
             Quaternion start = petController.petModelTransform.rotation;
-            Quaternion end = start * Quaternion.Euler(0, 90, 0);
+            Quaternion end = start * Quaternion.Euler(0, 45, 0);
             while (t < 1f) { t += Time.deltaTime; petController.petModelTransform.rotation = Quaternion.Slerp(start, end, t); yield return null; }
             yield return new WaitForSeconds(0.5f);
 
             // 왼쪽 180도 회전
             t = 0f;
             start = petController.petModelTransform.rotation;
-            end = start * Quaternion.Euler(0, -180, 0);
+            end = start * Quaternion.Euler(0, -90, 0);
             while (t < 1f) { t += Time.deltaTime; petController.petModelTransform.rotation = Quaternion.Slerp(start, end, t); yield return null; }
             yield return new WaitForSeconds(0.5f);
         }

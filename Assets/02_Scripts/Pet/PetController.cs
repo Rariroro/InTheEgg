@@ -82,24 +82,34 @@ public class PetController : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-        birthday = DateTime.Now;
+   // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
+private void Awake()
+{
+    birthday = DateTime.Now;
 
-        // NavMeshAgent 초기화
-        agent = GetComponent<NavMeshAgent>();
-        if (agent != null)
-        {
-            agent.speed = speed;
-            agent.angularSpeed = angularSpeed;
-            agent.acceleration = acceleration;
-            agent.stoppingDistance = stoppingDistance;
-            // 기본 값 저장
-            baseSpeed = speed;
-            baseAngularSpeed = angularSpeed;
-            baseAcceleration = acceleration;
-            baseStoppingDistance = stoppingDistance;
-        }
+    // NavMeshAgent 초기화
+    agent = GetComponent<NavMeshAgent>();
+    if (agent != null)
+    {
+        agent.speed = speed;
+        agent.angularSpeed = angularSpeed;
+        agent.acceleration = acceleration;
+        agent.stoppingDistance = stoppingDistance;
+        
+        // ★ 추가 설정 - 회전 관련 설정 개선
+        agent.updateRotation = false;  // 펫 모델의 회전은 직접 제어
+        agent.updatePosition = true;   // 위치는 NavMeshAgent가 제어
+        agent.updateUpAxis = false;    // Y축 회전만 필요
+        
+        // 기본 값 저장
+        baseSpeed = speed;
+        baseAngularSpeed = angularSpeed;
+        baseAcceleration = acceleration;
+        baseStoppingDistance = stoppingDistance;
+    }
+
+    // ... 나머지 코드는 동일
+
 
         // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
         if (transform.childCount > 0)
@@ -276,36 +286,45 @@ public class PetController : MonoBehaviour
 
   // PetController.cs의 Update 메서드 수정
   private void Update()
+{
+    feedingController.UpdateFeeding();
+    sleepingController.UpdateSleeping();
+
+    // 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
+    if (!isGathering && !isInteracting)
     {
-        feedingController.UpdateFeeding();
-        sleepingController.UpdateSleeping();
-
-        // 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
-        if (!isGathering && !isInteracting)
-        {
-            movementController.UpdateMovement();
-        }
-
-        // 모이기 중이 아닐 때만 상호작용 처리
-        if (!isGathering)
-        {
-            interactionController.HandleInput();
-        }
-        
-        // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
-        if (!isGatheringAnimationOverride)
-        {
-            animationController.UpdateAnimation();
-        }
-        
-        // // ★ 모이기 방향 오버라이드 중이 아닐 때만 모델 위치 동기화
-        // if (!isGatheringRotationOverride && petModelTransform != null)
-        // {
-        //     petModelTransform.position = transform.position;
-        //     // 일반 상태에서는 부모 오브젝트 회전 따라가기
-        //     petModelTransform.rotation = transform.rotation;
-        // }
+        movementController.UpdateMovement();
     }
+
+    // 모이기 중이 아닐 때만 상호작용 처리
+    if (!isGathering)
+    {
+        interactionController.HandleInput();
+    }
+    
+    // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
+    if (!isGatheringAnimationOverride)
+    {
+        animationController.UpdateAnimation();
+    }
+    
+    // ★ 모이기 상태가 아닐 때 기본 회전 동기화 (주석 해제하고 수정)
+    if (!isGathering && !isGatheringAnimationOverride && petModelTransform != null)
+    {
+        // 위치는 MovementController에서 처리하므로 여기서는 제거
+        // petModelTransform.position = transform.position;
+        
+        // ★ 정지 상태일 때만 부모 오브젝트 회전 따라가기 (이동 중이 아닐 때)
+        if (agent != null && agent.enabled && agent.isStopped)
+        {
+            petModelTransform.rotation = Quaternion.Slerp(
+                petModelTransform.rotation,
+                transform.rotation,
+                rotationSpeed * Time.deltaTime
+            );
+        }
+    }
+}
 
 // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
 public void StopMovement()
