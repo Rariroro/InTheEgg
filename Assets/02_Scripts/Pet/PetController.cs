@@ -285,7 +285,8 @@ private void Awake()
     }
 
   // PetController.cs의 Update 메서드 수정
-  private void Update()
+  // Update 메서드 수정
+private void Update()
 {
     feedingController.UpdateFeeding();
     sleepingController.UpdateSleeping();
@@ -308,21 +309,14 @@ private void Awake()
         animationController.UpdateAnimation();
     }
     
-    // ★ 모이기 상태가 아닐 때 기본 회전 동기화 (주석 해제하고 수정)
-    if (!isGathering && !isGatheringAnimationOverride && petModelTransform != null)
+    // ★ 자식 오브젝트는 항상 부모의 위치/회전을 기준으로 유지
+    if (petModelTransform != null)
     {
-        // 위치는 MovementController에서 처리하므로 여기서는 제거
-        // petModelTransform.position = transform.position;
+        // 자식 오브젝트는 부모 기준 로컬 위치를 유지 (보통 Vector3.zero)
+        petModelTransform.localPosition = Vector3.zero;
         
-        // ★ 정지 상태일 때만 부모 오브젝트 회전 따라가기 (이동 중이 아닐 때)
-        if (agent != null && agent.enabled && agent.isStopped)
-        {
-            petModelTransform.rotation = Quaternion.Slerp(
-                petModelTransform.rotation,
-                transform.rotation,
-                rotationSpeed * Time.deltaTime
-            );
-        }
+        // 자식 오브젝트는 부모 기준 로컬 회전을 유지 (보통 Quaternion.identity)
+        petModelTransform.localRotation = Quaternion.identity;
     }
 }
 

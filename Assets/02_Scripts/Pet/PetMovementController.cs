@@ -129,18 +129,22 @@ public bool IsRestingOrIdle => currentBehaviorState == BehaviorState.Resting ||
 public void UpdateMovement()
 {
     Debug.Log("#PetMovementController/UpdateMovement");
-    // 모으기 모드로 수집된 상태라면 카메라 바라보기 로직만 수행 후 종료
+    
+    // 🎯 모으기 모드 특별 처리
     if (petController.isGathered)
     {
-        if (petController.petModelTransform != null && Camera.main != null)
+        if (Camera.main != null)
         {
-            Vector3 dir = Camera.main.transform.position - petController.petModelTransform.position;
+            // ★ 부모 오브젝트를 카메라 방향으로 회전
+            Vector3 dir = Camera.main.transform.position - transform.position;
             dir.y = 0f;
+            
             if (dir.magnitude > 0.1f)
             {
                 Quaternion target = Quaternion.LookRotation(dir);
-                petController.petModelTransform.rotation = Quaternion.Slerp(
-                    petController.petModelTransform.rotation,
+                // 부모 오브젝트 회전
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
                     target,
                     petController.rotationSpeed * Time.deltaTime
                 );
@@ -175,24 +179,25 @@ public void UpdateMovement()
         petController.petModelTransform.position = transform.position;
         
         // ★ 회전 동기화 - 이동 중이고 쉬는/대기 상태가 아닐 때만 NavMeshAgent 회전 따라가기
-        if (!petController.agent.isStopped && 
-            petController.agent.hasPath && 
-            petController.agent.remainingDistance > 0.1f &&
-            currentBehaviorState != BehaviorState.Resting &&  // ★ 쉬는 상태 제외
-            currentBehaviorState != BehaviorState.Idle)       // ★ 대기 상태도 제외
+        // ★ 회전 동기화 - 부모 오브젝트 회전
+    if (!petController.agent.isStopped && 
+        petController.agent.hasPath && 
+        petController.agent.remainingDistance > 0.1f &&
+        currentBehaviorState != BehaviorState.Resting &&
+        currentBehaviorState != BehaviorState.Idle)
+    {
+        Vector3 moveDirection = petController.agent.velocity.normalized;
+        if (moveDirection.magnitude > 0.1f)
         {
-            // NavMeshAgent의 velocity 방향으로 회전
-            Vector3 moveDirection = petController.agent.velocity.normalized;
-            if (moveDirection.magnitude > 0.1f)
-            {
-                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                petController.petModelTransform.rotation = Quaternion.Slerp(
-                    petController.petModelTransform.rotation,
-                    targetRotation,
-                    petController.rotationSpeed * Time.deltaTime
-                );
-            }
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            // ★ 부모 오브젝트 회전
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                petController.rotationSpeed * Time.deltaTime
+            );
         }
+    }
     }
 }
 
@@ -303,31 +308,42 @@ public void UpdateMovement()
     }
 
     // 주변 둘러보기 코루틴 :contentReference[oaicite:12]{index=12}
-    private IEnumerator LookAround()
+   private IEnumerator LookAround()
+{
+    var anim = petController.GetComponent<PetAnimationController>();
+    anim?.SetContinuousAnimation(1);
+
+    for (int i = 0; i < 2; i++)
     {
-        var anim = petController.GetComponent<PetAnimationController>();
-        anim?.SetContinuousAnimation(1);
-
-        for (int i = 0; i < 2; i++)
-        {
-            if (petController.petModelTransform == null) break;
-
-            // 오른쪽 90도 회전
-            float t = 0f;
-            Quaternion start = petController.petModelTransform.rotation;
-            Quaternion end = start * Quaternion.Euler(0, 45, 0);
-            while (t < 1f) { t += Time.deltaTime; petController.petModelTransform.rotation = Quaternion.Slerp(start, end, t); yield return null; }
-            yield return new WaitForSeconds(0.5f);
-
-            // 왼쪽 180도 회전
-            t = 0f;
-            start = petController.petModelTransform.rotation;
-            end = start * Quaternion.Euler(0, -90, 0);
-            while (t < 1f) { t += Time.deltaTime; petController.petModelTransform.rotation = Quaternion.Slerp(start, end, t); yield return null; }
-            yield return new WaitForSeconds(0.5f);
+        // ★ 부모 오브젝트 회전
+        float t = 0f;
+        Quaternion start = transform.rotation;
+        Quaternion end = start * Quaternion.Euler(0, 45, 0);
+        
+        while (t < 1f) 
+        { 
+            t += Time.deltaTime; 
+            transform.rotation = Quaternion.Slerp(start, end, t); 
+            yield return null; 
         }
-        anim?.StopContinuousAnimation();
+        yield return new WaitForSeconds(0.5f);
+
+        // 왼쪽으로 회전
+        t = 0f;
+        start = transform.rotation;
+        end = start * Quaternion.Euler(0, -90, 0);
+        
+        while (t < 1f) 
+        { 
+            t += Time.deltaTime; 
+            transform.rotation = Quaternion.Slerp(start, end, t); 
+            yield return null; 
+        }
+        yield return new WaitForSeconds(0.5f);
     }
+    
+    anim?.StopContinuousAnimation();
+}
 
     // 놀기 행동 코루틴 :contentReference[oaicite:13]{index=13}
     private IEnumerator PerformPlay()

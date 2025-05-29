@@ -23,45 +23,37 @@ private bool isContinuousAnimationPlaying = false;
 private int continuousAnimationIndex = -1;
 
 // 2. UpdateAnimation 메서드 수정
+// UpdateAnimation 메서드 수정
 public void UpdateAnimation()
 {
-    // 현재 agent의 속도에 비례해서 애니메이션 속도를 조정합니다.
+    // 애니메이션 속도 조정은 유지
     if (petController.animator != null && petController.agent != null)
     {
         petController.animator.speed = petController.agent.speed / petController.baseSpeed;
     }
 
-    // 특별 애니메이션이나 연속 애니메이션이 재생 중이면 기본 애니메이션 로직 건너뛰기
     if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
         return;
 
-    if (petController.petModelTransform != null)
-    {
-        // 이동 속도 평활화 계산
-        Vector3 currentVelocity = (petController.petModelTransform.position - lastPosition) / Time.deltaTime;
-        smoothVelocity = Vector3.Lerp(smoothVelocity, currentVelocity, Time.deltaTime / petController.smoothTime);
-        lastPosition = petController.petModelTransform.position;
+    // ★ 이동 속도 계산을 부모 오브젝트 기준으로 변경
+    Vector3 currentVelocity = (transform.position - lastPosition) / Time.deltaTime;
+    smoothVelocity = Vector3.Lerp(smoothVelocity, currentVelocity, Time.deltaTime / petController.smoothTime);
+    lastPosition = transform.position;
 
-        // 이동 중이면 걷기 애니메이션, 그렇지 않으면 idle 처리
-        if (smoothVelocity.magnitude > 1f)
+    // ★ 회전 처리 제거 (부모가 이미 회전하므로)
+    if (smoothVelocity.magnitude > 1f)
+    {
+        // 회전 코드 제거
+        if (petController.animator != null)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(smoothVelocity);
-            petController.petModelTransform.rotation = Quaternion.Slerp(
-                petController.petModelTransform.rotation,
-                targetRotation,
-                Time.deltaTime * petController.rotationSpeed
-            );
-            if (petController.animator != null)
-            {
-                petController.animator.SetInteger("animation", 1);
-            }
+            petController.animator.SetInteger("animation", 1);
         }
-        else
+    }
+    else
+    {
+        if (petController.animator != null)
         {
-            if (petController.animator != null)
-            {
-                petController.animator.SetInteger("animation", 0);
-            }
+            petController.animator.SetInteger("animation", 0);
         }
     }
 }
