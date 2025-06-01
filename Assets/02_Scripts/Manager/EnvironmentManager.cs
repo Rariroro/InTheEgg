@@ -3,21 +3,40 @@ using System.Collections.Generic;
 
 public class EnvironmentManager : MonoBehaviour
 {
-    // 환경 프리팹들 (인스펙터에서 할당)
-    [Header("환경 프리팹")]
-    public GameObject forestEnvironment;
-    public GameObject desertEnvironment;
-    public GameObject snowEnvironment;
+     [Header("환경 프리팹")]
+    public GameObject foodstoreEnvironment;     // 음식가게
+    public GameObject orchardEnvironment;       // 과수원
+    public GameObject berryfieldEnvironment;    // 산딸기밭
+    public GameObject honeypotEnvironment;      // 꿀통
+    public GameObject sunflowerEnvironment;     // 해바라기
+    public GameObject cucumberEnvironment;      // 오이밭
+    public GameObject ricefieldEnvironment;     // 논
+    public GameObject watermelonEnvironment;    // 수박밭
+    public GameObject cornfieldEnvironment;     // 옥수수밭
+    public GameObject forestEnvironment;        // 숲
+    public GameObject pondEnvironment;          // 물웅덩이
+    public GameObject flowersEnvironment;       // 꽃
+    public GameObject fenceEnvironment;         // 초식동물용울타리
 
     // 환경 ID와 프리팹 연결을 위한 딕셔너리
     private Dictionary<string, GameObject> environmentPrefabs = new Dictionary<string, GameObject>();
 
     private void Awake()
     {
-        // 딕셔너리 초기화
+       // 딕셔너리 초기화
+        environmentPrefabs.Add("env_foodstore", foodstoreEnvironment);
+        environmentPrefabs.Add("env_orchard", orchardEnvironment);
+        environmentPrefabs.Add("env_berryfield", berryfieldEnvironment);
+        environmentPrefabs.Add("env_honeypot", honeypotEnvironment);
+        environmentPrefabs.Add("env_sunflower", sunflowerEnvironment);
+        environmentPrefabs.Add("env_cucumber", cucumberEnvironment);
+        environmentPrefabs.Add("env_ricefield", ricefieldEnvironment);
+        environmentPrefabs.Add("env_watermelon", watermelonEnvironment);
+        environmentPrefabs.Add("env_cornfield", cornfieldEnvironment);
         environmentPrefabs.Add("env_forest", forestEnvironment);
-        environmentPrefabs.Add("env_desert", desertEnvironment);
-        environmentPrefabs.Add("env_snow", snowEnvironment);
+        environmentPrefabs.Add("env_pond", pondEnvironment);
+        environmentPrefabs.Add("env_flowers", flowersEnvironment);
+        environmentPrefabs.Add("env_fence", fenceEnvironment);
     }
 
     private void Start()
