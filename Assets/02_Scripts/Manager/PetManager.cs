@@ -1,141 +1,240 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 using System.Collections.Generic;
 
-/// <summary>
-/// PetManager 클래스는 게임 씬이 시작될 때 PetSelectionManager에 의해 선택된 펫만
-/// NavMesh 위에 스폰(생성)하도록 관리합니다. 선택된 펫이 없을 경우 테스트 용도로
-/// 모든 펫을 스폰할 수 있는 기능도 포함되어 있습니다.
-/// </summary>
 public class PetManager : MonoBehaviour
 {
-    [Header("펫 스폰 설정")]
-    public GameObject[] petPrefabs;  // 60개의 펫 프리팹을 배열로 저장 (인덱스 0 ~ 59)
-    public float spawnRadius = 50f;  // 펫을 스폰할 때 사용되는 반경 (NavMesh 내 랜덤 위치)
-    public int maxPets = 50;         // 모든 펫을 스폰할 때 최대 스폰 개수 제한 (테스트 목적)
+    public GameObject[] petPrefabs;  // 60개의 펫 프리팹 배열
+    public float spawnRadius = 50f;  // 스폰 반경
+    public int maxPets = 50;
 
-    /// <summary>
-    /// Start() 메서드는 게임 씬이 시작될 때 자동으로 호출된다.
-    /// PetSelectionManager에 선택된 펫 ID가 있다면 해당 펫만 스폰하고,
-    /// 그렇지 않다면 (테스트용) 모든 펫을 스폰하도록 분기 처리한다.
-    /// </summary>
+    [Header("최초 등장 효과")]
+    public GameObject firstAppearanceEffectPrefab; // 최초 등장 효과 프리팹 (옵션)
+    public float firstAppearanceDelay = 0.5f; // 최초 등장 펫들 사이의 딜레이
+
     private void Start()
     {
-        // PetSelectionManager 인스턴스가 존재하고, 선택된 펫 ID 목록이 하나 이상 있을 경우
+        // PetSelectionManager가 존재하는지 확인
         if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
         {
-            // PetSelectionManager에 등록된 선택된 펫만 스폰
-            SpawnSelectedPets();
+            // 선택된 펫만 스폰
+            StartCoroutine(SpawnSelectedPetsWithEffects());
         }
         else
         {
-            // 선택된 펫이 없거나 PetSelectionManager가 존재하지 않을 경우 테스트용 스폰
+            // 선택된 펫이 없거나 매니저가 없는 경우 (테스트 목적으로만 사용)
             Debug.LogWarning("선택된 펫이 없거나 PetSelectionManager가 없습니다. 기본 동작으로 모든 펫을 스폰합니다.");
             SpawnAllPets();
         }
     }
 
-    /// <summary>
-    /// SpawnSelectedPets 메서드는 PetSelectionManager.Instance.selectedPetIds에
-    /// 저장된 펫 ID 목록을 순회하면서 해당 ID에 맞는 프리팹을 NavMesh 위
-    /// 랜덤 위치에 스폰(Instantiate)합니다.
-    /// </summary>
-    private void SpawnSelectedPets()
+    // 선택된 펫을 효과와 함께 스폰하는 코루틴 (새로 추가)
+    private IEnumerator SpawnSelectedPetsWithEffects()
     {
-        // 선택된 펫 수를 로그로 출력
         Debug.Log($"선택된 펫 수: {PetSelectionManager.Instance.selectedPetIds.Count}");
+        
+        // 일반 펫과 최초 등장 펫을 분리
+        List<string> normalPets = new List<string>();
+        List<string> firstAppearancePets = new List<string>();
 
-        // PetSelectionManager에서 저장된 각각의 petId 문자열을 순회
         foreach (string petId in PetSelectionManager.Instance.selectedPetIds)
         {
-            // petId는 "pet_001", "pet_002" 형태이므로 "pet_" 접두사와 숫자 부분이 있는지 확인
-            if (petId.StartsWith("pet_") && petId.Length >= 7)
+            if (PetSelectionManager.Instance.IsPetFirstAppearance(petId))
             {
-                // "pet_" 이후의 숫자 문자열만 추출 (예: "001", "002", ...)
-                string numberPart = petId.Substring(4);
+                firstAppearancePets.Add(petId);
+            }
+            else
+            {
+                normalPets.Add(petId);
+            }
+        }
 
-                // 추출한 숫자 문자열을 정수로 변환 시도
-                if (int.TryParse(numberPart, out int petIndex))
+        // 먼저 일반 펫들을 스폰
+        foreach (string petId in normalPets)
+        {
+            SpawnPet(petId, false);
+        }
+
+        // 최초 등장 펫들을 딜레이를 두고 효과와 함께 스폰
+        foreach (string petId in firstAppearancePets)
+        {
+            SpawnPet(petId, true);
+            yield return new WaitForSeconds(firstAppearanceDelay);
+        }
+    }
+
+    // 펫을 스폰하는 메서드 (효과 옵션 추가)
+    private void SpawnPet(string petId, bool withFirstAppearanceEffect)
+    {
+        // 펫 ID 형식: "pet_001", "pet_002", ... 에서 숫자 부분 추출
+        if (petId.StartsWith("pet_") && petId.Length >= 7)
+        {
+            string numberPart = petId.Substring(4); // "001", "002", ...
+            if (int.TryParse(numberPart, out int petIndex))
+            {
+                // 인덱스는 0부터 시작하므로 1을 빼줌
+                petIndex = petIndex - 1;
+                
+                // 유효한 인덱스인지 확인
+                if (petIndex >= 0 && petIndex < petPrefabs.Length)
                 {
-                    // petIndex는 1부터 시작하므로, 배열 인덱스는 0부터 시작하도록 1을 뺌
-                    petIndex = petIndex - 1;
+                    // 랜덤 위치에 펫 생성
+                    Vector3 spawnPosition = GetRandomPositionOnNavMesh();
+                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, Quaternion.identity);
 
-                    // 변환된 petIndex가 petPrefabs 배열의 유효 범위인지 확인
-                    if (petIndex >= 0 && petIndex < petPrefabs.Length)
+                    if (withFirstAppearanceEffect)
                     {
-                        // NavMesh 위에서 사용할 랜덤 위치 계산
-                        Vector3 spawnPosition = GetRandomPositionOnNavMesh();
-
-                        // petPrefabs[petIndex] 프리팹을 해당 위치와 기본 회전값(Quaternion.identity)으로 생성
-                        GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, Quaternion.identity);
-
-                        // 생성된 펫의 이름과 ID 정보를 로그로 출력
-                        Debug.Log($"펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
+                        // 최초 등장 효과 적용
+                        ApplyFirstAppearanceEffect(pet);
+                        Debug.Log($"최초 등장 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                     else
                     {
-                        // petIndex가 배열 범위를 벗어났을 경우 에러 로그 출력
-                        Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
+                        Debug.Log($"일반 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                 }
                 else
                 {
-                    // 숫자 부분을 정수로 변환할 수 없는 경우 에러 로그 출력
-                    Debug.LogError($"펫 ID 형식 오류: {petId}");
+                    Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
                 }
             }
             else
             {
-                // petId 문자열이 "pet_"로 시작하지 않거나 길이가 예상과 다를 경우 에러 로그 출력
-                Debug.LogError($"잘못된 펫 ID 형식: {petId}");
+                Debug.LogError($"펫 ID 형식 오류: {petId}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"잘못된 펫 ID 형식: {petId}");
+        }
+    }
+
+    // 최초 등장 효과를 적용하는 메서드 (새로 추가)
+    private void ApplyFirstAppearanceEffect(GameObject pet)
+    {
+        // 1. 파티클 효과 (프리팹이 있는 경우)
+        if (firstAppearanceEffectPrefab != null)
+        {
+            GameObject effect = Instantiate(firstAppearanceEffectPrefab, pet.transform.position, Quaternion.identity);
+            Destroy(effect, 3f); // 3초 후 제거
+        }
+
+        // 2. 스케일 애니메이션 효과
+        StartCoroutine(ScaleInEffect(pet));
+
+        // 3. 글로우 효과 (Material이 있는 경우)
+        StartCoroutine(GlowEffect(pet));
+    }
+
+    // 스케일 인 효과 코루틴 (새로 추가)
+    private IEnumerator ScaleInEffect(GameObject pet)
+    {
+        Vector3 originalScale = pet.transform.localScale;
+        pet.transform.localScale = Vector3.zero;
+
+        float duration = 1f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / duration;
+            
+            // 이징 효과 (Ease Out Back)
+            float scale = EaseOutBack(progress);
+            pet.transform.localScale = originalScale * scale;
+            
+            yield return null;
+        }
+
+        pet.transform.localScale = originalScale;
+    }
+
+    // 글로우 효과 코루틴 (새로 추가)
+    private IEnumerator GlowEffect(GameObject pet)
+    {
+        Renderer[] renderers = pet.GetComponentsInChildren<Renderer>();
+        Color originalEmission = Color.black;
+        bool hasEmissiveMaterial = false;
+
+        // 머터리얼이 Emission을 지원하는지 확인
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer.material.HasProperty("_EmissionColor"))
+            {
+                originalEmission = renderer.material.GetColor("_EmissionColor");
+                hasEmissiveMaterial = true;
+                break;
+            }
+        }
+
+        if (hasEmissiveMaterial)
+        {
+            float duration = 2f;
+            float elapsed = 0f;
+            Color glowColor = Color.yellow * 2f; // 밝은 노란색
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float intensity = Mathf.Sin(elapsed * Mathf.PI / duration);
+                
+                foreach (Renderer renderer in renderers)
+                {
+                    if (renderer.material.HasProperty("_EmissionColor"))
+                    {
+                        renderer.material.SetColor("_EmissionColor", Color.Lerp(originalEmission, glowColor, intensity));
+                    }
+                }
+                
+                yield return null;
+            }
+
+            // 원래 색상으로 복원
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer.material.HasProperty("_EmissionColor"))
+                {
+                    renderer.material.SetColor("_EmissionColor", originalEmission);
+                }
             }
         }
     }
 
-    /// <summary>
-    /// SpawnAllPets 메서드는 테스트 목적으로 petPrefabs 배열에 들어있는
-    /// 모든 프리팹을 최대 maxPets만큼 NavMesh 위 랜덤 위치에 생성합니다.
-    /// </summary>
+    // Ease Out Back 이징 함수 (새로 추가)
+    private float EaseOutBack(float t)
+    {
+        float c1 = 1.70158f;
+        float c3 = c1 + 1f;
+        return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+    }
+
+    // 기존 메서드들...
     private void SpawnAllPets()
     {
-        // petPrefabs 배열 길이 또는 maxPets 중 작은 쪽을 기준으로 반복
         for (int i = 0; i < petPrefabs.Length && i < maxPets; i++)
         {
-            // 해당 인덱스의 프리팹이 null이 아니면 생성
             if (petPrefabs[i] != null)
             {
                 Vector3 randomPosition = GetRandomPositionOnNavMesh();
                 GameObject pet = Instantiate(petPrefabs[i], randomPosition, Quaternion.identity);
-
-                // (옵션) 생성된 테스트 펫에 고유 이름을 붙이거나 디버그 로그를 남길 수 있음
-                Debug.Log($"테스트용 펫 생성: 인덱스 {i}, 이름: {pet.name}");
             }
         }
     }
 
-    /// <summary>
-    /// GetRandomPositionOnNavMesh 메서드는 지정된 spawnRadius 범위 내에서
-    /// NavMesh.SamplePosition을 사용해 유효한 NavMesh 위의 랜덤 위치를 반환한다.
-    /// </summary>
-    /// <returns>NavMesh 위의 유효한 랜덤 위치(Vector3)</returns>
     private Vector3 GetRandomPositionOnNavMesh()
     {
-        // 랜덤 방향 벡터를 구함 (반지름 spawnRadius 내의 구 안에서 랜덤)
         Vector3 randomDirection = Random.insideUnitSphere * spawnRadius;
-
-        // PetManager 오브젝트의 위치를 기준으로 offset 추가
         randomDirection += transform.position;
-
         NavMeshHit hit;
-        Vector3 finalPosition = transform.position; // 기본값 설정 (NavMesh 샘플에 실패 시 사용)
-
-        // NavMesh.SamplePosition을 사용해 randomDirection 근처의 NavMesh 위 위치를 hit에 저장
+        Vector3 finalPosition = transform.position;
+        
         if (NavMesh.SamplePosition(randomDirection, out hit, spawnRadius, NavMesh.AllAreas))
         {
-            // NavMesh 상의 유효한 위치가 있다면 hit.position을 finalPosition으로 설정
             finalPosition = hit.position;
         }
-
+        
         return finalPosition;
     }
 }
