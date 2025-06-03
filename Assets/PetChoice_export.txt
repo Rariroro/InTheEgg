@@ -1,6 +1,6 @@
 # Scene Hierarchy Export
 Scene Name: PetChoice
-Export Date: 5/31/2025 12:44:51 PM
+Export Date: 6/3/2025 3:43:04 PM
 --------------------------------------------
 
 GameObject: Main Camera (Active: True)
@@ -157,13 +157,13 @@ GameObject: SelectionUI (Active: True)
 GameObject: Canvas (Active: True)
   Component: RectTransform
       m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-      m_LocalPosition: (585.00, 1266.00, 0.00)
+      m_LocalPosition: (540.00, 1170.00, 0.00)
       m_LocalScale: (1.00, 1.00, 1.00)
       m_ConstrainProportionsScale: False
       m_AnchorMin: (0.00, 0.00)
       m_AnchorMax: (0.00, 0.00)
-      m_AnchoredPosition: (585.00, 1266.00)
-      m_SizeDelta: (1170.00, 2532.00)
+      m_AnchoredPosition: (540.00, 1170.00)
+      m_SizeDelta: (1080.00, 2340.00)
       m_Pivot: (0.50, 0.50)
   Component: Canvas
       m_RenderMode: Screen Space - Overlay
@@ -460,7 +460,7 @@ GameObject: Canvas (Active: True)
           m_TargetGraphic: Handle
           m_HandleRect: Handle
           m_Direction: LeftToRight
-          m_Value: 0.00
+          m_Value: 1.00
           m_Size: 1.00
           m_NumberOfSteps: 0
           m_OnValueChanged: (Not representable as string)
@@ -738,7 +738,7 @@ GameObject: Canvas (Active: True)
           m_TargetGraphic: Handle
           m_HandleRect: Handle
           m_Direction: LeftToRight
-          m_Value: 0.00
+          m_Value: 1.00
           m_Size: 1.00
           m_NumberOfSteps: 0
           m_OnValueChanged: (Not representable as string)
@@ -877,12 +877,12 @@ GameObject: Canvas (Active: True)
   GameObject: Text (TMP) (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (-274.00, -998.00, 0.00)
+        m_LocalPosition: (-281.10, -864.70, 0.00)
         m_LocalScale: (1.00, 1.00, 1.00)
         m_ConstrainProportionsScale: False
         m_AnchorMin: (0.50, 0.50)
         m_AnchorMax: (0.50, 0.50)
-        m_AnchoredPosition: (-274.00, -998.00)
+        m_AnchoredPosition: (-281.10, -864.70)
         m_SizeDelta: (200.00, 50.00)
         m_Pivot: (0.50, 0.50)
     Component: CanvasRenderer

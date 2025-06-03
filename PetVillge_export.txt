@@ -1,0 +1,1178 @@
+# Scene Hierarchy Export
+Scene Name: PetVillge
+Export Date: 6/3/2025 3:42:30 PM
+--------------------------------------------
+
+GameObject: Canvas (Active: True)
+  Component: RectTransform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (540.00, 1170.00, 0.00)
+      m_LocalScale: (2.34, 2.34, 2.34)
+      m_ConstrainProportionsScale: False
+      m_AnchorMin: (0.00, 0.00)
+      m_AnchorMax: (0.00, 0.00)
+      m_AnchoredPosition: (540.00, 1170.00)
+      m_SizeDelta: (461.29, 999.45)
+      m_Pivot: (0.50, 0.50)
+  Component: Canvas
+      m_RenderMode: Screen Space - Overlay
+      m_Camera: null
+      m_PlaneDistance: 100.00
+      m_PixelPerfect: False
+      m_ReceivesEvents: True
+      m_OverrideSorting: False
+      m_OverridePixelPerfect: False
+      m_SortingBucketNormalizedSize: 0.00
+      m_VertexColorAlwaysGammaSpace: False
+      m_AdditionalShaderChannelsFlag: [Invalid enum index: -1]
+      m_UpdateRectTransformForStandalone: Enabled
+  Component: CanvasScaler
+      m_UiScaleMode: ScaleWithScreenSize
+      m_ReferencePixelsPerUnit: 100.00
+      m_ScaleFactor: 1.00
+      m_ReferenceResolution: (800.00, 600.00)
+      m_ScreenMatchMode: MatchWidthOrHeight
+      m_MatchWidthOrHeight: 0.52
+      m_PhysicalUnit: Points
+      m_FallbackScreenDPI: 96.00
+      m_DefaultSpriteDPI: 96.00
+      m_DynamicPixelsPerUnit: 1.00
+      m_PresetInfoIsWorld: False
+  Component: GraphicRaycaster
+      m_IgnoreReversedGraphics: True
+      m_BlockingObjects: None
+      m_BlockingMask: (Not representable as string)
+
+  GameObject: PetCamera Button (Active: True)
+    Component: RectTransform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (138.65, -427.13, 0.00)
+        m_LocalScale: (0.64, 0.64, 0.64)
+        m_ConstrainProportionsScale: True
+        m_AnchorMin: (1.00, 0.00)
+        m_AnchorMax: (1.00, 0.00)
+        m_AnchoredPosition: (-91.99, 72.60)
+        m_SizeDelta: (160.00, 90.00)
+        m_Pivot: (0.50, 0.50)
+    Component: CanvasRenderer
+        m_CullTransparentMesh: True
+    Component: Image
+        m_Material: null
+        m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_RaycastTarget: True
+        m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+        m_Maskable: True
+        m_OnCullStateChanged: (Not representable as string)
+        m_Sprite: UISprite
+        m_Type: Sliced
+        m_PreserveAspect: False
+        m_FillCenter: True
+        m_FillMethod: Radial360
+        m_FillAmount: 1.00
+        m_FillClockwise: True
+        m_FillOrigin: 0
+        m_UseSpriteMesh: False
+        m_PixelsPerUnitMultiplier: 1.00
+    Component: Button
+        m_Navigation: (Not representable as string)
+        m_Transition: ColorTint
+        m_Colors: (Not representable as string)
+        m_SpriteState: (Not representable as string)
+        m_AnimationTriggers: (Not representable as string)
+        m_Interactable: True
+        m_TargetGraphic: PetCamera Button
+        m_OnClick: (Not representable as string)
+
+    GameObject: Text (TMP) (Active: True)
+      Component: RectTransform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+          m_AnchorMin: (0.00, 0.00)
+          m_AnchorMax: (1.00, 1.00)
+          m_AnchoredPosition: (0.00, 0.00)
+          m_SizeDelta: (0.00, 0.00)
+          m_Pivot: (0.50, 0.50)
+      Component: CanvasRenderer
+          m_CullTransparentMesh: True
+      Component: TextMeshProUGUI
+          m_Material: null
+          m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+          m_RaycastTarget: True
+          m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+          m_Maskable: True
+          m_OnCullStateChanged: (Not representable as string)
+          m_text: Pet Camera
+          m_isRightToLeft: False
+          m_fontAsset: NanumGothic SDF
+          m_sharedMaterial: NanumGothic SDF Material
+          m_fontSharedMaterials: (Not representable as string)
+          m_fontMaterial: null
+          m_fontMaterials: (Not representable as string)
+          m_fontColor32: RGBA(0.196, 0.196, 0.196, 1.000)
+          m_fontColor: RGBA(0.196, 0.196, 0.196, 1.000)
+          m_enableVertexGradient: False
+          m_colorMode: FourCornersGradient
+          m_fontColorGradient: (Not representable as string)
+          m_fontColorGradientPreset: null
+          m_spriteAsset: null
+          m_tintAllSprites: False
+          m_StyleSheet: null
+          m_TextStyleHashCode: -1183493901
+          m_overrideHtmlColors: False
+          m_faceColor: RGBA(1.000, 1.000, 1.000, 1.000)
+          m_fontSize: 24.00
+          m_fontSizeBase: 24.00
+          m_fontWeight: Regular
+          m_enableAutoSizing: False
+          m_fontSizeMin: 18.00
+          m_fontSizeMax: 72.00
+          m_fontStyle: Normal
+          m_HorizontalAlignment: Center
+          m_VerticalAlignment: Middle
+          m_textAlignment: Converted
+          m_characterSpacing: 0.00
+          m_wordSpacing: 0.00
+          m_lineSpacing: 0.00
+          m_lineSpacingMax: 0.00
+          m_paragraphSpacing: 0.00
+          m_charWidthMaxAdj: 0.00
+          m_TextWrappingMode: Normal
+          m_wordWrappingRatios: 0.40
+          m_overflowMode: Overflow
+          m_linkedTextComponent: null
+          parentLinkedComponent: null
+          m_enableKerning: False
+          m_ActiveFontFeatures: (Not representable as string)
+          m_enableExtraPadding: False
+          checkPaddingRequired: False
+          m_isRichText: True
+          m_EmojiFallbackSupport: True
+          m_parseCtrlCharacters: True
+          m_isOrthographic: True
+          m_isCullingEnabled: False
+          m_horizontalMapping: Character
+          m_verticalMapping: Character
+          m_uvLineOffset: 0.00
+          m_geometrySortingOrder: Normal
+          m_IsTextObjectScaleStatic: False
+          m_VertexBufferAutoSizeReduction: False
+          m_useMaxVisibleDescender: True
+          m_pageToDisplay: 1
+          m_margin: (0.00, 0.00, 0.00, 0.00)
+          m_isUsingLegacyAnimationComponent: False
+          m_isVolumetricText: False
+          m_hasFontAssetChanged: False
+          m_baseMaterial: null
+          m_maskOffset: (0.00, 0.00, 0.00, 0.00)
+
+      GameObject: TMP SubMeshUI [NanumGothic SDF Material + LiberationSans SDF Atlas] (Active: True)
+        Component: RectTransform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (0.00, 0.00, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+            m_AnchorMin: (0.00, 0.00)
+            m_AnchorMax: (1.00, 1.00)
+            m_AnchoredPosition: (0.00, 0.00)
+            m_SizeDelta: (0.00, 0.00)
+            m_Pivot: (0.50, 0.50)
+        Component: LayoutElement
+            m_IgnoreLayout: True
+            m_MinWidth: -1.00
+            m_MinHeight: -1.00
+            m_PreferredWidth: -1.00
+            m_PreferredHeight: -1.00
+            m_FlexibleWidth: -1.00
+            m_FlexibleHeight: -1.00
+            m_LayoutPriority: 1
+        Component: CanvasRenderer
+            m_CullTransparentMesh: True
+        Component: TMP_SubMeshUI
+            m_Material: NanumGothic SDF Material + LiberationSans SDF Atlas
+            m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+            m_RaycastTarget: True
+            m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+            m_Maskable: True
+            m_OnCullStateChanged: (Not representable as string)
+            m_fontAsset: LiberationSans SDF
+            m_spriteAsset: null
+            m_material: null
+            m_sharedMaterial: NanumGothic SDF Material + LiberationSans SDF Atlas
+            m_isDefaultMaterial: False
+            m_padding: 1.25
+            m_TextComponent: Text (TMP)
+            m_materialReferenceIndex: 1
+
+  GameObject: Gathering Button (Active: True)
+    Component: RectTransform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (138.04, -357.63, 0.00)
+        m_LocalScale: (0.60, 0.60, 0.60)
+        m_ConstrainProportionsScale: True
+        m_AnchorMin: (1.00, 0.00)
+        m_AnchorMax: (1.00, 0.00)
+        m_AnchoredPosition: (-92.60, 142.10)
+        m_SizeDelta: (160.00, 90.00)
+        m_Pivot: (0.50, 0.50)
+    Component: CanvasRenderer
+        m_CullTransparentMesh: True
+    Component: Image
+        m_Material: null
+        m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_RaycastTarget: True
+        m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+        m_Maskable: True
+        m_OnCullStateChanged: (Not representable as string)
+        m_Sprite: UISprite
+        m_Type: Sliced
+        m_PreserveAspect: False
+        m_FillCenter: True
+        m_FillMethod: Radial360
+        m_FillAmount: 1.00
+        m_FillClockwise: True
+        m_FillOrigin: 0
+        m_UseSpriteMesh: False
+        m_PixelsPerUnitMultiplier: 1.00
+    Component: Button
+        m_Navigation: (Not representable as string)
+        m_Transition: ColorTint
+        m_Colors: (Not representable as string)
+        m_SpriteState: (Not representable as string)
+        m_AnimationTriggers: (Not representable as string)
+        m_Interactable: True
+        m_TargetGraphic: Gathering Button
+        m_OnClick: (Not representable as string)
+
+    GameObject: Text (TMP) (Active: True)
+      Component: RectTransform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+          m_AnchorMin: (0.00, 0.00)
+          m_AnchorMax: (1.00, 1.00)
+          m_AnchoredPosition: (0.00, 0.00)
+          m_SizeDelta: (0.00, 0.00)
+          m_Pivot: (0.50, 0.50)
+      Component: CanvasRenderer
+          m_CullTransparentMesh: True
+      Component: TextMeshProUGUI
+          m_Material: null
+          m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+          m_RaycastTarget: True
+          m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+          m_Maskable: True
+          m_OnCullStateChanged: (Not representable as string)
+          m_text: Gather
+          m_isRightToLeft: False
+          m_fontAsset: NanumGothic SDF
+          m_sharedMaterial: NanumGothic SDF Material
+          m_fontSharedMaterials: (Not representable as string)
+          m_fontMaterial: null
+          m_fontMaterials: (Not representable as string)
+          m_fontColor32: RGBA(0.196, 0.196, 0.196, 1.000)
+          m_fontColor: RGBA(0.196, 0.196, 0.196, 1.000)
+          m_enableVertexGradient: False
+          m_colorMode: FourCornersGradient
+          m_fontColorGradient: (Not representable as string)
+          m_fontColorGradientPreset: null
+          m_spriteAsset: null
+          m_tintAllSprites: False
+          m_StyleSheet: null
+          m_TextStyleHashCode: -1183493901
+          m_overrideHtmlColors: False
+          m_faceColor: RGBA(1.000, 1.000, 1.000, 1.000)
+          m_fontSize: 24.00
+          m_fontSizeBase: 24.00
+          m_fontWeight: Regular
+          m_enableAutoSizing: False
+          m_fontSizeMin: 18.00
+          m_fontSizeMax: 72.00
+          m_fontStyle: Normal
+          m_HorizontalAlignment: Center
+          m_VerticalAlignment: Middle
+          m_textAlignment: Converted
+          m_characterSpacing: 0.00
+          m_wordSpacing: 0.00
+          m_lineSpacing: 0.00
+          m_lineSpacingMax: 0.00
+          m_paragraphSpacing: 0.00
+          m_charWidthMaxAdj: 0.00
+          m_TextWrappingMode: Normal
+          m_wordWrappingRatios: 0.40
+          m_overflowMode: Overflow
+          m_linkedTextComponent: null
+          parentLinkedComponent: null
+          m_enableKerning: False
+          m_ActiveFontFeatures: (Not representable as string)
+          m_enableExtraPadding: False
+          checkPaddingRequired: False
+          m_isRichText: True
+          m_EmojiFallbackSupport: True
+          m_parseCtrlCharacters: True
+          m_isOrthographic: True
+          m_isCullingEnabled: False
+          m_horizontalMapping: Character
+          m_verticalMapping: Character
+          m_uvLineOffset: 0.00
+          m_geometrySortingOrder: Normal
+          m_IsTextObjectScaleStatic: False
+          m_VertexBufferAutoSizeReduction: False
+          m_useMaxVisibleDescender: True
+          m_pageToDisplay: 1
+          m_margin: (0.00, 0.00, 0.00, 0.00)
+          m_isUsingLegacyAnimationComponent: False
+          m_isVolumetricText: False
+          m_hasFontAssetChanged: False
+          m_baseMaterial: null
+          m_maskOffset: (0.00, 0.00, 0.00, 0.00)
+
+      GameObject: TMP SubMeshUI [NanumGothic SDF Material + LiberationSans SDF Atlas] (Active: True)
+        Component: RectTransform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (0.00, 0.00, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+            m_AnchorMin: (0.00, 0.00)
+            m_AnchorMax: (1.00, 1.00)
+            m_AnchoredPosition: (0.00, 0.00)
+            m_SizeDelta: (0.00, 0.00)
+            m_Pivot: (0.50, 0.50)
+        Component: LayoutElement
+            m_IgnoreLayout: True
+            m_MinWidth: -1.00
+            m_MinHeight: -1.00
+            m_PreferredWidth: -1.00
+            m_PreferredHeight: -1.00
+            m_FlexibleWidth: -1.00
+            m_FlexibleHeight: -1.00
+            m_LayoutPriority: 1
+        Component: CanvasRenderer
+            m_CullTransparentMesh: True
+        Component: TMP_SubMeshUI
+            m_Material: NanumGothic SDF Material + LiberationSans SDF Atlas
+            m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+            m_RaycastTarget: True
+            m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+            m_Maskable: True
+            m_OnCullStateChanged: (Not representable as string)
+            m_fontAsset: LiberationSans SDF
+            m_spriteAsset: null
+            m_material: null
+            m_sharedMaterial: NanumGothic SDF Material + LiberationSans SDF Atlas
+            m_isDefaultMaterial: False
+            m_padding: 1.25
+            m_TextComponent: Text (TMP)
+            m_materialReferenceIndex: 1
+
+  GameObject: info (TMP) (Active: True)
+    Component: RectTransform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-59.30, -12.70, 0.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+        m_AnchorMin: (0.50, 0.50)
+        m_AnchorMax: (0.50, 0.50)
+        m_AnchoredPosition: (-59.30, -12.70)
+        m_SizeDelta: (200.00, 50.00)
+        m_Pivot: (0.50, 0.50)
+    Component: CanvasRenderer
+        m_CullTransparentMesh: True
+    Component: TextMeshProUGUI
+        m_Material: null
+        m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_RaycastTarget: False
+        m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
+        m_Maskable: True
+        m_OnCullStateChanged: (Not representable as string)
+        m_text: 
+        m_isRightToLeft: False
+        m_fontAsset: NanumGothic SDF
+        m_sharedMaterial: NanumGothic SDF Material
+        m_fontSharedMaterials: (Not representable as string)
+        m_fontMaterial: null
+        m_fontMaterials: (Not representable as string)
+        m_fontColor32: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_fontColor: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_enableVertexGradient: False
+        m_colorMode: FourCornersGradient
+        m_fontColorGradient: (Not representable as string)
+        m_fontColorGradientPreset: null
+        m_spriteAsset: null
+        m_tintAllSprites: False
+        m_StyleSheet: null
+        m_TextStyleHashCode: -1183493901
+        m_overrideHtmlColors: False
+        m_faceColor: RGBA(1.000, 1.000, 1.000, 1.000)
+        m_fontSize: 36.00
+        m_fontSizeBase: 36.00
+        m_fontWeight: Regular
+        m_enableAutoSizing: True
+        m_fontSizeMin: 18.00
+        m_fontSizeMax: 72.00
+        m_fontStyle: Normal
+        m_HorizontalAlignment: Left
+        m_VerticalAlignment: Top
+        m_textAlignment: Converted
+        m_characterSpacing: 0.00
+        m_wordSpacing: 0.00
+        m_lineSpacing: 0.00
+        m_lineSpacingMax: 0.00
+        m_paragraphSpacing: 0.00
+        m_charWidthMaxAdj: 0.00
+        m_TextWrappingMode: Normal
+        m_wordWrappingRatios: 0.40
+        m_overflowMode: Overflow
+        m_linkedTextComponent: null
+        parentLinkedComponent: null
+        m_enableKerning: False
+        m_ActiveFontFeatures: (Not representable as string)
+        m_enableExtraPadding: False
+        checkPaddingRequired: False
+        m_isRichText: True
+        m_EmojiFallbackSupport: True
+        m_parseCtrlCharacters: True
+        m_isOrthographic: True
+        m_isCullingEnabled: False
+        m_horizontalMapping: Character
+        m_verticalMapping: Character
+        m_uvLineOffset: 0.00
+        m_geometrySortingOrder: Normal
+        m_IsTextObjectScaleStatic: False
+        m_VertexBufferAutoSizeReduction: False
+        m_useMaxVisibleDescender: True
+        m_pageToDisplay: 1
+        m_margin: (0.00, 0.00, -118.56, 0.00)
+        m_isUsingLegacyAnimationComponent: False
+        m_isVolumetricText: False
+        m_hasFontAssetChanged: False
+        m_baseMaterial: null
+        m_maskOffset: (0.00, 0.00, 0.00, 0.00)
+
+GameObject: EventSystem (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, -0.99144, 0.00000, 0.13053)
+      m_LocalPosition: (-189.25, 5.73, 61.37)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+  Component: EventSystem
+      m_FirstSelected: null
+      m_sendNavigationEvents: True
+      m_DragThreshold: 10
+  Component: InputSystemUIInputModule
+      m_SendPointerHoverToParent: True
+      m_MoveRepeatDelay: 0.50
+      m_MoveRepeatRate: 0.10
+      m_XRTrackingOrigin: null
+      m_DeselectOnBackgroundClick: True
+      m_PointerBehavior: SingleMouseOrPenButMultiTouchAndTrack
+      m_ScrollDeltaPerTick: 6.00
+
+GameObject: CameraObject (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (22.30, 100.00, 66.40)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+  Component: CameraController
+      moveSpeed: 0.05
+      zoomSpeed: 2.00
+      minZoom: 60.00
+      maxZoom: 10.00
+      mouseDragSpeed: 0.50
+
+  GameObject: Main Camera (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.38268, 0.00000, 0.00000, 0.92388)
+        m_LocalPosition: (-200.00, 0.00, -100.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Camera
+        m_ClearFlags: Skybox
+        m_BackGroundColor: RGBA(0.192, 0.302, 0.475, 0.000)
+        m_projectionMatrixMode: 1
+        m_GateFitMode: 2
+        m_FOVAxisMode: 0
+        m_Iso: 200
+        m_ShutterSpeed: 0.01
+        m_Aperture: 16.00
+        m_FocusDistance: 10.00
+        m_FocalLength: 20.78
+        m_BladeCount: 5
+        m_Curvature: (2.00, 11.00)
+        m_BarrelClipping: 0.25
+        m_Anamorphism: 0.00
+        m_SensorSize: (36.00, 24.00)
+        m_LensShift: (0.00, 0.00)
+        m_NormalizedViewPortRect: (Not representable as string)
+        near clip plane: 0.30
+        far clip plane: 1000.00
+        field of view: 60.00
+        orthographic: False
+        orthographic size: 5.00
+        m_Depth: -1.00
+        m_CullingMask: (Not representable as string)
+        m_RenderingPath: Use Graphics Settings
+        m_TargetTexture: null
+        m_TargetDisplay: 0
+        m_TargetEye: 3
+        m_HDR: True
+        m_AllowMSAA: True
+        m_AllowDynamicResolution: False
+        m_ForceIntoRT: False
+        m_OcclusionCulling: True
+        m_StereoConvergence: 10.00
+        m_StereoSeparation: 0.02
+    Component: AudioListener
+    Component: UniversalAdditionalCameraData
+        m_RenderShadows: True
+        m_RequiresDepthTextureOption: UsePipelineSettings
+        m_RequiresOpaqueTextureOption: UsePipelineSettings
+        m_CameraType: Base
+        m_Cameras: (Not representable as string)
+        m_RendererIndex: -1
+        m_VolumeLayerMask: (Not representable as string)
+        m_VolumeTrigger: null
+        m_VolumeFrameworkUpdateModeOption: UsePipelineSettings
+        m_RenderPostProcessing: True
+        m_Antialiasing: None
+        m_AntialiasingQuality: High
+        m_StopNaN: False
+        m_Dithering: False
+        m_ClearDepth: True
+        m_AllowXRRendering: True
+        m_AllowHDROutput: True
+        m_UseScreenCoordOverride: False
+        m_ScreenSizeOverride: (0.00, 0.00, 0.00, 0.00)
+        m_ScreenCoordScaleBias: (0.00, 0.00, 0.00, 0.00)
+        m_RequiresDepthTexture: False
+        m_RequiresColorTexture: False
+        m_TaaSettings: (Not representable as string)
+
+GameObject: Directional Light (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.91214, -0.06197, 0.17120, 0.36721)
+      m_LocalPosition: (0.00, 3.00, 0.00)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+  Component: Light
+      m_Type: Directional
+      m_Color: RGBA(1.000, 0.960, 0.892, 1.000)
+      m_Intensity: 1.40
+      m_Range: 10.00
+      m_SpotAngle: 30.00
+      m_InnerSpotAngle: 21.80
+      m_CookieSize: 30.00
+      m_Shadows: (Not representable as string)
+      m_Cookie: null
+      m_DrawHalo: False
+      m_BakingOutput: (Not representable as string)
+      m_Flare: null
+      m_RenderMode: Important
+      m_CullingMask: (Not representable as string)
+      m_RenderingLayerMask: 1
+      m_Lightmapping: Mixed
+      m_LightShadowCasterMode: 0
+      m_AreaSize: (1.00, 1.00)
+      m_BounceIntensity: 1.00
+      m_ColorTemperature: 6570.00
+      m_UseColorTemperature: False
+      m_BoundingSphereOverride: (0.00, 0.00, 0.00, 0.00)
+      m_UseBoundingSphereOverride: False
+      m_UseViewFrustumForShadowCasterCull: True
+      m_ForceVisible: False
+      m_ShadowRadius: 0.00
+      m_ShadowAngle: 0.00
+      m_LightUnit: 1
+      m_LuxAtDistance: 1.00
+      m_EnableSpotReflector: True
+  Component: UniversalAdditionalLightData
+      m_Version: 3
+      m_UsePipelineSettings: True
+      m_AdditionalLightsShadowResolutionTier: 2
+      m_LightLayerMask: LightLayerDefault
+      m_RenderingLayers: 1
+      m_CustomShadowLayers: False
+      m_ShadowLayerMask: LightLayerDefault
+      m_ShadowRenderingLayers: 1
+      m_LightCookieSize: (1.00, 1.00)
+      m_LightCookieOffset: (0.00, 0.00)
+      m_SoftShadowQuality: Low
+
+GameObject: Terrain (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (-301.00, 0.00, -150.00)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+  Component: Terrain
+      m_TerrainData: TFP_Terrain_Data_Hills
+      m_TreeDistance: 5000.00
+      m_TreeBillboardDistance: 50.00
+      m_TreeCrossFadeLength: 5.00
+      m_TreeMaximumFullLODCount: 50
+      m_DetailObjectDistance: 80.00
+      m_DetailObjectDensity: 1.00
+      m_HeightmapPixelError: 1.00
+      m_SplatMapDistance: 953.00
+      m_HeightmapMinimumLODSimplification: 0
+      m_HeightmapMaximumLOD: 0
+      m_ShadowCastingMode: 2
+      m_DrawHeightmap: True
+      m_DrawInstanced: False
+      m_DrawTreesAndFoliage: True
+      m_StaticShadowCaster: False
+      m_IgnoreQualitySettings: False
+      m_ReflectionProbeUsage: 1
+      m_MaterialTemplate: TerrainLit
+      m_BakeLightProbesForTrees: True
+      m_PreserveTreePrototypeLayers: False
+      m_DeringLightProbesForTrees: False
+      m_LightmapParameters: Default-VeryLowResolution
+      m_GroupingID: 0
+      m_RenderingLayerMask: 1
+      m_AllowAutoConnect: True
+      m_EnableHeightmapRayTracing: True
+      m_EnableTreesAndDetailsRayTracing: False
+      m_TreeMotionVectorModeOverride: 3
+  Component: TerrainCollider
+      m_Material: null
+      m_IncludeLayers: (Not representable as string)
+      m_ExcludeLayers: (Not representable as string)
+      m_LayerOverridePriority: 0
+      m_ProvidesContacts: False
+      m_TerrainData: TFP_Terrain_Data_Hills
+      m_EnableTreeColliders: True
+  Component: NavMeshSurface
+      m_AgentTypeID: 0
+      m_CollectObjects: Volume
+      m_Size: (257.70, 46.00, 313.20)
+      m_Center: (141.25, 20.00, 222.66)
+      m_LayerMask: (Not representable as string)
+      m_UseGeometry: PhysicsColliders
+      m_DefaultArea: 0
+      m_GenerateLinks: False
+      m_IgnoreNavMeshAgent: True
+      m_IgnoreNavMeshObstacle: True
+      m_OverrideTileSize: False
+      m_TileSize: 256
+      m_OverrideVoxelSize: False
+      m_VoxelSize: 0.17
+      m_MinRegionArea: 2.00
+      m_NavMeshData: NavMesh-Terrain
+      m_BuildHeightMesh: False
+
+  GameObject: Terrain_(-701.00, 0.00, -150.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-400.00, 0.00, 0.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_bc6c2764-bca3-4070-a374-ba6d4e2bfd10
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_bc6c2764-bca3-4070-a374-ba6d4e2bfd10
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(-301.00, 0.00, 250.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (0.00, 0.00, 400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_b0b3bb0e-33e2-49a4-928f-e988d7b46fe7
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_b0b3bb0e-33e2-49a4-928f-e988d7b46fe7
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(99.00, 0.00, -150.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (400.00, 0.00, 0.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_702e1e28-3be3-41de-b8e3-9fb186e4ec12
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_702e1e28-3be3-41de-b8e3-9fb186e4ec12
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(-301.00, 0.00, -550.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (0.00, 0.00, -400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_c77ba5a2-5d61-4bb7-811b-0bff3aee82ea
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_c77ba5a2-5d61-4bb7-811b-0bff3aee82ea
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(-701.00, 0.00, -550.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-400.00, 0.00, -400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_56374468-6ee3-47c6-bc87-9ec2be175585
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_56374468-6ee3-47c6-bc87-9ec2be175585
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(-701.00, 0.00, 250.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-400.00, 0.00, 400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_c858e808-68ca-47fa-9d8a-2e69b786c8bc
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_c858e808-68ca-47fa-9d8a-2e69b786c8bc
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(99.00, 0.00, 250.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (400.00, 0.00, 400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_70fe4d69-4dc6-4db0-9590-b5f666d83fef
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_70fe4d69-4dc6-4db0-9590-b5f666d83fef
+        m_EnableTreeColliders: True
+
+  GameObject: Terrain_(99.00, 0.00, -550.00) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (400.00, 0.00, -400.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: Terrain
+        m_TerrainData: TerrainData_7ca17861-ecc5-4d38-bbe7-e07200aec03a
+        m_TreeDistance: 5000.00
+        m_TreeBillboardDistance: 50.00
+        m_TreeCrossFadeLength: 5.00
+        m_TreeMaximumFullLODCount: 50
+        m_DetailObjectDistance: 80.00
+        m_DetailObjectDensity: 1.00
+        m_HeightmapPixelError: 5.00
+        m_SplatMapDistance: 1000.00
+        m_HeightmapMinimumLODSimplification: 0
+        m_HeightmapMaximumLOD: 0
+        m_ShadowCastingMode: 2
+        m_DrawHeightmap: True
+        m_DrawInstanced: False
+        m_DrawTreesAndFoliage: True
+        m_StaticShadowCaster: False
+        m_IgnoreQualitySettings: False
+        m_ReflectionProbeUsage: 1
+        m_MaterialTemplate: TerrainLit
+        m_BakeLightProbesForTrees: True
+        m_PreserveTreePrototypeLayers: False
+        m_DeringLightProbesForTrees: False
+        m_LightmapParameters: Default-VeryLowResolution
+        m_GroupingID: 0
+        m_RenderingLayerMask: 1
+        m_AllowAutoConnect: True
+        m_EnableHeightmapRayTracing: True
+        m_EnableTreesAndDetailsRayTracing: False
+        m_TreeMotionVectorModeOverride: 3
+    Component: TerrainCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_ProvidesContacts: False
+        m_TerrainData: TerrainData_7ca17861-ecc5-4d38-bbe7-e07200aec03a
+        m_EnableTreeColliders: True
+
+GameObject: #Managers (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (-135.84, 13.40, -8.51)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+
+  GameObject: EmotionManager (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (135.84, -13.40, 8.51)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: EmotionManager
+        emotionBubblePrefab: EmotionBubble
+
+  GameObject: #ButtonManager (Active: True)
+    Component: RectTransform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (720.84, 1252.60, 8.51)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+        m_AnchorMin: (0.50, 0.50)
+        m_AnchorMax: (0.50, 0.50)
+        m_AnchoredPosition: (720.84, 1252.60)
+        m_SizeDelta: (100.00, 100.00)
+        m_Pivot: (0.50, 0.50)
+    Component: PetCameraSwitcher
+        petCameraButton: PetCamera Button
+        petCameraButtonText: Text (TMP)
+        feedbackText: info (TMP)
+    Component: PetGatheringController
+        gatherButton: Gathering Button
+        gatherRadius: 15.00
+        feedbackText: info (TMP)
+        speedMultiplier: 4.00
+        angularSpeedMultiplier: 4.00
+        accelerationMultiplier: 4.00
+        stoppingDistanceMultiplier: 3.00
+        maxReassignAttempts: 1
+        stuckTimeout: 5.00
+        gracePeriod: 7.00
+        velocityThreshold: 0.20
+        arrivalDelay: 0.50
+        cameraRotationSpeed: 180.00
+        angleThreshold: 0.10
+
+  GameObject: #Pet&EnvironmentManager (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-50.86, -5.90, 68.91)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: PetManager
+        spawnRadius: 150.00
+        maxPets: 60
+        firstAppearanceEffectPrefab: TFP_Butterflies_01C (1)
+        firstAppearanceDelay: 0.50
+    Component: EnvironmentManager
+        foodstoreEnvironment: FoodstoreEnvironment 1
+        orchardEnvironment: OrchardEnvironment 1
+        berryfieldEnvironment: BerryfieldEnvironment 1
+        honeypotEnvironment: HoneypotEnvironment 1
+        sunflowerEnvironment: SunflowerEnvironment 1
+        cucumberEnvironment: CucumberEnvironment 1
+        ricefieldEnvironment: RicefieldEnvironment 1
+        watermelonEnvironment: WatermelonEnvironment 1
+        cornfieldEnvironment: CornfieldEnvironment 1
+        forestEnvironment: ForestEnvironment 1
+        pondEnvironment: PondEnvironment 1
+        flowersEnvironment: FlowersEnvironment 2
+        fenceEnvironment: FenceEnvironment 1
+        firstAppearanceEffectPrefab: TFP_Bees_01A
+        firstAppearanceDelay: 1.00
+        giftPrefab: giftbox
+        celebrationEffectPrefab: TFP_Blowing_Debris_01A (9)
+        giftSpawnDelay: 0.50
+
+  GameObject: #PetInteractionManager (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (0.00, 0.00, 0.00)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: PetInteractionManager
+        interactionDistance: 5.00
+        interactionCooldown: 30.00
+        interactionCheckInterval: 0.10
+        maxChecksPerFrame: 5
+        gridCellSize: 20.00
+        startDelay: 3.00
+    Component: WalkTogetherInteraction
+    Component: FightInteraction
+    Component: RestTogetherInteraction
+    Component: RaceInteraction
+    Component: ChaseAndRunInteraction
+    Component: SleepTogetherInteraction
+    Component: RideAndWalkInteraction
+    Component: SlothKoalaRaceInteraction
+
+  GameObject: #TerrainTextureSwitcherManager (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-55.06, 14.80, -41.29)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+    Component: TerrainTextureSwitchManager
+        targetTerrain: Terrain
+        planeGroups: (Not representable as string)
+        showDebugVisuals: True
+        samplesPerUnit: 5
+
+GameObject: EmotionBubbleCanvas (Active: True)
+  Component: RectTransform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (3772.94, 8165.02, 0.00)
+      m_LocalScale: (0.10, 0.10, 0.10)
+      m_ConstrainProportionsScale: True
+      m_AnchorMin: (0.00, 0.00)
+      m_AnchorMax: (0.00, 0.00)
+      m_AnchoredPosition: (3772.94, 8165.02)
+      m_SizeDelta: (1170.00, 2532.00)
+      m_Pivot: (0.50, 0.50)
+  Component: Canvas
+      m_RenderMode: World Space
+      m_Camera: Main Camera
+      m_PlaneDistance: 100.00
+      m_PixelPerfect: False
+      m_ReceivesEvents: True
+      m_OverrideSorting: False
+      m_OverridePixelPerfect: False
+      m_SortingBucketNormalizedSize: 0.00
+      m_VertexColorAlwaysGammaSpace: False
+      m_AdditionalShaderChannelsFlag: None
+      m_UpdateRectTransformForStandalone: Enabled
+  Component: CanvasScaler
+      m_UiScaleMode: ConstantPixelSize
+      m_ReferencePixelsPerUnit: 100.00
+      m_ScaleFactor: 1.00
+      m_ReferenceResolution: (800.00, 600.00)
+      m_ScreenMatchMode: MatchWidthOrHeight
+      m_MatchWidthOrHeight: 0.00
+      m_PhysicalUnit: Points
+      m_FallbackScreenDPI: 96.00
+      m_DefaultSpriteDPI: 96.00
+      m_DynamicPixelsPerUnit: 1.00
+      m_PresetInfoIsWorld: True
+  Component: GraphicRaycaster
+      m_IgnoreReversedGraphics: True
+      m_BlockingObjects: None
+      m_BlockingMask: (Not representable as string)
+
