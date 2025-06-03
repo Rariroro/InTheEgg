@@ -230,7 +230,7 @@ public class EnvironmentManager : MonoBehaviour
         Vector3 giftPosition = environmentPrefab.transform.position;
         
         // 선물을 약간 위로 띄워서 더 잘 보이게 함
-        giftPosition.y += 2f;
+        giftPosition.y += 7f;
         
         GameObject gift = Instantiate(giftPrefab, giftPosition, giftPrefab.transform.rotation);
         
@@ -363,59 +363,110 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     // 플래시 효과 코루틴
-    private IEnumerator FlashEffect(GameObject environment)
+    // EnvironmentManager.cs의 FlashEffect 코루틴 수정
+
+// 플래시 효과 코루틴
+private IEnumerator FlashEffect(GameObject environment)
+{
+    Renderer[] renderers = environment.GetComponentsInChildren<Renderer>();
+    
+    // 원본 머터리얼 저장
+    Material[][] originalMaterials = new Material[renderers.Length][];
+    for (int i = 0; i < renderers.Length; i++)
     {
-        Renderer[] renderers = environment.GetComponentsInChildren<Renderer>();
+        originalMaterials[i] = renderers[i].materials;
+    }
+
+    // URP 호환 흰색 머터리얼 생성
+    Material flashMaterial = CreateURPFlashMaterial();
+    
+    // flashMaterial이 생성되지 않았으면 플래시 효과 건너뛰기
+    if (flashMaterial == null)
+    {
+        Debug.LogWarning("URP 플래시 머터리얼을 생성할 수 없습니다. 플래시 효과를 건너뜁니다.");
+        yield break;
+    }
+
+    float duration = 0.5f;
+    int flashCount = 3;
+    
+    for (int flash = 0; flash < flashCount; flash++)
+    {
+        // 플래시 ON
+        foreach (Renderer renderer in renderers)
+        {
+            Material[] flashMaterials = new Material[renderer.materials.Length];
+            for (int j = 0; j < flashMaterials.Length; j++)
+            {
+                flashMaterials[j] = flashMaterial;
+            }
+            renderer.materials = flashMaterials;
+        }
         
-        // 원본 머터리얼 저장
-        Material[][] originalMaterials = new Material[renderers.Length][];
+        yield return new WaitForSeconds(duration / (flashCount * 2));
+        
+        // 플래시 OFF (원본 복원)
         for (int i = 0; i < renderers.Length; i++)
         {
-            originalMaterials[i] = renderers[i].materials;
+            if (renderers[i] != null)
+            {
+                renderers[i].materials = originalMaterials[i];
+            }
         }
-
-        // 흰색 머터리얼 생성 (간단한 플래시 효과)
-        Material flashMaterial = new Material(Shader.Find("Standard"));
-        flashMaterial.color = Color.white;
-        flashMaterial.SetFloat("_Metallic", 0f);
-        flashMaterial.SetFloat("_Glossiness", 1f);
-
-        float duration = 0.5f;
-        int flashCount = 3;
         
-        for (int flash = 0; flash < flashCount; flash++)
-        {
-            // 플래시 ON
-            foreach (Renderer renderer in renderers)
-            {
-                Material[] flashMaterials = new Material[renderer.materials.Length];
-                for (int j = 0; j < flashMaterials.Length; j++)
-                {
-                    flashMaterials[j] = flashMaterial;
-                }
-                renderer.materials = flashMaterials;
-            }
-            
-            yield return new WaitForSeconds(duration / (flashCount * 2));
-            
-            // 플래시 OFF (원본 복원)
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                if (renderers[i] != null)
-                {
-                    renderers[i].materials = originalMaterials[i];
-                }
-            }
-            
-            yield return new WaitForSeconds(duration / (flashCount * 2));
-        }
+        yield return new WaitForSeconds(duration / (flashCount * 2));
+    }
 
-        // 플래시 머터리얼 정리
-        if (flashMaterial != null)
+    // 플래시 머터리얼 정리
+    if (flashMaterial != null)
+    {
+        DestroyImmediate(flashMaterial);
+    }
+}
+
+// URP 호환 플래시 머터리얼 생성 메서드 (새로 추가)
+private Material CreateURPFlashMaterial()
+{
+    Shader urpShader = null;
+    
+    // URP 셰이더 찾기 (우선순위 순)
+    string[] urpShaderNames = {
+        "Universal Render Pipeline/Lit",
+        "Universal Render Pipeline/Simple Lit", 
+        "Universal Render Pipeline/Unlit"
+    };
+    
+    foreach (string shaderName in urpShaderNames)
+    {
+        urpShader = Shader.Find(shaderName);
+        if (urpShader != null)
         {
-            DestroyImmediate(flashMaterial);
+            break;
         }
     }
+    
+    // URP 셰이더를 찾지 못한 경우
+    if (urpShader == null)
+    {
+        Debug.LogError("URP 셰이더를 찾을 수 없습니다!");
+        return null;
+    }
+    
+    // 플래시 머터리얼 생성
+    Material flashMaterial = new Material(urpShader);
+    flashMaterial.color = Color.white;
+    
+    // URP Lit 셰이더인 경우 추가 속성 설정
+    if (urpShader.name.Contains("Lit"))
+    {
+        if (flashMaterial.HasProperty("_Metallic"))
+            flashMaterial.SetFloat("_Metallic", 0f);
+        if (flashMaterial.HasProperty("_Smoothness"))
+            flashMaterial.SetFloat("_Smoothness", 1f);
+    }
+    
+    return flashMaterial;
+}
 
     // Ease Out Elastic 이징 함수
     private float EaseOutElastic(float t)
