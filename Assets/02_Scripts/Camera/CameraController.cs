@@ -7,7 +7,12 @@ public class CameraController : MonoBehaviour
     public float minZoom = 50f; // 가장 축소됐을 때의 FOV (더 넓은 시야)
     public float maxZoom = 20f; // 가장 확대됐을 때의 FOV (더 좁은 시야)
     public float mouseDragSpeed = 0.5f;
-
+  [Header("카메라 이동 제한")]
+    public bool limitCameraMovement = true;
+    public float minX = -500f;  // 최소 X 좌표
+    public float maxX = 500f;   // 최대 X 좌표
+    public float minZ = -500f;  // 최소 Z 좌표
+    public float maxZ = 500f;   // 최대 Z 좌표
     private Camera childCamera;
     private Vector3 lastPanPosition;
     private int fingerId = -1;
@@ -42,6 +47,12 @@ public class CameraController : MonoBehaviour
         else
         {
             HandleEditorInput();
+        }
+
+         // 카메라 위치 제한 적용
+        if (limitCameraMovement)
+        {
+            ClampCameraPosition();
         }
     }
 
@@ -117,7 +128,14 @@ public class CameraController : MonoBehaviour
             lastPanPosition = touch.position;
         }
     }
-
+  // 새로 추가된 메서드
+    void ClampCameraPosition()
+    {
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
+        transform.position = pos;
+    }
     void ZoomCamera()
     {
         Touch touch1 = Input.GetTouch(0);

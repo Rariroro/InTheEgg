@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 5433342947431373122}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 83.8, y: 100, z: 66}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -50,6 +50,11 @@ MonoBehaviour:
   minZoom: 80
   maxZoom: 20
   mouseDragSpeed: 0.5
+  limitCameraMovement: 1
+  minX: -500
+  maxX: 500
+  minZ: -500
+  maxZ: 500
 --- !u!1 &6462139813891871305
 GameObject:
   m_ObjectHideFlags: 0

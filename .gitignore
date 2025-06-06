@@ -79,3 +79,5 @@ Assets/TerrainSampleAssets/
 Assets/LeanTween/
 Assets/etc/
 Assets/Layer Lab/
+mono_crash.*
+*.tmp

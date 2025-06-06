@@ -10,21 +10,21 @@ public class PlaneGroup
     public bool useAlternativeTexture = false;
     [Tooltip("이 그룹에 속한 플레인 오브젝트들")]
     public List<GameObject> planes = new List<GameObject>();
-    
+
     // 이전 토글 상태 (변경 감지용)
     [HideInInspector]
     public bool previousToggleState = false;
-    
+
     // 그룹 내 플레인에 영향받는 지형 포인트 및 알파맵 좌표
     [HideInInspector]
     public List<Vector3> affectedTerrainPoints = new List<Vector3>();
     [HideInInspector]
     public List<Vector2Int> affectedAlphamapPoints = new List<Vector2Int>();
-    
+
     // 각 플레인별 영향 포인트 (디버깅용)
     [HideInInspector]
     public Dictionary<GameObject, List<Vector3>> planeTerrainPoints = new Dictionary<GameObject, List<Vector3>>();
-    
+
     // 원본 텍스처 데이터
     [HideInInspector]
     public float[,,] savedSplatmapData;
@@ -218,7 +218,8 @@ public class TerrainTextureSwitchManager : MonoBehaviour
             ApplyAllGroupChanges();
         }
 
-        // 디버그 시각화
+        // 에디터에서만 디버그 시각화
+#if UNITY_EDITOR
         if (showDebugVisuals)
         {
             for (int i = 0; i < planeGroups.Count; i++)
@@ -246,6 +247,8 @@ public class TerrainTextureSwitchManager : MonoBehaviour
                 }
             }
         }
+#endif
+
     }
 
     // 모든 그룹의 변경사항을 한 번에 적용하는 최적화된 함수
@@ -762,74 +765,74 @@ public class TerrainTextureSwitchManager : MonoBehaviour
 
         return worldPos;
     }
-    
-public void DisableGroupByEnvironmentId(string environmentId)
-{
-    string groupName = ConvertEnvironmentIdToGroupName(environmentId);
-    Debug.Log($"환경 ID '{environmentId}'를 그룹명 '{groupName}'으로 변환");
-    
-    bool groupFound = false;
-    for (int i = 0; i < planeGroups.Count; i++)
+
+    public void DisableGroupByEnvironmentId(string environmentId)
     {
-        Debug.Log($"그룹 {i}: '{planeGroups[i].groupName}' vs '{groupName}'");
-        if (planeGroups[i].groupName == groupName)
+        string groupName = ConvertEnvironmentIdToGroupName(environmentId);
+        Debug.Log($"환경 ID '{environmentId}'를 그룹명 '{groupName}'으로 변환");
+
+        bool groupFound = false;
+        for (int i = 0; i < planeGroups.Count; i++)
         {
-            planeGroups[i].useAlternativeTexture = false;
-            planeGroups[i].previousToggleState = false;
-            groupFound = true;
-            
-            // 즉시 변경사항 적용
-            ApplyAllGroupChanges();
-            
-            Debug.Log($"환경 {environmentId}에 해당하는 그룹 '{groupName}' 토글을 껐습니다.");
-            break;
+            Debug.Log($"그룹 {i}: '{planeGroups[i].groupName}' vs '{groupName}'");
+            if (planeGroups[i].groupName == groupName)
+            {
+                planeGroups[i].useAlternativeTexture = false;
+                planeGroups[i].previousToggleState = false;
+                groupFound = true;
+
+                // 즉시 변경사항 적용
+                ApplyAllGroupChanges();
+
+                Debug.Log($"환경 {environmentId}에 해당하는 그룹 '{groupName}' 토글을 껐습니다.");
+                break;
+            }
+        }
+
+        if (!groupFound)
+        {
+            Debug.LogError($"환경 {environmentId}에 해당하는 그룹 '{groupName}'을 찾을 수 없습니다!");
         }
     }
-    
-    if (!groupFound)
+
+    /// <summary>
+    /// 환경 ID를 플레인 그룹 이름으로 변환
+    /// </summary>
+    private string ConvertEnvironmentIdToGroupName(string environmentId)
     {
-        Debug.LogError($"환경 {environmentId}에 해당하는 그룹 '{groupName}'을 찾을 수 없습니다!");
+        // env_foodstore -> foodstoreEnvironment
+        if (environmentId.StartsWith("env_"))
+        {
+            string baseName = environmentId.Substring(4); // "env_" 제거
+            return baseName + "Environment";
+        }
+        return environmentId;
     }
-}
 
-/// <summary>
-/// 환경 ID를 플레인 그룹 이름으로 변환
-/// </summary>
-private string ConvertEnvironmentIdToGroupName(string environmentId)
-{
-    // env_foodstore -> foodstoreEnvironment
-    if (environmentId.StartsWith("env_"))
+    /// <summary>
+    /// TerrainTextureSwitchManager 인스턴스를 가져오는 정적 메서드
+    /// </summary>
+    public static TerrainTextureSwitchManager GetInstance()
     {
-        string baseName = environmentId.Substring(4); // "env_" 제거
-        return baseName + "Environment";
+        return FindObjectOfType<TerrainTextureSwitchManager>();
     }
-    return environmentId;
-}
 
-/// <summary>
-/// TerrainTextureSwitchManager 인스턴스를 가져오는 정적 메서드
-/// </summary>
-public static TerrainTextureSwitchManager GetInstance()
-{
-    return FindObjectOfType<TerrainTextureSwitchManager>();
-}
+    /// <summary>
+    /// 선택된 모든 환경에 대해 토글을 끄는 메서드
+    /// </summary>
+    // public void DisableSelectedEnvironmentGroups()
+    // {
+    //     if (EnvironmentSelectionManager.Instance != null)
+    //     {
+    //         foreach (string environmentId in EnvironmentSelectionManager.Instance.selectedEnvironmentIds)
+    //         {
+    //             DisableGroupByEnvironmentId(environmentId);
+    //         }
 
-/// <summary>
-/// 선택된 모든 환경에 대해 토글을 끄는 메서드
-/// </summary>
-// public void DisableSelectedEnvironmentGroups()
-// {
-//     if (EnvironmentSelectionManager.Instance != null)
-//     {
-//         foreach (string environmentId in EnvironmentSelectionManager.Instance.selectedEnvironmentIds)
-//         {
-//             DisableGroupByEnvironmentId(environmentId);
-//         }
-        
-//         // 변경사항 즉시 적용
-//         ApplyAllGroupChanges();
-        
-//         Debug.Log($"선택된 {EnvironmentSelectionManager.Instance.selectedEnvironmentIds.Count}개 환경의 토글을 껐습니다.");
-//     }
-// }
+    //         // 변경사항 즉시 적용
+    //         ApplyAllGroupChanges();
+
+    //         Debug.Log($"선택된 {EnvironmentSelectionManager.Instance.selectedEnvironmentIds.Count}개 환경의 토글을 껐습니다.");
+    //     }
+    // }
 }
