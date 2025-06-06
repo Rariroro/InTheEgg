@@ -158,75 +158,72 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
     }
     
     void DropItem(Vector3 dropPosition)
+{
+    Debug.Log($"[DropItem] currentItemType='{currentItemType}'");
+
+    // (1) currentItemType 자체가 유효하지 않을 때 즉시 종료
+    if (string.IsNullOrEmpty(currentItemType) 
+        || !itemPrefabs.ContainsKey(currentItemType) 
+        || !itemCounts.ContainsKey(currentItemType))
     {
-        // 안전성 검사 추가
-        if (string.IsNullOrEmpty(currentItemType))
-        {
-            Debug.LogError("현재 아이템 타입이 설정되지 않았습니다!");
-            CancelDropMode();
-            return;
-        }
-        
-        if (!itemPrefabs.ContainsKey(currentItemType))
-        {
-            Debug.LogError($"아이템 프리팹 딕셔너리에 '{currentItemType}'이 없습니다!");
-            CancelDropMode();
-            return;
-        }
-        
-        if (itemPrefabs[currentItemType] == null)
-        {
-            Debug.LogError($"아이템 프리팹이 할당되지 않았습니다: {currentItemType}");
-            CancelDropMode();
-            return;
-        }
-        
-        if (!itemCounts.ContainsKey(currentItemType))
-        {
-            Debug.LogError($"아이템 카운트에 '{currentItemType}'이 없습니다!");
-            CancelDropMode();
-            return;
-        }
-        
-        // 드롭 위치 설정 (높이 추가)
-        Vector3 spawnPosition = dropPosition + Vector3.up * dropHeight;
-        
-        // 아이템 생성
-        GameObject item = Instantiate(itemPrefabs[currentItemType], spawnPosition, Quaternion.identity);
-        
-        // Rigidbody 추가 (떨어지는 효과)
-        Rigidbody rb = item.GetComponent<Rigidbody>();
-        if (rb == null)
-        {
-            rb = item.AddComponent<Rigidbody>();
-        }
-        rb.mass = 1f;
-        rb.linearDamping = 0.5f;
-        rb.angularDamping = 0.5f;
-        
-        // 약간의 랜덤 회전 추가
-        rb.AddTorque(Random.insideUnitSphere * dropForce, ForceMode.Impulse);
-        
-        // 아이템 개수 감소
-        itemCounts[currentItemType]--;
-        UpdateItemButton(currentItemType);
-        
-        Debug.Log($"아이템 드롭 완료: {currentItemType}, 남은 개수: {itemCounts[currentItemType]}");
-        
-        // 드롭 모드 해제
+        Debug.LogError($"DropItem 방어: '{currentItemType}'이 유효하지 않음");
         CancelDropMode();
-        
-        // 아이템이 0개가 되면 버튼 제거
-        if (itemCounts[currentItemType] <= 0)
-        {
-            if (itemButtons.ContainsKey(currentItemType))
-            {
-                Destroy(itemButtons[currentItemType].gameObject);
-                itemButtons.Remove(currentItemType);
-                itemCounts.Remove(currentItemType);
-            }
-        }
+        return;
     }
+
+    // ★ currentItemType을 로컬 변수로 보존
+    string itemTypeToProcess = currentItemType;
+
+    // (2) 프리팹 안전하게 꺼내기
+    GameObject prefab;
+    if (!itemPrefabs.TryGetValue(itemTypeToProcess, out prefab) || prefab == null)
+    {
+        Debug.LogError($"아이템 프리팹이 없거나 할당되지 않음: '{itemTypeToProcess}'");
+        CancelDropMode();
+        return;
+    }
+
+    // (3) 아이템 생성 처리
+    Vector3 spawnPosition = dropPosition + Vector3.up * dropHeight;
+    GameObject item = Instantiate(prefab, spawnPosition, Quaternion.identity);
+    Rigidbody rb = item.GetComponent<Rigidbody>();
+    if (rb == null) rb = item.AddComponent<Rigidbody>();
+    rb.mass = 1f;
+    rb.linearDamping = 0.5f;
+    rb.angularDamping = 0.5f;
+    rb.AddTorque(Random.insideUnitSphere * dropForce, ForceMode.Impulse);
+
+    // (4) 개수 감소
+    if (itemCounts.ContainsKey(itemTypeToProcess))
+    {
+        itemCounts[itemTypeToProcess]--;
+        UpdateItemButton(itemTypeToProcess);
+        Debug.Log($"아이템 드롭 완료: {itemTypeToProcess}, 남은 개수: {itemCounts[itemTypeToProcess]}");
+    }
+    else
+    {
+        Debug.LogError($"개수 감소 도중 '{itemTypeToProcess}' 키를 찾을 수 없음");
+        CancelDropMode();
+        return;
+    }
+
+    // (5) 드롭 모드 해제
+    CancelDropMode();
+
+    // (6) 남은 개수가 0이하일 경우 버튼 제거 - 보존된 itemTypeToProcess 사용
+    if (itemCounts.ContainsKey(itemTypeToProcess) && itemCounts[itemTypeToProcess] <= 0)
+    {
+        if (itemButtons.ContainsKey(itemTypeToProcess))
+        {
+            Destroy(itemButtons[itemTypeToProcess].gameObject);
+            itemButtons.Remove(itemTypeToProcess);
+        }
+        // 버튼 제거 후 itemCounts에서도 키를 지운다
+        itemCounts.Remove(itemTypeToProcess);
+        Debug.Log($"아이템 '{itemTypeToProcess}' 개수가 0이므로 버튼과 딕셔너리에서 제거함");
+    }
+}
+
     
     void UpdateItemButton(string itemType)
     {
