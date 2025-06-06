@@ -33,10 +33,23 @@ public class EnvironmentManager : MonoBehaviour
     
     // 대기 중인 선물들과 해당 환경 정보를 저장하는 딕셔너리
     private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
+    
+    // TerrainTextureSwitchManager 캐싱
+    private TerrainTextureSwitchManager terrainManager;
+    
+    // 터치 처리 최적화를 위한 변수
+    private float lastTouchTime;
+    private const float TOUCH_COOLDOWN = 0.1f; // 터치 쿨다운
 
     private void Awake()
     {
         // 딕셔너리 초기화
+        InitializeEnvironmentPrefabs();
+    }
+
+    private void InitializeEnvironmentPrefabs()
+    {
+        environmentPrefabs.Clear();
         environmentPrefabs.Add("env_foodstore", foodstoreEnvironment);
         environmentPrefabs.Add("env_orchard", orchardEnvironment);
         environmentPrefabs.Add("env_berryfield", berryfieldEnvironment);
@@ -52,145 +65,113 @@ public class EnvironmentManager : MonoBehaviour
         environmentPrefabs.Add("env_fence", fenceEnvironment);
     }
 
-  // EnvironmentManager.cs의 Start() 메서드 수정
-// EnvironmentManager.cs 수정
-
-
-// EnvironmentManager.cs의 Start() 메서드 수정
-private void Start()
-{
-    // EnvironmentSelectionManager가 존재하는지 확인
-    if (EnvironmentSelectionManager.Instance != null)
+    private void Start()
     {
-        // TerrainTextureSwitchManager 초기화 완료 후 환경 스폰
-        StartCoroutine(WaitForTerrainManagerAndSpawn());
-    }
-    else
-    {
-        Debug.LogWarning("EnvironmentSelectionManager가 없습니다.");
-    }
-}
-
-// 새로 추가할 코루틴
-private IEnumerator WaitForTerrainManagerAndSpawn()
-{
-    // TerrainTextureSwitchManager가 준비될 때까지 대기
-    TerrainTextureSwitchManager terrainManager = null;
-    float waitTime = 0f;
-    float maxWaitTime = 5f; // 최대 5초 대기
-    
-    while (terrainManager == null && waitTime < maxWaitTime)
-    {
-        terrainManager = TerrainTextureSwitchManager.GetInstance();
-        if (terrainManager == null)
+        // EnvironmentSelectionManager가 존재하는지 확인
+        if (EnvironmentSelectionManager.Instance != null)
         {
-            yield return new WaitForSeconds(0.1f);
-            waitTime += 0.1f;
+            // TerrainTextureSwitchManager 초기화 완료 후 환경 스폰
+            StartCoroutine(WaitForTerrainManagerAndSpawn());
+        }
+        else
+        {
+            Debug.LogWarning("EnvironmentSelectionManager가 없습니다.");
         }
     }
-    
-    if (terrainManager == null)
+
+    private IEnumerator WaitForTerrainManagerAndSpawn()
     {
-        Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
-        yield break;
+        // TerrainTextureSwitchManager가 준비될 때까지 대기
+        float waitTime = 0f;
+        const float maxWaitTime = 5f; // 최대 5초 대기
+        
+        while (terrainManager == null && waitTime < maxWaitTime)
+        {
+            terrainManager = TerrainTextureSwitchManager.GetInstance();
+            if (terrainManager == null)
+            {
+                yield return new WaitForSeconds(0.1f);
+                waitTime += 0.1f;
+            }
+        }
+        
+        if (terrainManager == null)
+        {
+            Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+            yield break;
+        }
+        
+        // TerrainTextureSwitchManager의 초기화가 완료될 때까지 추가 대기
+        yield return new WaitForSeconds(0.2f);
+        
+        // 이제 환경 스폰 시작
+        yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
     }
-    
-    // TerrainTextureSwitchManager의 초기화가 완료될 때까지 추가 대기
-    yield return new WaitForSeconds(0.2f);
-    
-    // 이제 환경 스폰 시작
-    yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
-}
-
-
 
     private void Update()
     {
+        // 선물이 없으면 Update 실행하지 않음
+        if (pendingGifts.Count == 0) return;
+        
+        // 터치 쿨다운 체크
+        if (Time.time - lastTouchTime < TOUCH_COOLDOWN) return;
+        
         // 선물 터치 감지
         HandleGiftTouch();
     }
-// SpawnEnvironment() 메서드에 디버깅 강화
-private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
-{
-    // 환경 ID에 해당하는 프리팹 가져오기
-    if (!environmentPrefabs.ContainsKey(environmentId))
-    {
-        Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
-        return;
-    }
-    
-    GameObject prefab = environmentPrefabs[environmentId];
-    
-    // 프리팹 존재 여부 확인
-    if (prefab == null)
-    {
-        Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
-        return;
-    }
-    
-    // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
-    GameObject environment = Instantiate(prefab);
 
-    // TerrainTextureSwitchManager에서 해당 환경의 토글 끄기
-    TerrainTextureSwitchManager terrainManager = TerrainTextureSwitchManager.GetInstance();
-    if (terrainManager != null)
+    private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
     {
-        Debug.Log($"환경 {environmentId} 스폰 - 토글 끄기 시도 중...");
-        terrainManager.DisableGroupByEnvironmentId(environmentId);
-        Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
-    }
-    else
-    {
-        Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
-    }
-
-    if (withFirstAppearanceEffect)
-    {
-        ApplyFirstAppearanceEffect(environment);
-        Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
-    }
-    else
-    {
-        Debug.Log($"일반 환경 생성 완료: {environmentId}");
-    }
-}
-
-// 선물을 여는 코루틴 - 수정됨
-private IEnumerator OpenGift(GameObject gift, string environmentId)
-{
-    // 선물을 대기 목록에서 제거
-    pendingGifts.Remove(gift);
-
-    // 축하 효과 파티클 실행
-    if (celebrationEffectPrefab != null)
-    {
-        GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
+        // 환경 ID에 해당하는 프리팹 가져오기
+        if (!environmentPrefabs.ContainsKey(environmentId))
+        {
+            Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
+            return;
+        }
         
-        // 축하 효과 크기 조정
-        float scale = 1.5f;
-        celebration.transform.localScale = Vector3.one * scale;
+        GameObject prefab = environmentPrefabs[environmentId];
         
-        // 5초 후 축하 효과 제거
-        Destroy(celebration, 5f);
+        // 프리팹 존재 여부 확인
+        if (prefab == null)
+        {
+            Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
+            return;
+        }
+        
+        // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
+        GameObject environment = Instantiate(prefab);
+
+        // TerrainTextureSwitchManager에서 해당 환경의 토글 끄기
+        if (terrainManager != null)
+        {
+            terrainManager.DisableGroupByEnvironmentId(environmentId);
+            Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
+        }
+        else
+        {
+            Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+        }
+
+        if (withFirstAppearanceEffect)
+        {
+            ApplyFirstAppearanceEffect(environment);
+            Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
+        }
+        else
+        {
+            Debug.Log($"일반 환경 생성 완료: {environmentId}");
+        }
     }
 
-    // 선물 제거 애니메이션
-    yield return StartCoroutine(RemoveGiftWithAnimation(gift));
-
-    // 잠시 대기
-    yield return new WaitForSeconds(0.5f);
-
-    // 환경 스폰 (이 시점에서 SpawnEnvironment 내부에서 토글이 꺼짐)
-    SpawnEnvironment(environmentId, true);
-
-    Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
-}
-
-    // 선물 터치를 처리하는 메서드
     private void HandleGiftTouch()
     {
         if (Input.GetMouseButtonDown(0))
         {
+            lastTouchTime = Time.time;
+            
+            // 카메라가 없으면 처리하지 않음
+            if (Camera.main == null) return;
+            
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -208,42 +189,40 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         }
     }
 
-    // 선물을 여는 코루틴
-    // private IEnumerator OpenGift(GameObject gift, string environmentId)
-    // {
-    //     // 선물을 대기 목록에서 제거
-    //     pendingGifts.Remove(gift);
+    private IEnumerator OpenGift(GameObject gift, string environmentId)
+    {
+        // 선물을 대기 목록에서 제거
+        pendingGifts.Remove(gift);
 
-    //     // 축하 효과 파티클 실행
-    //     if (celebrationEffectPrefab != null)
-    //     {
-    //         GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
+        // 축하 효과 파티클 실행
+        if (celebrationEffectPrefab != null)
+        {
+            GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
             
-    //         // 축하 효과 크기 조정
-    //         float scale = 1.5f;
-    //         celebration.transform.localScale = Vector3.one * scale;
+            // 축하 효과 크기 조정
+            const float scale = 1.5f;
+            celebration.transform.localScale = Vector3.one * scale;
             
-    //         // 5초 후 축하 효과 제거
-    //         Destroy(celebration, 5f);
-    //     }
+            // 5초 후 축하 효과 제거
+            Destroy(celebration, 5f);
+        }
 
-    //     // 선물 제거 애니메이션
-    //     yield return StartCoroutine(RemoveGiftWithAnimation(gift));
+        // 선물 제거 애니메이션
+        yield return StartCoroutine(RemoveGiftWithAnimation(gift));
 
-    //     // 잠시 대기
-    //     yield return new WaitForSeconds(0.5f);
+        // 잠시 대기
+        yield return new WaitForSeconds(0.5f);
 
-    //     // 환경 스폰
-    //     SpawnEnvironment(environmentId, true);
+        // 환경 스폰 (이 시점에서 SpawnEnvironment 내부에서 토글이 꺼짐)
+        SpawnEnvironment(environmentId, true);
 
-    //     Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
-    // }
+        Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
+    }
 
-    // 선물 제거 애니메이션 코루틴
     private IEnumerator RemoveGiftWithAnimation(GameObject gift)
     {
         Vector3 originalScale = gift.transform.localScale;
-        float duration = 0.5f;
+        const float duration = 0.5f;
         float elapsed = 0f;
 
         // 선물이 회전하면서 사라지는 효과
@@ -268,14 +247,13 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         Destroy(gift);
     }
 
-    // 선택된 환경을 효과와 함께 스폰하는 코루틴 (수정됨)
     private IEnumerator SpawnSelectedEnvironmentsWithEffects()
     {
         List<string> selectedIds = EnvironmentSelectionManager.Instance.selectedEnvironmentIds;
         
         Debug.Log($"선택된 환경 수: {selectedIds.Count}");
         
-        // 선택된 환경이 없어도 괜찮음 (하나도 선택하지 않은 경우)
+        // 선택된 환경이 없어도 괜찮음
         if (selectedIds.Count == 0)
         {
             Debug.Log("선택된 환경이 없습니다. 기본 지형만 사용합니다.");
@@ -312,7 +290,6 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         }
     }
 
-    // 환경을 위한 선물을 스폰하는 메서드
     private void SpawnGiftForEnvironment(string environmentId)
     {
         // 환경 ID에 해당하는 프리팹 가져오기
@@ -357,7 +334,6 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         Debug.Log($"환경용 선물 생성 완료: {environmentId} at {giftPosition}");
     }
 
-    // 선물 회전 애니메이션 코루틴
     private IEnumerator RotateGift(GameObject gift)
     {
         while (gift != null && pendingGifts.ContainsKey(gift))
@@ -366,49 +342,12 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
             
             // 약간의 위아래 흔들림 효과
             float bobbing = Mathf.Sin(Time.time * 2f) * 0.1f;
-            Vector3 originalPos = gift.transform.position;
-            originalPos.y += bobbing * Time.deltaTime;
-            gift.transform.position = originalPos;
+            gift.transform.position += Vector3.up * bobbing;
             
             yield return null;
         }
     }
-    
-    // // 지정된 ID의 환경 스폰 (효과 옵션 추가)
-    // private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
-    // {
-    //     // 환경 ID에 해당하는 프리팹 가져오기
-    //     if (!environmentPrefabs.ContainsKey(environmentId))
-    //     {
-    //         Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
-    //         return;
-    //     }
-        
-    //     GameObject prefab = environmentPrefabs[environmentId];
-        
-    //     // 프리팹 존재 여부 확인
-    //     if (prefab == null)
-    //     {
-    //         Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
-    //         return;
-    //     }
-        
-    //     // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
-    //     GameObject environment = Instantiate(prefab);
 
-    //     if (withFirstAppearanceEffect)
-    //     {
-    //         // 최초 등장 효과 적용
-    //         ApplyFirstAppearanceEffect(environment);
-    //         Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
-    //     }
-    //     else
-    //     {
-    //         Debug.Log($"일반 환경 생성 완료: {environmentId}");
-    //     }
-    // }
-
-    // 최초 등장 효과를 적용하는 메서드
     private void ApplyFirstAppearanceEffect(GameObject environment)
     {
         // 1. 파티클 효과 (프리팹이 있는 경우)
@@ -435,7 +374,6 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         StartCoroutine(FlashEffect(environment));
     }
 
-    // 환경 오브젝트의 바운드를 계산하는 메서드
     private Bounds GetEnvironmentBounds(GameObject environment)
     {
         Renderer[] renderers = environment.GetComponentsInChildren<Renderer>();
@@ -445,20 +383,19 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         }
 
         Bounds bounds = renderers[0].bounds;
-        foreach (Renderer renderer in renderers)
+        for (int i = 1; i < renderers.Length; i++)
         {
-            bounds.Encapsulate(renderer.bounds);
+            bounds.Encapsulate(renderers[i].bounds);
         }
         return bounds;
     }
 
-    // 스케일 인 효과 코루틴
     private IEnumerator ScaleInEffect(GameObject environment)
     {
         Vector3 originalScale = environment.transform.localScale;
         environment.transform.localScale = Vector3.zero;
 
-        float duration = 1.5f;
+        const float duration = 1.5f;
         float elapsed = 0f;
 
         while (elapsed < duration)
@@ -476,116 +413,117 @@ private IEnumerator OpenGift(GameObject gift, string environmentId)
         environment.transform.localScale = originalScale;
     }
 
-    // 플래시 효과 코루틴
-    // EnvironmentManager.cs의 FlashEffect 코루틴 수정
-
-// 플래시 효과 코루틴
-private IEnumerator FlashEffect(GameObject environment)
-{
-    Renderer[] renderers = environment.GetComponentsInChildren<Renderer>();
-    
-    // 원본 머터리얼 저장
-    Material[][] originalMaterials = new Material[renderers.Length][];
-    for (int i = 0; i < renderers.Length; i++)
+    private IEnumerator FlashEffect(GameObject environment)
     {
-        originalMaterials[i] = renderers[i].materials;
-    }
-
-    // URP 호환 흰색 머터리얼 생성
-    Material flashMaterial = CreateURPFlashMaterial();
-    
-    // flashMaterial이 생성되지 않았으면 플래시 효과 건너뛰기
-    if (flashMaterial == null)
-    {
-        Debug.LogWarning("URP 플래시 머터리얼을 생성할 수 없습니다. 플래시 효과를 건너뜁니다.");
-        yield break;
-    }
-
-    float duration = 0.5f;
-    int flashCount = 3;
-    
-    for (int flash = 0; flash < flashCount; flash++)
-    {
-        // 플래시 ON
-        foreach (Renderer renderer in renderers)
-        {
-            Material[] flashMaterials = new Material[renderer.materials.Length];
-            for (int j = 0; j < flashMaterials.Length; j++)
-            {
-                flashMaterials[j] = flashMaterial;
-            }
-            renderer.materials = flashMaterials;
-        }
+        Renderer[] renderers = environment.GetComponentsInChildren<Renderer>();
         
-        yield return new WaitForSeconds(duration / (flashCount * 2));
-        
-        // 플래시 OFF (원본 복원)
+        // 원본 머터리얼 저장
+        Material[][] originalMaterials = new Material[renderers.Length][];
         for (int i = 0; i < renderers.Length; i++)
         {
-            if (renderers[i] != null)
+            originalMaterials[i] = renderers[i].materials;
+        }
+
+        // URP 호환 흰색 머터리얼 생성
+        Material flashMaterial = CreateURPFlashMaterial();
+        
+        // flashMaterial이 생성되지 않았으면 플래시 효과 건너뛰기
+        if (flashMaterial == null)
+        {
+            Debug.LogWarning("URP 플래시 머터리얼을 생성할 수 없습니다. 플래시 효과를 건너뜁니다.");
+            yield break;
+        }
+
+        const float duration = 0.5f;
+        const int flashCount = 3;
+        
+        for (int flash = 0; flash < flashCount; flash++)
+        {
+            // 플래시 ON
+            foreach (Renderer renderer in renderers)
             {
-                renderers[i].materials = originalMaterials[i];
+                Material[] flashMaterials = new Material[renderer.materials.Length];
+                for (int j = 0; j < flashMaterials.Length; j++)
+                {
+                    flashMaterials[j] = flashMaterial;
+                }
+                renderer.materials = flashMaterials;
+            }
+            
+            yield return new WaitForSeconds(duration / (flashCount * 2));
+            
+            // 플래시 OFF (원본 복원)
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] != null)
+                {
+                    renderers[i].materials = originalMaterials[i];
+                }
+            }
+            
+            yield return new WaitForSeconds(duration / (flashCount * 2));
+        }
+
+        // 플래시 머터리얼 정리
+        if (flashMaterial != null)
+        {
+            DestroyImmediate(flashMaterial);
+        }
+    }
+
+    private Material CreateURPFlashMaterial()
+    {
+        Shader urpShader = null;
+        
+        // URP 셰이더 찾기 (우선순위 순)
+        string[] urpShaderNames = {
+            "Universal Render Pipeline/Lit",
+            "Universal Render Pipeline/Simple Lit", 
+            "Universal Render Pipeline/Unlit"
+        };
+        
+        foreach (string shaderName in urpShaderNames)
+        {
+            urpShader = Shader.Find(shaderName);
+            if (urpShader != null)
+            {
+                break;
             }
         }
         
-        yield return new WaitForSeconds(duration / (flashCount * 2));
-    }
-
-    // 플래시 머터리얼 정리
-    if (flashMaterial != null)
-    {
-        DestroyImmediate(flashMaterial);
-    }
-}
-
-// URP 호환 플래시 머터리얼 생성 메서드 (새로 추가)
-private Material CreateURPFlashMaterial()
-{
-    Shader urpShader = null;
-    
-    // URP 셰이더 찾기 (우선순위 순)
-    string[] urpShaderNames = {
-        "Universal Render Pipeline/Lit",
-        "Universal Render Pipeline/Simple Lit", 
-        "Universal Render Pipeline/Unlit"
-    };
-    
-    foreach (string shaderName in urpShaderNames)
-    {
-        urpShader = Shader.Find(shaderName);
-        if (urpShader != null)
+        // URP 셰이더를 찾지 못한 경우
+        if (urpShader == null)
         {
-            break;
+            Debug.LogError("URP 셰이더를 찾을 수 없습니다!");
+            return null;
         }
+        
+        // 플래시 머터리얼 생성
+        Material flashMaterial = new Material(urpShader);
+        flashMaterial.color = Color.white;
+        
+        // URP Lit 셰이더인 경우 추가 속성 설정
+        if (urpShader.name.Contains("Lit"))
+        {
+            if (flashMaterial.HasProperty("_Metallic"))
+                flashMaterial.SetFloat("_Metallic", 0f);
+            if (flashMaterial.HasProperty("_Smoothness"))
+                flashMaterial.SetFloat("_Smoothness", 1f);
+        }
+        
+        return flashMaterial;
     }
-    
-    // URP 셰이더를 찾지 못한 경우
-    if (urpShader == null)
-    {
-        Debug.LogError("URP 셰이더를 찾을 수 없습니다!");
-        return null;
-    }
-    
-    // 플래시 머터리얼 생성
-    Material flashMaterial = new Material(urpShader);
-    flashMaterial.color = Color.white;
-    
-    // URP Lit 셰이더인 경우 추가 속성 설정
-    if (urpShader.name.Contains("Lit"))
-    {
-        if (flashMaterial.HasProperty("_Metallic"))
-            flashMaterial.SetFloat("_Metallic", 0f);
-        if (flashMaterial.HasProperty("_Smoothness"))
-            flashMaterial.SetFloat("_Smoothness", 1f);
-    }
-    
-    return flashMaterial;
-}
 
-    // Ease Out Elastic 이징 함수
     private float EaseOutElastic(float t)
     {
-        float c4 = (2f * Mathf.PI) / 3f;
+        const float c4 = (2f * Mathf.PI) / 3f;
         return t == 0f ? 0f : t == 1f ? 1f : Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
+    }
+    
+    private void OnDestroy()
+    {
+        // 정리 작업
+        pendingGifts.Clear();
+        environmentPrefabs.Clear();
     }
 }
