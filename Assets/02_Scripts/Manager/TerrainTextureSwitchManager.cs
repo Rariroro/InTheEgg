@@ -46,14 +46,31 @@ public class TerrainTextureSwitchManager : MonoBehaviour
     // 모든 영향받는 알파맵 좌표를 추적하는 딕셔너리
     // 키: 알파맵 좌표, 값: 해당 좌표에 영향을 주는 그룹들의 인덱스 목록
     private Dictionary<Vector2Int, List<int>> affectedCoordinatesMap = new Dictionary<Vector2Int, List<int>>();
-    
-    void Start()
+      [Header("초기화 설정")]
+    [Tooltip("시작 시 모든 토글을 자동으로 켤 것인지")]
+    public bool autoEnableAllTogglesOnStart = true;
+
+
+       // 런타임용 임시 TerrainData 추가
+    private TerrainData runtimeTerrainData;
+    private TerrainData originalTerrainData;
+       void Start()
     {
-        if (targetTerrain == null)
+      if (targetTerrain == null)
         {
             Debug.LogError("대상 지형이 할당되지 않았습니다!");
             return;
         }
+
+        // 원본 TerrainData 보존
+        originalTerrainData = targetTerrain.terrainData;
+         // 런타임용 TerrainData 복사본 생성 (에디터에서 저장하지 않도록 플래그 설정)
+    runtimeTerrainData = Instantiate(originalTerrainData);
+    runtimeTerrainData.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild; // 추가
+    targetTerrain.terrainData = runtimeTerrainData;
+        // 런타임용 TerrainData 복사본 생성
+        runtimeTerrainData = Instantiate(originalTerrainData);
+        targetTerrain.terrainData = runtimeTerrainData;
 
         if (planeGroups.Count == 0)
         {
@@ -62,7 +79,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         }
 
         // 지형 데이터 가져오기
-        TerrainData terrainData = targetTerrain.terrainData;
+TerrainData terrainData = targetTerrain.terrainData; // 이제 복사본 사용
         alphamapWidth = terrainData.alphamapWidth;
         alphamapHeight = terrainData.alphamapHeight;
 
@@ -72,13 +89,112 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         // 중첩 영역 맵 구축
         BuildOverlappingAreasMap();
         
-        // 각 그룹별로 초기 상태 저장
+        // 각 그룹별로 초기 상태 저장 (현재 지형 상태를 원본으로 저장)
         for (int i = 0; i < planeGroups.Count; i++)
         {
             SaveOriginalTextureForGroup(i);
         }
+
+        // 시작 시 모든 토글을 켜서 환경을 얻지 못한 상태로 만들기
+        if (autoEnableAllTogglesOnStart)
+        {
+            for (int i = 0; i < planeGroups.Count; i++)
+            {
+                planeGroups[i].useAlternativeTexture = true;
+                planeGroups[i].previousToggleState = true;
+            }
+            
+            // 모든 변경사항 적용
+            ApplyAllGroupChanges();
+        }
     }
 
+    // OnApplicationQuit 또는 OnDestroy에서 원본 텍스처로 복원
+    void OnApplicationQuit()
+    {
+        RestoreAllOriginalTextures();
+    }
+
+  void OnDestroy()
+    {
+        // 원본 TerrainData로 복원 (선택사항)
+        if (targetTerrain != null && originalTerrainData != null)
+        {
+            targetTerrain.terrainData = originalTerrainData;
+        }
+        
+        // 런타임 데이터 정리
+        if (runtimeTerrainData != null)
+        {
+            #if UNITY_EDITOR
+            DestroyImmediate(runtimeTerrainData);
+            #else
+            Destroy(runtimeTerrainData);
+            #endif
+        }
+    }
+
+    // 모든 텍스처를 원본으로 복원하는 메서드 추가
+    private void RestoreAllOriginalTextures()
+    {
+        if (targetTerrain == null) return;
+        
+        TerrainData terrainData = targetTerrain.terrainData;
+        float[,,] splatmapData = terrainData.GetAlphamaps(0, 0, alphamapWidth, alphamapHeight);
+        
+        // 모든 그룹의 토글을 끄고 원본 복원
+        for (int i = 0; i < planeGroups.Count; i++)
+        {
+            planeGroups[i].useAlternativeTexture = false;
+            planeGroups[i].previousToggleState = false;
+        }
+        
+        // 모든 영향받는 좌표를 원본으로 복원
+        foreach (var kvp in affectedCoordinatesMap)
+        {
+            Vector2Int alphaCoord = kvp.Key;
+            
+            // 첫 번째 그룹의 저장된 원본 데이터 사용
+            if (kvp.Value.Count > 0 && planeGroups.Count > kvp.Value[0])
+            {
+                PlaneGroup firstGroup = planeGroups[kvp.Value[0]];
+                if (firstGroup.savedSplatmapData != null)
+                {
+                    for (int layer = 0; layer < terrainData.alphamapLayers; layer++)
+                    {
+                        splatmapData[alphaCoord.y, alphaCoord.x, layer] = 
+                            firstGroup.savedSplatmapData[alphaCoord.y, alphaCoord.x, layer];
+                    }
+                }
+            }
+        }
+        
+        // 변경사항 적용
+        terrainData.SetAlphamaps(0, 0, splatmapData);
+        
+        Debug.Log("모든 지형 텍스처가 원본으로 복원되었습니다.");
+    }
+
+    /// <summary>
+/// 모든 그룹의 토글을 끄고 원본 텍스처로 복원하는 메서드
+/// 나중에 삭제
+/// </summary>
+public void ResetAllTogglesToOff()
+{
+    Debug.Log("모든 환경 토글을 끕니다.");
+    
+    // 모든 그룹의 토글을 끄기
+    for (int i = 0; i < planeGroups.Count; i++)
+    {
+        planeGroups[i].useAlternativeTexture = false;
+        planeGroups[i].previousToggleState = false;
+    }
+    
+    // 모든 변경사항 적용 (원본 텍스처로 복원됨)
+    ApplyAllGroupChanges();
+    
+    Debug.Log("모든 환경이 원본 상태로 복원되었습니다.");
+}
     void Update()
     {
         bool anyGroupChanged = false;

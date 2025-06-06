@@ -59,19 +59,19 @@ public class CameraController : MonoBehaviour
 
     void HandleEditorInput()
     {
-        // if (Input.GetMouseButtonDown(0))
-        // {
-        //     // Debug.Log("HandleEditorInput :1");
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Debug.Log("HandleEditorInput :1");
 
-        //     isDragging = true;
-        //     lastMousePosition = Input.mousePosition;
-        // }
-        // else if (Input.GetMouseButtonUp(0))
-        // {
-        //     // Debug.Log("HandleEditorInput :2");
+            isDragging = true;
+            lastMousePosition = Input.mousePosition;
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            // Debug.Log("HandleEditorInput :2");
 
-        //     isDragging = false;
-        // }
+            isDragging = false;
+        }
 
         if (isDragging)
         {
