@@ -52,25 +52,139 @@ public class EnvironmentManager : MonoBehaviour
         environmentPrefabs.Add("env_fence", fenceEnvironment);
     }
 
-    private void Start()
+  // EnvironmentManager.cs의 Start() 메서드 수정
+// EnvironmentManager.cs 수정
+
+
+// EnvironmentManager.cs의 Start() 메서드 수정
+private void Start()
+{
+    // EnvironmentSelectionManager가 존재하는지 확인
+    if (EnvironmentSelectionManager.Instance != null)
     {
-        // EnvironmentSelectionManager가 존재하는지 확인
-        if (EnvironmentSelectionManager.Instance != null)
+        // TerrainTextureSwitchManager 초기화 완료 후 환경 스폰
+        StartCoroutine(WaitForTerrainManagerAndSpawn());
+    }
+    else
+    {
+        Debug.LogWarning("EnvironmentSelectionManager가 없습니다.");
+    }
+}
+
+// 새로 추가할 코루틴
+private IEnumerator WaitForTerrainManagerAndSpawn()
+{
+    // TerrainTextureSwitchManager가 준비될 때까지 대기
+    TerrainTextureSwitchManager terrainManager = null;
+    float waitTime = 0f;
+    float maxWaitTime = 5f; // 최대 5초 대기
+    
+    while (terrainManager == null && waitTime < maxWaitTime)
+    {
+        terrainManager = TerrainTextureSwitchManager.GetInstance();
+        if (terrainManager == null)
         {
-            // 선택된 환경을 효과와 함께 스폰
-            StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
-        }
-        else
-        {
-            Debug.LogWarning("EnvironmentSelectionManager가 없습니다.");
+            yield return new WaitForSeconds(0.1f);
+            waitTime += 0.1f;
         }
     }
+    
+    if (terrainManager == null)
+    {
+        Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+        yield break;
+    }
+    
+    // TerrainTextureSwitchManager의 초기화가 완료될 때까지 추가 대기
+    yield return new WaitForSeconds(0.2f);
+    
+    // 이제 환경 스폰 시작
+    yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
+}
+
+
 
     private void Update()
     {
         // 선물 터치 감지
         HandleGiftTouch();
     }
+// SpawnEnvironment() 메서드에 디버깅 강화
+private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
+{
+    // 환경 ID에 해당하는 프리팹 가져오기
+    if (!environmentPrefabs.ContainsKey(environmentId))
+    {
+        Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
+        return;
+    }
+    
+    GameObject prefab = environmentPrefabs[environmentId];
+    
+    // 프리팹 존재 여부 확인
+    if (prefab == null)
+    {
+        Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
+        return;
+    }
+    
+    // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
+    GameObject environment = Instantiate(prefab);
+
+    // TerrainTextureSwitchManager에서 해당 환경의 토글 끄기
+    TerrainTextureSwitchManager terrainManager = TerrainTextureSwitchManager.GetInstance();
+    if (terrainManager != null)
+    {
+        Debug.Log($"환경 {environmentId} 스폰 - 토글 끄기 시도 중...");
+        terrainManager.DisableGroupByEnvironmentId(environmentId);
+        Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
+    }
+    else
+    {
+        Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+    }
+
+    if (withFirstAppearanceEffect)
+    {
+        ApplyFirstAppearanceEffect(environment);
+        Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
+    }
+    else
+    {
+        Debug.Log($"일반 환경 생성 완료: {environmentId}");
+    }
+}
+
+// 선물을 여는 코루틴 - 수정됨
+private IEnumerator OpenGift(GameObject gift, string environmentId)
+{
+    // 선물을 대기 목록에서 제거
+    pendingGifts.Remove(gift);
+
+    // 축하 효과 파티클 실행
+    if (celebrationEffectPrefab != null)
+    {
+        GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
+        
+        // 축하 효과 크기 조정
+        float scale = 1.5f;
+        celebration.transform.localScale = Vector3.one * scale;
+        
+        // 5초 후 축하 효과 제거
+        Destroy(celebration, 5f);
+    }
+
+    // 선물 제거 애니메이션
+    yield return StartCoroutine(RemoveGiftWithAnimation(gift));
+
+    // 잠시 대기
+    yield return new WaitForSeconds(0.5f);
+
+    // 환경 스폰 (이 시점에서 SpawnEnvironment 내부에서 토글이 꺼짐)
+    SpawnEnvironment(environmentId, true);
+
+    Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
+}
 
     // 선물 터치를 처리하는 메서드
     private void HandleGiftTouch()
@@ -95,35 +209,35 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     // 선물을 여는 코루틴
-    private IEnumerator OpenGift(GameObject gift, string environmentId)
-    {
-        // 선물을 대기 목록에서 제거
-        pendingGifts.Remove(gift);
+    // private IEnumerator OpenGift(GameObject gift, string environmentId)
+    // {
+    //     // 선물을 대기 목록에서 제거
+    //     pendingGifts.Remove(gift);
 
-        // 축하 효과 파티클 실행
-        if (celebrationEffectPrefab != null)
-        {
-            GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
+    //     // 축하 효과 파티클 실행
+    //     if (celebrationEffectPrefab != null)
+    //     {
+    //         GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
             
-            // 축하 효과 크기 조정
-            float scale = 1.5f;
-            celebration.transform.localScale = Vector3.one * scale;
+    //         // 축하 효과 크기 조정
+    //         float scale = 1.5f;
+    //         celebration.transform.localScale = Vector3.one * scale;
             
-            // 5초 후 축하 효과 제거
-            Destroy(celebration, 5f);
-        }
+    //         // 5초 후 축하 효과 제거
+    //         Destroy(celebration, 5f);
+    //     }
 
-        // 선물 제거 애니메이션
-        yield return StartCoroutine(RemoveGiftWithAnimation(gift));
+    //     // 선물 제거 애니메이션
+    //     yield return StartCoroutine(RemoveGiftWithAnimation(gift));
 
-        // 잠시 대기
-        yield return new WaitForSeconds(0.5f);
+    //     // 잠시 대기
+    //     yield return new WaitForSeconds(0.5f);
 
-        // 환경 스폰
-        SpawnEnvironment(environmentId, true);
+    //     // 환경 스폰
+    //     SpawnEnvironment(environmentId, true);
 
-        Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
-    }
+    //     Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
+    // }
 
     // 선물 제거 애니메이션 코루틴
     private IEnumerator RemoveGiftWithAnimation(GameObject gift)
@@ -260,39 +374,39 @@ public class EnvironmentManager : MonoBehaviour
         }
     }
     
-    // 지정된 ID의 환경 스폰 (효과 옵션 추가)
-    private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
-    {
-        // 환경 ID에 해당하는 프리팹 가져오기
-        if (!environmentPrefabs.ContainsKey(environmentId))
-        {
-            Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
-            return;
-        }
+    // // 지정된 ID의 환경 스폰 (효과 옵션 추가)
+    // private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
+    // {
+    //     // 환경 ID에 해당하는 프리팹 가져오기
+    //     if (!environmentPrefabs.ContainsKey(environmentId))
+    //     {
+    //         Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
+    //         return;
+    //     }
         
-        GameObject prefab = environmentPrefabs[environmentId];
+    //     GameObject prefab = environmentPrefabs[environmentId];
         
-        // 프리팹 존재 여부 확인
-        if (prefab == null)
-        {
-            Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
-            return;
-        }
+    //     // 프리팹 존재 여부 확인
+    //     if (prefab == null)
+    //     {
+    //         Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
+    //         return;
+    //     }
         
-        // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
-        GameObject environment = Instantiate(prefab);
+    //     // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
+    //     GameObject environment = Instantiate(prefab);
 
-        if (withFirstAppearanceEffect)
-        {
-            // 최초 등장 효과 적용
-            ApplyFirstAppearanceEffect(environment);
-            Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
-        }
-        else
-        {
-            Debug.Log($"일반 환경 생성 완료: {environmentId}");
-        }
-    }
+    //     if (withFirstAppearanceEffect)
+    //     {
+    //         // 최초 등장 효과 적용
+    //         ApplyFirstAppearanceEffect(environment);
+    //         Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
+    //     }
+    //     else
+    //     {
+    //         Debug.Log($"일반 환경 생성 완료: {environmentId}");
+    //     }
+    // }
 
     // 최초 등장 효과를 적용하는 메서드
     private void ApplyFirstAppearanceEffect(GameObject environment)
