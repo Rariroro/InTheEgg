@@ -157,11 +157,12 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
         }
     }
     
-    void DropItem(Vector3 dropPosition)
+   // DropItem 메서드 수정 (아이템 생성 부분)
+void DropItem(Vector3 dropPosition)
 {
     Debug.Log($"[DropItem] currentItemType='{currentItemType}'");
 
-    // (1) currentItemType 자체가 유효하지 않을 때 즉시 종료
+    // (기존 검증 코드는 동일)
     if (string.IsNullOrEmpty(currentItemType) 
         || !itemPrefabs.ContainsKey(currentItemType) 
         || !itemCounts.ContainsKey(currentItemType))
@@ -171,10 +172,8 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
         return;
     }
 
-    // ★ currentItemType을 로컬 변수로 보존
     string itemTypeToProcess = currentItemType;
 
-    // (2) 프리팹 안전하게 꺼내기
     GameObject prefab;
     if (!itemPrefabs.TryGetValue(itemTypeToProcess, out prefab) || prefab == null)
     {
@@ -186,6 +185,15 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
     // (3) 아이템 생성 처리
     Vector3 spawnPosition = dropPosition + Vector3.up * dropHeight;
     GameObject item = Instantiate(prefab, spawnPosition, Quaternion.identity);
+    
+    // ★ 추가: Food 태그 설정 및 PetFeedingController 캐시에 등록
+    item.tag = "Food";
+    PetFeedingController.RegisterFoodItem(item);
+    
+    // ★ 추가: 아이템이 삭제될 때 캐시에서도 제거되도록 컴포넌트 추가
+    FoodItem foodComponent = item.AddComponent<FoodItem>();
+    foodComponent.Initialize();
+    
     Rigidbody rb = item.GetComponent<Rigidbody>();
     if (rb == null) rb = item.AddComponent<Rigidbody>();
     rb.mass = 1f;
@@ -193,7 +201,7 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
     rb.angularDamping = 0.5f;
     rb.AddTorque(Random.insideUnitSphere * dropForce, ForceMode.Impulse);
 
-    // (4) 개수 감소
+    // (나머지 코드는 동일)
     if (itemCounts.ContainsKey(itemTypeToProcess))
     {
         itemCounts[itemTypeToProcess]--;
@@ -207,10 +215,8 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
         return;
     }
 
-    // (5) 드롭 모드 해제
     CancelDropMode();
 
-    // (6) 남은 개수가 0이하일 경우 버튼 제거 - 보존된 itemTypeToProcess 사용
     if (itemCounts.ContainsKey(itemTypeToProcess) && itemCounts[itemTypeToProcess] <= 0)
     {
         if (itemButtons.ContainsKey(itemTypeToProcess))
@@ -218,7 +224,6 @@ string displayName = itemType; // GetItemDisplayName(itemType) 대신
             Destroy(itemButtons[itemTypeToProcess].gameObject);
             itemButtons.Remove(itemTypeToProcess);
         }
-        // 버튼 제거 후 itemCounts에서도 키를 지운다
         itemCounts.Remove(itemTypeToProcess);
         Debug.Log($"아이템 '{itemTypeToProcess}' 개수가 0이므로 버튼과 딕셔너리에서 제거함");
     }
