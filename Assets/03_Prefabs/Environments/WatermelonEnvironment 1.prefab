@@ -434,6 +434,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 2514985518287573085, guid: f4b3c6a730f94435fad0c95ae9212813, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -512,6 +516,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7665686169917374502, guid: aaa97ee270c2b4ac380e9e44f84a2fee, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -530,6 +538,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1552130778516874057, guid: c3452ff2dd30f433dab36ee730c7034c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4986128718454877688, guid: c3452ff2dd30f433dab36ee730c7034c, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_01A (6)
@@ -656,6 +668,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8600616954672600688, guid: fe47f77003de04122ae4775758e654fe, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -674,6 +690,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 218080299315593946, guid: 5171d96b28f214cdeb0e7f9edc7de5c8, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4772058519264152409, guid: 5171d96b28f214cdeb0e7f9edc7de5c8, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0071379
@@ -748,6 +768,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 469002589399291274, guid: bbf880c0367ff43a08fddff401282f29, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4708379940183733135, guid: bbf880c0367ff43a08fddff401282f29, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.95795345
@@ -878,6 +902,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -10.272
       objectReference: {fileID: 0}
+    - target: {fileID: 1510177490529889235, guid: a4ba683ebbc4c4f3ca6b635a7abbaf9f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3093385322590741974, guid: a4ba683ebbc4c4f3ca6b635a7abbaf9f, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_02A (6)
@@ -904,6 +932,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 7659406501350221839, guid: b11448ebbcceb46cdb4fca64016cbe41, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8363805208145029669, guid: b11448ebbcceb46cdb4fca64016cbe41, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.8179343
@@ -990,6 +1022,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3821409558805174116, guid: b8a1fe33225024c11b9e5641fbd7158a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4828291862294993833, guid: b8a1fe33225024c11b9e5641fbd7158a, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0658269
@@ -1068,6 +1104,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5312715502592953462, guid: 036df0da2968b4953892a4f8b6655894, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6695173733349265268, guid: 036df0da2968b4953892a4f8b6655894, type: 3}
       propertyPath: m_LocalScale.z
       value: 1.0438416
@@ -1130,6 +1170,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1518512383087067300, guid: 70bd98921c1734ce7837322d73032a45, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3071647355565242328, guid: 70bd98921c1734ce7837322d73032a45, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_03A (4)
@@ -1310,6 +1354,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.304
       objectReference: {fileID: 0}
+    - target: {fileID: 2225920136699895951, guid: 8b636d034b1ed4fca8aa0267766ae632, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5085904048534766482, guid: 8b636d034b1ed4fca8aa0267766ae632, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_4 (46)
@@ -1384,6 +1432,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -2.722
       objectReference: {fileID: 0}
+    - target: {fileID: 7884198793295867819, guid: b3d758a1a1e0546e8b73ac50edf332b1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8437244973911132303, guid: b3d758a1a1e0546e8b73ac50edf332b1, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (35)
@@ -1410,6 +1462,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3600033968122884069, guid: 4b21145c6cb444ff09c1033f1d8ace6e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5906239036609522400, guid: 4b21145c6cb444ff09c1033f1d8ace6e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0031446
@@ -1535,6 +1591,10 @@ PrefabInstance:
     - target: {fileID: 4057836929773425724, guid: 64104eede9c784dbfa8b409b987eb637, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 14.599
+      objectReference: {fileID: 0}
+    - target: {fileID: 4267647216579650407, guid: 64104eede9c784dbfa8b409b987eb637, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7105340265010312018, guid: 64104eede9c784dbfa8b409b987eb637, type: 3}
       propertyPath: m_Name
@@ -1746,6 +1806,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.006
       objectReference: {fileID: 0}
+    - target: {fileID: 6933611810089394211, guid: 05a180bffc84a4148877dce623791719, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7360505951474125148, guid: 05a180bffc84a4148877dce623791719, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (10)
@@ -1828,6 +1892,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3174674911851293954, guid: 27a19c1778d374668a96b8941923c040, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1901,6 +1969,10 @@ PrefabInstance:
     - target: {fileID: 1251027102833807925, guid: 1c0e6a8f361a043fcb4476d372db5bbf, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 6573243266260185732, guid: 1c0e6a8f361a043fcb4476d372db5bbf, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1980,6 +2052,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9031073399766001652, guid: abc7598365a1b4af484e4a42d56a5877, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2054,6 +2130,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4794203022272297262, guid: 2fb5da7150b9c42e083aee64f10e0d9a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2079,6 +2159,10 @@ PrefabInstance:
     - target: {fileID: 2574626121787761505, guid: 00544df95254b4b8981b765e8266c565, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3454280000938147119, guid: 00544df95254b4b8981b765e8266c565, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7932065822077916821, guid: 00544df95254b4b8981b765e8266c565, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2198,6 +2282,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8842267580768521940, guid: 71859d7751ce54c41852b3472e25e492, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2275,6 +2363,10 @@ PrefabInstance:
     - target: {fileID: 1276042076715457344, guid: 2362e1f482a5e42658187fa216dda925, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -12.99
+      objectReference: {fileID: 0}
+    - target: {fileID: 4032760054329342402, guid: 2362e1f482a5e42658187fa216dda925, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2354,6 +2446,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.731
       objectReference: {fileID: 0}
+    - target: {fileID: 7911781187851624097, guid: d8a50e5a98c1945f59845d588a3bea7b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2372,6 +2468,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2341330599330846147, guid: c5e64c414a4d849449e85e2c2065ac1f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3053806869345018106, guid: c5e64c414a4d849449e85e2c2065ac1f, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.94075125
@@ -2506,6 +2606,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.215
       objectReference: {fileID: 0}
+    - target: {fileID: 9024932108875163457, guid: 9e728652549764e398b78ac79b7e5de1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2531,6 +2635,10 @@ PrefabInstance:
     - target: {fileID: 363132244792841058, guid: b1cf113f1681545df8aa9aba10f373b7, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1888680105512331933, guid: b1cf113f1681545df8aa9aba10f373b7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9174367046376382726, guid: b1cf113f1681545df8aa9aba10f373b7, type: 3}
       propertyPath: m_LocalScale.x
@@ -2650,6 +2758,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7152102053026045220, guid: 1290a244b45234c739ec9dfe92ff4537, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2727,6 +2839,10 @@ PrefabInstance:
     - target: {fileID: 5798374606145700186, guid: 81cfb9e9a25164a62b368611b6a8f8e7, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8466819706734930023, guid: 81cfb9e9a25164a62b368611b6a8f8e7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2806,6 +2922,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6943261475454305839, guid: d58e8fe07c8bc47dfac6c28613bd6a33, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2884,6 +3004,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5651714137327900104, guid: 9e8eff9e8d2ba489b8129e168a2ea0ff, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2941,6 +3065,10 @@ PrefabInstance:
     - target: {fileID: 3738768974106794736, guid: 6acee4d32b0514de899bc205bab41c8e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.003
+      objectReference: {fileID: 0}
+    - target: {fileID: 7561001872467690005, guid: 6acee4d32b0514de899bc205bab41c8e, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8193715427023526036, guid: 6acee4d32b0514de899bc205bab41c8e, type: 3}
       propertyPath: m_Name
@@ -3020,6 +3148,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 4832496937804328586, guid: 3e5c3d6f746df4a81a1b476235b70143, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6213778184136523516, guid: 3e5c3d6f746df4a81a1b476235b70143, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (2)
@@ -3053,6 +3185,10 @@ PrefabInstance:
     - target: {fileID: 5308793989459057291, guid: 41c09f376f3354271bf2ab45ae7822f9, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6976441407615175587, guid: 41c09f376f3354271bf2ab45ae7822f9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8858697581650043359, guid: 41c09f376f3354271bf2ab45ae7822f9, type: 3}
       propertyPath: m_LocalScale.x
@@ -3180,6 +3316,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.649
       objectReference: {fileID: 0}
+    - target: {fileID: 7814810093226136098, guid: e8235ea381048481cbcf4a6303cd0331, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3258,6 +3398,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4168617312281324639, guid: 8a3058a72cf9447169ce70e61de86c2f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3276,6 +3420,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 588053920664293957, guid: 266fa15b73f824e278f20bcb3d7d00bb, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1833812427416812560, guid: 266fa15b73f824e278f20bcb3d7d00bb, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0439646
@@ -3354,6 +3502,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1647472029967618843, guid: 8dac6a10b14ee4d56a83ec30c99dc2d2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7106536205196426078, guid: 8dac6a10b14ee4d56a83ec30c99dc2d2, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9936328
@@ -3484,6 +3636,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -11.579
       objectReference: {fileID: 0}
+    - target: {fileID: 663679512457938685, guid: 60331be4e7410400395048f107f2bc97, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3706226171968915634, guid: 60331be4e7410400395048f107f2bc97, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (8)
@@ -3510,6 +3666,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1374820521413583171, guid: c4365c6d7d4904c2c92de9bbf19a45f5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3149650348621735229, guid: c4365c6d7d4904c2c92de9bbf19a45f5, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01B (22)
@@ -3632,6 +3792,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 7.395
       objectReference: {fileID: 0}
+    - target: {fileID: 2509183917591198176, guid: 2ca48f9b899234794b6762c6aad9412b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5809638446045971165, guid: 2ca48f9b899234794b6762c6aad9412b, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (21)
@@ -3665,6 +3829,10 @@ PrefabInstance:
     - target: {fileID: 2212420987027094050, guid: f73fcad69ea8642a8b67247faf59cafe, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6873285467010367626, guid: f73fcad69ea8642a8b67247faf59cafe, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8343266643785902456, guid: f73fcad69ea8642a8b67247faf59cafe, type: 3}
       propertyPath: m_LocalScale.x
@@ -3788,6 +3956,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 14.927
       objectReference: {fileID: 0}
+    - target: {fileID: 1255304202671968901, guid: 9b536a8fef6664b2bb1f0156f3179c5c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4162372023523146163, guid: 9b536a8fef6664b2bb1f0156f3179c5c, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (10)
@@ -3814,6 +3986,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3266141310915197835, guid: 0b1ca27bf9e784b258a28b9b3e06ee7c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7407545878493062476, guid: 0b1ca27bf9e784b258a28b9b3e06ee7c, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (59)
@@ -3892,6 +4068,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 108310626883916824, guid: 5cf3d6d3b620b4f7a9daccd069ea813e, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2748739865853033846, guid: 5cf3d6d3b620b4f7a9daccd069ea813e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.5086212
@@ -4018,6 +4198,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4888966591703900717, guid: 6d7961d19258d49a898c7b55bde5d388, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4076,6 +4260,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.009
       objectReference: {fileID: 0}
+    - target: {fileID: 4088641822062244004, guid: fd1f3cf95069c4236b094299b56ec1a1, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4280158924838608590, guid: fd1f3cf95069c4236b094299b56ec1a1, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Pole (20)
@@ -4109,6 +4297,10 @@ PrefabInstance:
     - target: {fileID: 593873706389960207, guid: 366753fe6e7234ef490f01da0febb04c, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 998983277818061078, guid: 366753fe6e7234ef490f01da0febb04c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7387189460683613519, guid: 366753fe6e7234ef490f01da0febb04c, type: 3}
       propertyPath: m_LocalScale.x
@@ -4180,6 +4372,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2693898253803453782, guid: a4d0d976c6b9c4dbda47445a6a43bc07, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6528505239772668275, guid: a4d0d976c6b9c4dbda47445a6a43bc07, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0632052
@@ -4306,6 +4502,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.408
       objectReference: {fileID: 0}
+    - target: {fileID: 3319964926992252504, guid: 5ce5f5302cb4a411e869628725f6a1bc, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4518297231902686303, guid: 5ce5f5302cb4a411e869628725f6a1bc, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (20)
@@ -4388,6 +4588,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.006
       objectReference: {fileID: 0}
+    - target: {fileID: 5987886498604972796, guid: 3d3607803e32c44a986ac3e9a9f628c8, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4413,6 +4617,10 @@ PrefabInstance:
     - target: {fileID: 1061456432033004703, guid: b1c1230c0c26a4873a37edf244e97e49, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3210562881764491424, guid: b1c1230c0c26a4873a37edf244e97e49, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6202020456922585645, guid: b1c1230c0c26a4873a37edf244e97e49, type: 3}
       propertyPath: m_LocalScale.x
@@ -4544,6 +4752,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9010947546944717677, guid: cd7c3b349c42c42a5a8b714901007257, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4562,6 +4774,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5701429021313458589, guid: 8635843798606462e82e751729cea0db, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6418517482455617931, guid: 8635843798606462e82e751729cea0db, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.1013649
@@ -4692,6 +4908,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.004
       objectReference: {fileID: 0}
+    - target: {fileID: 6948706300937984663, guid: 5a2aca46228394c33bf04c1ae0bac7d9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7333710767149456857, guid: 5a2aca46228394c33bf04c1ae0bac7d9, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (64)
@@ -4766,6 +4986,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.812
       objectReference: {fileID: 0}
+    - target: {fileID: 2324563813631064889, guid: f2addad136e9244898d7f04f86a557ac, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5393448711320256680, guid: f2addad136e9244898d7f04f86a557ac, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_03A (8)
@@ -4799,6 +5023,10 @@ PrefabInstance:
     - target: {fileID: 3007533684248595081, guid: 5e9cddae7ea11468b81bfeef3b7da58f, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3624969281856323742, guid: 5e9cddae7ea11468b81bfeef3b7da58f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3698241887746267517, guid: 5e9cddae7ea11468b81bfeef3b7da58f, type: 3}
       propertyPath: m_LocalScale.x
@@ -4870,6 +5098,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1390662672339616633, guid: ad05f0a253ac44309b281f3420fb56ed, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6469828841183151954, guid: ad05f0a253ac44309b281f3420fb56ed, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9471797
@@ -5038,6 +5270,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2966494470306653884, guid: c8588cd0999f2469fb66eb1e372ce4b1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6208214945132960064, guid: c8588cd0999f2469fb66eb1e372ce4b1, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.8963972
@@ -5160,6 +5396,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.27
       objectReference: {fileID: 0}
+    - target: {fileID: 6121847392289260018, guid: 3c561dd92aaad47489da8331f7685262, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9175416166909153411, guid: 3c561dd92aaad47489da8331f7685262, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (10)
@@ -5186,6 +5426,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1878392092617597230, guid: a522bd491db7d41c4934488aae9a1379, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2895225577973914410, guid: a522bd491db7d41c4934488aae9a1379, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (17)
@@ -5312,6 +5556,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.202
       objectReference: {fileID: 0}
+    - target: {fileID: 5111882505405405858, guid: bd161581fddc0422ca8a55b69aa9c354, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6772488505282986851, guid: bd161581fddc0422ca8a55b69aa9c354, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (61)
@@ -5398,6 +5646,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 4.883
       objectReference: {fileID: 0}
+    - target: {fileID: 8684974945818984030, guid: 62bf1e8b2387743c9acdf2946adea3d0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5423,6 +5675,10 @@ PrefabInstance:
     - target: {fileID: 1427307185401537015, guid: f399fd30761f947dd9ee0ec8c8166548, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2812772172938597864, guid: f399fd30761f947dd9ee0ec8c8166548, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4319877853139834524, guid: f399fd30761f947dd9ee0ec8c8166548, type: 3}
       propertyPath: m_LocalScale.x
@@ -5490,6 +5746,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 70477715782003027, guid: aa885fddb27834fc3b70b72b2086477b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3471365488584403342, guid: aa885fddb27834fc3b70b72b2086477b, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.018344
@@ -5575,6 +5835,10 @@ PrefabInstance:
     - target: {fileID: 654676915080691535, guid: 27483c7857a01486bada036996a84c4b, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 743063199471969416, guid: 27483c7857a01486bada036996a84c4b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8915468463188299757, guid: 27483c7857a01486bada036996a84c4b, type: 3}
       propertyPath: m_LocalScale.x
@@ -5702,6 +5966,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 3.398
       objectReference: {fileID: 0}
+    - target: {fileID: 8858342027647112282, guid: 2d4a425fbdb824abaad40902109187ba, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5779,6 +6047,10 @@ PrefabInstance:
     - target: {fileID: 4145440425069435700, guid: dc2b0cbd3c508436a81838157dd68a44, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 7.397
+      objectReference: {fileID: 0}
+    - target: {fileID: 5815406305697865568, guid: dc2b0cbd3c508436a81838157dd68a44, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5858,6 +6130,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 5025315307314194708, guid: 24af600c89ccd46cfbdc5d42c8394afe, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -5936,6 +6212,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.564
       objectReference: {fileID: 0}
+    - target: {fileID: 4365528373721865850, guid: 10f5e20f4d0544d979bc2a7c13cde7de, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6005,6 +6285,10 @@ PrefabInstance:
     - target: {fileID: 2266527290274961271, guid: e8f447024c82444fca2e236ccd0cd5af, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 6251596152395329236, guid: e8f447024c82444fca2e236ccd0cd5af, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6884652202041277659, guid: e8f447024c82444fca2e236ccd0cd5af, type: 3}
       propertyPath: m_Name
@@ -6088,6 +6372,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8701799676691940551, guid: 0a1ed68ef69d045cbbab6bf5e1107f1a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6106,6 +6394,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5428256967570246194, guid: 11cabe1c1ba8249c0b624eaa3cbb4a88, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8059409512840288796, guid: 11cabe1c1ba8249c0b624eaa3cbb4a88, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (13)
@@ -6180,6 +6472,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1142061392594718093, guid: 02a7b52cb05ea4ff99b6f3e2a2dce026, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2967470097300267573, guid: 02a7b52cb05ea4ff99b6f3e2a2dce026, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.91170764
@@ -6314,6 +6610,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7590436771293877689, guid: 05203ce25c22e431e822a7a941d57e66, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6392,6 +6692,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7710903724618708488, guid: a3894d626a72644e7af26647371fc66a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6417,6 +6721,10 @@ PrefabInstance:
     - target: {fileID: 749796552630439332, guid: 13529871a7b7a4973a3f75af48f439c1, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1369074962050031365, guid: 13529871a7b7a4973a3f75af48f439c1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5134156649612353256, guid: 13529871a7b7a4973a3f75af48f439c1, type: 3}
       propertyPath: m_LocalScale.x
@@ -6488,6 +6796,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 330696886443141410, guid: de131833d284744108d971404a0e670d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2922180683266155949, guid: de131833d284744108d971404a0e670d, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9410433
@@ -6601,6 +6913,10 @@ PrefabInstance:
     - target: {fileID: 1621963227684009449, guid: a4966b6ecc54f47feabcd76266762157, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.413
+      objectReference: {fileID: 0}
+    - target: {fileID: 2120226558400224328, guid: a4966b6ecc54f47feabcd76266762157, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6445075695720633220, guid: a4966b6ecc54f47feabcd76266762157, type: 3}
       propertyPath: m_Name
@@ -6754,6 +7070,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6220542526176097226, guid: 7dd1f0997cf054a498ac3d6a77bd93d5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6779,6 +7099,10 @@ PrefabInstance:
     - target: {fileID: 2652188873382843557, guid: a092dd9a4b91e4db1b8cda1a1bea65ef, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4019792558427394047, guid: a092dd9a4b91e4db1b8cda1a1bea65ef, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8665840071532122748, guid: a092dd9a4b91e4db1b8cda1a1bea65ef, type: 3}
       propertyPath: m_LocalScale.x
@@ -6853,6 +7177,10 @@ PrefabInstance:
     - target: {fileID: 948804472408826125, guid: 2cf00104843d841aca1dc103518a0f81, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2581968164534767774, guid: 2cf00104843d841aca1dc103518a0f81, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2821997403200565158, guid: 2cf00104843d841aca1dc103518a0f81, type: 3}
       propertyPath: m_LocalScale.x
@@ -7052,6 +7380,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 4431738266954848134, guid: 74c3094bdebfe482bb67f42c18594cf0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6369616982714410362, guid: 74c3094bdebfe482bb67f42c18594cf0, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9888678
@@ -7178,6 +7510,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -5.584
       objectReference: {fileID: 0}
+    - target: {fileID: 3729632965604158115, guid: 17fc6bf8c0b324cd38b77be57d4d30e7, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7255,6 +7591,10 @@ PrefabInstance:
     - target: {fileID: 3172689690696337393, guid: 353db001568594ba49e2a30b392e97bc, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7102169641298847977, guid: 353db001568594ba49e2a30b392e97bc, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7334,6 +7674,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 8944518028868749989, guid: 9aa9a566dc3984f6ab3f04a7ec259661, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7412,6 +7756,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 7.202
       objectReference: {fileID: 0}
+    - target: {fileID: 5386224123769167703, guid: eb81857b5696a4f41b62ea902bf0807e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7485,6 +7833,10 @@ PrefabInstance:
     - target: {fileID: 8336700374186144795, guid: 0a34f15591fc3411e99b406cc2476a41, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 13.551
+      objectReference: {fileID: 0}
+    - target: {fileID: 8666010455217779303, guid: 0a34f15591fc3411e99b406cc2476a41, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7564,6 +7916,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8588484618067357323, guid: 0bcfe7a6246e342249edcde4b19436af, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7629,6 +7985,10 @@ PrefabInstance:
     - target: {fileID: 1779613361412530599, guid: ac2902899b66543bb995f9b5f0ac5d9b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.304
+      objectReference: {fileID: 0}
+    - target: {fileID: 3160149644133178743, guid: ac2902899b66543bb995f9b5f0ac5d9b, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -7696,6 +8056,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9103441883256550760, guid: 8ab7d3b89f615471eb894de8a40bf0d5, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7721,6 +8085,10 @@ PrefabInstance:
     - target: {fileID: 5603397888636118292, guid: df0a31b272dc649aeb139d845deb70a9, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7520984423579413629, guid: df0a31b272dc649aeb139d845deb70a9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8644240033141689161, guid: df0a31b272dc649aeb139d845deb70a9, type: 3}
       propertyPath: m_LocalScale.x
@@ -7848,6 +8216,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8488761131438830347, guid: e709c919abd734757b2642050fe9d5bd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -7918,6 +8290,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 11.148
       objectReference: {fileID: 0}
+    - target: {fileID: 3961526910026762191, guid: 2200620fecb7b45b1a943bad37033e4c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7395497484262488765, guid: 2200620fecb7b45b1a943bad37033e4c, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (14)
@@ -7944,6 +8320,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 599030149679252928, guid: 105ee79d824db4db9849de5281f1fd5e, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1026116781489355447, guid: 105ee79d824db4db9849de5281f1fd5e, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Pole (22)
@@ -8010,6 +8390,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1974135528080209660, guid: cd026cf4f698e4bcbbd0bd115bdbb5b5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4446192482789390133, guid: cd026cf4f698e4bcbbd0bd115bdbb5b5, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (24)
@@ -8144,6 +8528,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 7.728
       objectReference: {fileID: 0}
+    - target: {fileID: 7256599946797842263, guid: 47ad4446a7b464348bc7eb9908aa4cae, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8222,6 +8610,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 6189528308016364968, guid: 3f9eed3f78a234015891aacfb31b979c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8240,6 +8632,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1672814576457472394, guid: a8f2b8ac96d734e2cb632ed205fb8ea0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4851844492933688463, guid: a8f2b8ac96d734e2cb632ed205fb8ea0, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (38)
@@ -8370,6 +8766,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 5.693
       objectReference: {fileID: 0}
+    - target: {fileID: 5619733626688655875, guid: 5bae7a48b48694ece9dc4f1d7f13c4fc, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5979372933273478765, guid: 5bae7a48b48694ece9dc4f1d7f13c4fc, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (18)
@@ -8456,6 +8856,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 8008427042452065435, guid: e4426ab04ae754330981c52c81354bd0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8525,6 +8929,10 @@ PrefabInstance:
     - target: {fileID: 1842286704405492307, guid: 1d4f7a0b2f7014832a1e23728954dd72, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 11.698
+      objectReference: {fileID: 0}
+    - target: {fileID: 5685855088557036983, guid: 1d4f7a0b2f7014832a1e23728954dd72, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7659435570946963145, guid: 1d4f7a0b2f7014832a1e23728954dd72, type: 3}
       propertyPath: m_Name
@@ -8603,6 +9011,10 @@ PrefabInstance:
     - target: {fileID: 905780576912140064, guid: 46112321436184dc38a75cbefa373a09, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 3.94
+      objectReference: {fileID: 0}
+    - target: {fileID: 5924943669633167200, guid: 46112321436184dc38a75cbefa373a09, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9141080660835286041, guid: 46112321436184dc38a75cbefa373a09, type: 3}
       propertyPath: m_Name
@@ -8690,6 +9102,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8401277280180716806, guid: be72e072a03934334a6852466d54ac4b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8708,6 +9124,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5448555507932928789, guid: e73b7ab962421430080b54153f52ee80, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7800365283379725953, guid: e73b7ab962421430080b54153f52ee80, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_02A (1)
@@ -8834,6 +9254,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7780833325679709599, guid: eeb73ad407f83428fa70b2dbe71e9a7b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8900,6 +9324,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8435945694053899520, guid: 20b0c6ab1a11847a6877724c792344df, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8918,6 +9346,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2991488455474229091, guid: 33d7de614c0e9465ba4abdc603b852a5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3057461985090532420, guid: 33d7de614c0e9465ba4abdc603b852a5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 8.004692
@@ -9044,6 +9476,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7053656435257920723, guid: 93ca73de7c5e54ef89226311e3d54156, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9069,6 +9505,10 @@ PrefabInstance:
     - target: {fileID: 2226098728434463108, guid: cf03656465a1a4692a08646803b2f953, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3881364559244450517, guid: cf03656465a1a4692a08646803b2f953, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8849666137706383137, guid: cf03656465a1a4692a08646803b2f953, type: 3}
       propertyPath: m_LocalScale.x
@@ -9136,6 +9576,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1642241094976388063, guid: 9864dde9a5f1c486a96397fba99f3a28, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5259892257029803123, guid: 9864dde9a5f1c486a96397fba99f3a28, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_03A (14)
@@ -9266,6 +9710,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.915
       objectReference: {fileID: 0}
+    - target: {fileID: 8407845146433762739, guid: e411048f11f3c4d13ae8629122cce0c9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9284,6 +9732,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 7270644418933943202, guid: c56fa7a0c898c48ba82b8efc5ca4eaed, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8304646372065484937, guid: c56fa7a0c898c48ba82b8efc5ca4eaed, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (8)
@@ -9410,6 +9862,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1.127
       objectReference: {fileID: 0}
+    - target: {fileID: 6252570662549039975, guid: 63d76cf3d0f83430f915869a1500c9e8, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7425887442200073724, guid: 63d76cf3d0f83430f915869a1500c9e8, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (7)
@@ -9443,6 +9899,10 @@ PrefabInstance:
     - target: {fileID: 1650428042578584015, guid: c4413d1ed46774d3d8a340f95792a180, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2017983343050989097, guid: c4413d1ed46774d3d8a340f95792a180, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3203198599353811392, guid: c4413d1ed46774d3d8a340f95792a180, type: 3}
       propertyPath: m_LocalScale.y
@@ -9562,6 +10022,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 3806168351057907184, guid: b06fdd9e850e440f792d2d68e67a6bf6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8660903644346503080, guid: b06fdd9e850e440f792d2d68e67a6bf6, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (4)
@@ -9648,6 +10112,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.003
       objectReference: {fileID: 0}
+    - target: {fileID: 6164857672872170917, guid: f2d9b5c06add3473d857ff6e6cb03f45, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9666,6 +10134,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 972525845767609161, guid: f84967e5b4e854b399a2b517f8dff75b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1869269550301554617, guid: f84967e5b4e854b399a2b517f8dff75b, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_03A (2)
@@ -9800,6 +10272,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1.129
       objectReference: {fileID: 0}
+    - target: {fileID: 4833721900048315456, guid: a02ec2c56c6bc4499919745d620cddec, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9873,6 +10349,10 @@ PrefabInstance:
     - target: {fileID: 6257919865740147735, guid: dbca02d8bbbb7488a92eecf7b3f168df, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7137792255957796089, guid: dbca02d8bbbb7488a92eecf7b3f168df, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9952,6 +10432,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8411927238039762913, guid: 70a52ef8d21f64ccc8440265506d3d0d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -9970,6 +10454,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 4185108824748495312, guid: 72b1c035b7e8d4464b3943864a52154e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6160564276613580696, guid: 72b1c035b7e8d4464b3943864a52154e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0646123
@@ -10154,6 +10642,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.376
       objectReference: {fileID: 0}
+    - target: {fileID: 4146109130917650875, guid: cb811539387a248638e4d9ec7b225f54, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5483874069548774256, guid: cb811539387a248638e4d9ec7b225f54, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_2 (070)
@@ -10187,6 +10679,10 @@ PrefabInstance:
     - target: {fileID: 2793359563121684917, guid: 7bb21f0c6ab744dd3b8ecc8ef893550d, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4960418641576406993, guid: 7bb21f0c6ab744dd3b8ecc8ef893550d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7745240634573547530, guid: 7bb21f0c6ab744dd3b8ecc8ef893550d, type: 3}
       propertyPath: m_LocalScale.x
@@ -10302,6 +10798,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.496
       objectReference: {fileID: 0}
+    - target: {fileID: 8920563480226911708, guid: 0a85ea3a929654ad8a58857895719dbe, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9123019223879010717, guid: 0a85ea3a929654ad8a58857895719dbe, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (30)
@@ -10383,6 +10883,10 @@ PrefabInstance:
     - target: {fileID: 4538990883875858998, guid: 5cd5eba06e54f4530a35dd69279111d3, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6636487641908751873, guid: 5cd5eba06e54f4530a35dd69279111d3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10520,6 +11024,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.009
       objectReference: {fileID: 0}
+    - target: {fileID: 221330774892411764, guid: f4df8b198cbcc4b4fbf5ddc0bc5f5127, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3998486683333534735, guid: f4df8b198cbcc4b4fbf5ddc0bc5f5127, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (62)
@@ -10546,6 +11054,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5862424576667607308, guid: bc181e973a8a347228d328d6bbc55334, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7359171991911931759, guid: bc181e973a8a347228d328d6bbc55334, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (14)
@@ -10690,6 +11202,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5135643433106278055, guid: a7f09a662ef314f0dbbe47bfca1b1971, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6622920136946870188, guid: a7f09a662ef314f0dbbe47bfca1b1971, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (2)
@@ -10808,6 +11324,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.051
       objectReference: {fileID: 0}
+    - target: {fileID: 4838823510217041031, guid: 2d803169dc23d4ccdae815e5a5e3ba14, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8142764056336281396, guid: 2d803169dc23d4ccdae815e5a5e3ba14, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_4 (47)
@@ -10834,6 +11354,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2404055485722250767, guid: f1dd1e563c986487da8b92b716f97801, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4326425305332188945, guid: f1dd1e563c986487da8b92b716f97801, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0204563
@@ -10912,6 +11436,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 333652001076255543, guid: 67f9ace8ba9a54df29e0b4e91e3ffc9b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4895956313711810028, guid: 67f9ace8ba9a54df29e0b4e91e3ffc9b, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.887193
@@ -10986,6 +11514,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1956470902177800363, guid: e434f1fe667774ecab48e56169f60149, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2543269562556619788, guid: e434f1fe667774ecab48e56169f60149, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (5)
@@ -11116,6 +11648,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 2.187
       objectReference: {fileID: 0}
+    - target: {fileID: 7137891243565838113, guid: 97df0935ee7d7495d8766df3247a5cff, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9217620114015113927, guid: 97df0935ee7d7495d8766df3247a5cff, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (5)
@@ -11149,6 +11685,10 @@ PrefabInstance:
     - target: {fileID: 2326080069327738932, guid: c4828a19a32564844a3811aed5b30392, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6698734459208071213, guid: c4828a19a32564844a3811aed5b30392, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8037309229990008429, guid: c4828a19a32564844a3811aed5b30392, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11268,6 +11808,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.012
       objectReference: {fileID: 0}
+    - target: {fileID: 3553398660499487835, guid: 500f9f7c300bd4fc5814521530ed3aff, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11342,6 +11886,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
       objectReference: {fileID: 0}
+    - target: {fileID: 1330148617171533485, guid: 2e135f485218846dfb9acc3c69e911c2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11408,6 +11956,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.258
       objectReference: {fileID: 0}
+    - target: {fileID: 3620552790849879339, guid: d3cccc99a042848c78635abaee40a065, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11433,6 +11985,10 @@ PrefabInstance:
     - target: {fileID: 1551976657386496213, guid: 5ae2c67ca6f7b41eb8bc6e4ef9ec98eb, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3536285969672393076, guid: 5ae2c67ca6f7b41eb8bc6e4ef9ec98eb, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8502686206254839779, guid: 5ae2c67ca6f7b41eb8bc6e4ef9ec98eb, type: 3}
       propertyPath: m_LocalScale.x
@@ -11560,6 +12116,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6998551635317339957, guid: 5cb741ea3a1ec47b883c46b2221388d9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11634,6 +12194,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4810870144502534582, guid: 74272671552b249d1ac086edddbc7314, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11652,6 +12216,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5809274199696467419, guid: c42ad46da5c764aaf828dfa05b33e85f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5964990482508381422, guid: c42ad46da5c764aaf828dfa05b33e85f, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_03A
@@ -11726,6 +12294,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5180495424119695092, guid: 3392b7732429d4db197daa5e7f80633d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8737719526489390987, guid: 3392b7732429d4db197daa5e7f80633d, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0217845
@@ -11792,6 +12364,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 4005622095645101902, guid: 6db66c8cd864244eaacc2b15666a3514, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5186765351424532144, guid: 6db66c8cd864244eaacc2b15666a3514, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0487481
@@ -11926,6 +12502,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 15.413
       objectReference: {fileID: 0}
+    - target: {fileID: 5131376992744003300, guid: fbfcd1efe64ff46efaa911f27bccb5c4, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -11999,6 +12579,10 @@ PrefabInstance:
     - target: {fileID: 4019817811657820568, guid: 26fec3d8bc68046aa902c895b80ab70b, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5137564684895744056, guid: 26fec3d8bc68046aa902c895b80ab70b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -12084,6 +12668,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3747774449471875948, guid: 2a120b5d0d37a4923abb26c17171dd8c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4606237386271262650, guid: 2a120b5d0d37a4923abb26c17171dd8c, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9278659
@@ -12228,6 +12816,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2332343874346767483, guid: 49cff91f1652246b79b5e965b579dfcf, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4516000324274310235, guid: 49cff91f1652246b79b5e965b579dfcf, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_03A (22)
@@ -12309,6 +12901,10 @@ PrefabInstance:
     - target: {fileID: 5546414811562454172, guid: 5919d651ac7024c569aae017c7b7435b, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7845694851686618663, guid: 5919d651ac7024c569aae017c7b7435b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8697737477082396996, guid: 5919d651ac7024c569aae017c7b7435b, type: 3}
       propertyPath: m_LocalScale.x
@@ -12432,6 +13028,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 11.967
       objectReference: {fileID: 0}
+    - target: {fileID: 3487884207033236828, guid: 4f006eff7ef594dc88029652bdca6768, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5657147486738575611, guid: 4f006eff7ef594dc88029652bdca6768, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (9)
@@ -12514,6 +13114,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6605102786621876968, guid: 158c78563dcce47c7848209d28fadbd1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12579,6 +13183,10 @@ PrefabInstance:
     - target: {fileID: 1811099235857928193, guid: 737a8242509494cd7883b5941a6049df, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.003
+      objectReference: {fileID: 0}
+    - target: {fileID: 7164240418617532871, guid: 737a8242509494cd7883b5941a6049df, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7893446820949221116, guid: 737a8242509494cd7883b5941a6049df, type: 3}
       propertyPath: m_Name
@@ -12658,6 +13266,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -9.728
       objectReference: {fileID: 0}
+    - target: {fileID: 7575344880754439576, guid: 2421959fd46574d1185a7e19e0e74b2c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12683,6 +13295,10 @@ PrefabInstance:
     - target: {fileID: 2872551585153944297, guid: c98809e4a29c2451bab499f87f882cba, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5309345481272819060, guid: c98809e4a29c2451bab499f87f882cba, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7949673313003485196, guid: c98809e4a29c2451bab499f87f882cba, type: 3}
       propertyPath: m_LocalScale.x
@@ -12810,6 +13426,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6771569953769697472, guid: 3080aba49d5de4801841e7ec79277787, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12887,6 +13507,10 @@ PrefabInstance:
     - target: {fileID: 7877594683169831185, guid: 3216364dde9444682b67b54f2131f319, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 8552404473318104632, guid: 3216364dde9444682b67b54f2131f319, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -12966,6 +13590,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.002
       objectReference: {fileID: 0}
+    - target: {fileID: 7308303090863439738, guid: b4a3cdc70f90d419a8525776ab76df39, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -12984,6 +13612,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 370189168041389353, guid: 0b0048682e14548c18f058859961adf8, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8585231202436304884, guid: 0b0048682e14548c18f058859961adf8, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_1 (47)
@@ -13050,6 +13682,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5099691671175730561, guid: ccf2d53558f8e47d5bc3f179cb1ce36e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6388919375212382611, guid: ccf2d53558f8e47d5bc3f179cb1ce36e, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02A (21)
@@ -13128,6 +13764,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 352517545744486893, guid: 13ea558719a73400bbe210fcb4995a5d, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2813157673535045457, guid: 13ea558719a73400bbe210fcb4995a5d, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_1 (48)
@@ -13194,6 +13834,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 189681024199112125, guid: c032a33cb61f345ea8847b74d002aa0c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3079716713838079629, guid: c032a33cb61f345ea8847b74d002aa0c, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0957345
@@ -13328,6 +13972,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7380847022510835750, guid: 3d9442f6526974e8b8156906795aa186, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13405,6 +14053,10 @@ PrefabInstance:
     - target: {fileID: 7424458234411137845, guid: 9fb8245ba2c29447f9d68bf0b548a69d, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8808055949163128799, guid: 9fb8245ba2c29447f9d68bf0b548a69d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -13484,6 +14136,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6273481458107218590, guid: 729f73cf5203b4c1b84e190da133dda1, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13502,6 +14158,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1118328567476960931, guid: 116d43da716d74cf79ee7ba05410c924, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4556884525161498969, guid: 116d43da716d74cf79ee7ba05410c924, type: 3}
       propertyPath: m_LocalPosition.x
       value: 3.476448
@@ -13624,6 +14284,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -3.096
       objectReference: {fileID: 0}
+    - target: {fileID: 7715299511147776842, guid: d8b396865c266401f86e666459b03719, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13690,6 +14354,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -6.236
       objectReference: {fileID: 0}
+    - target: {fileID: 2913818073720181152, guid: 98646f9b62d4442309de4b6118c89b99, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7696090766218426948, guid: 98646f9b62d4442309de4b6118c89b99, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_03A (18)
@@ -13723,6 +14391,10 @@ PrefabInstance:
     - target: {fileID: 107696979726647049, guid: 965231f2207ce48dba7811a5dbe37452, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7367045274358868689, guid: 965231f2207ce48dba7811a5dbe37452, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7768447787043347169, guid: 965231f2207ce48dba7811a5dbe37452, type: 3}
       propertyPath: m_LocalScale.x
@@ -13846,6 +14518,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -3.172
       objectReference: {fileID: 0}
+    - target: {fileID: 2697432390440027827, guid: 0b73841bc8cbd4bb89c0b28799d691a3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5792830063267987526, guid: 0b73841bc8cbd4bb89c0b28799d691a3, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (6)
@@ -13872,6 +14548,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1993332488921850864, guid: 10dad2cf28ac641c6a0026ef9c7ca892, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4474828865035418959, guid: 10dad2cf28ac641c6a0026ef9c7ca892, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_03A (5)
@@ -13958,6 +14638,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3518219599788526181, guid: 74ff14d0e21b742778139a6582754ab5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7927752941159283750, guid: 74ff14d0e21b742778139a6582754ab5, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0166684
@@ -14028,6 +14712,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 4369125553880608538, guid: e32b28c2a6d1843b8bfdd116df49471b, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5922519277224367195, guid: e32b28c2a6d1843b8bfdd116df49471b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 9.230003
@@ -14094,6 +14782,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1578545658827754810, guid: 26b9048fa9c05456f906edbc7d0fe8db, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5745383898752061796, guid: 26b9048fa9c05456f906edbc7d0fe8db, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (12)
@@ -14180,6 +14872,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6459817934136679214, guid: 093f54d84b73441f0bb91df7a3ad3a14, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8000235694258059692, guid: 093f54d84b73441f0bb91df7a3ad3a14, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.97688615
@@ -14250,6 +14946,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3271529157328657813, guid: 0b7856c68bddb4059a7bbe1d1231de8d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8582422123142643377, guid: 0b7856c68bddb4059a7bbe1d1231de8d, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01B (17)
@@ -14388,6 +15088,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8756516954147405253, guid: 6e36713f679da40ce953cdec4794c5a0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14466,6 +15170,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6985662877855063581, guid: 1d5a56f3cd33440b195b7541c561563a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14536,6 +15244,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 5.61
       objectReference: {fileID: 0}
+    - target: {fileID: 2362540396344767120, guid: 666397d86bec841edb4ed67a030ac32b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3192206764557307116, guid: 666397d86bec841edb4ed67a030ac32b, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01B (10)
@@ -14562,6 +15274,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 675810601634438750, guid: ced96d48573ff4933b3c4d1439bd0015, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2096475332056738345, guid: ced96d48573ff4933b3c4d1439bd0015, type: 3}
       propertyPath: m_LocalPosition.x
       value: 6.4764023
@@ -14688,6 +15404,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -1.69
       objectReference: {fileID: 0}
+    - target: {fileID: 8207633550710783814, guid: 4d666230777e04aec96a1c4e9273129f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14753,6 +15473,10 @@ PrefabInstance:
     - target: {fileID: 4464936673237571871, guid: c737e763d7f6b4c39aa96c5259bde836, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 6011999539124419241, guid: c737e763d7f6b4c39aa96c5259bde836, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6517801364091452347, guid: c737e763d7f6b4c39aa96c5259bde836, type: 3}
       propertyPath: m_Name
@@ -14831,6 +15555,10 @@ PrefabInstance:
     - target: {fileID: 3517871469519689543, guid: a56d9910574334c71b4e24c45a622fe6, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -14.341
+      objectReference: {fileID: 0}
+    - target: {fileID: 4676114794187164437, guid: a56d9910574334c71b4e24c45a622fe6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8154311568811275693, guid: a56d9910574334c71b4e24c45a622fe6, type: 3}
       propertyPath: m_Name
@@ -14918,6 +15646,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -13.828
       objectReference: {fileID: 0}
+    - target: {fileID: 4043410385070911529, guid: 15661eafb7cad4ce2b53f8a55ef71932, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -14996,6 +15728,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5891234203079257913, guid: 90ff7d33f5ff747aeafdc745e8cf4f6d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -15014,6 +15750,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1143641661002304782, guid: 57087675fed774544a9d7be45dbedd7c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4875949711401942930, guid: 57087675fed774544a9d7be45dbedd7c, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0298471
@@ -15152,6 +15892,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6182699547311932652, guid: 332c0e5b559e34e92a998318d7185f59, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -15170,6 +15914,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1397699831376037846, guid: 316841c3397114c90bde3f1aa9fca379, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2445749030456057515, guid: 316841c3397114c90bde3f1aa9fca379, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.129724
@@ -15251,6 +15999,10 @@ PrefabInstance:
     - target: {fileID: 3367102322166240579, guid: 4cf4f7bccfc0643b7ae5982f3d024bbb, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4142688479745654761, guid: 4cf4f7bccfc0643b7ae5982f3d024bbb, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6661830492752459839, guid: 4cf4f7bccfc0643b7ae5982f3d024bbb, type: 3}
       propertyPath: m_LocalScale.x
@@ -15382,6 +16134,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -13.455
       objectReference: {fileID: 0}
+    - target: {fileID: 6774655498163717044, guid: eea93d811abbc4885ba2df111b032561, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -15407,6 +16163,10 @@ PrefabInstance:
     - target: {fileID: 532189495440622542, guid: 1e1a63a09bb3f46b185821f5739c7afb, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6298709215281373492, guid: 1e1a63a09bb3f46b185821f5739c7afb, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7498672952599164077, guid: 1e1a63a09bb3f46b185821f5739c7afb, type: 3}
       propertyPath: m_LocalScale.x
@@ -15478,6 +16238,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 522713238743658780, guid: 301c5e1591c9e4424910d21e4cbac0c9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4467733237443171347, guid: 301c5e1591c9e4424910d21e4cbac0c9, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.8828375
@@ -15564,6 +16328,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7695509294200231142, guid: e2e713a94181c445faf0472c2d44d102, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9023687522609998634, guid: e2e713a94181c445faf0472c2d44d102, type: 3}
       propertyPath: m_LocalScale.y
       value: 1.0381333
@@ -15638,6 +16406,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3828598437609151329, guid: fb96e21a4fd9e4917ac036804c7ad45a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3989323324546790017, guid: fb96e21a4fd9e4917ac036804c7ad45a, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0159804
@@ -15708,6 +16480,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 683534923134869375, guid: 21eeb8dfe0afd4110820c663573b07d2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1283681293686666551, guid: 21eeb8dfe0afd4110820c663573b07d2, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01B (14)
@@ -15852,6 +16628,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 570520021678049433, guid: fc867673aab1746dcb7307d4b5cd1591, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8395087891251093809, guid: fc867673aab1746dcb7307d4b5cd1591, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (12)
@@ -15978,6 +16758,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.003
       objectReference: {fileID: 0}
+    - target: {fileID: 7427706745543555839, guid: e98fed4da8a574e368f0b67888b606ef, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8964822874128295832, guid: e98fed4da8a574e368f0b67888b606ef, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_03A (2)
@@ -16011,6 +16795,10 @@ PrefabInstance:
     - target: {fileID: 1334919448849251377, guid: c0db137bd9fb44e28b6bd67f98f4aade, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5897300957926537644, guid: c0db137bd9fb44e28b6bd67f98f4aade, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8569220458739782819, guid: c0db137bd9fb44e28b6bd67f98f4aade, type: 3}
       propertyPath: m_LocalScale.x
@@ -16142,6 +16930,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6262834082048291448, guid: bdb3207b79e1d44068cb6ad6fec266a6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -16211,6 +17003,10 @@ PrefabInstance:
     - target: {fileID: 829262766863649595, guid: d8e82b82d5f324bc588c6988471fb1a3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423715776978634980, guid: d8e82b82d5f324bc588c6988471fb1a3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5854530389865013423, guid: d8e82b82d5f324bc588c6988471fb1a3, type: 3}
       propertyPath: m_Name
@@ -16298,6 +17094,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7120118471949589392, guid: 3c6bd872cc080492dab1a425dc152ce2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -16364,6 +17164,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8677433528541333897, guid: a303eab5d4e0b477cbb37f2c2515afda, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9098306148580104670, guid: a303eab5d4e0b477cbb37f2c2515afda, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (68)
@@ -16390,6 +17194,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3486919052353758975, guid: 5bde57195870b442bacc94a81915b193, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8831233817266180324, guid: 5bde57195870b442bacc94a81915b193, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9552746
@@ -16644,6 +17452,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.297
       objectReference: {fileID: 0}
+    - target: {fileID: 7713386542458421214, guid: cef7bbb6dccca46ff89f839739b343a2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -16662,6 +17474,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2019210745440108114, guid: 17dc9631b7d1a421a90b5fb0f506cf05, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2240332905897120497, guid: 17dc9631b7d1a421a90b5fb0f506cf05, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0325276
@@ -16796,6 +17612,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6357989227900921201, guid: f4bcf5dbf2dcc4d11ae2e70c61d74336, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -16814,6 +17634,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 812299587307719466, guid: 590c7e623c65a4f5ab3db5fa58a52357, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2811375804886531151, guid: 590c7e623c65a4f5ab3db5fa58a52357, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (4)
@@ -16966,6 +17790,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5045461350057220903, guid: bee84d04e6d9f497da351547066a51bb, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8226948927848982987, guid: bee84d04e6d9f497da351547066a51bb, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.097008
@@ -17032,6 +17860,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3209208838019861161, guid: 0e78f383da96b4986a3f3a01c633d1b5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3336180323404000491, guid: 0e78f383da96b4986a3f3a01c633d1b5, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (8)
@@ -17106,6 +17938,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3683779022127561514, guid: 972be8239f05a4fab81fb1cb1a5cc9dd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4488708039332920911, guid: 972be8239f05a4fab81fb1cb1a5cc9dd, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0687302
@@ -17184,6 +18020,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 818986005291269105, guid: 203ffc21829d247458af27c0de9ec455, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4599493193714896751, guid: 203ffc21829d247458af27c0de9ec455, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (18)
@@ -17318,6 +18158,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 6.443
       objectReference: {fileID: 0}
+    - target: {fileID: 6086694333328000043, guid: 0218c036b503b4f04b68bf2fa3949c89, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -17391,6 +18235,10 @@ PrefabInstance:
     - target: {fileID: 5609004420424216440, guid: 8e0a4a096b85d43c39594b8f7b24f0d3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.002
+      objectReference: {fileID: 0}
+    - target: {fileID: 8697601918125176413, guid: 8e0a4a096b85d43c39594b8f7b24f0d3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -17470,6 +18318,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -5.47
       objectReference: {fileID: 0}
+    - target: {fileID: 7072488759706794439, guid: 25386c70b70d743308b020d40e516df9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -17535,6 +18387,10 @@ PrefabInstance:
     - target: {fileID: 3211948357529251896, guid: 953df2402f05e4d1181fba75e4c07e49, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.543
+      objectReference: {fileID: 0}
+    - target: {fileID: 6512080319703063055, guid: 953df2402f05e4d1181fba75e4c07e49, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7539636987560161598, guid: 953df2402f05e4d1181fba75e4c07e49, type: 3}
       propertyPath: m_Name
@@ -17676,6 +18532,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.317
       objectReference: {fileID: 0}
+    - target: {fileID: 6323156744405761007, guid: f694790cff7e04efe8c4df707d8ea54b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9025800738482837608, guid: f694790cff7e04efe8c4df707d8ea54b, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (29)
@@ -17702,6 +18562,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 4072462977978743378, guid: 5ba4c9b34629242338ab61237f715cd6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5785374746238792505, guid: 5ba4c9b34629242338ab61237f715cd6, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9094826
@@ -17840,6 +18704,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2861947227195646883, guid: 0e242a5627c724e7b8baec64dbdd5b9c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -17858,6 +18726,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 449458213268229176, guid: 3f6586fe9692440729c7e09e59d366c6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2145684332162217716, guid: 3f6586fe9692440729c7e09e59d366c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.88826966
@@ -17936,6 +18808,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3804712473028343427, guid: 95806fe4273a1428bb51d4b87d49b865, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4727541385260385204, guid: 95806fe4273a1428bb51d4b87d49b865, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (3)
@@ -18070,6 +18946,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.143
       objectReference: {fileID: 0}
+    - target: {fileID: 8901240640238014226, guid: 1d91f0fc3ecd8490f8b72afe09bfcdfd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -18139,6 +19019,10 @@ PrefabInstance:
     - target: {fileID: 60776643432645986, guid: d129b46e590724700b0cf8cd4da69e68, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 12.484
+      objectReference: {fileID: 0}
+    - target: {fileID: 4365034446270201814, guid: d129b46e590724700b0cf8cd4da69e68, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5835258862529806927, guid: d129b46e590724700b0cf8cd4da69e68, type: 3}
       propertyPath: m_Name
@@ -18240,6 +19124,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3160817523964658277, guid: 032f6b5e7f2f142f9993cb8ff9dede34, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8474862145843914402, guid: 032f6b5e7f2f142f9993cb8ff9dede34, type: 3}
       propertyPath: m_LocalScale.y
       value: 0.8504388
@@ -18306,6 +19194,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 450990687330236517, guid: 7010ce95332ef42f2ae90479784e58b9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7099518871393927496, guid: 7010ce95332ef42f2ae90479784e58b9, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.89813036
@@ -18440,6 +19332,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7062436130294459100, guid: 09c2c37716e83449aab0534e638d01fc, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -18458,6 +19354,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3371869912641749050, guid: db88e7afc290c427b98627af1122dee4, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3616987508057625235, guid: db88e7afc290c427b98627af1122dee4, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (50)
@@ -18536,6 +19436,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1176320705161050262, guid: f0727429ba7d14a3885909c50f34c222, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1477111139402050602, guid: f0727429ba7d14a3885909c50f34c222, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_02A (5)
@@ -18614,6 +19518,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 90996874669004066, guid: 9a0a9fa28eff1445594391766185c59f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6020042572169934731, guid: 9a0a9fa28eff1445594391766185c59f, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (17)
@@ -18688,6 +19596,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2821767628998023343, guid: e2bee356ea82a4aab867982aa0d2c166, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4637820590760823767, guid: e2bee356ea82a4aab867982aa0d2c166, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A (13)
@@ -18770,6 +19682,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6159534338948591237, guid: 9b3ff641ef70940168f9ccae29947d5b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7481896836510982736, guid: 9b3ff641ef70940168f9ccae29947d5b, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.1135356
@@ -18840,6 +19756,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3353067140082493094, guid: 1447830b65ac3453cbe25424763d85d3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3596747279073693524, guid: 1447830b65ac3453cbe25424763d85d3, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9353143
@@ -18974,6 +19894,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8204747295843486085, guid: 47c5ac5f883cd4c93b7c4262c86bae07, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19044,6 +19968,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -2.95
       objectReference: {fileID: 0}
+    - target: {fileID: 8328512143907073335, guid: c570bb658fa1647a78ca6a96e9ec3b66, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19062,6 +19990,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 622624784736125897, guid: 8ef0c590ecff14d3eb545a6cc154564d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4916836449725816203, guid: 8ef0c590ecff14d3eb545a6cc154564d, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (18)
@@ -19188,6 +20120,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8970389989570584219, guid: a8bc6d280f7a34723989fa0a352d72fb, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19206,6 +20142,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 96275245392116858, guid: b2d001840efb343c0a07ddf4bbe1229a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 666758213493663334, guid: b2d001840efb343c0a07ddf4bbe1229a, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_02A (4)
@@ -19291,6 +20231,10 @@ PrefabInstance:
     - target: {fileID: 4785670399690329915, guid: c7c3e0dcadd6545038a09019d2cbbfb2, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7695575350870661991, guid: c7c3e0dcadd6545038a09019d2cbbfb2, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8472421871871162242, guid: c7c3e0dcadd6545038a09019d2cbbfb2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -19402,6 +20346,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6928917531202939140, guid: 874e57a45645f48d58ba060bc9d763cc, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19420,6 +20368,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 780180662189162202, guid: d06acd3a933a04f15b11744aaa6ff06c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1504312001253790478, guid: d06acd3a933a04f15b11744aaa6ff06c, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0311034
@@ -19554,6 +20506,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3780502323898642967, guid: 35fd6715d0c27434eb351a7002e0792e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19572,6 +20528,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5259319823481710593, guid: 44d0d03685e834a399f77428322e9d9b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6639925821685001432, guid: 44d0d03685e834a399f77428322e9d9b, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (20)
@@ -19706,6 +20666,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
       objectReference: {fileID: 0}
+    - target: {fileID: 4559553078855554133, guid: ffcd986d225dd48e8a9fe74059d7472e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -19731,6 +20695,10 @@ PrefabInstance:
     - target: {fileID: 443235644218382581, guid: d78bcc092d8f442bda7fca3f7aaf496a, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1549348620875496407, guid: d78bcc092d8f442bda7fca3f7aaf496a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4460052490245059073, guid: d78bcc092d8f442bda7fca3f7aaf496a, type: 3}
       propertyPath: m_LocalScale.x
@@ -19810,6 +20778,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6474466298441147237, guid: 937e08dd5fbcc4c25935f612fec2b4b7, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7635504619331589012, guid: 937e08dd5fbcc4c25935f612fec2b4b7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 9.430901
@@ -19868,6 +20840,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 651723613118580751, guid: 3fabf75facaa5474a95e93cb5d844764, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8301925633570752851, guid: 3fabf75facaa5474a95e93cb5d844764, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.99020356
@@ -20006,6 +20982,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8367846781787061911, guid: b29e693e4603544ba8c6b95c3e50669d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -20024,6 +21004,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3218304027936951903, guid: 2c10d0f8fb382471aa8299f31b932a0a, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5168243042467475628, guid: 2c10d0f8fb382471aa8299f31b932a0a, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_2 (42)
@@ -20146,6 +21130,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4882059511918306817, guid: 76625340359574ae3a36993b06475cf0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -20164,6 +21152,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3372591308097704746, guid: 6bc4fe638a2b14e22a24f6941aa0cd87, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3489308571429217145, guid: 6bc4fe638a2b14e22a24f6941aa0cd87, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (13)
@@ -20242,6 +21234,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1515432879948739648, guid: 711b520401a2045e6a39927c8139ba12, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3859132766563885455, guid: 711b520401a2045e6a39927c8139ba12, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (19)
@@ -20320,6 +21316,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2070130104959113645, guid: 9a446bfc06aeb4364a36271605d0e400, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2672412741765146570, guid: 9a446bfc06aeb4364a36271605d0e400, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_03A (7)
@@ -20445,6 +21445,10 @@ PrefabInstance:
     - target: {fileID: 675410292484393494, guid: 0f876e985c3e94094a47ab01cec255fd, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683386267353285700, guid: 0f876e985c3e94094a47ab01cec255fd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4657122467249545519, guid: 0f876e985c3e94094a47ab01cec255fd, type: 3}
       propertyPath: m_Name
@@ -20612,6 +21616,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6338051063940420582, guid: 8184aacdc366d419995edb298b1d6ff9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8159808206059279078, guid: 8184aacdc366d419995edb298b1d6ff9, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9036231
@@ -20730,6 +21738,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.604
       objectReference: {fileID: 0}
+    - target: {fileID: 8086031210314738443, guid: ac118920352e84d5b91f3c475a542db3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8473236350036464741, guid: ac118920352e84d5b91f3c475a542db3, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01B (13)
@@ -20808,6 +21820,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.159
       objectReference: {fileID: 0}
+    - target: {fileID: 7947423810587924920, guid: 0ba8fa9092d3c4e2dbe32067facffcde, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8470678534398466339, guid: 0ba8fa9092d3c4e2dbe32067facffcde, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (3)
@@ -20834,6 +21850,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1132944979131923228, guid: d5c18a66d496a48ecb0bf18ad4d09e7d, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3561687449105046747, guid: d5c18a66d496a48ecb0bf18ad4d09e7d, type: 3}
       propertyPath: m_Name
       value: TFP_Fence_04A_Module_3 (34)
@@ -20952,6 +21972,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.004
       objectReference: {fileID: 0}
+    - target: {fileID: 2292678122637755985, guid: c449d1a1f5d8948168c00c9fe6a67607, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5576324214259128646, guid: c449d1a1f5d8948168c00c9fe6a67607, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_01A (2)
@@ -21038,6 +22062,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 8.426
       objectReference: {fileID: 0}
+    - target: {fileID: 9014531629373216486, guid: 5eb77b61fa34449e384f4ff624d187e6, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21116,6 +22144,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -6.644
       objectReference: {fileID: 0}
+    - target: {fileID: 5510887838187373136, guid: 663a20a6d8f5549eb996ce166c4574e4, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21185,6 +22217,10 @@ PrefabInstance:
     - target: {fileID: 1642428359835799830, guid: ea2bdd70d7395440d90d183809937ac7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 11.988
+      objectReference: {fileID: 0}
+    - target: {fileID: 2322630184702235688, guid: ea2bdd70d7395440d90d183809937ac7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -21256,6 +22292,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 2.468
       objectReference: {fileID: 0}
+    - target: {fileID: 1809803815175567769, guid: 7da75abf709544b2d8c4f498ee278aa9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6024775818921697728, guid: 7da75abf709544b2d8c4f498ee278aa9, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (25)
@@ -21282,6 +22322,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3364683141584515717, guid: 16e1accd3b8cc4c64ae2aeed6fb86398, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7024420269963651455, guid: 16e1accd3b8cc4c64ae2aeed6fb86398, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.91281223
@@ -21416,6 +22460,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7289122089291661006, guid: 2ddfe257a3ee2454598255caafd89eb7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21434,6 +22482,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1719659183314911182, guid: 89bcf726b34244c02949465220d98110, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4106558196291063624, guid: 89bcf726b34244c02949465220d98110, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (17)
@@ -21568,6 +22620,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 2.496
       objectReference: {fileID: 0}
+    - target: {fileID: 7117121000861465709, guid: eda15f6eed483485bb4f426e7f29db9c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -21637,6 +22693,10 @@ PrefabInstance:
     - target: {fileID: 476543159534678861, guid: 4b0752815cf4f4c15a8f8decdfafa3be, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.292
+      objectReference: {fileID: 0}
+    - target: {fileID: 4378729356862520680, guid: 4b0752815cf4f4c15a8f8decdfafa3be, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6313269788809373082, guid: 4b0752815cf4f4c15a8f8decdfafa3be, type: 3}
       propertyPath: m_Name
@@ -21712,6 +22772,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.18
       objectReference: {fileID: 0}
+    - target: {fileID: 726816232158119611, guid: aec6b8ae7a82c4ccca7287607cd9a5f0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8456775589204698579, guid: aec6b8ae7a82c4ccca7287607cd9a5f0, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (27)
@@ -21738,6 +22802,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 920273748736421607, guid: 145d68dd0fd3f4e1289e2b6899df26ac, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4150372347263237747, guid: 145d68dd0fd3f4e1289e2b6899df26ac, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (47)
@@ -21816,6 +22884,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1490195191509328322, guid: 48b2254d18b4a4899972c3fa8c4ec6aa, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3950002744462169760, guid: 48b2254d18b4a4899972c3fa8c4ec6aa, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.1188755
@@ -21950,6 +23022,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 12.973
       objectReference: {fileID: 0}
+    - target: {fileID: 7263439606794088144, guid: 34b7dd99658b34b64b4f8dec7b73c1df, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22027,6 +23103,10 @@ PrefabInstance:
     - target: {fileID: 469759426504511732, guid: c5da23fa8f03e497dab7e77889567ad0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 4130355081169025342, guid: c5da23fa8f03e497dab7e77889567ad0, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -22106,6 +23186,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 9.337
       objectReference: {fileID: 0}
+    - target: {fileID: 8778996569603480783, guid: 5c40a2e57fa1d484d9584285bc9d532b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22183,6 +23267,10 @@ PrefabInstance:
     - target: {fileID: 5995401753911562500, guid: 404c859b13b0e4287b59a0a153f6a6a9, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.716
+      objectReference: {fileID: 0}
+    - target: {fileID: 9121360164439557465, guid: 404c859b13b0e4287b59a0a153f6a6a9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -22262,6 +23350,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6880521743004538259, guid: 02dcc4f97260a4cb799291bf2923808f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22327,6 +23419,10 @@ PrefabInstance:
     - target: {fileID: 2285515465572428802, guid: cbfb8550d691743f5b06109f5c5f2aae, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -4.909
+      objectReference: {fileID: 0}
+    - target: {fileID: 3902763157569218449, guid: cbfb8550d691743f5b06109f5c5f2aae, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7392561739851683528, guid: cbfb8550d691743f5b06109f5c5f2aae, type: 3}
       propertyPath: m_Name
@@ -22410,6 +23506,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6149634768082970077, guid: 02e684c9048574fffadf48b85358197d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22435,6 +23535,10 @@ PrefabInstance:
     - target: {fileID: 2237774546515559157, guid: aa0b8b2e0270d4aabaf462f06036a7dd, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3292474445937535672, guid: aa0b8b2e0270d4aabaf462f06036a7dd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4248752148896734491, guid: aa0b8b2e0270d4aabaf462f06036a7dd, type: 3}
       propertyPath: m_LocalScale.x
@@ -22554,6 +23658,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 3.214
       objectReference: {fileID: 0}
+    - target: {fileID: 2044603058684201042, guid: 1d0c3bb5d1aff4936bc7469978a81c2a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9020503156585113692, guid: 1d0c3bb5d1aff4936bc7469978a81c2a, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_03A (2)
@@ -22632,6 +23740,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -14.273
       objectReference: {fileID: 0}
+    - target: {fileID: 6532879391711463889, guid: a5d1fb708ff8d447e9458b3f1f7bb4f4, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6623281702862818426, guid: a5d1fb708ff8d447e9458b3f1f7bb4f4, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_03A (3)
@@ -22665,6 +23777,10 @@ PrefabInstance:
     - target: {fileID: 1944617156592161806, guid: c544d284c07ff4a2eb95d848e5168d4b, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2446350510915941006, guid: c544d284c07ff4a2eb95d848e5168d4b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8312285515183441996, guid: c544d284c07ff4a2eb95d848e5168d4b, type: 3}
       propertyPath: m_LocalScale.x
@@ -22784,6 +23900,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7121746623769224790, guid: 6275ec8963afb4859b9fbd28839d2e6b, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22853,6 +23973,10 @@ PrefabInstance:
     - target: {fileID: 53606331713959173, guid: 75e7b4c4ccb0e4818b186b7eaeecce3f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 7.181
+      objectReference: {fileID: 0}
+    - target: {fileID: 3020170428021635237, guid: 75e7b4c4ccb0e4818b186b7eaeecce3f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8408221989013476528, guid: 75e7b4c4ccb0e4818b186b7eaeecce3f, type: 3}
       propertyPath: m_Name
@@ -22940,6 +24064,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.002
       objectReference: {fileID: 0}
+    - target: {fileID: 7172021807276387028, guid: 37f04550d62e64a19856dbf9c3a93f40, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -23018,6 +24146,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6076209051847436259, guid: 05932f69cee2c4883830c25471cbf33a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -23075,6 +24207,10 @@ PrefabInstance:
     - target: {fileID: 5727293460975692299, guid: 115891c6ec94d44279816fa5b6c71947, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 7112675762184737923, guid: 115891c6ec94d44279816fa5b6c71947, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9129123362883794797, guid: 115891c6ec94d44279816fa5b6c71947, type: 3}
       propertyPath: m_Name
@@ -23168,6 +24304,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 766461214336600419, guid: dd37d2d312c7d446fb3158f76a5ff514, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8002094535915396538, guid: dd37d2d312c7d446fb3158f76a5ff514, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Leaves_04A (57)
@@ -23242,6 +24382,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 6347626282375959362, guid: 9cc6aac599e884183b542996acd4255e, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6697759887261828751, guid: 9cc6aac599e884183b542996acd4255e, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_01A (16)
@@ -23320,6 +24464,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1296009703295149549, guid: ca854d081a6ee451aa7d90bf8bcc67c3, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2246830368337694799, guid: ca854d081a6ee451aa7d90bf8bcc67c3, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9226805
@@ -23398,6 +24546,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 206923736484132270, guid: c56538c9bc08f49c99bf5b8649a7129d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2613240578885318600, guid: c56538c9bc08f49c99bf5b8649a7129d, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.90380514
@@ -23476,6 +24628,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 854159514432554743, guid: b86c1803eb2f742a2b727f2dbe76e2d5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6266884042682296447, guid: b86c1803eb2f742a2b727f2dbe76e2d5, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_Mirrored_03A (3)
@@ -23562,6 +24718,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6151334176691335739, guid: 312ef5eb1c1f14788b2e8a5e2206826d, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7966867429793859026, guid: 312ef5eb1c1f14788b2e8a5e2206826d, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.99280626
@@ -23632,6 +24792,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2236010158937391467, guid: a4bd3fa8b722c49498838c68d8ec96f2, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4331378584627021360, guid: a4bd3fa8b722c49498838c68d8ec96f2, type: 3}
       propertyPath: m_LocalPosition.x
       value: -10.773323
@@ -23698,6 +24862,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1572252614030189230, guid: 539b4f0f076bd49ad80d668aebacc130, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4399807976540799473, guid: 539b4f0f076bd49ad80d668aebacc130, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.88787913
@@ -23838,6 +25006,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 190304278273137991, guid: fef0e8cfbea7a4cb1ae08666f2a138fa, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7442213408129398567, guid: fef0e8cfbea7a4cb1ae08666f2a138fa, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.97302663
@@ -23968,6 +25140,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6167058153176941395, guid: 137f4e7facc9c4bcba47b74547b3ca11, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -23986,6 +25162,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 1844470601385323313, guid: cdc056ff103b745dd93207ea1231ae1a, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2765700349048557896, guid: cdc056ff103b745dd93207ea1231ae1a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -7.9912033
@@ -24052,6 +25232,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5588611050897778134, guid: 40ee13019f6994f1d9d1c5b20a01eb1f, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7476280846012378733, guid: 40ee13019f6994f1d9d1c5b20a01eb1f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 6.2495193
@@ -24178,6 +25362,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 7710690980233420492, guid: 27a8f3ac27bfb454ea103a92ad94c446, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -24252,6 +25440,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 8083984790097161100, guid: 6576babf63d1c47e3b83712f6ef063d8, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -24277,6 +25469,10 @@ PrefabInstance:
     - target: {fileID: 1524061344038295924, guid: 2107644bd4e7d492b87a33af3725e8f5, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3399295714638404460, guid: 2107644bd4e7d492b87a33af3725e8f5, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7841073709317551870, guid: 2107644bd4e7d492b87a33af3725e8f5, type: 3}
       propertyPath: m_LocalScale.x
@@ -24348,6 +25544,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 5086207386230384893, guid: bfd42b6b591f344418a597209b000e58, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8716134426949355813, guid: bfd42b6b591f344418a597209b000e58, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.1095629
@@ -24430,6 +25630,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5412869610005477129, guid: a2ae60746805a415eb1a3b0ab1b4bd36, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5822475678394289767, guid: a2ae60746805a415eb1a3b0ab1b4bd36, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9555307
@@ -24508,6 +25712,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3924632976679037464, guid: 3acd5e58ff07a43c9a23b47592d5f74b, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9068102056861213769, guid: 3acd5e58ff07a43c9a23b47592d5f74b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.523491
@@ -24573,6 +25781,10 @@ PrefabInstance:
     - target: {fileID: 1628610833813988559, guid: 0272db118e61345afb62be6a7a5e8e37, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5826971268327421576, guid: 0272db118e61345afb62be6a7a5e8e37, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6457159524136610614, guid: 0272db118e61345afb62be6a7a5e8e37, type: 3}
       propertyPath: m_LocalScale.x
@@ -24644,6 +25856,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3160653910822926924, guid: 9c42af380609c40d5af64add2c36fed9, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7459142579201800341, guid: 9c42af380609c40d5af64add2c36fed9, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Module_02B (7)
@@ -24778,6 +25994,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.006
       objectReference: {fileID: 0}
+    - target: {fileID: 8510656827565283061, guid: 7600749e033ff4bfaaca964a71505971, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -24803,6 +26023,10 @@ PrefabInstance:
     - target: {fileID: 1834697804170359754, guid: 7c4e1331358274c18957bd9cde684319, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3485765064311346233, guid: 7c4e1331358274c18957bd9cde684319, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8410491936816689509, guid: 7c4e1331358274c18957bd9cde684319, type: 3}
       propertyPath: m_LocalPosition.x
@@ -24862,6 +26086,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3282015726831355219, guid: e85c650aaf09549d9b484f320a41594a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6514354820765028440, guid: e85c650aaf09549d9b484f320a41594a, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.9759664
@@ -25000,6 +26228,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -2.057
       objectReference: {fileID: 0}
+    - target: {fileID: 5463613375267956372, guid: 34f7105a9c22244edb4f8b0ddc4f9acd, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25078,6 +26310,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8707891350272398059, guid: d1e0753294e064e35be39ea456f48ee7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25152,6 +26388,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.005
       objectReference: {fileID: 0}
+    - target: {fileID: 7730490963652220503, guid: b5eb8b4478ae5455fac638a248d6f88a, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25218,6 +26458,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7604882409170613309, guid: 36919a534831b481e9fec8a140dec9e1, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25236,6 +26480,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 3329412800593367880, guid: f47ff8c6ed73248a9ad5f1b0d9e9938c, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5355308202751367310, guid: f47ff8c6ed73248a9ad5f1b0d9e9938c, type: 3}
       propertyPath: m_Name
       value: TFP_Watermelon_Vine_01A
@@ -25310,6 +26558,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5109571190195822794}
     m_Modifications:
+    - target: {fileID: 2006357981780883769, guid: c90fcbc5b5b924cbba9f95b4befa8d9b, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4878832223771754305, guid: c90fcbc5b5b924cbba9f95b4befa8d9b, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.0731691
@@ -25444,6 +26696,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 14.729
       objectReference: {fileID: 0}
+    - target: {fileID: 9092470628297706670, guid: bfcf1bb0f7ab44bafb1e730d0d6ad7a7, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25522,6 +26778,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1258765536438167736, guid: 7468a304263a44b0a964b8e90a75141f, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -25547,6 +26807,10 @@ PrefabInstance:
     - target: {fileID: 1001267973747966962, guid: 7b19d47fc5c72473a841b34bd34f4670, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2718048882174221483, guid: 7b19d47fc5c72473a841b34bd34f4670, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2965287946071108152, guid: 7b19d47fc5c72473a841b34bd34f4670, type: 3}
       propertyPath: m_LocalScale.x
@@ -25677,6 +26941,10 @@ PrefabInstance:
     - target: {fileID: 2135081304975521930, guid: d4e5d1a57737140c7a9fc37f733600e4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -6.231
+      objectReference: {fileID: 0}
+    - target: {fileID: 2983136248918353874, guid: d4e5d1a57737140c7a9fc37f733600e4, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
