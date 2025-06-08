@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 33467985196428562}
   - component: {fileID: 23087675666503452}
   - component: {fileID: 95708440554403190}
-  - component: {fileID: 7465103663138119802}
   - component: {fileID: -3949655853969786325}
+  - component: {fileID: 3736520372900377908}
   m_Layer: 7
   m_Name: banana
   m_TagString: Food
@@ -111,8 +111,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!65 &7465103663138119802
-BoxCollider:
+--- !u!114 &-3949655853969786325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1063926865984852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!64 &3736520372900377908
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -129,18 +141,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.0748379, y: 1.0179794, z: 0.3989296}
-  m_Center: {x: -0.14250173, y: 0.03946045, z: -0.000000007450581}
---- !u!114 &-3949655853969786325
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1063926865984852}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 40675dd4ca8538243a01fe5c51d19120, type: 3}

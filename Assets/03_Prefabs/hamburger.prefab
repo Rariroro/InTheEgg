@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 33256045423210148}
   - component: {fileID: 23232737996329080}
   - component: {fileID: 95796299384827058}
-  - component: {fileID: 2094840138110430764}
   - component: {fileID: 7418221277064821066}
+  - component: {fileID: 4423106982014373836}
   m_Layer: 7
   m_Name: hamburger
   m_TagString: Food
@@ -111,8 +111,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!65 &2094840138110430764
-BoxCollider:
+--- !u!114 &7418221277064821066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1920111936519340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!64 &4423106982014373836
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -129,18 +141,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.77676696, y: 0.6737792, z: 0.7991671}
-  m_Center: {x: -0.00000014901161, y: 0.0570243, z: 0.0051400065}
---- !u!114 &7418221277064821066
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1920111936519340}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 24be6ba9bfd0fe047897f2352c0c3702, type: 3}
