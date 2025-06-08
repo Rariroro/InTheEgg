@@ -13,13 +13,38 @@ public class PetManager : MonoBehaviour
     public GameObject firstAppearanceEffectPrefab; // 최초 등장 효과 프리팹 (옵션)
     public float firstAppearanceDelay = 0.5f; // 최초 등장 펫들 사이의 딜레이
 
+    [Header("NavMesh 대기 설정")]
+    public float navMeshWaitTime = 3f; // NavMesh 베이크 대기 시간
+
     private void Start()
     {
+        // NavMesh 베이크가 완료될 때까지 대기 후 펫 스폰
+        StartCoroutine(WaitForNavMeshAndSpawnPets());
+    }
+
+    // NavMesh 베이크 완료를 기다린 후 펫을 스폰하는 코루틴
+    private IEnumerator WaitForNavMeshAndSpawnPets()
+    {
+        // EnvironmentManager가 환경을 스폰하고 NavMesh를 베이크할 시간 대기
+        Debug.Log($"NavMesh 베이크 완료 대기 중... ({navMeshWaitTime}초)");
+        yield return new WaitForSeconds(navMeshWaitTime);
+        
+        // NavMesh가 베이크되었는지 확인
+        NavMeshHit hit;
+        Vector3 testPosition = transform.position;
+        bool navMeshReady = NavMesh.SamplePosition(testPosition, out hit, 10f, NavMesh.AllAreas);
+        
+        if (!navMeshReady)
+        {
+            Debug.LogWarning("NavMesh가 아직 준비되지 않았습니다. 추가 대기...");
+            yield return new WaitForSeconds(2f);
+        }
+
         // PetSelectionManager가 존재하는지 확인
         if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
         {
             // 선택된 펫만 스폰
-            StartCoroutine(SpawnSelectedPetsWithEffects());
+            yield return StartCoroutine(SpawnSelectedPetsWithEffects());
         }
         else
         {

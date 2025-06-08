@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.AI.Navigation;
 
 public class EnvironmentManager : MonoBehaviour
 {
@@ -28,6 +29,10 @@ public class EnvironmentManager : MonoBehaviour
     public GameObject celebrationEffectPrefab; // 축하 효과 파티클 프리팹
     public float giftSpawnDelay = 0.5f;        // 선물 스폰 딜레이
 
+    [Header("NavMesh 설정")]
+    public NavMeshSurface navMeshSurface;     // NavMesh Surface 참조
+    public float navMeshBakeDelay = 0.5f;      // NavMesh 베이크 전 추가 대기 시간
+    
     // 환경 ID와 프리팹 연결을 위한 딕셔너리
     private Dictionary<string, GameObject> environmentPrefabs = new Dictionary<string, GameObject>();
     
@@ -41,10 +46,23 @@ public class EnvironmentManager : MonoBehaviour
     private float lastTouchTime;
     private const float TOUCH_COOLDOWN = 0.1f; // 터치 쿨다운
 
+    // 생성된 환경 오브젝트들을 추적
+    private List<GameObject> spawnedEnvironments = new List<GameObject>();
+
     private void Awake()
     {
         // 딕셔너리 초기화
         InitializeEnvironmentPrefabs();
+        
+        // NavMeshSurface 찾기
+        if (navMeshSurface == null)
+        {
+            GameObject terrain = GameObject.Find("Terrain");
+            if (terrain != null)
+            {
+                navMeshSurface = terrain.GetComponent<NavMeshSurface>();
+            }
+        }
     }
 
     private void InitializeEnvironmentPrefabs()
@@ -98,13 +116,15 @@ public class EnvironmentManager : MonoBehaviour
         if (terrainManager == null)
         {
             Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+            // TerrainManager가 없어도 NavMesh는 베이크해야 함
+            yield return StartCoroutine(BakeNavMeshAfterDelay());
             yield break;
         }
         
         // TerrainTextureSwitchManager의 초기화가 완료될 때까지 추가 대기
         yield return new WaitForSeconds(0.2f);
         
-        // 이제 환경 스폰 시작
+        // 이제 환경 스폰 시작 (이 과정에서 초기 NavMesh 베이크도 포함됨)
         yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
     }
 
@@ -120,13 +140,13 @@ public class EnvironmentManager : MonoBehaviour
         HandleGiftTouch();
     }
 
-    private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
+    private IEnumerator SpawnEnvironmentCoroutine(string environmentId, bool withFirstAppearanceEffect = false)
     {
         // 환경 ID에 해당하는 프리팹 가져오기
         if (!environmentPrefabs.ContainsKey(environmentId))
         {
             Debug.LogError($"알 수 없는 환경 ID: {environmentId}");
-            return;
+            yield break;
         }
         
         GameObject prefab = environmentPrefabs[environmentId];
@@ -135,11 +155,16 @@ public class EnvironmentManager : MonoBehaviour
         if (prefab == null)
         {
             Debug.LogError($"환경 프리팹이 할당되지 않았습니다: {environmentId}");
-            return;
+            yield break;
         }
         
         // 프리팹 그대로 인스턴스화 (프리팹의 위치/회전 사용)
         GameObject environment = Instantiate(prefab);
+        spawnedEnvironments.Add(environment);
+
+        // 프레임 대기 - 오브젝트가 완전히 생성되도록
+        yield return null;
+        yield return new WaitForFixedUpdate();
 
         // TerrainTextureSwitchManager에서 해당 환경의 토글 끄기
         if (terrainManager != null)
@@ -161,6 +186,14 @@ public class EnvironmentManager : MonoBehaviour
         {
             Debug.Log($"일반 환경 생성 완료: {environmentId}");
         }
+
+        // 물리 엔진 동기화
+        Physics.SyncTransforms();
+    }
+
+    private void SpawnEnvironment(string environmentId, bool withFirstAppearanceEffect = false)
+    {
+        StartCoroutine(SpawnEnvironmentCoroutine(environmentId, withFirstAppearanceEffect));
     }
 
     private void HandleGiftTouch()
@@ -213,8 +246,17 @@ public class EnvironmentManager : MonoBehaviour
         // 잠시 대기
         yield return new WaitForSeconds(0.5f);
 
-        // 환경 스폰 (이 시점에서 SpawnEnvironment 내부에서 토글이 꺼짐)
-        SpawnEnvironment(environmentId, true);
+        // 환경 스폰 (코루틴으로 실행하고 완료 대기)
+        yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
+
+        // 환경이 완전히 배치될 때까지 추가 대기
+        yield return new WaitForSeconds(1f);
+
+        // 물리 엔진 동기화
+        Physics.SyncTransforms();
+
+        // NavMesh 재베이크
+        yield return StartCoroutine(BakeNavMeshAfterDelay());
 
         Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
     }
@@ -253,34 +295,51 @@ public class EnvironmentManager : MonoBehaviour
         
         Debug.Log($"선택된 환경 수: {selectedIds.Count}");
         
-        // 선택된 환경이 없어도 괜찮음
-        if (selectedIds.Count == 0)
-        {
-            Debug.Log("선택된 환경이 없습니다. 기본 지형만 사용합니다.");
-            yield break;
-        }
-
         // 일반 환경과 최초 등장 환경을 분리
         List<string> normalEnvironments = new List<string>();
         List<string> firstAppearanceEnvironments = new List<string>();
 
-        foreach (string environmentId in selectedIds)
+        if (selectedIds.Count > 0)
         {
-            if (EnvironmentSelectionManager.Instance.IsEnvironmentFirstAppearance(environmentId))
+            foreach (string environmentId in selectedIds)
             {
-                firstAppearanceEnvironments.Add(environmentId);
+                if (EnvironmentSelectionManager.Instance.IsEnvironmentFirstAppearance(environmentId))
+                {
+                    firstAppearanceEnvironments.Add(environmentId);
+                }
+                else
+                {
+                    normalEnvironments.Add(environmentId);
+                }
             }
-            else
+
+            // 먼저 일반 환경들을 모두 스폰 (코루틴으로 실행)
+            List<Coroutine> spawnCoroutines = new List<Coroutine>();
+            foreach (string environmentId in normalEnvironments)
             {
-                normalEnvironments.Add(environmentId);
+                Coroutine spawnCoroutine = StartCoroutine(SpawnEnvironmentCoroutine(environmentId, false));
+                spawnCoroutines.Add(spawnCoroutine);
+                
+                // 각 스폰 사이에 약간의 딜레이
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            // 모든 스폰 코루틴이 완료될 때까지 대기
+            foreach (var coroutine in spawnCoroutines)
+            {
+                yield return coroutine;
             }
         }
 
-        // 먼저 일반 환경들을 스폰
-        foreach (string environmentId in normalEnvironments)
-        {
-            SpawnEnvironment(environmentId, false);
-        }
+        // 모든 일반 환경 스폰이 완료된 후 추가 대기
+        yield return new WaitForSeconds(1f);
+        
+        // 물리 엔진 동기화
+        Physics.SyncTransforms();
+
+        // 초기 NavMesh 베이크 (일반 환경이 있든 없든 항상 실행)
+        Debug.Log("초기 NavMesh 베이크 시작...");
+        yield return StartCoroutine(BakeNavMeshAfterDelay());
 
         // 최초 등장 환경들은 선물로 스폰
         foreach (string environmentId in firstAppearanceEnvironments)
@@ -312,8 +371,8 @@ public class EnvironmentManager : MonoBehaviour
         if (giftPrefab == null)
         {
             Debug.LogError("선물 프리팹이 할당되지 않았습니다!");
-            // 선물 프리팹이 없으면 바로 환경 스폰
-            SpawnEnvironment(environmentId, true);
+            // 선물 프리팹이 없으면 바로 환경 스폰하고 베이크
+            StartCoroutine(SpawnEnvironmentAndBake(environmentId));
             return;
         }
 
@@ -334,6 +393,14 @@ public class EnvironmentManager : MonoBehaviour
         Debug.Log($"환경용 선물 생성 완료: {environmentId} at {giftPosition}");
     }
 
+    private IEnumerator SpawnEnvironmentAndBake(string environmentId)
+    {
+        yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
+        yield return new WaitForSeconds(1f);
+        Physics.SyncTransforms();
+        yield return StartCoroutine(BakeNavMeshAfterDelay());
+    }
+
     private IEnumerator RotateGift(GameObject gift)
     {
         while (gift != null && pendingGifts.ContainsKey(gift))
@@ -345,6 +412,47 @@ public class EnvironmentManager : MonoBehaviour
             gift.transform.position += Vector3.up * bobbing;
             
             yield return null;
+        }
+    }
+
+    // NavMesh 베이크 코루틴
+    private IEnumerator BakeNavMeshAfterDelay()
+    {
+        // 환경 오브젝트들이 완전히 배치될 때까지 잠시 대기
+        yield return new WaitForSeconds(navMeshBakeDelay);
+        
+        // NavMeshSurface가 없으면 다시 찾기 시도
+        if (navMeshSurface == null)
+        {
+            GameObject terrain = GameObject.Find("Terrain");
+            if (terrain != null)
+            {
+                navMeshSurface = terrain.GetComponent<NavMeshSurface>();
+            }
+            
+            // 그래도 없으면 모든 NavMeshSurface 찾기
+            if (navMeshSurface == null)
+            {
+                navMeshSurface = FindObjectOfType<NavMeshSurface>();
+            }
+        }
+        
+        // NavMesh 베이크
+        if (navMeshSurface != null)
+        {
+            Debug.Log("NavMesh 베이크 시작...");
+            
+            // 기존 NavMesh 데이터 제거
+            navMeshSurface.RemoveData();
+            
+            // 새로운 NavMesh 베이크
+            navMeshSurface.BuildNavMesh();
+            
+            Debug.Log("NavMesh 베이크 완료!");
+        }
+        else
+        {
+            Debug.LogError("NavMeshSurface를 찾을 수 없습니다! Terrain 오브젝트에 NavMeshSurface 컴포넌트를 추가해주세요.");
         }
     }
 
@@ -525,5 +633,6 @@ public class EnvironmentManager : MonoBehaviour
         // 정리 작업
         pendingGifts.Clear();
         environmentPrefabs.Clear();
+        spawnedEnvironments.Clear();
     }
 }
