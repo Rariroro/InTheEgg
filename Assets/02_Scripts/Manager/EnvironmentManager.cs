@@ -48,6 +48,7 @@ public class EnvironmentManager : MonoBehaviour
 
     // 생성된 환경 오브젝트들을 추적
     private List<GameObject> spawnedEnvironments = new List<GameObject>();
+public bool IsInitializationComplete { get; private set; } = false;
 
     private void Awake()
     {
@@ -84,49 +85,106 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     private void Start()
+{
+    // 초기화 시작
+    IsInitializationComplete = false;
+    
+    // EnvironmentSelectionManager가 존재하는지 확인
+    if (EnvironmentSelectionManager.Instance != null && 
+        EnvironmentSelectionManager.Instance.selectedEnvironmentIds.Count > 0)
     {
-        // EnvironmentSelectionManager가 존재하는지 확인
-        if (EnvironmentSelectionManager.Instance != null)
-        {
-            // TerrainTextureSwitchManager 초기화 완료 후 환경 스폰
-            StartCoroutine(WaitForTerrainManagerAndSpawn());
-        }
-        else
-        {
-            Debug.LogWarning("EnvironmentSelectionManager가 없습니다.");
-        }
+        // 선택된 환경이 있는 경우
+        StartCoroutine(WaitForTerrainManagerAndSpawn());
     }
-
-    private IEnumerator WaitForTerrainManagerAndSpawn()
+    else
     {
-        // TerrainTextureSwitchManager가 준비될 때까지 대기
-        float waitTime = 0f;
-        const float maxWaitTime = 5f; // 최대 5초 대기
-        
-        while (terrainManager == null && waitTime < maxWaitTime)
-        {
-            terrainManager = TerrainTextureSwitchManager.GetInstance();
-            if (terrainManager == null)
-            {
-                yield return new WaitForSeconds(0.1f);
-                waitTime += 0.1f;
-            }
-        }
-        
+        // 선택된 환경이 없거나 매니저가 없는 경우 (펫 빌리지 씬에서 직접 시작)
+        Debug.LogWarning("EnvironmentSelectionManager가 없거나 선택된 환경이 없습니다. 기본 환경을 스폰합니다.");
+        StartCoroutine(SpawnDefaultEnvironments());
+    }
+}
+
+// 새로 추가: 기본 환경 스폰 (펫 빌리지 씬에서 직접 시작할 때)
+private IEnumerator SpawnDefaultEnvironments()
+{
+    // TerrainTextureSwitchManager 대기
+    float waitTime = 0f;
+    const float maxWaitTime = 5f;
+    
+    while (terrainManager == null && waitTime < maxWaitTime)
+    {
+        terrainManager = TerrainTextureSwitchManager.GetInstance();
         if (terrainManager == null)
         {
-            Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
-            // TerrainManager가 없어도 NavMesh는 베이크해야 함
-            yield return StartCoroutine(BakeNavMeshAfterDelay());
-            yield break;
+            yield return new WaitForSeconds(0.1f);
+            waitTime += 0.1f;
         }
-        
-        // TerrainTextureSwitchManager의 초기화가 완료될 때까지 추가 대기
-        yield return new WaitForSeconds(0.2f);
-        
-        // 이제 환경 스폰 시작 (이 과정에서 초기 NavMesh 베이크도 포함됨)
-        yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
     }
+    
+    // 기본 환경들 스폰 (예: 몇 가지 기본 환경)
+    string[] defaultEnvironments = {
+        "env_forest",
+        "env_pond", 
+        "env_flowers"
+    };
+    
+    Debug.Log("기본 환경 스폰 시작...");
+    
+    foreach (string envId in defaultEnvironments)
+    {
+        if (environmentPrefabs.ContainsKey(envId) && environmentPrefabs[envId] != null)
+        {
+            yield return StartCoroutine(SpawnEnvironmentCoroutine(envId, false));
+            yield return new WaitForSeconds(0.2f);
+        }
+    }
+    
+    // 물리 엔진 동기화
+    yield return new WaitForSeconds(1f);
+    Physics.SyncTransforms();
+    
+    // NavMesh 베이크
+    Debug.Log("기본 환경 NavMesh 베이크 시작...");
+    yield return StartCoroutine(BakeNavMeshAfterDelay());
+    
+    // 초기화 완료 플래그 설정
+    IsInitializationComplete = true;
+    Debug.Log("기본 환경 초기화 완료!");
+}
+
+    private IEnumerator WaitForTerrainManagerAndSpawn()
+{
+    // TerrainTextureSwitchManager가 준비될 때까지 대기
+    float waitTime = 0f;
+    const float maxWaitTime = 5f;
+    
+    while (terrainManager == null && waitTime < maxWaitTime)
+    {
+        terrainManager = TerrainTextureSwitchManager.GetInstance();
+        if (terrainManager == null)
+        {
+            yield return new WaitForSeconds(0.1f);
+            waitTime += 0.1f;
+        }
+    }
+    
+    if (terrainManager == null)
+    {
+        Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
+        yield return StartCoroutine(BakeNavMeshAfterDelay());
+        IsInitializationComplete = true; // 초기화 완료 설정
+        yield break;
+    }
+    
+    yield return new WaitForSeconds(0.2f);
+    
+    // 선택된 환경 스폰
+    yield return StartCoroutine(SpawnSelectedEnvironmentsWithEffects());
+    
+    // 초기화 완료 플래그 설정
+    IsInitializationComplete = true;
+    Debug.Log("선택된 환경 초기화 완료!");
+}
 
     private void Update()
     {
@@ -292,9 +350,9 @@ public class EnvironmentManager : MonoBehaviour
     private IEnumerator SpawnSelectedEnvironmentsWithEffects()
     {
         List<string> selectedIds = EnvironmentSelectionManager.Instance.selectedEnvironmentIds;
-        
+
         Debug.Log($"선택된 환경 수: {selectedIds.Count}");
-        
+
         // 일반 환경과 최초 등장 환경을 분리
         List<string> normalEnvironments = new List<string>();
         List<string> firstAppearanceEnvironments = new List<string>();
@@ -319,7 +377,7 @@ public class EnvironmentManager : MonoBehaviour
             {
                 Coroutine spawnCoroutine = StartCoroutine(SpawnEnvironmentCoroutine(environmentId, false));
                 spawnCoroutines.Add(spawnCoroutine);
-                
+
                 // 각 스폰 사이에 약간의 딜레이
                 yield return new WaitForSeconds(0.1f);
             }
@@ -333,7 +391,7 @@ public class EnvironmentManager : MonoBehaviour
 
         // 모든 일반 환경 스폰이 완료된 후 추가 대기
         yield return new WaitForSeconds(1f);
-        
+
         // 물리 엔진 동기화
         Physics.SyncTransforms();
 
@@ -347,6 +405,8 @@ public class EnvironmentManager : MonoBehaviour
             SpawnGiftForEnvironment(environmentId);
             yield return new WaitForSeconds(giftSpawnDelay);
         }
+            IsInitializationComplete = true;
+
     }
 
     private void SpawnGiftForEnvironment(string environmentId)

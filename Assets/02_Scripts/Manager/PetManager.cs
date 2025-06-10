@@ -17,43 +17,44 @@ public class PetManager : MonoBehaviour
     public float navMeshWaitTime = 3f; // NavMesh 베이크 대기 시간
 
     private void Start()
+{
+    // EnvironmentManager가 환경 스폰과 NavMesh 베이크를 완료할 때까지 기다린 후 펫 스폰
+    StartCoroutine(WaitForEnvironmentAndSpawnPets());
+}
+
+// 새로 추가: 환경 준비 완료까지 기다리는 코루틴
+private IEnumerator WaitForEnvironmentAndSpawnPets()
+{
+    // EnvironmentManager 찾기
+    EnvironmentManager environmentManager = FindObjectOfType<EnvironmentManager>();
+    
+    if (environmentManager != null)
     {
-        // NavMesh 베이크가 완료될 때까지 대기 후 펫 스폰
-        StartCoroutine(WaitForNavMeshAndSpawnPets());
+        // EnvironmentManager가 초기화를 완료할 때까지 대기
+        yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
+        Debug.Log("EnvironmentManager 초기화 완료, 펫 스폰 시작");
     }
-
-    // NavMesh 베이크 완료를 기다린 후 펫을 스폰하는 코루틴
-    private IEnumerator WaitForNavMeshAndSpawnPets()
+    else
     {
-        // EnvironmentManager가 환경을 스폰하고 NavMesh를 베이크할 시간 대기
-        Debug.Log($"NavMesh 베이크 완료 대기 중... ({navMeshWaitTime}초)");
-        yield return new WaitForSeconds(navMeshWaitTime);
-        
-        // NavMesh가 베이크되었는지 확인
-        NavMeshHit hit;
-        Vector3 testPosition = transform.position;
-        bool navMeshReady = NavMesh.SamplePosition(testPosition, out hit, 10f, NavMesh.AllAreas);
-        
-        if (!navMeshReady)
-        {
-            Debug.LogWarning("NavMesh가 아직 준비되지 않았습니다. 추가 대기...");
-            yield return new WaitForSeconds(2f);
-        }
-
-        // PetSelectionManager가 존재하는지 확인
-        if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
-        {
-            // 선택된 펫만 스폰
-            yield return StartCoroutine(SpawnSelectedPetsWithEffects());
-        }
-        else
-        {
-            // 선택된 펫이 없거나 매니저가 없는 경우 (테스트 목적으로만 사용)
-            Debug.LogWarning("선택된 펫이 없거나 PetSelectionManager가 없습니다. 기본 동작으로 모든 펫을 스폰합니다.");
-            SpawnAllPets();
-        }
+        Debug.LogWarning("EnvironmentManager를 찾을 수 없습니다. 기본 대기 시간 적용");
+        // EnvironmentManager가 없으면 기본 대기 시간
+        yield return new WaitForSeconds(3f);
     }
-
+    
+    // 추가 안전 대기
+    yield return new WaitForSeconds(1f);
+    
+    // 이제 펫 스폰 시작
+    if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
+    {
+        StartCoroutine(SpawnSelectedPetsWithEffects());
+    }
+    else
+    {
+        Debug.LogWarning("선택된 펫이 없거나 PetSelectionManager가 없습니다. 기본 동작으로 모든 펫을 스폰합니다.");
+        SpawnAllPets();
+    }
+}
     // 선택된 펫을 효과와 함께 스폰하는 코루틴 (새로 추가)
     private IEnumerator SpawnSelectedPetsWithEffects()
     {
