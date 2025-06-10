@@ -77,8 +77,7 @@ public class EnvironmentPetAttractor : MonoBehaviour
                     break;
                     
                 case "env_honeypot":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Honey;
-                    break;
+                 
                     
                 case "env_forest":
                     shouldAttract = pet.habitat == PetAIProperties.Habitat.Forest;
@@ -89,7 +88,14 @@ public class EnvironmentPetAttractor : MonoBehaviour
                     break;
                     
                 case "env_ricefield":
+                 shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore;
+                    break;
+
                 case "env_cucumber":
+                 shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore;
+                    break;
+
+
                 case "env_watermelon":
                     shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore || 
                                    pet.dietType == PetAIProperties.DietType.Omnivore;
@@ -112,8 +118,7 @@ public class EnvironmentPetAttractor : MonoBehaviour
                     
                 case "env_orchard":
                     shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore || 
-                                   pet.dietType == PetAIProperties.DietType.Omnivore ||
-                                   pet.personality == PetAIProperties.Personality.Playful;
+                                   pet.dietType == PetAIProperties.DietType.Omnivore ;
                     break;
             }
             

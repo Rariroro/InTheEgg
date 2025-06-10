@@ -8,7 +8,7 @@ using UnityEngine.AI;
 public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
-    public enum DietType { Carnivore, Herbivore, Omnivore, Honey }
+    public enum DietType { Carnivore, Herbivore, Omnivore }
     public enum Habitat { Water, Forest, Field, Fence }
 }
 
@@ -306,7 +306,8 @@ private void Update()
     {
         interactionController.HandleInput();
     }
-    
+      // [수정 1] 중앙 회전 처리 메서드를 여기서 호출합니다.
+        HandleRotation();
     // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
     if (!isGatheringAnimationOverride)
     {
@@ -323,7 +324,42 @@ private void Update()
         petModelTransform.localRotation = Quaternion.identity;
     }
 }
+ // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
+    /// <summary>
+    /// 펫의 회전을 중앙에서 관리합니다.
+    /// NavMeshAgent의 이동 방향(velocity)에 맞춰 펫을 부드럽게 회전시킵니다.
+    /// </summary>
+    private void HandleRotation()
+    {
+        // 도착해서 멈췄거나(isGathered), 플레이어가 직접 조작 중일 때는(isInteracting) 자동 회전을 하지 않습니다.
+        if (isGathered || isInteracting)
+        {
+            return;
+        }
 
+        // NavMeshAgent가 멈춰있거나, 경로가 없으면 회전하지 않습니다.
+        if (agent.isStopped || !agent.hasPath || agent.remainingDistance < 0.1f)
+        {
+            return;
+        }
+
+        // 이동 방향 벡터를 가져옵니다.
+        Vector3 moveDirection = agent.velocity.normalized;
+
+        // 이동 방향이 있을 경우에만 회전합니다 (제자리에서 회전하는 것 방지).
+        if (moveDirection.magnitude > 0.1f)
+        {
+            // 이동 방향을 바라보는 회전값(Quaternion)을 계산합니다.
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+
+            // 현재 각도에서 목표 각도로 부드럽게 회전시킵니다.
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                rotationSpeed * Time.deltaTime
+            );
+        }
+    }
 // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
 public void StopMovement()
 {

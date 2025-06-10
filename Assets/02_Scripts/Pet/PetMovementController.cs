@@ -178,26 +178,26 @@ public void UpdateMovement()
         // 위치 동기화
         petController.petModelTransform.position = transform.position;
         
-        // ★ 회전 동기화 - 이동 중이고 쉬는/대기 상태가 아닐 때만 NavMeshAgent 회전 따라가기
-        // ★ 회전 동기화 - 부모 오브젝트 회전
-    if (!petController.agent.isStopped && 
-        petController.agent.hasPath && 
-        petController.agent.remainingDistance > 0.1f &&
-        currentBehaviorState != BehaviorState.Resting &&
-        currentBehaviorState != BehaviorState.Idle)
-    {
-        Vector3 moveDirection = petController.agent.velocity.normalized;
-        if (moveDirection.magnitude > 0.1f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            // ★ 부모 오브젝트 회전
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                petController.rotationSpeed * Time.deltaTime
-            );
-        }
-    }
+    //     // ★ 회전 동기화 - 이동 중이고 쉬는/대기 상태가 아닐 때만 NavMeshAgent 회전 따라가기
+    //     // ★ 회전 동기화 - 부모 오브젝트 회전
+    // if (!petController.agent.isStopped && 
+    //     petController.agent.hasPath && 
+    //     petController.agent.remainingDistance > 0.1f &&
+    //     currentBehaviorState != BehaviorState.Resting &&
+    //     currentBehaviorState != BehaviorState.Idle)
+    // {
+    //     Vector3 moveDirection = petController.agent.velocity.normalized;
+    //     if (moveDirection.magnitude > 0.1f)
+    //     {
+    //         Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+    //         // ★ 부모 오브젝트 회전
+    //         transform.rotation = Quaternion.Slerp(
+    //             transform.rotation,
+    //             targetRotation,
+    //             petController.rotationSpeed * Time.deltaTime
+    //         );
+    //     }
+    // }
     }
 }
 
