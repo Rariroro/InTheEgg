@@ -53,6 +53,15 @@ public class PetSleepingController : MonoBehaviour
 
     public void UpdateSleeping()
     {
+          // [수정 1] '모이기' 상태일 때 수면 행동을 중단하는 로직 추가
+        if (petController.isGathering || petController.isGathered)
+        {
+            if (isSleeping)
+            {
+                InterruptSleep(); // 잠자는 중이었다면 즉시 깨움
+            }
+            return;
+        }
         // 자고 있지 않은 경우에만 졸림 증가
         if (!isSleeping)
         {
@@ -124,7 +133,12 @@ public class PetSleepingController : MonoBehaviour
             }
         }
     }
-
+// 현재 수면 관련 행동 중인지 외부에서 확인할 수 있는 메서드 추가
+    public bool IsSleepingOrSeeking()
+    {
+        // 현재 잠을 자고 있거나, 잠자리를 찾아가는 중이면 true를 반환
+        return isSleeping || (targetSleepingArea != null);
+    }
     // 성격에 따른 졸림 증가 배율 반환
     private float GetPersonalitySleepModifier()
     {

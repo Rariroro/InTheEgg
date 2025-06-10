@@ -205,8 +205,17 @@ public void UpdateMovement()
     private void DecideNextBehavior()
     {
 
-                Debug.Log("#PetMovementController/DecideNextBehavior");
+ // [수정] 새로운 행동을 결정하기 전, 더 중요한 행동(식사, 수면)을 하는지 확인
+        var feedingController = petController.GetComponent<PetFeedingController>();
+        var sleepingController = petController.GetComponent<PetSleepingController>();
 
+        if ((feedingController != null && feedingController.IsEatingOrSeeking()) ||
+            (sleepingController != null && sleepingController.IsSleepingOrSeeking()))
+        {
+            // 밥을 먹으러 가거나 잠을 자러 가는 중이면, 새로운 기본 행동을 결정하지 않음
+            behaviorTimer = 0f; // 타이머만 초기화해서 곧 다시 체크하도록 함
+            return;
+        }
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
             return;
 

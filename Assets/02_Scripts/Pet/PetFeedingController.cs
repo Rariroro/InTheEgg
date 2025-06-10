@@ -166,7 +166,23 @@ public class PetFeedingController : MonoBehaviour
     {
         // "모이기"(집단 호출) 중이면 먹이 행동 X
         if (petController.isGathering || petController.isGathered) return;
-
+  // [수정 1] 수면 행동에 우선순위를 부여하는 로직 추가
+        var sleepingController = petController.GetComponent<PetSleepingController>();
+        if (sleepingController != null && sleepingController.IsSleepingOrSeeking())
+        {
+            // 펫이 잠자러 가는 중이면, 식사 행동을 하지 않음
+            // 만약 음식 목표가 있었다면 취소
+            if (targetFood != null || targetFeedingArea != null)
+            {
+                targetFood = null;
+                targetFeedingArea = null;
+                if (petController.agent.hasPath)
+                {
+                    petController.agent.ResetPath();
+                }
+            }
+            return;
+        }
         // ---- 배고픔 자연 증가 -----------------------------------------
         if (!isEating)
         {
@@ -227,7 +243,12 @@ public class PetFeedingController : MonoBehaviour
         // ---- 목표물 이동 & 섭취 처리 -----------------------------------
         HandleMovementToTarget();
     }
-
+  // [수정 2] 현재 식사 관련 행동 중인지 외부에서 확인할 수 있는 메서드 추가
+    public bool IsEatingOrSeeking()
+    {
+        // 현재 밥을 먹고 있거나, 음식을 찾아가는 중이면 true를 반환
+        return isEating || (targetFood != null) || (targetFeedingArea != null);
+    }
     //---------------------------------------------------------------------
     // 🐾 5. 탐색 로직 (급식소 / 음식)
     //---------------------------------------------------------------------
