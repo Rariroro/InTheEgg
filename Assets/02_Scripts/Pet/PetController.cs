@@ -170,7 +170,11 @@ private void Awake()
             StartCoroutine(RegisterToPetManager());
         }
     }
-    
+    // PetController.cs에 추가
+public void SetRandomDestination()
+{
+    movementController?.SetRandomDestination();
+}
     private IEnumerator RegisterToPetManager()
     {
         // 프레임 하나 대기

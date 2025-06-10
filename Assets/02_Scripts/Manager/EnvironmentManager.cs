@@ -234,7 +234,11 @@ private IEnumerator SpawnDefaultEnvironments()
         {
             Debug.LogError("TerrainTextureSwitchManager를 찾을 수 없습니다!");
         }
-
+ // ★ 펫 유인 시스템 호출 추가
+    if (EnvironmentPetAttractor.Instance != null)
+    {
+        EnvironmentPetAttractor.Instance.OnEnvironmentSpawned(environmentId, environment.transform.position);
+    }
         if (withFirstAppearanceEffect)
         {
             ApplyFirstAppearanceEffect(environment);
@@ -306,7 +310,13 @@ private IEnumerator SpawnDefaultEnvironments()
 
         // 환경 스폰 (코루틴으로 실행하고 완료 대기)
         yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
-
+ // ★ 선물로 나온 환경도 펫 유인
+    GameObject spawnedEnv = spawnedEnvironments[spawnedEnvironments.Count - 1];
+    if (EnvironmentPetAttractor.Instance != null && spawnedEnv != null)
+    {
+        yield return new WaitForSeconds(0.5f); // 약간의 딜레이
+        EnvironmentPetAttractor.Instance.OnEnvironmentSpawned(environmentId, spawnedEnv.transform.position);
+    }
         // 환경이 완전히 배치될 때까지 추가 대기
         yield return new WaitForSeconds(1f);
 
