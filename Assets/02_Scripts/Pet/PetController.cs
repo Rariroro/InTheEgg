@@ -8,8 +8,8 @@ using UnityEngine.AI;
 public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
-    public enum DietType { Carnivore, Herbivore, Omnivore }
-    public enum Habitat { Water, Forest, Field }
+    public enum DietType { Carnivore, Herbivore, Omnivore, Honey }
+    public enum Habitat { Water, Forest, Field, Fence }
 }
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.

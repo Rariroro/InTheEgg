@@ -10,6 +10,8 @@ public class PetSelectionUI : MonoBehaviour
     public Transform toggleContainer;         // 토글 버튼들이 배치될 부모 오브젝트
     public Button startButton;                // 게임 시작 버튼
     public TMP_Text selectedPetsText;         // 선택된 펫 수 표시 텍스트
+                                              // ★ 새로 추가된 버튼들
+    public Button selectAllPetsButton;       // 모든 펫 선택 버튼
     public int columns = 4;                   // 그리드 열 수
     public float toggleSpacing = 100f;        // 토글 간격
 
@@ -37,10 +39,33 @@ public class PetSelectionUI : MonoBehaviour
             startButton.onClick.AddListener(OnStartButtonClicked);
             startButton.interactable = false; // 초기에는 비활성화
         }
+        // ★ 새로 추가된 버튼 이벤트 설정
+        if (selectAllPetsButton != null)
+        {
+            selectAllPetsButton.onClick.AddListener(OnSelectAllPetsClicked);
+        }
+
 
         // 선택된 펫 수 텍스트 업데이트
         UpdateSelectedCountText();
     }
+    // ★ 모든 펫 선택 버튼 클릭 메서드
+    void OnSelectAllPetsClicked()
+    {
+        Debug.Log("모든 펫 선택 버튼 클릭됨");
+
+        // 모든 펫 토글을 켜기
+        for (int i = 0; i < petToggles.Count; i++)
+        {
+            if (petToggles[i] != null && !petToggles[i].isOn)
+            {
+                petToggles[i].isOn = true; // 이렇게 하면 OnPetToggleValueChanged가 자동 호출됨
+            }
+        }
+
+        Debug.Log($"총 {petToggles.Count}개 펫이 선택되었습니다.");
+    }
+
 
     void CreatePetToggles()
     {
@@ -56,9 +81,9 @@ public class PetSelectionUI : MonoBehaviour
             // 메인 컨테이너 생성 (펫 토글 + 최초 등장 토글을 담을 컨테이너)
             GameObject containerObj = new GameObject($"PetContainer_{i:D03}");
             containerObj.transform.SetParent(toggleContainer);
-            
+
             RectTransform containerRect = containerObj.AddComponent<RectTransform>();
-            
+
             // 컨테이너 위치 설정 (그리드 레이아웃)
             int row = (i - 1) / columns;
             int col = (i - 1) % columns;
@@ -72,10 +97,10 @@ public class PetSelectionUI : MonoBehaviour
             petToggleRect.sizeDelta = new Vector2(80, 40);
 
             Toggle petToggle = petToggleObj.GetComponent<Toggle>();
-            
+
             // 펫 ID 설정
             string petId = $"pet_{i:D03}";
-            
+
             // 펫 토글 라벨 텍스트 설정
             TMP_Text petLabelText = petToggleObj.GetComponentInChildren<TMP_Text>();
             if (petLabelText != null)
@@ -104,10 +129,10 @@ public class PetSelectionUI : MonoBehaviour
             // 펫 토글 이벤트 등록
             string id = petId; // 클로저에서 사용할 변수
             petToggle.onValueChanged.AddListener((isOn) => OnPetToggleValueChanged(id, isOn, firstAppearanceToggle));
-            
+
             // 최초 등장 토글 이벤트 등록
             firstAppearanceToggle.onValueChanged.AddListener((isOn) => OnFirstAppearanceToggleValueChanged(id, isOn));
-            
+
             petToggles.Add(petToggle);
             firstAppearanceToggles.Add(firstAppearanceToggle);
         }
@@ -126,9 +151,9 @@ public class PetSelectionUI : MonoBehaviour
             firstAppearanceToggle.interactable = false; // 최초 등장 토글 비활성화
             firstAppearanceToggle.isOn = false; // 최초 등장 토글 해제
         }
-        
+
         UpdateSelectedCountText();
-        
+
         // 최소 하나 이상 선택되어 있는지 확인하여 시작 버튼 활성화/비활성화
         if (startButton != null)
         {

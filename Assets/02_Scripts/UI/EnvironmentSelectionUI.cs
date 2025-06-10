@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
+using System.Collections;
 
 public class EnvironmentSelectionUI : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class EnvironmentSelectionUI : MonoBehaviour
     public int columns = 3;                  // 그리드 형태의 열 수
     public float toggleSpacing = 100f;       // 토글 간격
     public TMP_Text selectedEnvironmentText;  // 선택된 환경 개수를 표시할 텍스트
+    public Button selectAllEnvironmentsButton; // 모든 환경 최초등장 선택 버튼
+
 
     // UI 토글들을 관리하기 위한 리스트
     private List<Toggle> environmentToggles = new List<Toggle>();
@@ -30,11 +33,52 @@ public class EnvironmentSelectionUI : MonoBehaviour
 
         // UI에 표시할 토글 버튼을 동적으로 생성
         CreateEnvironmentToggles();
-
+  // ★ 모든 환경 최초등장 선택 버튼 이벤트 설정
+    if (selectAllEnvironmentsButton != null)
+    {
+        selectAllEnvironmentsButton.onClick.AddListener(OnSelectAllEnvironmentsClicked);
+    }
         // 선택된 환경 개수를 텍스트에 반영(초기 값: 0)
         UpdateSelectedCountText();
     }
+// ★ 모든 환경 최초등장 선택 버튼 클릭 메서드
+void OnSelectAllEnvironmentsClicked()
+{
+    Debug.Log("모든 환경 최초등장 선택 버튼 클릭됨");
+    
+    // 모든 환경 토글 켜기
+    for (int i = 0; i < environmentToggles.Count; i++)
+    {
+        if (environmentToggles[i] != null && !environmentToggles[i].isOn)
+        {
+            environmentToggles[i].isOn = true;
+        }
+    }
+    
+    // 잠시 대기 후 모든 최초등장 토글 켜기
+    StartCoroutine(EnableAllFirstAppearanceToggles());
+}
 
+// ★ 모든 최초등장 토글을 켜는 코루틴
+private IEnumerator EnableAllFirstAppearanceToggles()
+{
+    // 환경 토글들이 처리될 시간을 주기 위해 약간 대기
+    yield return new WaitForSeconds(0.1f);
+    
+    // 모든 최초등장 토글 켜기
+    for (int i = 0; i < firstAppearanceToggles.Count; i++)
+    {
+        if (firstAppearanceToggles[i] != null && firstAppearanceToggles[i].interactable && !firstAppearanceToggles[i].isOn)
+        {
+            firstAppearanceToggles[i].isOn = true;
+        }
+    }
+    
+    Debug.Log($"총 {environmentToggles.Count}개 환경이 최초등장 상태로 선택되었습니다.");
+    
+    // 선택된 환경 개수 텍스트 업데이트
+    UpdateSelectedCountText();
+}
     void CreateEnvironmentToggles()
     {
         if (togglePrefab == null || toggleContainer == null)

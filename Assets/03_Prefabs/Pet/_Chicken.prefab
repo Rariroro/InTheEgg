@@ -55,15 +55,18 @@ MonoBehaviour:
   smoothTime: 0.3
   personality: 3
   dietType: 2
-  habitat: 2
+  habitat: 3
   affection: 0
   hunger: 0
+  sleepiness: 0
   petName: Chicken
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
   isGathered: 0
+  isGathering: 0
   gatherCommandVersion: 0
+  isGatheringAnimationOverride: 0
   baseSpeed: 0
   baseAngularSpeed: 0
   baseAcceleration: 0
