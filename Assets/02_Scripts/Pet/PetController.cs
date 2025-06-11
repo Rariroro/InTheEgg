@@ -70,7 +70,9 @@ public class PetController : MonoBehaviour
     // 상호작용 관련 변수
     [HideInInspector] public bool isInteracting = false;
     [HideInInspector] public PetController interactionPartner = null;
-
+// PetController에 물 상태 플래그 추가
+[HideInInspector] public bool isInWater = false;
+[HideInInspector] public float waterDepthOffset = 0f;
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
     {
@@ -314,13 +316,11 @@ private void Update()
         animationController.UpdateAnimation();
     }
     
-    // ★ 자식 오브젝트는 항상 부모의 위치/회전을 기준으로 유지
+  // ★ 물에 있을 때는 Y 오프셋 적용, 아니면 원위치
     if (petModelTransform != null)
     {
-        // 자식 오브젝트는 부모 기준 로컬 위치를 유지 (보통 Vector3.zero)
-        petModelTransform.localPosition = Vector3.zero;
-        
-        // 자식 오브젝트는 부모 기준 로컬 회전을 유지 (보통 Quaternion.identity)
+        Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+        petModelTransform.localPosition = targetLocalPos;
         petModelTransform.localRotation = Quaternion.identity;
     }
 }
