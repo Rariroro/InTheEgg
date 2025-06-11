@@ -29,8 +29,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.4999999, y: 1.4999999, z: 1.4999999}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6353010618909736458}
   m_Father: {fileID: 0}
@@ -58,12 +58,15 @@ MonoBehaviour:
   habitat: 2
   affection: 0
   hunger: 0
+  sleepiness: 0
   petName: Meerkat
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
   isGathered: 0
+  isGathering: 0
   gatherCommandVersion: 0
+  isGatheringAnimationOverride: 0
   baseSpeed: 0
   baseAngularSpeed: 0
   baseAcceleration: 0
@@ -72,6 +75,8 @@ MonoBehaviour:
   manuallySetPetType: 0
   isInteracting: 0
   interactionPartner: {fileID: 0}
+  isInWater: 0
+  waterDepthOffset: 0
 --- !u!195 &5035496654800545202
 NavMeshAgent:
   m_ObjectHideFlags: 0
