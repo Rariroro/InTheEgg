@@ -9,7 +9,7 @@ public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
     public enum DietType { Carnivore, Herbivore, Omnivore }
-    public enum Habitat { Water, Forest, Field, Fence }
+    public enum Habitat { Water, Forest, Field, Fence,Tree }
 }
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.
@@ -72,7 +72,12 @@ public class PetController : MonoBehaviour
     [HideInInspector] public PetController interactionPartner = null;
 // PetController에 물 상태 플래그 추가
 [HideInInspector] public bool isInWater = false;
-[HideInInspector] public float waterDepthOffset = 0f;
+    [HideInInspector] public float waterDepthOffset = 0f;
+// PetController.cs에 추가
+[HideInInspector] public bool isClimbingTree = false;
+[HideInInspector] public Transform currentTree = null;
+    [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이
+
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
     {
