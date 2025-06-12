@@ -109,26 +109,33 @@ void Update()
             // ★ 새로운 스마트 위치 배정 시스템 적용
             Dictionary<PetController, Vector3> smartAssignments = OptimizePositionAssignment(pets, targetPositions);
 
-            // ★ 1단계: 모든 펫을 우선 모이기 상태로 설정
-            foreach (PetController pet in pets)
-            {
-                if (pet != null)
-                {
-                    pet.gatherCommandVersion++;
-                    pet.isGathered = false;
-                    pet.isGathering = true;
+           // ★ 1단계: 모든 펫을 우선 모이기 상태로 설정
+foreach (PetController pet in pets)
+{
+    if (pet != null)
+    {
+        pet.gatherCommandVersion++;
+        pet.isGathered = false;
+        pet.isGathering = true;
 
-                    // 현재 움직임 중단
-                    if (pet.agent != null && pet.agent.enabled)
-                    {
-                        try
-                        {
-                            pet.agent.isStopped = true;
-                        }
-                        catch { }
-                    }
-                }
+        // ★ 나무에 올라가 있는 펫 강제로 내려오게 하기
+        if (pet.isClimbingTree)
+        {
+            StartCoroutine(ForceClimbDownForGathering(pet));
+            continue; // 나무에서 내려오는 중이므로 다른 처리는 스킵
+        }
+
+        // 현재 움직임 중단
+        if (pet.agent != null && pet.agent.enabled)
+        {
+            try
+            {
+                pet.agent.isStopped = true;
             }
+            catch { }
+        }
+    }
+}
 
             // ★ 2단계: 최적화된 배정에 따라 개별 펫 처리
             int successfulAssignments = 0;
@@ -222,7 +229,57 @@ void Update()
         }
     }
 }
+// 나무에 올라가 있는 펫을 강제로 내려오게 하는 코루틴
+private IEnumerator ForceClimbDownForGathering(PetController pet)
+{
+    Debug.Log($"{pet.petName}: 모이기 명령으로 나무에서 내려옵니다.");
+    
+    // 나무 올라가기 상태 해제
+    pet.isClimbingTree = false;
+    
+    // 현재 나무 올라가기 코루틴들 중단
+    pet.StopAllCoroutines();
+    
+    // NavMeshAgent 재활성화 및 지면으로 이동
+    if (pet.agent != null)
+    {
+        pet.agent.enabled = true;
+        
+        // 현재 위치에서 지면으로 NavMesh 위치 찾기
+        NavMeshHit navHit;
+        Vector3 groundPosition = pet.transform.position;
+        groundPosition.y = 0; // 지면 높이로 설정
+        
+        if (NavMesh.SamplePosition(groundPosition, out navHit, 10f, NavMesh.AllAreas))
+        {
+            pet.transform.position = navHit.position;
+            pet.agent.Warp(navHit.position);
+        }
+        
+        // 모이기 설정 적용
+        float originalSpeed = pet.baseSpeed;
+        float originalAngularSpeed = pet.baseAngularSpeed;
+        float originalAcceleration = pet.baseAcceleration;
+        float originalStoppingDistance = pet.baseStoppingDistance;
 
+        pet.agent.speed = originalSpeed * speedMultiplier;
+        pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
+        pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
+        pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
+        
+        pet.isGatheringAnimationOverride = true;
+        
+        if (pet.animator != null)
+        {
+            pet.animator.SetInteger("animation", 2); // 뛰기 애니메이션
+        }
+        
+        // 모이기 목표 위치로 이동 (기존 로직과 연결)
+        yield return new WaitForSeconds(0.5f); // 잠시 대기 후 모이기 진행
+    }
+    
+    pet.currentTree = null;
+}
 // ★ 새로 추가되는 스마트 위치 배정 메서드들
 
 /// <summary>
