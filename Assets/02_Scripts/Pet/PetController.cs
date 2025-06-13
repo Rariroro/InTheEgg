@@ -341,7 +341,11 @@ private void Update()
         {
             return;
         }
-
+ // ★ NavMeshAgent 상태 체크 추가
+    if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+    {
+        return;
+    }
         // NavMeshAgent가 멈춰있거나, 경로가 없으면 회전하지 않습니다.
         if (agent.isStopped || !agent.hasPath || agent.remainingDistance < 0.1f)
         {

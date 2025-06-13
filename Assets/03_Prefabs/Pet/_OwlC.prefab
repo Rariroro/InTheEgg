@@ -55,7 +55,7 @@ MonoBehaviour:
   smoothTime: 0.3
   personality: 0
   dietType: 2
-  habitat: 4
+  habitat: 1
   affection: 0
   hunger: 0
   sleepiness: 0
