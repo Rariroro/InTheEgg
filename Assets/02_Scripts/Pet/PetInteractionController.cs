@@ -263,40 +263,54 @@ public class PetInteractionController : MonoBehaviour
 
     // PetInteractionController.cs 내의 수정이 필요한 부분
     private void StartHolding()
+{
+    isHolding = true;
+    petController.StopMovement();
+
+    // ★ 나무 올라가기 상태 초기화 개선
+    if (petController.isClimbingTree)
     {
-        isHolding = true;
-        petController.StopMovement();
-
-        // NavMeshAgent 비활성화
-        if (petController.agent != null)
-        {
-            petController.agent.enabled = false;
-            // 현재 회전값 저장
-            if (petController.petModelTransform != null)
-            {
-                petController.petModelTransform.rotation = petController.transform.rotation;
-            }
-        }
-
-        // CameraController 비활성화
-        CameraController camController = FindObjectOfType<CameraController>();
-        if (camController != null)
-        {
-            camController.enabled = false;
-        }
-
-        // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
-        {
-            Vector3 surfacePoint = hit.position;
-            targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
-            petController.transform.position = targetPosition;
-        }
-
-        if (nameTextObject != null)
-            nameTextObject.SetActive(false);
+        // PetMovementController의 나무 관련 코루틴만 중단
+        var movementController = petController.GetComponent<PetMovementController>();
+        movementController?.StopTreeClimbing();
+        
+        // 나무 올라가기 관련 상태 초기화
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+        
+        Debug.Log($"{petController.petName}: 나무에서 강제로 내려옴 (플레이어가 잡음)");
     }
+
+    // NavMeshAgent 비활성화
+    if (petController.agent != null)
+    {
+        petController.agent.enabled = false;
+        // 현재 회전값 저장
+        if (petController.petModelTransform != null)
+        {
+            petController.petModelTransform.rotation = petController.transform.rotation;
+        }
+    }
+
+    // CameraController 비활성화
+    CameraController camController = FindObjectOfType<CameraController>();
+    if (camController != null)
+    {
+        camController.enabled = false;
+    }
+
+    // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
+    NavMeshHit hit;
+    if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
+    {
+        Vector3 surfacePoint = hit.position;
+        targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
+        petController.transform.position = targetPosition;
+    }
+
+    if (nameTextObject != null)
+        nameTextObject.SetActive(false);
+}
 
     private void StopHolding()
     {
@@ -447,14 +461,23 @@ public class PetInteractionController : MonoBehaviour
     }
 
     // 펫 배치를 완료하는 함수
-    private void CompletePetPlacement()
+   private void CompletePetPlacement()
+{
+    isHolding = false;  // 펫을 들고 있지 않은 상태로 설정
+    
+    // ★ 나무 상태 최종 확인 및 초기화
+    if (petController.isClimbingTree)
     {
-        isHolding = false;  // 펫을 들고 있지 않은 상태로 설정
-        petController.ResumeMovement(); // 펫의 움직임을 다시 시작합니다.
-        // 펫에게 랜덤한 목적지를 설정합니다.
-        petController.GetComponent<PetMovementController>().SetRandomDestination();
-        Deselect();       // 펫 선택 해제
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+        Debug.Log($"{petController.petName}: 나무 상태 최종 초기화");
     }
+    
+    petController.ResumeMovement(); // 펫의 움직임을 다시 시작합니다.
+    // 펫에게 랜덤한 목적지를 설정합니다.
+    petController.GetComponent<PetMovementController>().SetRandomDestination();
+    Deselect();       // 펫 선택 해제
+}
 
     // 펫을 선택하는 함수
     private void Select()

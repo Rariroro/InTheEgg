@@ -50,10 +50,13 @@ public class PetMovementController : MonoBehaviour
     private float depthTransitionSpeed = 2f;
 
 
-    private float treeDetectionRadius = 10f;
+    private float treeDetectionRadius = 50f;
     private float treeClimbChance = 0.9f; // 30% 확률로 나무에 올라감
     private bool isSearchingForTree = false;
-
+// ✅ 새로 추가할 변수들
+[SerializeField] private LayerMask treeLayerMask = -1; // 나무 레이어 마스크
+private float lastTreeSearchTime = 0f;                // 마지막 탐색 시간
+private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
     /// <summary>
     /// 물 속성 펫이 물 vs 육지 목적지를 고를 확률 (0~1).
     /// 예: 0.8이면 80% 확률로 물 영역을 선택.
@@ -202,248 +205,275 @@ public class PetMovementController : MonoBehaviour
     }
 
     private void CheckTreeArea()
+{
+    // Tree 또는 Forest habitat만 나무에 올라감
+    if (petController.habitat != PetAIProperties.Habitat.Tree )
+        return;
+
+    // 이미 나무에 있거나 물에 있으면 체크하지 않음
+    if (petController.isClimbingTree || isInWater)
+        return;
+
+    // ✅ 쿨다운 + 확률 체크로 변경
+    if (!isSearchingForTree && 
+        Time.time - lastTreeSearchTime > treeSearchCooldown && 
+        Random.value < 0.1f) // 10% 확률 (쿨다운 덕분에 안전)
     {
-        // Tree 또는 Forest habitat만 나무에 올라감
-        if (petController.habitat != PetAIProperties.Habitat.Tree )
-            return;
-
-        // 이미 나무에 있거나 물에 있으면 체크하지 않음
-        if (petController.isClimbingTree || isInWater)
-            return;
-
-        // 주기적으로 나무 탐색 (매 프레임 체크 방지)
-        if (!isSearchingForTree && Random.value < 0.01f) // 1% 확률로 체크 시작
-        {
-            StartCoroutine(SearchAndClimbTree());
-        }
+        lastTreeSearchTime = Time.time;
+        StartCoroutine(SearchAndClimbTree());
     }
+}
+private Coroutine climbTreeCoroutine = null;
 
-    // 나무 찾기 및 올라가기 코루틴
-    private IEnumerator SearchAndClimbTree()
+   // 나무 찾기 및 올라가기 코루틴
+private IEnumerator SearchAndClimbTree()
+{
+    isSearchingForTree = true;
+
+    // ✅ 레이어 마스크 적용으로 성능 최적화
+    Collider[] trees = Physics.OverlapSphere(transform.position, treeDetectionRadius, treeLayerMask);
+    Transform nearestTree = null;
+    float nearestDistance = float.MaxValue;
+
+    foreach (Collider col in trees)
     {
-        isSearchingForTree = true;
-
-        // 주변 나무 탐색 (태그가 "Tree"인 오브젝트)
-        Collider[] trees = Physics.OverlapSphere(transform.position, treeDetectionRadius);
-        Transform nearestTree = null;
-        float nearestDistance = float.MaxValue;
-
-        foreach (Collider col in trees)
+        if (col.CompareTag("Tree"))
         {
-            if (col.CompareTag("Tree"))
+            float distance = Vector3.Distance(transform.position, col.transform.position);
+            if (distance < nearestDistance)
             {
-                float distance = Vector3.Distance(transform.position, col.transform.position);
-                if (distance < nearestDistance)
-                {
-                    nearestDistance = distance;
-                    nearestTree = col.transform;
-                }
+                nearestDistance = distance;
+                nearestTree = col.transform;
             }
         }
-
-        // 나무를 찾았고 확률적으로 올라가기로 결정
-        if (nearestTree != null && Random.value < treeClimbChance)
-        {
-            yield return StartCoroutine(ClimbTree(nearestTree));
-        }
-
-        isSearchingForTree = false;
     }
 
+       // 나무를 찾았고 확률적으로 올라가기로 결정
+    if (nearestTree != null && Random.value < treeClimbChance)
+    {
+        // ★ 코루틴 참조 저장
+        climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
+        yield return climbTreeCoroutine;
+        climbTreeCoroutine = null;
+    }
+
+    isSearchingForTree = false;
+}
+// 나무 올라가기 중단 메서드 추가
+public void StopTreeClimbing()
+{
+    if (climbTreeCoroutine != null)
+    {
+        StopCoroutine(climbTreeCoroutine);
+        climbTreeCoroutine = null;
+    }
+    
+    isSearchingForTree = false;
+    
+    // 애니메이션 정리
+    var anim = GetComponent<PetAnimationController>();
+    anim?.StopContinuousAnimation();
+}
     // 나무 올라가기 코루틴
-   private IEnumerator ClimbTree(Transform tree)
-{
-    petController.isClimbingTree = true;
-    petController.currentTree = tree;
-    
-    // NavMeshAgent 비활성화
-    if (petController.agent != null)
+    private IEnumerator ClimbTree(Transform tree)
     {
-        petController.agent.enabled = false;
-    }
+        petController.isClimbingTree = true;
+        petController.currentTree = tree;
 
-    // 나무의 실제 높이 계산
-    float treeHeight = CalculateTreeHeight(tree);
-    float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
-    
-    // 나무로 이동
-    Vector3 treeBase = tree.position;
-    float moveTime = 2f;
-    float elapsed = 0f;
-    Vector3 startPos = transform.position;
-
-    // 걷기 애니메이션
-    var anim = petController.GetComponent<PetAnimationController>();
-    anim?.SetContinuousAnimation(1);
-
-    // 나무 밑으로 이동
-    while (elapsed < moveTime)
-    {
-        elapsed += Time.deltaTime;
-        float t = elapsed / moveTime;
-        transform.position = Vector3.Lerp(startPos, treeBase, t);
-        
-        // 나무를 바라보도록 회전
-        Vector3 lookDir = (treeBase - transform.position).normalized;
-        lookDir.y = 0;
-        if (lookDir != Vector3.zero)
+        // NavMeshAgent 비활성화
+        if (petController.agent != null)
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, 
-                Quaternion.LookRotation(lookDir), Time.deltaTime * 5f);
-        }
-        
-        yield return null;
-    }
-
-    // 올라가기 애니메이션
-    anim?.SetContinuousAnimation(3);
-
-    // 계산된 높이로 올라가기
-    Vector3 climbTarget = treeBase + Vector3.up * climbTargetHeight;
-    elapsed = 0f;
-    moveTime = 3f;
-    startPos = transform.position;
-
-    while (elapsed < moveTime)
-    {
-        elapsed += Time.deltaTime;
-        float t = elapsed / moveTime;
-        transform.position = Vector3.Lerp(startPos, climbTarget, t);
-        yield return null;
-    }
-
-    // 나무 위에서 쉬기
-    anim?.SetContinuousAnimation(5);
-
-    // 5-10초 동안 나무 위에서 쉬기
-    yield return new WaitForSeconds(Random.Range(5f, 10f));
-
-    // 내려오기
-    yield return StartCoroutine(ClimbDownTree());
-}
-
-// 나무의 실제 높이를 계산하는 메서드
-private float CalculateTreeHeight(Transform tree)
-{
-    float height = 5f; // 기본 높이
-    
-    // 1. Collider bounds로 높이 계산
-    Collider treeCollider = tree.GetComponent<Collider>();
-    if (treeCollider != null)
-    {
-        height = treeCollider.bounds.size.y;
-    }
-    else
-    {
-        // 2. Collider가 없으면 MeshRenderer bounds 사용
-        MeshRenderer meshRenderer = tree.GetComponentInChildren<MeshRenderer>();
-        if (meshRenderer != null)
-        {
-            height = meshRenderer.bounds.size.y;
-        }
-        else
-        {
-            // 3. 둘 다 없으면 자식 오브젝트들의 bounds 계산
-            Bounds combinedBounds = CalculateCombinedBounds(tree);
-            if (combinedBounds.size != Vector3.zero)
-            {
-                height = combinedBounds.size.y;
-            }
-        }
-    }
-    
-    return height;
-}
-
-// 올라갈 위치 계산 (나무 높이의 60-80% 지점)
-private float CalculateClimbPosition(Transform tree, float treeHeight)
-{
-    // 나무 높이에 따라 올라갈 비율 조정
-    float climbRatio;
-    
-    // if (treeHeight < 3f) // 작은 나무
-    // {
-    //     climbRatio = Random.Range(0.5f, 0.7f); // 50-70%
-    // }
-    // else if (treeHeight < 6f) // 중간 나무
-    // {
-    //     climbRatio = Random.Range(0.6f, 0.8f); // 60-80%
-    // }
-    // else // 큰 나무
-    // {
-    //     climbRatio = Random.Range(0.7f, 0.85f); // 70-85%
-    // }
-            climbRatio = Random.Range(2.0f, 2.3f); // 70-85%
-
-    // 나무의 로컬 Y 위치도 고려
-    float baseY = 0f;
-    if (tree.GetComponent<Collider>() != null)
-    {
-        baseY = tree.GetComponent<Collider>().bounds.min.y - tree.position.y;
-    }
-    
-    return baseY + (treeHeight * climbRatio);
-}
-
-// 자식 오브젝트들을 포함한 전체 bounds 계산
-private Bounds CalculateCombinedBounds(Transform parent)
-{
-    Renderer[] renderers = parent.GetComponentsInChildren<Renderer>();
-    
-    if (renderers.Length == 0)
-        return new Bounds(parent.position, Vector3.zero);
-    
-    Bounds bounds = renderers[0].bounds;
-    for (int i = 1; i < renderers.Length; i++)
-    {
-        bounds.Encapsulate(renderers[i].bounds);
-    }
-    
-    return bounds;
-}
-
-
-    // 나무에서 내려오기
-    private IEnumerator ClimbDownTree()
-    {
-        var anim = petController.GetComponent<PetAnimationController>();
-
-        // 내려가기 애니메이션
-        anim?.SetContinuousAnimation(1);
-
-        // 바닥으로 내려오기
-        Vector3 groundPos = petController.currentTree.position;
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(groundPos, out hit, 5f, NavMesh.AllAreas))
-        {
-            groundPos = hit.position;
+            petController.agent.enabled = false;
         }
 
+        // 나무의 실제 높이 계산
+        float treeHeight = CalculateTreeHeight(tree);
+        float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
+
+        // 나무로 이동
+        Vector3 treeBase = tree.position;
         float moveTime = 2f;
         float elapsed = 0f;
         Vector3 startPos = transform.position;
+
+        // 걷기 애니메이션
+        var anim = petController.GetComponent<PetAnimationController>();
+        anim?.SetContinuousAnimation(1);
+
+        // 나무 밑으로 이동
+        while (elapsed < moveTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / moveTime;
+            transform.position = Vector3.Lerp(startPos, treeBase, t);
+
+            // 나무를 바라보도록 회전
+            Vector3 lookDir = (treeBase - transform.position).normalized;
+            lookDir.y = 0;
+            if (lookDir != Vector3.zero)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation,
+                    Quaternion.LookRotation(lookDir), Time.deltaTime * 5f);
+            }
+
+            yield return null;
+        }
+
+        // 올라가기 애니메이션
+        anim?.SetContinuousAnimation(3);
+
+        // 계산된 높이로 올라가기
+        Vector3 climbTarget = treeBase + Vector3.up * climbTargetHeight;
+        elapsed = 0f;
+        moveTime = 3f;
+        startPos = transform.position;
 
         while (elapsed < moveTime)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / moveTime;
-            transform.position = Vector3.Lerp(startPos, groundPos, t);
+            transform.position = Vector3.Lerp(startPos, climbTarget, t);
             yield return null;
         }
 
+        // 나무 위에서 쉬기
+        anim?.SetContinuousAnimation(5);
+
+        // 5-10초 동안 나무 위에서 쉬기
+        yield return new WaitForSeconds(Random.Range(5f, 10f));
+
+        // 내려오기
+        yield return StartCoroutine(ClimbDownTree());
+    }
+
+    // 나무의 실제 높이를 계산하는 메서드
+    private float CalculateTreeHeight(Transform tree)
+    {
+        float height = 5f; // 기본 높이
+
+        // 1. Collider bounds로 높이 계산
+        Collider treeCollider = tree.GetComponent<Collider>();
+        if (treeCollider != null)
+        {
+            height = treeCollider.bounds.size.y;
+        }
+        else
+        {
+            // 2. Collider가 없으면 MeshRenderer bounds 사용
+            MeshRenderer meshRenderer = tree.GetComponentInChildren<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                height = meshRenderer.bounds.size.y;
+            }
+            else
+            {
+                // 3. 둘 다 없으면 자식 오브젝트들의 bounds 계산
+                Bounds combinedBounds = CalculateCombinedBounds(tree);
+                if (combinedBounds.size != Vector3.zero)
+                {
+                    height = combinedBounds.size.y;
+                }
+            }
+        }
+
+        return height;
+    }
+
+    // 올라갈 위치 계산 (나무 높이의 60-80% 지점)
+    private float CalculateClimbPosition(Transform tree, float treeHeight)
+    {
+        // 나무 높이에 따라 올라갈 비율 조정
+        float climbRatio;
+
+        
+        climbRatio = Random.Range(2.3f, 2.5f); // 70-85%
+
+        // 나무의 로컬 Y 위치도 고려
+        float baseY = 0f;
+        if (tree.GetComponent<Collider>() != null)
+        {
+            baseY = tree.GetComponent<Collider>().bounds.min.y - tree.position.y;
+        }
+
+        return baseY + (treeHeight * climbRatio);
+    }
+
+    // 자식 오브젝트들을 포함한 전체 bounds 계산
+    private Bounds CalculateCombinedBounds(Transform parent)
+    {
+        Renderer[] renderers = parent.GetComponentsInChildren<Renderer>();
+
+        if (renderers.Length == 0)
+            return new Bounds(parent.position, Vector3.zero);
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+        {
+            bounds.Encapsulate(renderers[i].bounds);
+        }
+
+        return bounds;
+    }
+
+
+    // 나무에서 내려오기
+   // 나무에서 내려오기
+private IEnumerator ClimbDownTree()
+{
+    // ★ null 체크 추가
+    if (petController.currentTree == null)
+    {
+        Debug.LogWarning($"{petController.petName}: currentTree가 null입니다. 내려오기 중단.");
+        
         // NavMeshAgent 재활성화
         if (petController.agent != null)
         {
             petController.agent.enabled = true;
             petController.agent.Warp(transform.position);
         }
-
+        
         petController.isClimbingTree = false;
-        petController.currentTree = null;
-
-        // 일반 애니메이션으로 복귀
-        anim?.StopContinuousAnimation();
+        yield break;
     }
+    
+    var anim = petController.GetComponent<PetAnimationController>();
+
+    // 내려가기 애니메이션
+    anim?.SetContinuousAnimation(1);
+
+    // 바닥으로 내려오기
+    Vector3 groundPos = petController.currentTree.position; // ★ 이미 null 체크 완료
+    NavMeshHit hit;
+    if (NavMesh.SamplePosition(groundPos, out hit, 5f, NavMesh.AllAreas))
+    {
+        groundPos = hit.position;
+    }
+
+    float moveTime = 2f;
+    float elapsed = 0f;
+    Vector3 startPos = transform.position;
+
+    while (elapsed < moveTime)
+    {
+        elapsed += Time.deltaTime;
+        float t = elapsed / moveTime;
+        transform.position = Vector3.Lerp(startPos, groundPos, t);
+        yield return null;
+    }
+
+    // NavMeshAgent 재활성화
+    if (petController.agent != null)
+    {
+        petController.agent.enabled = true;
+        petController.agent.Warp(transform.position);
+    }
+
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
+
+    // 일반 애니메이션으로 복귀
+    anim?.StopContinuousAnimation();
+}
     // 새 메서드 추가
     private void CheckWaterArea()
     {

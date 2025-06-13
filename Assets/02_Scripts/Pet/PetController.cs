@@ -9,7 +9,7 @@ public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
     public enum DietType { Carnivore, Herbivore, Omnivore }
-    public enum Habitat { Water, Forest, Field, Fence,Tree }
+    public enum Habitat { Water, Forest, Field, Fence, Tree }
 }
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.
@@ -52,7 +52,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public float baseAngularSpeed;
     [HideInInspector] public float baseAcceleration;
     [HideInInspector] public float baseStoppingDistance;
-    
+
     // 각 기능별 컨트롤러 참조
     private PetMovementController movementController;
     private PetAnimationController animationController;
@@ -70,12 +70,12 @@ public class PetController : MonoBehaviour
     // 상호작용 관련 변수
     [HideInInspector] public bool isInteracting = false;
     [HideInInspector] public PetController interactionPartner = null;
-// PetController에 물 상태 플래그 추가
-[HideInInspector] public bool isInWater = false;
+    // PetController에 물 상태 플래그 추가
+    [HideInInspector] public bool isInWater = false;
     [HideInInspector] public float waterDepthOffset = 0f;
-// PetController.cs에 추가
-[HideInInspector] public bool isClimbingTree = false;
-[HideInInspector] public Transform currentTree = null;
+    // PetController.cs에 추가
+    [HideInInspector] public bool isClimbingTree = false;
+    [HideInInspector] public Transform currentTree = null;
     [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이
 
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
@@ -89,33 +89,33 @@ public class PetController : MonoBehaviour
         }
     }
 
-   // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
-private void Awake()
-{
-    birthday = DateTime.Now;
-
-    // NavMeshAgent 초기화
-    agent = GetComponent<NavMeshAgent>();
-    if (agent != null)
+    // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
+    private void Awake()
     {
-        agent.speed = speed;
-        agent.angularSpeed = angularSpeed;
-        agent.acceleration = acceleration;
-        agent.stoppingDistance = stoppingDistance;
-        
-        // ★ 추가 설정 - 회전 관련 설정 개선
-        agent.updateRotation = false;  // 펫 모델의 회전은 직접 제어
-        agent.updatePosition = true;   // 위치는 NavMeshAgent가 제어
-        agent.updateUpAxis = false;    // Y축 회전만 필요
-        
-        // 기본 값 저장
-        baseSpeed = speed;
-        baseAngularSpeed = angularSpeed;
-        baseAcceleration = acceleration;
-        baseStoppingDistance = stoppingDistance;
-    }
+        birthday = DateTime.Now;
 
-    // ... 나머지 코드는 동일
+        // NavMeshAgent 초기화
+        agent = GetComponent<NavMeshAgent>();
+        if (agent != null)
+        {
+            agent.speed = speed;
+            agent.angularSpeed = angularSpeed;
+            agent.acceleration = acceleration;
+            agent.stoppingDistance = stoppingDistance;
+
+            // ★ 추가 설정 - 회전 관련 설정 개선
+            agent.updateRotation = false;  // 펫 모델의 회전은 직접 제어
+            agent.updatePosition = true;   // 위치는 NavMeshAgent가 제어
+            agent.updateUpAxis = false;    // Y축 회전만 필요
+
+            // 기본 값 저장
+            baseSpeed = speed;
+            baseAngularSpeed = angularSpeed;
+            baseAcceleration = acceleration;
+            baseStoppingDistance = stoppingDistance;
+        }
+
+        // ... 나머지 코드는 동일
 
 
         // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
@@ -178,10 +178,10 @@ private void Awake()
         }
     }
     // PetController.cs에 추가
-public void SetRandomDestination()
-{
-    movementController?.SetRandomDestination();
-}
+    public void SetRandomDestination()
+    {
+        movementController?.SetRandomDestination();
+    }
     private IEnumerator RegisterToPetManager()
     {
         // 프레임 하나 대기
@@ -192,7 +192,7 @@ public void SetRandomDestination()
             PetInteractionManager.Instance.RegisterPet(this);
         }
     }
-    
+
     private void OnDestroy()
     {
         // PetInteractionManager에서 이 펫 제거
@@ -201,7 +201,7 @@ public void SetRandomDestination()
             PetInteractionManager.Instance.UnregisterPet(this);
         }
     }
-    
+
     private IEnumerator EnsureNavMeshPlacement()
     {
         yield return new WaitForSeconds(0.2f);
@@ -217,7 +217,7 @@ public void SetRandomDestination()
         if (!agent.isOnNavMesh)
         {
             Debug.Log($"[PetController] {petName}: NavMesh 위에 배치 시도 중...");
-            
+
             NavMeshHit hit;
             if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
             {
@@ -226,11 +226,11 @@ public void SetRandomDestination()
                 agent.enabled = false;
                 transform.position = hit.position;
                 yield return new WaitForSeconds(0.1f);
-                
+
                 // Agent 다시 활성화
                 agent.enabled = wasEnabled;
                 yield return new WaitForSeconds(0.1f);
-                
+
                 Debug.Log($"[PetController] {petName}: NavMesh 위치로 이동 완료 - {hit.position}");
             }
             else
@@ -243,7 +243,7 @@ public void SetRandomDestination()
         if (agent.enabled && agent.isOnNavMesh)
         {
             Debug.Log($"[PetController] {petName}: NavMeshAgent 준비 완료");
-            
+
             // 이제 안전하게 컨트롤러들을 초기화
             if (movementController != null)
                 movementController.Init(this);
@@ -259,7 +259,7 @@ public void SetRandomDestination()
             Debug.LogError($"[PetController] {petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.");
         }
     }
-    
+
     // 펫 이름에서 타입 유추하는 메서드 (개선된 버전)
     private void SetPetTypeFromName()
     {
@@ -295,41 +295,41 @@ public void SetRandomDestination()
         }
     }
 
-  // PetController.cs의 Update 메서드 수정
-  // Update 메서드 수정
-private void Update()
-{
-    feedingController.UpdateFeeding();
-    sleepingController.UpdateSleeping();
-
-    // 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
-    if (!isGathering && !isInteracting)
+    // PetController.cs의 Update 메서드 수정
+    // Update 메서드 수정
+    private void Update()
     {
-        movementController.UpdateMovement();
-    }
+        feedingController.UpdateFeeding();
+        sleepingController.UpdateSleeping();
 
-    // 모이기 중이 아닐 때만 상호작용 처리
-    if (!isGathering)
-    {
-        interactionController.HandleInput();
-    }
-      // [수정 1] 중앙 회전 처리 메서드를 여기서 호출합니다.
+        // 모이기 중이거나 상호작용 중이 아닐 때만 움직임 업데이트
+        if (!isGathering && !isInteracting)
+        {
+            movementController.UpdateMovement();
+        }
+
+        // 모이기 중이 아닐 때만 상호작용 처리
+        if (!isGathering)
+        {
+            interactionController.HandleInput();
+        }
+        // [수정 1] 중앙 회전 처리 메서드를 여기서 호출합니다.
         HandleRotation();
-    // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
-    if (!isGatheringAnimationOverride)
-    {
-        animationController.UpdateAnimation();
+        // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
+        if (!isGatheringAnimationOverride)
+        {
+            animationController.UpdateAnimation();
+        }
+
+        // ★ 물에 있을 때는 Y 오프셋 적용, 아니면 원위치
+        if (petModelTransform != null)
+        {
+            Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+            petModelTransform.localPosition = targetLocalPos;
+            petModelTransform.localRotation = Quaternion.identity;
+        }
     }
-    
-  // ★ 물에 있을 때는 Y 오프셋 적용, 아니면 원위치
-    if (petModelTransform != null)
-    {
-        Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-        petModelTransform.localPosition = targetLocalPos;
-        petModelTransform.localRotation = Quaternion.identity;
-    }
-}
- // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
+    // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
     /// <summary>
     /// 펫의 회전을 중앙에서 관리합니다.
     /// NavMeshAgent의 이동 방향(velocity)에 맞춰 펫을 부드럽게 회전시킵니다.
@@ -341,11 +341,11 @@ private void Update()
         {
             return;
         }
- // ★ NavMeshAgent 상태 체크 추가
-    if (agent == null || !agent.enabled || !agent.isOnNavMesh)
-    {
-        return;
-    }
+        // ★ NavMeshAgent 상태 체크 추가
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            return;
+        }
         // NavMeshAgent가 멈춰있거나, 경로가 없으면 회전하지 않습니다.
         if (agent.isStopped || !agent.hasPath || agent.remainingDistance < 0.1f)
         {
@@ -369,43 +369,43 @@ private void Update()
             );
         }
     }
-// ★ 외부에서 이동을 제어하기 위한 메서드들 개선
-public void StopMovement()
-{
-    if (agent != null && agent.enabled && agent.isOnNavMesh)
+    // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
+    public void StopMovement()
     {
-        try
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            agent.isStopped = true;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
+            try
+            {
+                agent.isStopped = true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
+            }
         }
     }
-}
 
-public void ResumeMovement()
-{
-    // ★ 모이기 중일 때는 움직임 재개하지 않음
-    if (isGathering) 
+    public void ResumeMovement()
     {
-        return;
-    }
-    
-    if (agent != null && agent.enabled && agent.isOnNavMesh)
-    {
-        try
+        // ★ 모이기 중일 때는 움직임 재개하지 않음
+        if (isGathering)
         {
-            agent.isStopped = false;
+            return;
         }
-        catch (System.Exception e)
+
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
+            try
+            {
+                agent.isStopped = false;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
+            }
         }
     }
-}
-    
+
     // 감정 표현 메서드
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
