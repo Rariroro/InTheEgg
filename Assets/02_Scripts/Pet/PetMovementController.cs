@@ -45,7 +45,7 @@ public class PetMovementController : MonoBehaviour
     // 클래스 상단에 필드 추가
     private bool isInWater = false;
     private float waterSpeedMultiplier = 0.3f;
-    private float waterSinkDepth = 0.5f;
+    private float waterSinkDepth = 1.0f;
     private float currentDepth = 0f;
     private float depthTransitionSpeed = 2f;
 
@@ -142,7 +142,7 @@ private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
     // UpdateMovement() 메서드의 마지막 부분 수정
     public void UpdateMovement()
     {
-        Debug.Log("#PetMovementController/UpdateMovement");
+        // Debug.Log("#PetMovementController/UpdateMovement");
         // 물 영역 체크 (NavMeshAgent가 준비된 경우에만)
         // 물 영역 체크를 가장 먼저 수행
         CheckWaterArea();
@@ -152,28 +152,26 @@ private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
         {
             return;
         }
-        // 🎯 모으기 모드 특별 처리
-        if (petController.isGathered)
+         // 모으기 모드면 즉시 리턴
+    if (petController.isGathering)
+    {
+        // 카메라 회전 로직만 처리
+        if (petController.isGathered && Camera.main != null)
         {
-            if (Camera.main != null)
+            Vector3 dir = Camera.main.transform.position - transform.position;
+            dir.y = 0f;
+            if (dir.magnitude > 0.1f)
             {
-                // ★ 부모 오브젝트를 카메라 방향으로 회전
-                Vector3 dir = Camera.main.transform.position - transform.position;
-                dir.y = 0f;
-
-                if (dir.magnitude > 0.1f)
-                {
-                    Quaternion target = Quaternion.LookRotation(dir);
-                    // 부모 오브젝트 회전
-                    transform.rotation = Quaternion.Slerp(
-                        transform.rotation,
-                        target,
-                        petController.rotationSpeed * Time.deltaTime
-                    );
-                }
+                Quaternion target = Quaternion.LookRotation(dir);
+                transform.rotation = Quaternion.Slerp(transform.rotation, target, 
+                    petController.rotationSpeed * Time.deltaTime);
             }
-            return;
         }
+        return;
+    }
+    
+    // NavMeshAgent 체크를 캐싱
+    if (!IsAgentReady()) return;
 
         // NavMeshAgent 준비 상태가 아니면 종료
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
@@ -203,21 +201,26 @@ private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
 
         }
     }
-
-    private void CheckTreeArea()
+// 헬퍼 메서드 추가
+private bool IsAgentReady()
 {
-    // Tree 또는 Forest habitat만 나무에 올라감
-    if (petController.habitat != PetAIProperties.Habitat.Tree )
-        return;
-
-    // 이미 나무에 있거나 물에 있으면 체크하지 않음
-    if (petController.isClimbingTree || isInWater)
-        return;
-
-    // ✅ 쿨다운 + 확률 체크로 변경
-    if (!isSearchingForTree && 
-        Time.time - lastTreeSearchTime > treeSearchCooldown && 
-        Random.value < 0.1f) // 10% 확률 (쿨다운 덕분에 안전)
+    return petController.agent != null && 
+           petController.agent.enabled && 
+           petController.agent.isOnNavMesh;
+}
+   private void CheckTreeArea()
+{
+    // Tree habitat이 아니면 즉시 리턴
+    if (petController.habitat != PetAIProperties.Habitat.Tree) return;
+    
+    // 이미 상태가 정해진 경우 즉시 리턴
+    if (petController.isClimbingTree || isInWater || isSearchingForTree) return;
+    
+    // 쿨다운 체크를 먼저 (불필요한 Random.value 호출 방지)
+    if (Time.time - lastTreeSearchTime < treeSearchCooldown) return;
+    
+    // 확률 체크
+    if (Random.value < 0.1f)
     {
         lastTreeSearchTime = Time.time;
         StartCoroutine(SearchAndClimbTree());
@@ -229,34 +232,43 @@ private Coroutine climbTreeCoroutine = null;
 private IEnumerator SearchAndClimbTree()
 {
     isSearchingForTree = true;
-
-    // ✅ 레이어 마스크 적용으로 성능 최적화
-    Collider[] trees = Physics.OverlapSphere(transform.position, treeDetectionRadius, treeLayerMask);
-    Transform nearestTree = null;
-    float nearestDistance = float.MaxValue;
-
-    foreach (Collider col in trees)
+    
+    // OverlapSphereNonAlloc 사용으로 GC 방지
+    Collider[] treeBuffer = new Collider[10]; // 클래스 레벨 필드로 이동 권장
+    int treeCount = Physics.OverlapSphereNonAlloc(
+        transform.position, 
+        treeDetectionRadius, 
+        treeBuffer, 
+        treeLayerMask
+    );
+    
+    if (treeCount > 0)
     {
-        if (col.CompareTag("Tree"))
+        // 가장 가까운 나무만 찾기
+        Transform nearestTree = null;
+        float nearestDistSqr = float.MaxValue; // sqrMagnitude 사용
+        
+        for (int i = 0; i < treeCount; i++)
         {
-            float distance = Vector3.Distance(transform.position, col.transform.position);
-            if (distance < nearestDistance)
+            if (treeBuffer[i].CompareTag("Tree"))
             {
-                nearestDistance = distance;
-                nearestTree = col.transform;
+                float distSqr = (treeBuffer[i].transform.position - transform.position).sqrMagnitude;
+                if (distSqr < nearestDistSqr)
+                {
+                    nearestDistSqr = distSqr;
+                    nearestTree = treeBuffer[i].transform;
+                }
             }
         }
+        
+        if (nearestTree != null && Random.value < treeClimbChance)
+        {
+            climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
+            yield return climbTreeCoroutine;
+            climbTreeCoroutine = null;
+        }
     }
-
-       // 나무를 찾았고 확률적으로 올라가기로 결정
-    if (nearestTree != null && Random.value < treeClimbChance)
-    {
-        // ★ 코루틴 참조 저장
-        climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
-        yield return climbTreeCoroutine;
-        climbTreeCoroutine = null;
-    }
-
+    
     isSearchingForTree = false;
 }
 // 나무 올라가기 중단 메서드 추가
