@@ -16,151 +16,153 @@ public class PetAnimationController : MonoBehaviour
             lastPosition = petController.petModelTransform.position;
     }
 
- // PetAnimationController.cs의 수정사항
+    // PetAnimationController.cs의 수정사항
 
-// 1. 애니메이션 상태를 추적하는 변수 추가
-private bool isContinuousAnimationPlaying = false;
-private int continuousAnimationIndex = -1;
+    // 1. 애니메이션 상태를 추적하는 변수 추가
+    private bool isContinuousAnimationPlaying = false;
+    private int continuousAnimationIndex = -1;
 
-// 2. UpdateAnimation 메서드 수정
-// UpdateAnimation 메서드 수정
-// PetAnimationController.cs
+    // 2. UpdateAnimation 메서드 수정
+    // UpdateAnimation 메서드 수정
+    // PetAnimationController.cs
 
-public void UpdateAnimation()
-{ // ★ 추가: 선택되었거나 들고 있는 상태에서는 애니메이션 업데이트 스킵
-    if (petController.isSelected || petController.isHolding)
-    {
-        return;
-    }
-    // 애니메이션 속도 조정은 유지합니다.
-    // 펫의 현재 최대 속도(agent.speed)를 기본 속도(baseSpeed)로 나누어 애니메이션 배속을 조절합니다.
-    // 이를 통해 '모이기' 등 특수 상황에서 빨라진 속도에 맞춰 애니메이션도 빠르게 재생됩니다.
-    if (petController.animator != null && petController.agent != null && petController.baseSpeed > 0)
-    {
-        petController.animator.speed = petController.agent.speed / petController.baseSpeed;
-    }
-
-    // 특별 애니메이션(점프, 먹기 등)이나 행동 기반 애니메이션(휴식 등)이 재생 중일 때는
-    // 아래의 기본 이동(Locomotion) 애니메이션 로직을 실행하지 않습니다.
-    if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
-        return;
-
-    // NavMeshAgent의 실제 속도를 기준으로 애니메이션을 결정합니다.
-    if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh && petController.animator != null)
-    {
-        // 에이전트의 현재 속력을 가져옵니다.
-        float agentVelocity = petController.agent.velocity.magnitude;
-
-        // 에이전트가 실제로 움직이고 있는지 확인합니다. (미세한 움직임은 '정지'로 간주)
-        if (agentVelocity > 0.1f)
+    public void UpdateAnimation()
+    { // ★ 추가: 선택되었거나 들고 있는 상태에서는 애니메이션 업데이트 스킵
+        if (petController.isSelected || petController.isHolding)
         {
-            // 에이전트에 설정된 speed 값에 따라 '걷기'와 '뛰기'를 구분합니다.
-            // PetMovementController의 Running 상태에서 speed를 1.5배로 설정한 것을 기반으로 합니다.
-            if (petController.agent.speed > petController.baseSpeed * 1.3f)
+            return;
+        }
+        // 애니메이션 속도 조정은 유지합니다.
+        // 펫의 현재 최대 속도(agent.speed)를 기본 속도(baseSpeed)로 나누어 애니메이션 배속을 조절합니다.
+        // 이를 통해 '모이기' 등 특수 상황에서 빨라진 속도에 맞춰 애니메이션도 빠르게 재생됩니다.
+        if (petController.animator != null && petController.agent != null && petController.baseSpeed > 0)
+        {
+            petController.animator.speed = petController.agent.speed / petController.baseSpeed;
+        }
+
+        // 특별 애니메이션(점프, 먹기 등)이나 행동 기반 애니메이션(휴식 등)이 재생 중일 때는
+        // 아래의 기본 이동(Locomotion) 애니메이션 로직을 실행하지 않습니다.
+        if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
+            return;
+
+        // NavMeshAgent의 실제 속도를 기준으로 애니메이션을 결정합니다.
+        if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh && petController.animator != null)
+        {
+            // 에이전트의 현재 속력을 가져옵니다.
+            float agentVelocity = petController.agent.velocity.magnitude;
+
+            // 에이전트가 실제로 움직이고 있는지 확인합니다. (미세한 움직임은 '정지'로 간주)
+            if (agentVelocity > 0.1f)
             {
-                petController.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
+                // 에이전트에 설정된 speed 값에 따라 '걷기'와 '뛰기'를 구분합니다.
+                // PetMovementController의 Running 상태에서 speed를 1.5배로 설정한 것을 기반으로 합니다.
+                if (petController.agent.speed > petController.baseSpeed * 1.3f)
+                {
+                    petController.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
+                }
+                else
+                {
+                    petController.animator.SetInteger("animation", 1); // 걷기(Walk) 애니메이션
+                }
             }
             else
             {
-                petController.animator.SetInteger("animation", 1); // 걷기(Walk) 애니메이션
+                // 움직이지 않을 때는 '정지' 애니메이션을 재생합니다.
+                petController.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
             }
         }
-        else
+        else if (petController.animator != null)
         {
-            // 움직이지 않을 때는 '정지' 애니메이션을 재생합니다.
+            // NavMeshAgent가 없거나 비활성화된 경우에도 '정지' 상태로 처리합니다.
             petController.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
         }
     }
-    else if (petController.animator != null)
-    {
-         // NavMeshAgent가 없거나 비활성화된 경우에도 '정지' 상태로 처리합니다.
-         petController.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
-    }
-}
 
-// 3. 연속적인 애니메이션 설정 메서드 수정
-public void SetContinuousAnimation(int animationNumber)
-{
-    if (petController.animator != null)
+    // 3. 연속적인 애니메이션 설정 메서드 수정
+    public void SetContinuousAnimation(int animationNumber)
     {
-        petController.animator.SetInteger("animation", animationNumber);
-        isContinuousAnimationPlaying = true;
-        continuousAnimationIndex = animationNumber;
-    }
-}
-
-// 4. 연속적인 애니메이션 종료 메서드 수정
-public void StopContinuousAnimation()
-{
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", 0);
-        isContinuousAnimationPlaying = false;
-        continuousAnimationIndex = -1;
-    }
-}
-// 애니메이션을 강제로 중단하는 메서드 추가
-public void ForceStopAllAnimations()
-{
-    isSpecialAnimationPlaying = false;
-    isContinuousAnimationPlaying = false;
-    continuousAnimationIndex = -1;
-    
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", 0);
-        petController.animator.speed = 1.0f;
-    }
-}
-// 5. PlayAnimationWithCustomDuration 메서드 수정
-public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float duration, bool returnToIdle = true, bool resumeMovementAfter = true)
-{
-    isSpecialAnimationPlaying = true;
-    
-    if (petController.animator != null)
-    {
-        // 현재 애니메이션 상태 저장
-        int previousAnimation = petController.animator.GetInteger("animation");
-        
-        // 새 애니메이션 설정
-        petController.animator.SetInteger("animation", animationNumber);
-        
-        // 지정된 시간만큼 대기
-        yield return new WaitForSeconds(duration);
-        
-        // 기본 애니메이션으로 돌아갈지 여부
-        if (returnToIdle)
+        if (petController.animator != null)
         {
-            petController.animator.SetInteger("animation", 0);
-        }
-        else
-        {
-            // 연속 애니메이션으로 전환
+            petController.animator.SetInteger("animation", animationNumber);
             isContinuousAnimationPlaying = true;
             continuousAnimationIndex = animationNumber;
         }
     }
-    else
+
+    // 4. 연속적인 애니메이션 종료 메서드 수정
+    public void StopContinuousAnimation()
     {
-        yield return new WaitForSeconds(duration);
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+            isContinuousAnimationPlaying = false;
+            continuousAnimationIndex = -1;
+        }
     }
-    
-    isSpecialAnimationPlaying = false;
-    
-    // 이동을 재개할지 여부
-    if (resumeMovementAfter && petController.agent != null && 
-        petController.agent.enabled && petController.agent.isOnNavMesh)
+    // 애니메이션을 강제로 중단하는 메서드 추가
+    public void ForceStopAllAnimations()
     {
-        petController.ResumeMovement();
+        isSpecialAnimationPlaying = false;
+        isContinuousAnimationPlaying = false;
+        continuousAnimationIndex = -1;
+
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+            petController.animator.speed = 1.0f;
+        }
     }
-}
+    // 5. PlayAnimationWithCustomDuration 메서드 수정
+    public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float duration, bool returnToIdle = true, bool resumeMovementAfter = true)
+    {
+        isSpecialAnimationPlaying = true;
+
+        if (petController.animator != null)
+        {
+            // 현재 애니메이션 상태 저장
+            int previousAnimation = petController.animator.GetInteger("animation");
+
+            // 새 애니메이션 설정
+            petController.animator.SetInteger("animation", animationNumber);
+
+            // 지정된 시간만큼 대기
+            yield return new WaitForSeconds(duration);
+
+            // 기본 애니메이션으로 돌아갈지 여부
+            if (returnToIdle)
+            {
+                petController.animator.SetInteger("animation", 0);
+            }
+            else
+            {
+                // 연속 애니메이션으로 전환
+                isContinuousAnimationPlaying = true;
+                continuousAnimationIndex = animationNumber;
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(duration);
+        }
+
+        isSpecialAnimationPlaying = false;
+
+        // 이동을 재개할지 여부
+        if (resumeMovementAfter && petController.agent != null &&
+            petController.agent.enabled && petController.agent.isOnNavMesh)
+        {
+            petController.ResumeMovement();
+        }
+    }
 
 
- // PetAnimationController.cs 파일의 PlaySpecialAnimation 메서드를 아래 코드로 교체하세요.
+    // PetAnimationController.cs 파일의 PlaySpecialAnimation 메서드를 아래 코드로 교체하세요.
+
+   // PetAnimationController.cs
 
 public IEnumerator PlaySpecialAnimation(int animationNumber, bool isBlocking = true)
 {
-    // ★ 잠금 플래그를 true로 설정하여 다른 상호작용을 막습니다.
+    // 1. 다른 상호작용을 막기 위해 잠금을 설정합니다.
     petController.isAnimationLocked = true;
     isSpecialAnimationPlaying = true;
 
@@ -170,42 +172,40 @@ public IEnumerator PlaySpecialAnimation(int animationNumber, bool isBlocking = t
         {
             petController.animator.SetInteger("animation", animationNumber);
 
-            // isBlocking이 true일 경우에만 애니메이션이 끝날 때까지 기다립니다.
-            if (isBlocking)
-            {
-                // 애니메이터의 현재 상태 길이만큼 대기
-                // 0.1초의 추가 대기시간을 주어 애니메이션 전환이 확실히 이루어지도록 합니다.
-                yield return new WaitForSeconds(petController.animator.GetCurrentAnimatorStateInfo(0).length + 0.1f);
-            }
+            // ★ 중요: 애니메이터가 새로운 상태로 전환될 시간을 주기 위해 한 프레임을 기다립니다.
+            // 이렇게 해야 다음 줄에서 정확한 애니메이션 길이를 가져올 수 있습니다.
+            yield return null; 
+
+            // ★ 중요: isBlocking 값과 상관없이, 항상 애니메이션의 실제 길이를 가져옵니다.
+            float animationLength = petController.animator.GetCurrentAnimatorStateInfo(0).length;
+
+            // ★ 애니메이션 길이만큼 대기하여 재생 시간을 보장합니다.
+            yield return new WaitForSeconds(animationLength);
         }
         else
         {
-            // 애니메이터가 없을 경우, isBlocking일 때만 대기
-            if (isBlocking)
-            {
-                yield return new WaitForSeconds(2f); // 기본 대기 시간
-            }
+            // 애니메이터가 없을 경우, 2초간 대기 (기존과 동일)
+            yield return new WaitForSeconds(2f);
         }
     }
     finally
     {
-        // ★ 애니메이션이 끝나면 잠금을 해제합니다. (가장 중요)
+        // 2. 애니메이션이 모두 끝나면 잠금을 해제합니다.
         isSpecialAnimationPlaying = false;
         petController.isAnimationLocked = false;
 
-        // isBlocking 애니메이션(죽음 등)이 끝난 후에만 Idle 상태로 되돌립니다.
-        if (isBlocking && petController.animator != null)
+        // 3. 펫의 상태를 기본(Idle)으로 되돌립니다.
+        if (petController.animator != null)
         {
             petController.animator.SetInteger("animation", 0);
         }
 
-        // isBlocking 애니메이션이 끝난 후 움직임을 재개합니다.
-        if (isBlocking && petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
+        // 4. 펫의 움직임을 다시 시작합니다.
+        if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
         {
             petController.ResumeMovement();
         }
     }
 }
-
 
 }
