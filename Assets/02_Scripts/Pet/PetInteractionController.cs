@@ -482,22 +482,28 @@ public class PetInteractionController : MonoBehaviour
     // 펫을 선택하는 함수
     private void Select()
     {
-        petController.isSelected = true;  // PetController에 선택 상태 알림
-
-        isSelected = true;          // 펫이 선택된 상태로 설정
-        selectionTimer = 0f;       // 선택 타이머 초기화
-        petController.StopMovement(); // 펫의 움직임을 멈춥니다.
-                                      // ★ 추가: 쉬고 있는 상태라면 애니메이션 중단
-          // ★ 추가: 모든 상태에서 애니메이션을 Idle로 전환
+       petController.isSelected = true;
+    isSelected = true;
+    selectionTimer = 0f;
+    
+    // ★ 더 완전한 움직임 중단
+    petController.StopMovement();
+    
+    // ★ 추가: 현재 진행 중인 모든 행동 중단
+    var movementController = petController.GetComponent<PetMovementController>();
+    if (movementController != null)
+    {
+        movementController.StopAllCoroutines();  // 진행 중인 코루틴 중단
+    }
+    
+    // 애니메이션 즉시 Idle로
     var animController = petController.GetComponent<PetAnimationController>();
     animController?.StopContinuousAnimation();
     
-    // 즉시 Idle 애니메이션으로 전환
     if (petController.animator != null)
     {
         petController.animator.SetInteger("animation", 0);
     }
-
         touchCount++;             // 터치 횟수 증가
         lastTouchTime = Time.time; // 마지막 터치 시간 업데이트
 
@@ -545,19 +551,21 @@ public class PetInteractionController : MonoBehaviour
 // ★ 새로운 코루틴 추가: 애니메이션 정상화 후 이동 재개
 private IEnumerator DelayedMovementResume()
 {
-    // 먼저 회전을 정면으로 리셋 (옵션)
+    // ★ 먼저 agent 상태 확인
     if (petController.agent != null && petController.agent.enabled)
     {
-        // 현재 보고 있는 방향을 유지하면서 부드럽게 전환
+        // ★ 기존 경로가 남아있을 수 있으므로 한 번 더 초기화
+        petController.agent.ResetPath();
         yield return new WaitForSeconds(0.1f);
     }
     
     // 이동 재개
     petController.ResumeMovement();
     
-    // 약간의 지연 후 새 목적지 설정
-    yield return new WaitForSeconds(0.2f);
+    // ★ 새 목적지 설정 전 약간 더 대기
+    yield return new WaitForSeconds(0.3f);
     
+    // ★ 새로운 목적지 설정
     var movementController = petController.GetComponent<PetMovementController>();
     movementController?.SetRandomDestination();
 }

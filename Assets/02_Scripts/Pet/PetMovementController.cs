@@ -53,10 +53,13 @@ public class PetMovementController : MonoBehaviour
     private float treeDetectionRadius = 50f;
     private float treeClimbChance = 0.9f; // 30% 확률로 나무에 올라감
     private bool isSearchingForTree = false;
-// ✅ 새로 추가할 변수들
-[SerializeField] private LayerMask treeLayerMask = -1; // 나무 레이어 마스크
-private float lastTreeSearchTime = 0f;                // 마지막 탐색 시간
-private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
+    // ✅ 새로 추가할 변수들
+    [SerializeField] private LayerMask treeLayerMask = -1; // 나무 레이어 마스크
+    private float lastTreeSearchTime = 0f;                // 마지막 탐색 시간
+    private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
+
+    private Coroutine currentBehaviorCoroutine = null;
+
     /// <summary>
     /// 물 속성 펫이 물 vs 육지 목적지를 고를 확률 (0~1).
     /// 예: 0.8이면 80% 확률로 물 영역을 선택.
@@ -152,26 +155,26 @@ private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
         {
             return;
         }
-         // 모으기 모드면 즉시 리턴
-    if (petController.isGathering)
-    {
-        // 카메라 회전 로직만 처리
-        if (petController.isGathered && Camera.main != null)
+        // 모으기 모드면 즉시 리턴
+        if (petController.isGathering)
         {
-            Vector3 dir = Camera.main.transform.position - transform.position;
-            dir.y = 0f;
-            if (dir.magnitude > 0.1f)
+            // 카메라 회전 로직만 처리
+            if (petController.isGathered && Camera.main != null)
             {
-                Quaternion target = Quaternion.LookRotation(dir);
-                transform.rotation = Quaternion.Slerp(transform.rotation, target, 
-                    petController.rotationSpeed * Time.deltaTime);
+                Vector3 dir = Camera.main.transform.position - transform.position;
+                dir.y = 0f;
+                if (dir.magnitude > 0.1f)
+                {
+                    Quaternion target = Quaternion.LookRotation(dir);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, target,
+                        petController.rotationSpeed * Time.deltaTime);
+                }
             }
+            return;
         }
-        return;
-    }
-    
-    // NavMeshAgent 체크를 캐싱
-    if (!IsAgentReady()) return;
+
+        // NavMeshAgent 체크를 캐싱
+        if (!IsAgentReady()) return;
 
         // NavMeshAgent 준비 상태가 아니면 종료
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
@@ -201,73 +204,73 @@ private float treeSearchCooldown = 2f;                // 탐색 쿨다운 (초)
 
         }
     }
-// 헬퍼 메서드 추가
-private bool IsAgentReady()
-{
-    return petController.agent != null && 
-           petController.agent.enabled && 
-           petController.agent.isOnNavMesh;
-}
-   private void CheckTreeArea()
-{
-    // Tree habitat이 아니면 즉시 리턴
-    if (petController.habitat != PetAIProperties.Habitat.Tree) return;
-    
-    // 이미 상태가 정해진 경우 즉시 리턴
-    if (petController.isClimbingTree || isInWater || isSearchingForTree) return;
-    
-    // 쿨다운 체크를 먼저 (불필요한 Random.value 호출 방지)
-    if (Time.time - lastTreeSearchTime < treeSearchCooldown) return;
-    
-    // 확률 체크
-    if (Random.value < 0.1f)
+    // 헬퍼 메서드 추가
+    private bool IsAgentReady()
     {
-        lastTreeSearchTime = Time.time;
-        StartCoroutine(SearchAndClimbTree());
+        return petController.agent != null &&
+               petController.agent.enabled &&
+               petController.agent.isOnNavMesh;
     }
-}
-private Coroutine climbTreeCoroutine = null;
-
-   // 나무 찾기 및 올라가기 코루틴
-private IEnumerator SearchAndClimbTree()
-{
-    isSearchingForTree = true;
-    
-     Transform nearestTree = TreeManager.Instance.FindNearestTree(transform.position);
-
-    // 가장 가까운 나무를 찾았고, 일정 확률을 통과하면 올라가기를 시도합니다.
-    if (nearestTree != null && Random.value < treeClimbChance)
+    private void CheckTreeArea()
     {
-        // 찾은 나무가 너무 멀리 있으면 포기 (선택 사항)
-        if ((nearestTree.position - transform.position).sqrMagnitude > treeDetectionRadius * treeDetectionRadius)
+        // Tree habitat이 아니면 즉시 리턴
+        if (petController.habitat != PetAIProperties.Habitat.Tree) return;
+
+        // 이미 상태가 정해진 경우 즉시 리턴
+        if (petController.isClimbingTree || isInWater || isSearchingForTree) return;
+
+        // 쿨다운 체크를 먼저 (불필요한 Random.value 호출 방지)
+        if (Time.time - lastTreeSearchTime < treeSearchCooldown) return;
+
+        // 확률 체크
+        if (Random.value < 0.1f)
         {
-            // 너무 멀어서 포기
-        }
-        else
-        {
-             climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
-             yield return climbTreeCoroutine;
-             climbTreeCoroutine = null;
+            lastTreeSearchTime = Time.time;
+            StartCoroutine(SearchAndClimbTree());
         }
     }
+    private Coroutine climbTreeCoroutine = null;
 
-    isSearchingForTree = false;
-}
-// 나무 올라가기 중단 메서드 추가
-public void StopTreeClimbing()
-{
-    if (climbTreeCoroutine != null)
+    // 나무 찾기 및 올라가기 코루틴
+    private IEnumerator SearchAndClimbTree()
     {
-        StopCoroutine(climbTreeCoroutine);
-        climbTreeCoroutine = null;
+        isSearchingForTree = true;
+
+        Transform nearestTree = TreeManager.Instance.FindNearestTree(transform.position);
+
+        // 가장 가까운 나무를 찾았고, 일정 확률을 통과하면 올라가기를 시도합니다.
+        if (nearestTree != null && Random.value < treeClimbChance)
+        {
+            // 찾은 나무가 너무 멀리 있으면 포기 (선택 사항)
+            if ((nearestTree.position - transform.position).sqrMagnitude > treeDetectionRadius * treeDetectionRadius)
+            {
+                // 너무 멀어서 포기
+            }
+            else
+            {
+                climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
+                yield return climbTreeCoroutine;
+                climbTreeCoroutine = null;
+            }
+        }
+
+        isSearchingForTree = false;
     }
-    
-    isSearchingForTree = false;
-    
-    // 애니메이션 정리
-    var anim = GetComponent<PetAnimationController>();
-    anim?.StopContinuousAnimation();
-}
+    // 나무 올라가기 중단 메서드 추가
+    public void StopTreeClimbing()
+    {
+        if (climbTreeCoroutine != null)
+        {
+            StopCoroutine(climbTreeCoroutine);
+            climbTreeCoroutine = null;
+        }
+
+        isSearchingForTree = false;
+
+        // 애니메이션 정리
+        var anim = GetComponent<PetAnimationController>();
+        anim?.StopContinuousAnimation();
+    }
     // 나무 올라가기 코루틴
     private IEnumerator ClimbTree(Transform tree)
     {
@@ -379,7 +382,7 @@ public void StopTreeClimbing()
         // 나무 높이에 따라 올라갈 비율 조정
         float climbRatio;
 
-        
+
         climbRatio = Random.Range(2.3f, 2.5f); // 70-85%
 
         // 나무의 로컬 Y 위치도 고려
@@ -411,63 +414,63 @@ public void StopTreeClimbing()
 
 
     // 나무에서 내려오기
-   // 나무에서 내려오기
-private IEnumerator ClimbDownTree()
-{
-    // ★ null 체크 추가
-    if (petController.currentTree == null)
+    // 나무에서 내려오기
+    private IEnumerator ClimbDownTree()
     {
-        Debug.LogWarning($"{petController.petName}: currentTree가 null입니다. 내려오기 중단.");
-        
+        // ★ null 체크 추가
+        if (petController.currentTree == null)
+        {
+            Debug.LogWarning($"{petController.petName}: currentTree가 null입니다. 내려오기 중단.");
+
+            // NavMeshAgent 재활성화
+            if (petController.agent != null)
+            {
+                petController.agent.enabled = true;
+                petController.agent.Warp(transform.position);
+            }
+
+            petController.isClimbingTree = false;
+            yield break;
+        }
+
+        var anim = petController.GetComponent<PetAnimationController>();
+
+        // 내려가기 애니메이션
+        anim?.SetContinuousAnimation(1);
+
+        // 바닥으로 내려오기
+        Vector3 groundPos = petController.currentTree.position; // ★ 이미 null 체크 완료
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(groundPos, out hit, 5f, NavMesh.AllAreas))
+        {
+            groundPos = hit.position;
+        }
+
+        float moveTime = 2f;
+        float elapsed = 0f;
+        Vector3 startPos = transform.position;
+
+        while (elapsed < moveTime)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / moveTime;
+            transform.position = Vector3.Lerp(startPos, groundPos, t);
+            yield return null;
+        }
+
         // NavMeshAgent 재활성화
         if (petController.agent != null)
         {
             petController.agent.enabled = true;
             petController.agent.Warp(transform.position);
         }
-        
+
         petController.isClimbingTree = false;
-        yield break;
+        petController.currentTree = null;
+
+        // 일반 애니메이션으로 복귀
+        anim?.StopContinuousAnimation();
     }
-    
-    var anim = petController.GetComponent<PetAnimationController>();
-
-    // 내려가기 애니메이션
-    anim?.SetContinuousAnimation(1);
-
-    // 바닥으로 내려오기
-    Vector3 groundPos = petController.currentTree.position; // ★ 이미 null 체크 완료
-    NavMeshHit hit;
-    if (NavMesh.SamplePosition(groundPos, out hit, 5f, NavMesh.AllAreas))
-    {
-        groundPos = hit.position;
-    }
-
-    float moveTime = 2f;
-    float elapsed = 0f;
-    Vector3 startPos = transform.position;
-
-    while (elapsed < moveTime)
-    {
-        elapsed += Time.deltaTime;
-        float t = elapsed / moveTime;
-        transform.position = Vector3.Lerp(startPos, groundPos, t);
-        yield return null;
-    }
-
-    // NavMeshAgent 재활성화
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = true;
-        petController.agent.Warp(transform.position);
-    }
-
-    petController.isClimbingTree = false;
-    petController.currentTree = null;
-
-    // 일반 애니메이션으로 복귀
-    anim?.StopContinuousAnimation();
-}
     // 새 메서드 추가
     private void CheckWaterArea()
     {
@@ -550,12 +553,12 @@ private IEnumerator ClimbDownTree()
     // 행동 전환 시 호출: 가중치 기반 랜덤으로 다음 행동 선정
     private void DecideNextBehavior()
     {
-// 선택된 상태에서는 새로운 행동을 결정하지 않음
-    if (petController.isSelected)
-    {
-        behaviorTimer = 0f;
-        return;
-    }
+        // 선택된 상태에서는 새로운 행동을 결정하지 않음
+        if (petController.isSelected)
+        {
+            behaviorTimer = 0f;
+            return;
+        }
         // [수정] 새로운 행동을 결정하기 전, 더 중요한 행동(식사, 수면)을 하는지 확인
         var feedingController = petController.GetComponent<PetFeedingController>();
         var sleepingController = petController.GetComponent<PetSleepingController>();
@@ -592,77 +595,96 @@ private IEnumerator ClimbDownTree()
     // 행동 상태 전환: NavMeshAgent 속성·애니메이션 적용 :contentReference[oaicite:8]{index=8}
     // PetMovementController.cs
 
-private void SetBehavior(BehaviorState state)
-{
-    // 모으기 상태거나 NavMeshAgent가 준비되지 않았으면 행동을 변경하지 않습니다.
-    if (petController.isGathering) return;
-    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-    {
-        Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
-        return;
+    private void SetBehavior(BehaviorState state)
+    {  // ★ 이전 코루틴 중단
+        if (currentBehaviorCoroutine != null)
+        {
+            StopCoroutine(currentBehaviorCoroutine);
+            currentBehaviorCoroutine = null;
+        }
+        // 모으기 상태거나 NavMeshAgent가 준비되지 않았으면 행동을 변경하지 않습니다.
+        if (petController.isGathering) return;
+        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
+            return;
+        }
+
+        currentBehaviorState = state;
+        nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
+
+        try { petController.agent.isStopped = true; }
+        catch { /* 예외 무시 */ }
+
+        var anim = petController.GetComponent<PetAnimationController>();
+
+        // ★★★ 중요: 새로운 행동을 시작하기 전에, 이전의 연속 애니메이션(예: 휴식) 상태를 해제합니다.
+        // 이렇게 해야 '휴식' 상태에서 '걷기'로 전환될 때, 애니메이션이 '휴식'에 고정되지 않고
+        // UpdateAnimation 로직에 의해 '걷기' 애니메이션으로 자연스럽게 변경됩니다.
+        if (anim != null)
+        {
+            anim.StopContinuousAnimation();
+        }
+
+        switch (state)
+        {
+            case BehaviorState.Idle:
+                // Idle 상태를 명시적으로 유지하고 싶을 때 사용합니다.
+                anim?.SetContinuousAnimation(0);
+                break;
+
+            case BehaviorState.Walking:
+                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
+                SetRandomDestination();
+                // anim?.SetContinuousAnimation(1); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
+                break;
+
+            case BehaviorState.Running:
+                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
+                SetRandomDestination();
+                // anim?.SetContinuousAnimation(2); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
+                break;
+
+            case BehaviorState.Jumping:
+                StartCoroutine(PerformJump());
+                break;
+
+            case BehaviorState.Resting:
+                // '휴식'은 움직임이 없는 행동 애니메이션이므로, 이 호출은 유지합니다.
+                anim?.SetContinuousAnimation(5);
+                break;
+
+            case BehaviorState.Looking:
+                StartCoroutine(LookAround());
+                break;
+
+            case BehaviorState.Playing:
+                StartCoroutine(PerformPlay());
+                break;
+        }
+
+        // 행동 설정 후 물에 있으면 속도를 재조정합니다.
+        if (isInWater && petController.agent != null)
+        {
+            float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
+                              ? 0.7f : waterSpeedMultiplier;
+            petController.agent.speed *= speedMult;
+        }
     }
 
-    currentBehaviorState = state;
-    nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
-
-    try { petController.agent.isStopped = true; }
-    catch { /* 예외 무시 */ }
-
-    var anim = petController.GetComponent<PetAnimationController>();
-
-    // ★★★ 중요: 새로운 행동을 시작하기 전에, 이전의 연속 애니메이션(예: 휴식) 상태를 해제합니다.
-    // 이렇게 해야 '휴식' 상태에서 '걷기'로 전환될 때, 애니메이션이 '휴식'에 고정되지 않고
-    // UpdateAnimation 로직에 의해 '걷기' 애니메이션으로 자연스럽게 변경됩니다.
-    if(anim != null)
+    // 새 메서드 추가
+    public void ForceStopCurrentBehavior()
     {
-        anim.StopContinuousAnimation();
+        if (currentBehaviorCoroutine != null)
+        {
+            StopCoroutine(currentBehaviorCoroutine);
+            currentBehaviorCoroutine = null;
+        }
+
+        // 현재 행동 상태를 Idle로 리셋
+        currentBehaviorState = BehaviorState.Idle;
+        behaviorTimer = 0f;
     }
-
-    switch (state)
-    {
-        case BehaviorState.Idle:
-            // Idle 상태를 명시적으로 유지하고 싶을 때 사용합니다.
-            anim?.SetContinuousAnimation(0);
-            break;
-
-        case BehaviorState.Walking:
-            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
-            SetRandomDestination();
-            // anim?.SetContinuousAnimation(1); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
-            break;
-
-        case BehaviorState.Running:
-            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
-            SetRandomDestination();
-            // anim?.SetContinuousAnimation(2); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
-            break;
-
-        case BehaviorState.Jumping:
-            StartCoroutine(PerformJump());
-            break;
-
-        case BehaviorState.Resting:
-            // '휴식'은 움직임이 없는 행동 애니메이션이므로, 이 호출은 유지합니다.
-            anim?.SetContinuousAnimation(5);
-            break;
-
-        case BehaviorState.Looking:
-            StartCoroutine(LookAround());
-            break;
-
-        case BehaviorState.Playing:
-            StartCoroutine(PerformPlay());
-            break;
-    }
-
-    // 행동 설정 후 물에 있으면 속도를 재조정합니다.
-    if (isInWater && petController.agent != null)
-    {
-        float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
-                          ? 0.7f : waterSpeedMultiplier;
-        petController.agent.speed *= speedMult;
-    }
-}
     // NavMeshAgent 속도·정지 상태를 안전하게 설정 (모으기 상태 무시) :contentReference[oaicite:9]{index=9}
     private void SafeSetAgentMovement(float speed, bool isStopped)
     {

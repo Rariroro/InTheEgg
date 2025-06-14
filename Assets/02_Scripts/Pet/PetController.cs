@@ -382,41 +382,41 @@ public class PetController : MonoBehaviour
 
    
     // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
-    public void StopMovement()
+   public void StopMovement()
+{
+    if (agent != null && agent.enabled && agent.isOnNavMesh)
     {
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        try
         {
-            try
-            {
-                agent.isStopped = true;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
-            }
+            agent.isStopped = true;
+            agent.ResetPath();  // ★ 추가: 경로 완전히 초기화
+            agent.velocity = Vector3.zero;  // ★ 추가: 속도도 0으로
+            agent.updateRotation = false;  // ★ 추가: 자동 회전 중지
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
         }
     }
+}
 
-    public void ResumeMovement()
+public void ResumeMovement()
+{
+    if (isGathering) return;
+
+    if (agent != null && agent.enabled && agent.isOnNavMesh)
     {
-        // ★ 모이기 중일 때는 움직임 재개하지 않음
-        if (isGathering)
+        try
         {
-            return;
+            agent.updateRotation = true;  // ★ 추가: 자동 회전 재개
+            agent.isStopped = false;
         }
-
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        catch (System.Exception e)
         {
-            try
-            {
-                agent.isStopped = false;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
-            }
+            Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
         }
     }
+}
 
     // 감정 표현 메서드
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
