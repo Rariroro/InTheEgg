@@ -27,7 +27,11 @@ private int continuousAnimationIndex = -1;
 // PetAnimationController.cs
 
 public void UpdateAnimation()
-{
+{// ★ 추가: 선택된 상태에서는 애니메이션 업데이트 스킵
+    if (petController.isSelected)
+    {
+        return;
+    }
     // 애니메이션 속도 조정은 유지합니다.
     // 펫의 현재 최대 속도(agent.speed)를 기본 속도(baseSpeed)로 나누어 애니메이션 배속을 조절합니다.
     // 이를 통해 '모이기' 등 특수 상황에서 빨라진 속도에 맞춰 애니메이션도 빠르게 재생됩니다.

@@ -488,18 +488,16 @@ public class PetInteractionController : MonoBehaviour
         selectionTimer = 0f;       // 선택 타이머 초기화
         petController.StopMovement(); // 펫의 움직임을 멈춥니다.
                                       // ★ 추가: 쉬고 있는 상태라면 애니메이션 중단
-        var movementController = petController.GetComponent<PetMovementController>();
-        var animController = petController.GetComponent<PetAnimationController>();
+          // ★ 추가: 모든 상태에서 애니메이션을 Idle로 전환
+    var animController = petController.GetComponent<PetAnimationController>();
+    animController?.StopContinuousAnimation();
+    
+    // 즉시 Idle 애니메이션으로 전환
+    if (petController.animator != null)
+    {
+        petController.animator.SetInteger("animation", 0);
+    }
 
-        if (movementController != null && movementController.IsRestingOrIdle)
-        {
-            // 휴식 애니메이션 중단하고 Idle로 전환
-            animController?.StopContinuousAnimation();
-            if (petController.animator != null)
-            {
-                petController.animator.SetInteger("animation", 0); // Idle 애니메이션
-            }
-        }
         touchCount++;             // 터치 횟수 증가
         lastTouchTime = Time.time; // 마지막 터치 시간 업데이트
 
@@ -529,30 +527,40 @@ public class PetInteractionController : MonoBehaviour
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
+{
+    petController.isSelected = false;
+    isSelected = false;
+
+    if (!isHolding)
     {
-        petController.isSelected = false;  // PetController에 선택 해제 알림
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
 
-        isSelected = false; // 펫 선택 상태 해제
-
-        // 펫을 들고 있지 않은 경우
-        if (!isHolding)
-        {
-            petController.ResumeMovement(); // 펫의 움직임을 다시 시작
-            // 이름 텍스트 오브젝트가 있으면 비활성화
-            if (nameTextObject != null)
-                nameTextObject.SetActive(false);
-
-            StopAllCoroutines(); // 모든 코루틴 중지 (카메라를 바라보는 코루틴 등)
-
-            // ★ 추가: 선택 해제 시 새로운 행동 결정하도록 유도
-            var movementController = petController.GetComponent<PetMovementController>();
-            if (movementController != null)
-            {
-                movementController.SetRandomDestination();
-            }
-        }
+        StopAllCoroutines();
+        
+        // ★ 수정: 애니메이션 정상화 후 이동 시작하도록 코루틴 사용
+        StartCoroutine(DelayedMovementResume());
     }
-
+}
+// ★ 새로운 코루틴 추가: 애니메이션 정상화 후 이동 재개
+private IEnumerator DelayedMovementResume()
+{
+    // 먼저 회전을 정면으로 리셋 (옵션)
+    if (petController.agent != null && petController.agent.enabled)
+    {
+        // 현재 보고 있는 방향을 유지하면서 부드럽게 전환
+        yield return new WaitForSeconds(0.1f);
+    }
+    
+    // 이동 재개
+    petController.ResumeMovement();
+    
+    // 약간의 지연 후 새 목적지 설정
+    yield return new WaitForSeconds(0.2f);
+    
+    var movementController = petController.GetComponent<PetMovementController>();
+    movementController?.SetRandomDestination();
+}
     // 특별한 애니메이션을 재생하는 코루틴
     private IEnumerator TriggerSpecialAnimation(int animationNumber)
     {
@@ -561,18 +569,25 @@ public class PetInteractionController : MonoBehaviour
     }
 
     // 펫이 멈추고 카메라를 바라볼 때까지 기다리는 코루틴
-    private IEnumerator WaitForStopAndLookAtCamera()
+   private IEnumerator WaitForStopAndLookAtCamera()
+{
+    // ★ 추가: 즉시 Idle 애니메이션으로 전환
+    if (petController.animator != null)
     {
-        // 펫의 에이전트 속도가 0.01f보다 클 동안 (즉, 펫이 움직이고 있는 동안)
-        while (petController.agent.velocity.magnitude > 0.01f)
-        {
-            yield return null; // 다음 프레임까지 대기
-        }
-
-        // 펫이 멈추면 부드럽게 카메라를 바라보도록 하는 코루틴 시작
-        yield return StartCoroutine(SmoothLookAtCamera());
+        petController.animator.SetInteger("animation", 0);
+    }
+    
+    // 펫의 에이전트 속도가 0.01f보다 클 동안 대기
+    while (petController.agent != null && 
+           petController.agent.enabled && 
+           petController.agent.velocity.magnitude > 0.01f)
+    {
+        yield return null;
     }
 
+    // 펫이 멈추면 부드럽게 카메라를 바라보도록 하는 코루틴 시작
+    yield return StartCoroutine(SmoothLookAtCamera());
+}
     // 펫이 부드럽게 카메라를 바라보도록 하는 코루틴
     private IEnumerator SmoothLookAtCamera()
     {
