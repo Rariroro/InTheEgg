@@ -84,16 +84,16 @@ public class PetInteractionController : MonoBehaviour
             {
                 ForceStopHolding();
             }
-            
+
             // 선택되어 있었다면 선택 해제
             if (isSelected)
             {
                 Deselect();
             }
-            
+
             return; // 모이기 중에는 새로운 상호작용 입력을 받지 않음
         }
-        
+
         // 터치 카운트 리셋 (마지막 터치 이후 일정 시간이 지나면 터치 카운트 초기화)
         if (Time.time - lastTouchTime > touchResetTime)
             touchCount = 0;
@@ -194,7 +194,7 @@ public class PetInteractionController : MonoBehaviour
                     return; // 일반 선택 로직을 실행하지 않음
                 }
             }
-            
+
             // 일반 터치(펫 선택) 처리
             if (hit.collider.gameObject == petController.gameObject)
             {
@@ -263,54 +263,54 @@ public class PetInteractionController : MonoBehaviour
 
     // PetInteractionController.cs 내의 수정이 필요한 부분
     private void StartHolding()
-{
-    isHolding = true;
-    petController.StopMovement();
-
-    // ★ 나무 올라가기 상태 초기화 개선
-    if (petController.isClimbingTree)
     {
-        // PetMovementController의 나무 관련 코루틴만 중단
-        var movementController = petController.GetComponent<PetMovementController>();
-        movementController?.StopTreeClimbing();
-        
-        // 나무 올라가기 관련 상태 초기화
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
-        
-        Debug.Log($"{petController.petName}: 나무에서 강제로 내려옴 (플레이어가 잡음)");
-    }
+        isHolding = true;
+        petController.StopMovement();
 
-    // NavMeshAgent 비활성화
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = false;
-        // 현재 회전값 저장
-        if (petController.petModelTransform != null)
+        // ★ 나무 올라가기 상태 초기화 개선
+        if (petController.isClimbingTree)
         {
-            petController.petModelTransform.rotation = petController.transform.rotation;
+            // PetMovementController의 나무 관련 코루틴만 중단
+            var movementController = petController.GetComponent<PetMovementController>();
+            movementController?.StopTreeClimbing();
+
+            // 나무 올라가기 관련 상태 초기화
+            petController.isClimbingTree = false;
+            petController.currentTree = null;
+
+            Debug.Log($"{petController.petName}: 나무에서 강제로 내려옴 (플레이어가 잡음)");
         }
-    }
 
-    // CameraController 비활성화
-    CameraController camController = FindObjectOfType<CameraController>();
-    if (camController != null)
-    {
-        camController.enabled = false;
-    }
+        // NavMeshAgent 비활성화
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = false;
+            // 현재 회전값 저장
+            if (petController.petModelTransform != null)
+            {
+                petController.petModelTransform.rotation = petController.transform.rotation;
+            }
+        }
 
-    // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
-    NavMeshHit hit;
-    if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
-    {
-        Vector3 surfacePoint = hit.position;
-        targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
-        petController.transform.position = targetPosition;
-    }
+        // CameraController 비활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = false;
+        }
 
-    if (nameTextObject != null)
-        nameTextObject.SetActive(false);
-}
+        // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
+        {
+            Vector3 surfacePoint = hit.position;
+            targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
+            petController.transform.position = targetPosition;
+        }
+
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
+    }
 
     private void StopHolding()
     {
@@ -322,8 +322,8 @@ public class PetInteractionController : MonoBehaviour
         isHolding = false;
 
         // 현재 회전값 저장
-        Quaternion currentRotation = petController.petModelTransform != null 
-            ? petController.petModelTransform.rotation 
+        Quaternion currentRotation = petController.petModelTransform != null
+            ? petController.petModelTransform.rotation
             : petController.transform.rotation;
 
         // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
@@ -348,7 +348,7 @@ public class PetInteractionController : MonoBehaviour
     private void ForceStopHolding()
     {
         if (!isHolding) return;
-        
+
         if (petController.animator != null)
         {
             petController.animator.SetInteger("animation", 0);
@@ -380,7 +380,7 @@ public class PetInteractionController : MonoBehaviour
 
         if (nameTextObject != null)
             nameTextObject.SetActive(false);
-            
+
         Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
     }
 
@@ -389,10 +389,10 @@ public class PetInteractionController : MonoBehaviour
         Vector3 startPosition = petController.transform.position;
         float startY = startPosition.y;
         float targetY = groundPoint.y;
-        
+
         float duration = 0.8f;
         float elapsed = 0f;
-        
+
         Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
         Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
 
@@ -406,20 +406,20 @@ public class PetInteractionController : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
-            
+
             // 이징 함수 적용
             float easeT = 1f - Mathf.Pow(1f - t, 3f);
-            
+
             // 수평 이동과 수직 하강을 분리하여 계산
             Vector3 horizontalPosition = Vector3.Lerp(horizontalStart, horizontalEnd, easeT);
             float currentY = Mathf.Lerp(startY, targetY, easeT);
-            
+
             Vector3 newPosition = new Vector3(
                 horizontalPosition.x,
                 currentY,
                 horizontalPosition.z
             );
-            
+
             petController.transform.position = newPosition;
 
             // 회전값 유지
@@ -433,7 +433,7 @@ public class PetInteractionController : MonoBehaviour
 
         // 최종 위치 설정
         petController.transform.position = groundPoint;
-        
+
         // 최종 회전값 설정
         if (petController.petModelTransform != null)
         {
@@ -461,32 +461,45 @@ public class PetInteractionController : MonoBehaviour
     }
 
     // 펫 배치를 완료하는 함수
-   private void CompletePetPlacement()
-{
-    isHolding = false;  // 펫을 들고 있지 않은 상태로 설정
-    
-    // ★ 나무 상태 최종 확인 및 초기화
-    if (petController.isClimbingTree)
+    private void CompletePetPlacement()
     {
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
-        Debug.Log($"{petController.petName}: 나무 상태 최종 초기화");
+        isHolding = false;  // 펫을 들고 있지 않은 상태로 설정
+
+        // ★ 나무 상태 최종 확인 및 초기화
+        if (petController.isClimbingTree)
+        {
+            petController.isClimbingTree = false;
+            petController.currentTree = null;
+            Debug.Log($"{petController.petName}: 나무 상태 최종 초기화");
+        }
+
+        petController.ResumeMovement(); // 펫의 움직임을 다시 시작합니다.
+                                        // 펫에게 랜덤한 목적지를 설정합니다.
+        petController.GetComponent<PetMovementController>().SetRandomDestination();
+        Deselect();       // 펫 선택 해제
     }
-    
-    petController.ResumeMovement(); // 펫의 움직임을 다시 시작합니다.
-    // 펫에게 랜덤한 목적지를 설정합니다.
-    petController.GetComponent<PetMovementController>().SetRandomDestination();
-    Deselect();       // 펫 선택 해제
-}
 
     // 펫을 선택하는 함수
     private void Select()
-    {        petController.isSelected = true;  // PetController에 선택 상태 알림
+    {
+        petController.isSelected = true;  // PetController에 선택 상태 알림
 
         isSelected = true;          // 펫이 선택된 상태로 설정
         selectionTimer = 0f;       // 선택 타이머 초기화
         petController.StopMovement(); // 펫의 움직임을 멈춥니다.
+                                      // ★ 추가: 쉬고 있는 상태라면 애니메이션 중단
+        var movementController = petController.GetComponent<PetMovementController>();
+        var animController = petController.GetComponent<PetAnimationController>();
 
+        if (movementController != null && movementController.IsRestingOrIdle)
+        {
+            // 휴식 애니메이션 중단하고 Idle로 전환
+            animController?.StopContinuousAnimation();
+            if (petController.animator != null)
+            {
+                petController.animator.SetInteger("animation", 0); // Idle 애니메이션
+            }
+        }
         touchCount++;             // 터치 횟수 증가
         lastTouchTime = Time.time; // 마지막 터치 시간 업데이트
 
@@ -516,7 +529,8 @@ public class PetInteractionController : MonoBehaviour
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
-    {        petController.isSelected = false;  // PetController에 선택 해제 알림
+    {
+        petController.isSelected = false;  // PetController에 선택 해제 알림
 
         isSelected = false; // 펫 선택 상태 해제
 
@@ -529,8 +543,13 @@ public class PetInteractionController : MonoBehaviour
                 nameTextObject.SetActive(false);
 
             StopAllCoroutines(); // 모든 코루틴 중지 (카메라를 바라보는 코루틴 등)
-            // 펫에게 랜덤한 목적지를 설정합니다.
-            petController.GetComponent<PetMovementController>().SetRandomDestination();
+
+            // ★ 추가: 선택 해제 시 새로운 행동 결정하도록 유도
+            var movementController = petController.GetComponent<PetMovementController>();
+            if (movementController != null)
+            {
+                movementController.SetRandomDestination();
+            }
         }
     }
 
@@ -555,30 +574,30 @@ public class PetInteractionController : MonoBehaviour
     }
 
     // 펫이 부드럽게 카메라를 바라보도록 하는 코루틴
-  private IEnumerator SmoothLookAtCamera()
-{
-    if (Camera.main != null && petController.petModelTransform != null)
+    private IEnumerator SmoothLookAtCamera()
     {
-        // 카메라에서 펫으로의 방향 벡터 계산
-        Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
-        directionToCamera.y = 0; // Y축 회전은 무시
-
-        if (directionToCamera != Vector3.zero)
+        if (Camera.main != null && petController.petModelTransform != null)
         {
-            // 목표 회전값 계산
-            Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+            // 카메라에서 펫으로의 방향 벡터 계산
+            Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
+            directionToCamera.y = 0; // Y축 회전은 무시
 
-            // 부모 오브젝트(PetController)를 회전시킴
-            while (Quaternion.Angle(petController.transform.rotation, targetRotation) > 1f && isSelected)
+            if (directionToCamera != Vector3.zero)
             {
-                petController.transform.rotation = Quaternion.Slerp(
-                    petController.transform.rotation,
-                    targetRotation,
-                    Time.deltaTime * petController.rotationSpeed * 2f // 조금 더 빠르게
-                );
-                yield return null;
+                // 목표 회전값 계산
+                Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+
+                // 부모 오브젝트(PetController)를 회전시킴
+                while (Quaternion.Angle(petController.transform.rotation, targetRotation) > 1f && isSelected)
+                {
+                    petController.transform.rotation = Quaternion.Slerp(
+                        petController.transform.rotation,
+                        targetRotation,
+                        Time.deltaTime * petController.rotationSpeed * 2f // 조금 더 빠르게
+                    );
+                    yield return null;
+                }
             }
         }
     }
-}
 }
