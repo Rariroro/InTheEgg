@@ -27,8 +27,8 @@ private int continuousAnimationIndex = -1;
 // PetAnimationController.cs
 
 public void UpdateAnimation()
-{// ★ 추가: 선택된 상태에서는 애니메이션 업데이트 스킵
-    if (petController.isSelected)
+{ // ★ 추가: 선택되었거나 들고 있는 상태에서는 애니메이션 업데이트 스킵
+    if (petController.isSelected || petController.isHolding)
     {
         return;
     }
@@ -99,7 +99,19 @@ public void StopContinuousAnimation()
         continuousAnimationIndex = -1;
     }
 }
-
+// 애니메이션을 강제로 중단하는 메서드 추가
+public void ForceStopAllAnimations()
+{
+    isSpecialAnimationPlaying = false;
+    isContinuousAnimationPlaying = false;
+    continuousAnimationIndex = -1;
+    
+    if (petController.animator != null)
+    {
+        petController.animator.SetInteger("animation", 0);
+        petController.animator.speed = 1.0f;
+    }
+}
 // 5. PlayAnimationWithCustomDuration 메서드 수정
 public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float duration, bool returnToIdle = true, bool resumeMovementAfter = true)
 {
