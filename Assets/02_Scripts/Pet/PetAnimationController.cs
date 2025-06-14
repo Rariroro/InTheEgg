@@ -156,26 +156,54 @@ public IEnumerator PlayAnimationWithCustomDuration(int animationNumber, float du
 }
 
 
-  public IEnumerator PlaySpecialAnimation(int animationNumber)
+ // PetAnimationController.cs 파일의 PlaySpecialAnimation 메서드를 아래 코드로 교체하세요.
+
+public IEnumerator PlaySpecialAnimation(int animationNumber, bool isBlocking = true)
 {
+    // ★ 잠금 플래그를 true로 설정하여 다른 상호작용을 막습니다.
+    petController.isAnimationLocked = true;
     isSpecialAnimationPlaying = true;
-    if (petController.animator != null)
+
+    try
     {
-        petController.animator.SetInteger("animation", animationNumber);
-        // 애니메이터의 현재 상태 길이만큼 대기
-        yield return new WaitForSeconds(petController.animator.GetCurrentAnimatorStateInfo(0).length);
-        petController.animator.SetInteger("animation", 0);
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", animationNumber);
+
+            // isBlocking이 true일 경우에만 애니메이션이 끝날 때까지 기다립니다.
+            if (isBlocking)
+            {
+                // 애니메이터의 현재 상태 길이만큼 대기
+                // 0.1초의 추가 대기시간을 주어 애니메이션 전환이 확실히 이루어지도록 합니다.
+                yield return new WaitForSeconds(petController.animator.GetCurrentAnimatorStateInfo(0).length + 0.1f);
+            }
+        }
+        else
+        {
+            // 애니메이터가 없을 경우, isBlocking일 때만 대기
+            if (isBlocking)
+            {
+                yield return new WaitForSeconds(2f); // 기본 대기 시간
+            }
+        }
     }
-    else
+    finally
     {
-        yield return new WaitForSeconds(2f);
-    }
-    isSpecialAnimationPlaying = false;
-    
-    // NavMeshAgent가 활성화되어 있고 NavMesh 위에 있는 경우에만 ResumeMovement 호출
-    if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
-    {
-        petController.ResumeMovement();
+        // ★ 애니메이션이 끝나면 잠금을 해제합니다. (가장 중요)
+        isSpecialAnimationPlaying = false;
+        petController.isAnimationLocked = false;
+
+        // isBlocking 애니메이션(죽음 등)이 끝난 후에만 Idle 상태로 되돌립니다.
+        if (isBlocking && petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+        }
+
+        // isBlocking 애니메이션이 끝난 후 움직임을 재개합니다.
+        if (isBlocking && petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
+        {
+            petController.ResumeMovement();
+        }
     }
 }
 

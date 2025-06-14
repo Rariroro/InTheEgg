@@ -79,6 +79,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이
     [HideInInspector] public bool isSelected = false;
 [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
+[HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
 
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType

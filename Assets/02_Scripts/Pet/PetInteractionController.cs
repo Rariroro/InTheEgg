@@ -519,56 +519,62 @@ private void ForceStopHolding()
     }
 
     // 펫을 선택하는 함수
-    private void Select()
+   // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
+
+private void Select()
+{
+    // ★★★ 추가된 코드: 애니메이션이 잠겨있으면 아무 처리도 하지 않고 즉시 리턴 ★★★
+    if (petController.isAnimationLocked)
     {
-       petController.isSelected = true;
+        return;
+    }
+
+    petController.isSelected = true;
     isSelected = true;
     selectionTimer = 0f;
-    
-    // ★ 더 완전한 움직임 중단
+
     petController.StopMovement();
-    
-    // ★ 추가: 현재 진행 중인 모든 행동 중단
+
     var movementController = petController.GetComponent<PetMovementController>();
     if (movementController != null)
     {
-        movementController.StopAllCoroutines();  // 진행 중인 코루틴 중단
+        movementController.StopAllCoroutines();
     }
-    
-    // 애니메이션 즉시 Idle로
+
     var animController = petController.GetComponent<PetAnimationController>();
     animController?.StopContinuousAnimation();
-    
+
     if (petController.animator != null)
     {
         petController.animator.SetInteger("animation", 0);
     }
-        touchCount++;             // 터치 횟수 증가
-        lastTouchTime = Time.time; // 마지막 터치 시간 업데이트
 
-        // 터치 횟수에 따라 특별한 애니메이션을 재생합니다.
-        if (touchCount >= maxTouchCount)
-        {
-            // 최대 터치 횟수에 도달하면 8번 애니메이션 재생
-            StartCoroutine(TriggerSpecialAnimation(8));
-            touchCount = 0; // 터치 횟수 초기화
-        }
-        else if (touchCount >= 5)
-        {
-            // 5번 이상 터치하면 6번 애니메이션 재생
-            StartCoroutine(TriggerSpecialAnimation(6));
-        }
-        else
-        {
-            // 이름 텍스트 오브젝트가 있으면 활성화
-            if (nameTextObject != null)
-                nameTextObject.SetActive(true);
+    touchCount++;
+    lastTouchTime = Time.time;
 
-            // 펫을 들고 있지 않으면, 펫이 멈추고 카메라를 바라보도록 하는 코루틴 시작
-            if (!isHolding)
-                StartCoroutine(WaitForStopAndLookAtCamera());
-        }
+    // 터치 횟수에 따라 다른 애니메이션을 호출합니다.
+    if (touchCount >= maxTouchCount) // 10번 이상 터치 (죽음)
+    {
+        // isBlocking을 true로 하여 애니메이션이 끝날 때까지 기다립니다.
+        StartCoroutine(animController.PlaySpecialAnimation(8, true));
+        touchCount = 0; // 터치 횟수 초기화
     }
+    else if (touchCount >= 5) // 5번 이상 터치 (공격)
+    {
+        // isBlocking을 false로 하여 애니메이션 재생 중 다른 행동이 가능하지만,
+        // isAnimationLocked 플래그 때문에 터치 입력은 무시됩니다.
+        // 애니메이션이 끝나면 잠금이 풀립니다.
+        StartCoroutine(animController.PlaySpecialAnimation(6, false));
+    }
+    else // 일반 터치
+    {
+        if (nameTextObject != null)
+            nameTextObject.SetActive(true);
+
+        if (!isHolding)
+            StartCoroutine(WaitForStopAndLookAtCamera());
+    }
+}
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
