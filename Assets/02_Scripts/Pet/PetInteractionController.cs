@@ -523,12 +523,13 @@ private void ForceStopHolding()
 
 private void Select()
 {
-    // ★★★ 추가된 코드: 애니메이션이 잠겨있으면 아무 처리도 하지 않고 즉시 리턴 ★★★
+    // ★ 애니메이션 잠금 확인 (이 부분은 그대로 유지)
     if (petController.isAnimationLocked)
     {
         return;
     }
-
+    
+    // ... (isSelected, StopMovement 등 다른 코드는 모두 그대로) ...
     petController.isSelected = true;
     isSelected = true;
     selectionTimer = 0f;
@@ -555,16 +556,14 @@ private void Select()
     // 터치 횟수에 따라 다른 애니메이션을 호출합니다.
     if (touchCount >= maxTouchCount) // 10번 이상 터치 (죽음)
     {
-        // isBlocking을 true로 하여 애니메이션이 끝날 때까지 기다립니다.
         StartCoroutine(animController.PlaySpecialAnimation(8, true));
-        touchCount = 0; // 터치 횟수 초기화
+        touchCount = 0; 
     }
     else if (touchCount >= 5) // 5번 이상 터치 (공격)
     {
-        // isBlocking을 false로 하여 애니메이션 재생 중 다른 행동이 가능하지만,
-        // isAnimationLocked 플래그 때문에 터치 입력은 무시됩니다.
-        // 애니메이션이 끝나면 잠금이 풀립니다.
-        StartCoroutine(animController.PlaySpecialAnimation(6, false));
+        // ★★★ 수정된 부분 ★★★
+        // 직접 애니메이션을 재생하는 대신, 순서가 보장된 새 코루틴을 호출합니다.
+        StartCoroutine(AttackSequence());
     }
     else // 일반 터치
     {
@@ -578,42 +577,59 @@ private void Select()
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
-{
-    petController.isSelected = false;
-    isSelected = false;
-
-    if (!isHolding)
     {
-        if (nameTextObject != null)
-            nameTextObject.SetActive(false);
+        petController.isSelected = false;
+        isSelected = false;
 
-        StopAllCoroutines();
-        
-        // ★ 수정: 애니메이션 정상화 후 이동 시작하도록 코루틴 사용
-        StartCoroutine(DelayedMovementResume());
+        if (!isHolding)
+        {
+            if (nameTextObject != null)
+                nameTextObject.SetActive(false);
+
+            StopAllCoroutines();
+
+            // ★ 수정: 애니메이션 정상화 후 이동 시작하도록 코루틴 사용
+            StartCoroutine(DelayedMovementResume());
+        }
+    }
+
+/// <summary>
+/// 펫이 카메라를 바라본 후 공격 애니메이션을 순서대로 재생하는 코루틴입니다.
+/// </summary>
+private IEnumerator AttackSequence()
+{
+    // 1. 펫이 멈추고 카메라를 바라보는 동작이 끝날 때까지 기다립니다.
+    yield return StartCoroutine(WaitForStopAndLookAtCamera());
+
+    // 2. 카메라를 모두 바라본 후, 공격 애니메이션을 재생합니다.
+    var animController = petController.GetComponent<PetAnimationController>();
+    if (animController != null)
+    {
+        // PlaySpecialAnimation 내부에서 입력 잠금을 처리하므로 그대로 호출합니다.
+        yield return StartCoroutine(animController.PlaySpecialAnimation(6, false));
     }
 }
-// ★ 새로운 코루틴 추가: 애니메이션 정상화 후 이동 재개
-private IEnumerator DelayedMovementResume()
-{
-    // ★ 먼저 agent 상태 확인
-    if (petController.agent != null && petController.agent.enabled)
+    // ★ 새로운 코루틴 추가: 애니메이션 정상화 후 이동 재개
+    private IEnumerator DelayedMovementResume()
     {
-        // ★ 기존 경로가 남아있을 수 있으므로 한 번 더 초기화
-        petController.agent.ResetPath();
-        yield return new WaitForSeconds(0.1f);
+        // ★ 먼저 agent 상태 확인
+        if (petController.agent != null && petController.agent.enabled)
+        {
+            // ★ 기존 경로가 남아있을 수 있으므로 한 번 더 초기화
+            petController.agent.ResetPath();
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        // 이동 재개
+        petController.ResumeMovement();
+
+        // ★ 새 목적지 설정 전 약간 더 대기
+        yield return new WaitForSeconds(0.3f);
+
+        // ★ 새로운 목적지 설정
+        var movementController = petController.GetComponent<PetMovementController>();
+        movementController?.SetRandomDestination();
     }
-    
-    // 이동 재개
-    petController.ResumeMovement();
-    
-    // ★ 새 목적지 설정 전 약간 더 대기
-    yield return new WaitForSeconds(0.3f);
-    
-    // ★ 새로운 목적지 설정
-    var movementController = petController.GetComponent<PetMovementController>();
-    movementController?.SetRandomDestination();
-}
     // 특별한 애니메이션을 재생하는 코루틴
     private IEnumerator TriggerSpecialAnimation(int animationNumber)
     {
