@@ -585,64 +585,79 @@ private IEnumerator ClimbDownTree()
     }
 
     // 행동 상태 전환: NavMeshAgent 속성·애니메이션 적용 :contentReference[oaicite:8]{index=8}
-    private void SetBehavior(BehaviorState state)
+    // PetMovementController.cs
+
+private void SetBehavior(BehaviorState state)
+{
+    // 모으기 상태거나 NavMeshAgent가 준비되지 않았으면 행동을 변경하지 않습니다.
+    if (petController.isGathering) return;
+    if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
     {
-
-        // 모으기 상태면 행동 변경하지 않음
-        if (petController.isGathering) return;
-
-        // Agent 준비 확인
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-        {
-            Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
-            return;
-        }
-
-        currentBehaviorState = state;
-        nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
-
-        // 이동 일시정지
-        try { petController.agent.isStopped = true; }
-        catch { /* 예외 무시 */ }
-
-        var anim = petController.GetComponent<PetAnimationController>();
-        switch (state)
-        {
-            case BehaviorState.Idle:
-                anim?.SetContinuousAnimation(0);
-                break;
-            case BehaviorState.Walking:
-                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
-                SetRandomDestination();
-                anim?.SetContinuousAnimation(1);
-                break;
-            case BehaviorState.Running:
-                SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
-                SetRandomDestination();
-                anim?.SetContinuousAnimation(2);
-                break;
-            case BehaviorState.Jumping:
-                StartCoroutine(PerformJump());
-                break;
-            case BehaviorState.Resting:
-                anim?.SetContinuousAnimation(5);
-                break;
-            case BehaviorState.Looking:
-                StartCoroutine(LookAround());
-                break;
-            case BehaviorState.Playing:
-                StartCoroutine(PerformPlay());
-                break;
-        }
-        // 행동 설정 후 물에 있으면 속도 재조정
-        if (isInWater && petController.agent != null)
-        {
-            float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
-                              ? 0.7f : waterSpeedMultiplier;
-            petController.agent.speed *= speedMult;
-        }
+        Debug.LogWarning($"[PetMovementController] {petController.petName}: NavMeshAgent 미준비");
+        return;
     }
 
+    currentBehaviorState = state;
+    nextBehaviorChange = pb.behaviorDuration + Random.Range(-1f, 1f);
+
+    try { petController.agent.isStopped = true; }
+    catch { /* 예외 무시 */ }
+
+    var anim = petController.GetComponent<PetAnimationController>();
+
+    // ★★★ 중요: 새로운 행동을 시작하기 전에, 이전의 연속 애니메이션(예: 휴식) 상태를 해제합니다.
+    // 이렇게 해야 '휴식' 상태에서 '걷기'로 전환될 때, 애니메이션이 '휴식'에 고정되지 않고
+    // UpdateAnimation 로직에 의해 '걷기' 애니메이션으로 자연스럽게 변경됩니다.
+    if(anim != null)
+    {
+        anim.StopContinuousAnimation();
+    }
+
+    switch (state)
+    {
+        case BehaviorState.Idle:
+            // Idle 상태를 명시적으로 유지하고 싶을 때 사용합니다.
+            anim?.SetContinuousAnimation(0);
+            break;
+
+        case BehaviorState.Walking:
+            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
+            SetRandomDestination();
+            // anim?.SetContinuousAnimation(1); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
+            break;
+
+        case BehaviorState.Running:
+            SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier * 1.5f, false);
+            SetRandomDestination();
+            // anim?.SetContinuousAnimation(2); // << 이 줄을 삭제! UpdateAnimation이 속도를 감지해 처리하도록 합니다.
+            break;
+
+        case BehaviorState.Jumping:
+            StartCoroutine(PerformJump());
+            break;
+
+        case BehaviorState.Resting:
+            // '휴식'은 움직임이 없는 행동 애니메이션이므로, 이 호출은 유지합니다.
+            anim?.SetContinuousAnimation(5);
+            break;
+
+        case BehaviorState.Looking:
+            StartCoroutine(LookAround());
+            break;
+
+        case BehaviorState.Playing:
+            StartCoroutine(PerformPlay());
+            break;
+    }
+
+    // 행동 설정 후 물에 있으면 속도를 재조정합니다.
+    if (isInWater && petController.agent != null)
+    {
+        float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
+                          ? 0.7f : waterSpeedMultiplier;
+        petController.agent.speed *= speedMult;
+    }
+}
     // NavMeshAgent 속도·정지 상태를 안전하게 설정 (모으기 상태 무시) :contentReference[oaicite:9]{index=9}
     private void SafeSetAgentMovement(float speed, bool isStopped)
     {

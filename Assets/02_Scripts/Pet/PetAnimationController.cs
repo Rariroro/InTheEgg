@@ -24,37 +24,53 @@ private int continuousAnimationIndex = -1;
 
 // 2. UpdateAnimation 메서드 수정
 // UpdateAnimation 메서드 수정
+// PetAnimationController.cs
+
 public void UpdateAnimation()
 {
-    // 애니메이션 속도 조정은 유지
-    if (petController.animator != null && petController.agent != null)
+    // 애니메이션 속도 조정은 유지합니다.
+    // 펫의 현재 최대 속도(agent.speed)를 기본 속도(baseSpeed)로 나누어 애니메이션 배속을 조절합니다.
+    // 이를 통해 '모이기' 등 특수 상황에서 빨라진 속도에 맞춰 애니메이션도 빠르게 재생됩니다.
+    if (petController.animator != null && petController.agent != null && petController.baseSpeed > 0)
     {
         petController.animator.speed = petController.agent.speed / petController.baseSpeed;
     }
 
+    // 특별 애니메이션(점프, 먹기 등)이나 행동 기반 애니메이션(휴식 등)이 재생 중일 때는
+    // 아래의 기본 이동(Locomotion) 애니메이션 로직을 실행하지 않습니다.
     if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
         return;
 
-    // ★ 이동 속도 계산을 부모 오브젝트 기준으로 변경
-    Vector3 currentVelocity = (transform.position - lastPosition) / Time.deltaTime;
-    smoothVelocity = Vector3.Lerp(smoothVelocity, currentVelocity, Time.deltaTime / petController.smoothTime);
-    lastPosition = transform.position;
-
-    // ★ 회전 처리 제거 (부모가 이미 회전하므로)
-    if (smoothVelocity.magnitude > 1f)
+    // NavMeshAgent의 실제 속도를 기준으로 애니메이션을 결정합니다.
+    if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh && petController.animator != null)
     {
-        // 회전 코드 제거
-        if (petController.animator != null)
+        // 에이전트의 현재 속력을 가져옵니다.
+        float agentVelocity = petController.agent.velocity.magnitude;
+
+        // 에이전트가 실제로 움직이고 있는지 확인합니다. (미세한 움직임은 '정지'로 간주)
+        if (agentVelocity > 0.1f)
         {
-            petController.animator.SetInteger("animation", 1);
+            // 에이전트에 설정된 speed 값에 따라 '걷기'와 '뛰기'를 구분합니다.
+            // PetMovementController의 Running 상태에서 speed를 1.5배로 설정한 것을 기반으로 합니다.
+            if (petController.agent.speed > petController.baseSpeed * 1.3f)
+            {
+                petController.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
+            }
+            else
+            {
+                petController.animator.SetInteger("animation", 1); // 걷기(Walk) 애니메이션
+            }
+        }
+        else
+        {
+            // 움직이지 않을 때는 '정지' 애니메이션을 재생합니다.
+            petController.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
         }
     }
-    else
+    else if (petController.animator != null)
     {
-        if (petController.animator != null)
-        {
-            petController.animator.SetInteger("animation", 0);
-        }
+         // NavMeshAgent가 없거나 비활성화된 경우에도 '정지' 상태로 처리합니다.
+         petController.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
     }
 }
 
