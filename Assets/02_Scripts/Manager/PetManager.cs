@@ -32,7 +32,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     {
         // EnvironmentManager가 초기화를 완료할 때까지 대기
         yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
-        Debug.Log("EnvironmentManager 초기화 완료, 펫 스폰 시작");
+        // Debug.Log("EnvironmentManager 초기화 완료, 펫 스폰 시작");
     }
     else
     {
@@ -58,7 +58,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     // 선택된 펫을 효과와 함께 스폰하는 코루틴 (새로 추가)
     private IEnumerator SpawnSelectedPetsWithEffects()
     {
-        Debug.Log($"선택된 펫 수: {PetSelectionManager.Instance.selectedPetIds.Count}");
+        // Debug.Log($"선택된 펫 수: {PetSelectionManager.Instance.selectedPetIds.Count}");
         
         // 일반 펫과 최초 등장 펫을 분리
         List<string> normalPets = new List<string>();
@@ -113,11 +113,11 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                     {
                         // 최초 등장 효과 적용
                         ApplyFirstAppearanceEffect(pet);
-                        Debug.Log($"최초 등장 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
+                        // Debug.Log($"최초 등장 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                     else
                     {
-                        Debug.Log($"일반 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
+                        // Debug.Log($"일반 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                 }
                 else

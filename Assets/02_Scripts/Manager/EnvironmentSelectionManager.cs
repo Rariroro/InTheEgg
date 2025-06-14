@@ -32,7 +32,7 @@ public class EnvironmentSelectionManager : MonoBehaviour
         if (!selectedEnvironmentIds.Contains(environmentId))
         {
             selectedEnvironmentIds.Add(environmentId);
-            Debug.Log($"환경 추가: {environmentId}, 현재 선택된 환경: {selectedEnvironmentIds.Count}개");
+            // Debug.Log($"환경 추가: {environmentId}, 현재 선택된 환경: {selectedEnvironmentIds.Count}개");
         }
     }
 
@@ -47,7 +47,7 @@ public class EnvironmentSelectionManager : MonoBehaviour
             {
                 firstAppearanceEnvironmentIds.Remove(environmentId);
             }
-            Debug.Log($"환경 제거: {environmentId}, 현재 선택된 환경: {selectedEnvironmentIds.Count}개");
+            // Debug.Log($"환경 제거: {environmentId}, 현재 선택된 환경: {selectedEnvironmentIds.Count}개");
         }
     }
 
@@ -59,7 +59,7 @@ public class EnvironmentSelectionManager : MonoBehaviour
             if (!firstAppearanceEnvironmentIds.Contains(environmentId))
             {
                 firstAppearanceEnvironmentIds.Add(environmentId);
-                Debug.Log($"환경 최초 등장 설정: {environmentId}");
+                // Debug.Log($"환경 최초 등장 설정: {environmentId}");
             }
         }
         else
@@ -67,7 +67,7 @@ public class EnvironmentSelectionManager : MonoBehaviour
             if (firstAppearanceEnvironmentIds.Contains(environmentId))
             {
                 firstAppearanceEnvironmentIds.Remove(environmentId);
-                Debug.Log($"환경 최초 등장 해제: {environmentId}");
+                // Debug.Log($"환경 최초 등장 해제: {environmentId}");
             }
         }
     }
@@ -83,6 +83,6 @@ public class EnvironmentSelectionManager : MonoBehaviour
     {
         selectedEnvironmentIds.Clear();
         firstAppearanceEnvironmentIds.Clear(); // 최초 등장 목록도 초기화
-        Debug.Log("선택된 모든 환경 초기화");
+        // Debug.Log("선택된 모든 환경 초기화");
     }
 }

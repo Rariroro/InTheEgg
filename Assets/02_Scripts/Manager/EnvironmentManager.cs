@@ -128,7 +128,7 @@ private IEnumerator SpawnDefaultEnvironments()
         "env_flowers"
     };
     
-    Debug.Log("기본 환경 스폰 시작...");
+    // Debug.Log("기본 환경 스폰 시작...");
     
     foreach (string envId in defaultEnvironments)
     {
@@ -144,9 +144,15 @@ private IEnumerator SpawnDefaultEnvironments()
     Physics.SyncTransforms();
     
     // NavMesh 베이크
-    Debug.Log("기본 환경 NavMesh 베이크 시작...");
+    // Debug.Log("기본 환경 NavMesh 베이크 시작...");
     yield return StartCoroutine(BakeNavMeshAfterDelay());
     
+    // ★★★★★ [수정] TreeManager 그리드 재생성 호출 ★★★★★
+    if (TreeManager.Instance != null)
+    {
+        TreeManager.Instance.RebuildTreeGrid();
+    }
+
     // 초기화 완료 플래그 설정
     IsInitializationComplete = true;
     Debug.Log("기본 환경 초기화 완료!");
@@ -183,7 +189,7 @@ private IEnumerator SpawnDefaultEnvironments()
     
     // 초기화 완료 플래그 설정
     IsInitializationComplete = true;
-    Debug.Log("선택된 환경 초기화 완료!");
+    // Debug.Log("선택된 환경 초기화 완료!");
 }
 
     private void Update()
@@ -228,7 +234,7 @@ private IEnumerator SpawnDefaultEnvironments()
         if (terrainManager != null)
         {
             terrainManager.DisableGroupByEnvironmentId(environmentId);
-            Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
+            // Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
         }
         else
         {
@@ -242,11 +248,11 @@ private IEnumerator SpawnDefaultEnvironments()
         if (withFirstAppearanceEffect)
         {
             ApplyFirstAppearanceEffect(environment);
-            Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
+            // Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
         }
         else
         {
-            Debug.Log($"일반 환경 생성 완료: {environmentId}");
+            // Debug.Log($"일반 환경 생성 완료: {environmentId}");
         }
 
         // 물리 엔진 동기화
@@ -325,8 +331,13 @@ private IEnumerator SpawnDefaultEnvironments()
 
         // NavMesh 재베이크
         yield return StartCoroutine(BakeNavMeshAfterDelay());
+  // ★★★★★ [수정] TreeManager 그리드 재생성 호출 ★★★★★
+    if (TreeManager.Instance != null)
+    {
+        TreeManager.Instance.RebuildTreeGrid();
+    }
 
-        Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
+        // Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
     }
 
     private IEnumerator RemoveGiftWithAnimation(GameObject gift)
@@ -361,7 +372,7 @@ private IEnumerator SpawnDefaultEnvironments()
     {
         List<string> selectedIds = EnvironmentSelectionManager.Instance.selectedEnvironmentIds;
 
-        Debug.Log($"선택된 환경 수: {selectedIds.Count}");
+        // Debug.Log($"선택된 환경 수: {selectedIds.Count}");
 
         // 일반 환경과 최초 등장 환경을 분리
         List<string> normalEnvironments = new List<string>();
@@ -406,9 +417,13 @@ private IEnumerator SpawnDefaultEnvironments()
         Physics.SyncTransforms();
 
         // 초기 NavMesh 베이크 (일반 환경이 있든 없든 항상 실행)
-        Debug.Log("초기 NavMesh 베이크 시작...");
+        // Debug.Log("초기 NavMesh 베이크 시작...");
         yield return StartCoroutine(BakeNavMeshAfterDelay());
-
+  // ★★★★★ [수정] TreeManager 그리드 재생성 호출 ★★★★★
+    if (TreeManager.Instance != null)
+    {
+        TreeManager.Instance.RebuildTreeGrid();
+    }
         // 최초 등장 환경들은 선물로 스폰
         foreach (string environmentId in firstAppearanceEnvironments)
         {
@@ -460,7 +475,7 @@ private IEnumerator SpawnDefaultEnvironments()
         // 대기 중인 선물 목록에 추가
         pendingGifts.Add(gift, environmentId);
 
-        Debug.Log($"환경용 선물 생성 완료: {environmentId} at {giftPosition}");
+        // Debug.Log($"환경용 선물 생성 완료: {environmentId} at {giftPosition}");
     }
 
     private IEnumerator SpawnEnvironmentAndBake(string environmentId)
@@ -510,7 +525,7 @@ private IEnumerator SpawnDefaultEnvironments()
         // NavMesh 베이크
         if (navMeshSurface != null)
         {
-            Debug.Log("NavMesh 베이크 시작...");
+            // Debug.Log("NavMesh 베이크 시작...");
             
             // 기존 NavMesh 데이터 제거
             navMeshSurface.RemoveData();
@@ -518,7 +533,7 @@ private IEnumerator SpawnDefaultEnvironments()
             // 새로운 NavMesh 베이크
             navMeshSurface.BuildNavMesh();
             
-            Debug.Log("NavMesh 베이크 완료!");
+            // Debug.Log("NavMesh 베이크 완료!");
         }
         else
         {

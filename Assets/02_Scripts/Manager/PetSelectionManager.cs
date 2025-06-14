@@ -33,7 +33,7 @@ public class PetSelectionManager : MonoBehaviour
         if (!selectedPetIds.Contains(petId))
         {
             selectedPetIds.Add(petId);
-            Debug.Log($"펫 추가: {petId}, 현재 선택된 펫: {selectedPetIds.Count}개");
+            // Debug.Log($"펫 추가: {petId}, 현재 선택된 펫: {selectedPetIds.Count}개");
         }
     }
 
@@ -48,7 +48,7 @@ public class PetSelectionManager : MonoBehaviour
             {
                 firstAppearancePetIds.Remove(petId);
             }
-            Debug.Log($"펫 제거: {petId}, 현재 선택된 펫: {selectedPetIds.Count}개");
+            // Debug.Log($"펫 제거: {petId}, 현재 선택된 펫: {selectedPetIds.Count}개");
         }
     }
 
@@ -60,7 +60,7 @@ public class PetSelectionManager : MonoBehaviour
             if (!firstAppearancePetIds.Contains(petId))
             {
                 firstAppearancePetIds.Add(petId);
-                Debug.Log($"펫 최초 등장 설정: {petId}");
+                // Debug.Log($"펫 최초 등장 설정: {petId}");
             }
         }
         else
@@ -68,7 +68,7 @@ public class PetSelectionManager : MonoBehaviour
             if (firstAppearancePetIds.Contains(petId))
             {
                 firstAppearancePetIds.Remove(petId);
-                Debug.Log($"펫 최초 등장 해제: {petId}");
+                // Debug.Log($"펫 최초 등장 해제: {petId}");
             }
         }
     }
@@ -84,7 +84,7 @@ public class PetSelectionManager : MonoBehaviour
     {
         selectedPetIds.Clear();
         firstAppearancePetIds.Clear(); // 최초 등장 목록도 초기화
-        Debug.Log("선택된 모든 펫 초기화");
+        // Debug.Log("선택된 모든 펫 초기화");
     }
 
     // 두 번째 씬으로 이동
@@ -100,11 +100,11 @@ public class PetSelectionManager : MonoBehaviour
                 
                 if (environmentCount == 0)
                 {
-                    Debug.Log("환경이 선택되지 않았습니다. 기본 지형만 사용합니다.");
+                    // Debug.Log("환경이 선택되지 않았습니다. 기본 지형만 사용합니다.");
                 }
                 else
                 {
-                    Debug.Log($"선택된 환경 수: {environmentCount}");
+                    // Debug.Log($"선택된 환경 수: {environmentCount}");
                 }
             }
             

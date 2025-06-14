@@ -52,7 +52,7 @@ public class PetSelectionUI : MonoBehaviour
     // ★ 모든 펫 선택 버튼 클릭 메서드
     void OnSelectAllPetsClicked()
     {
-        Debug.Log("모든 펫 선택 버튼 클릭됨");
+        // Debug.Log("모든 펫 선택 버튼 클릭됨");
 
         // 모든 펫 토글을 켜기
         for (int i = 0; i < petToggles.Count; i++)
@@ -63,7 +63,7 @@ public class PetSelectionUI : MonoBehaviour
             }
         }
 
-        Debug.Log($"총 {petToggles.Count}개 펫이 선택되었습니다.");
+        // Debug.Log($"총 {petToggles.Count}개 펫이 선택되었습니다.");
     }
 
 

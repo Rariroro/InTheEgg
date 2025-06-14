@@ -233,42 +233,24 @@ private IEnumerator SearchAndClimbTree()
 {
     isSearchingForTree = true;
     
-    // OverlapSphereNonAlloc 사용으로 GC 방지
-    Collider[] treeBuffer = new Collider[10]; // 클래스 레벨 필드로 이동 권장
-    int treeCount = Physics.OverlapSphereNonAlloc(
-        transform.position, 
-        treeDetectionRadius, 
-        treeBuffer, 
-        treeLayerMask
-    );
-    
-    if (treeCount > 0)
+     Transform nearestTree = TreeManager.Instance.FindNearestTree(transform.position);
+
+    // 가장 가까운 나무를 찾았고, 일정 확률을 통과하면 올라가기를 시도합니다.
+    if (nearestTree != null && Random.value < treeClimbChance)
     {
-        // 가장 가까운 나무만 찾기
-        Transform nearestTree = null;
-        float nearestDistSqr = float.MaxValue; // sqrMagnitude 사용
-        
-        for (int i = 0; i < treeCount; i++)
+        // 찾은 나무가 너무 멀리 있으면 포기 (선택 사항)
+        if ((nearestTree.position - transform.position).sqrMagnitude > treeDetectionRadius * treeDetectionRadius)
         {
-            if (treeBuffer[i].CompareTag("Tree"))
-            {
-                float distSqr = (treeBuffer[i].transform.position - transform.position).sqrMagnitude;
-                if (distSqr < nearestDistSqr)
-                {
-                    nearestDistSqr = distSqr;
-                    nearestTree = treeBuffer[i].transform;
-                }
-            }
+            // 너무 멀어서 포기
         }
-        
-        if (nearestTree != null && Random.value < treeClimbChance)
+        else
         {
-            climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
-            yield return climbTreeCoroutine;
-            climbTreeCoroutine = null;
+             climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
+             yield return climbTreeCoroutine;
+             climbTreeCoroutine = null;
         }
     }
-    
+
     isSearchingForTree = false;
 }
 // 나무 올라가기 중단 메서드 추가
@@ -605,7 +587,6 @@ private IEnumerator ClimbDownTree()
     // 행동 상태 전환: NavMeshAgent 속성·애니메이션 적용 :contentReference[oaicite:8]{index=8}
     private void SetBehavior(BehaviorState state)
     {
-        Debug.Log("#PetMovementController/SetBehavior");
 
         // 모으기 상태면 행동 변경하지 않음
         if (petController.isGathering) return;

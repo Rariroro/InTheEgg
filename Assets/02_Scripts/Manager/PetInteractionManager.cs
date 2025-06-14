@@ -183,7 +183,7 @@ public class PetInteractionManager : MonoBehaviour
             // 그리드에 추가
             AddPetToGrid(pet);
             
-            Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
+            // Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
         }
     }
 
@@ -210,7 +210,7 @@ public class PetInteractionManager : MonoBehaviour
             
             lastInteractionTime.Remove(pet);
             
-            Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
+            // Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
         }
     }
 

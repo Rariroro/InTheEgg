@@ -216,7 +216,7 @@ public class PetController : MonoBehaviour
         // NavMesh에 없는 경우 배치 시도
         if (!agent.isOnNavMesh)
         {
-            Debug.Log($"[PetController] {petName}: NavMesh 위에 배치 시도 중...");
+            // Debug.Log($"[PetController] {petName}: NavMesh 위에 배치 시도 중...");
 
             NavMeshHit hit;
             if (NavMesh.SamplePosition(transform.position, out hit, 10f, NavMesh.AllAreas))
@@ -231,7 +231,7 @@ public class PetController : MonoBehaviour
                 agent.enabled = wasEnabled;
                 yield return new WaitForSeconds(0.1f);
 
-                Debug.Log($"[PetController] {petName}: NavMesh 위치로 이동 완료 - {hit.position}");
+                // Debug.Log($"[PetController] {petName}: NavMesh 위치로 이동 완료 - {hit.position}");
             }
             else
             {
@@ -242,7 +242,7 @@ public class PetController : MonoBehaviour
         // NavMeshAgent가 활성화되고 NavMesh 위에 있는지 최종 확인
         if (agent.enabled && agent.isOnNavMesh)
         {
-            Debug.Log($"[PetController] {petName}: NavMeshAgent 준비 완료");
+            // Debug.Log($"[PetController] {petName}: NavMeshAgent 준비 완료");
 
             // 이제 안전하게 컨트롤러들을 초기화
             if (movementController != null)
@@ -290,7 +290,7 @@ public class PetController : MonoBehaviour
             else if (name.Contains("dog")) petType = PetType.Dog;
             else
             {
-                // Debug.LogWarning($"[PetController] 펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {petType}을(를) 사용합니다.");
+                Debug.LogWarning($"[PetController] 펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {petType}을(를) 사용합니다.");
             }
         }
     }

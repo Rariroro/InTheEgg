@@ -44,7 +44,7 @@ public class EnvironmentSelectionUI : MonoBehaviour
 // ★ 모든 환경 최초등장 선택 버튼 클릭 메서드
 void OnSelectAllEnvironmentsClicked()
 {
-    Debug.Log("모든 환경 최초등장 선택 버튼 클릭됨");
+    // Debug.Log("모든 환경 최초등장 선택 버튼 클릭됨");
     
     // 모든 환경 토글 켜기
     for (int i = 0; i < environmentToggles.Count; i++)
@@ -74,7 +74,7 @@ private IEnumerator EnableAllFirstAppearanceToggles()
         }
     }
     
-    Debug.Log($"총 {environmentToggles.Count}개 환경이 최초등장 상태로 선택되었습니다.");
+    // Debug.Log($"총 {environmentToggles.Count}개 환경이 최초등장 상태로 선택되었습니다.");
     
     // 선택된 환경 개수 텍스트 업데이트
     UpdateSelectedCountText();
