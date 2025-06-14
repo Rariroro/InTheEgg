@@ -481,7 +481,8 @@ public class PetInteractionController : MonoBehaviour
 
     // 펫을 선택하는 함수
     private void Select()
-    {
+    {        petController.isSelected = true;  // PetController에 선택 상태 알림
+
         isSelected = true;          // 펫이 선택된 상태로 설정
         selectionTimer = 0f;       // 선택 타이머 초기화
         petController.StopMovement(); // 펫의 움직임을 멈춥니다.
@@ -515,7 +516,8 @@ public class PetInteractionController : MonoBehaviour
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
-    {
+    {        petController.isSelected = false;  // PetController에 선택 해제 알림
+
         isSelected = false; // 펫 선택 상태 해제
 
         // 펫을 들고 있지 않은 경우
@@ -553,32 +555,30 @@ public class PetInteractionController : MonoBehaviour
     }
 
     // 펫이 부드럽게 카메라를 바라보도록 하는 코루틴
-    private IEnumerator SmoothLookAtCamera()
+  private IEnumerator SmoothLookAtCamera()
+{
+    if (Camera.main != null && petController.petModelTransform != null)
     {
-        // 카메라와 펫의 petModelTransform이 null이 아닌 경우
-        if (Camera.main != null && petController.petModelTransform != null)
+        // 카메라에서 펫으로의 방향 벡터 계산
+        Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
+        directionToCamera.y = 0; // Y축 회전은 무시
+
+        if (directionToCamera != Vector3.zero)
         {
-            // 카메라에서 펫으로의 방향 벡터를 계산합니다.
-            Vector3 directionToCamera = Camera.main.transform.position - petController.petModelTransform.position;
-            directionToCamera.y = 0; // Y축 회전은 무시 (펫이 위아래로 기울어지지 않도록)
+            // 목표 회전값 계산
+            Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
 
-            // 방향 벡터가 0이 아니면 (즉, 카메라와 펫이 같은 위치에 있지 않으면)
-            if (directionToCamera != Vector3.zero)
+            // 부모 오브젝트(PetController)를 회전시킴
+            while (Quaternion.Angle(petController.transform.rotation, targetRotation) > 1f && isSelected)
             {
-                // 목표 회전값을 계산합니다.
-                Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
-
-                // 현재 회전에서 목표 회전으로 부드럽게 회전 (Slerp 사용)
-                while (Quaternion.Angle(petController.petModelTransform.rotation, targetRotation) > 0.01f)
-                {
-                    petController.petModelTransform.rotation = Quaternion.Slerp(
-                        petController.petModelTransform.rotation,
-                        targetRotation,
-                        Time.deltaTime * petController.rotationSpeed
-                    );
-                    yield return null; // 다음 프레임까지 대기
-                }
+                petController.transform.rotation = Quaternion.Slerp(
+                    petController.transform.rotation,
+                    targetRotation,
+                    Time.deltaTime * petController.rotationSpeed * 2f // 조금 더 빠르게
+                );
+                yield return null;
             }
         }
     }
+}
 }

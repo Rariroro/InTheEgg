@@ -550,7 +550,12 @@ private IEnumerator ClimbDownTree()
     // 행동 전환 시 호출: 가중치 기반 랜덤으로 다음 행동 선정
     private void DecideNextBehavior()
     {
-
+// 선택된 상태에서는 새로운 행동을 결정하지 않음
+    if (petController.isSelected)
+    {
+        behaviorTimer = 0f;
+        return;
+    }
         // [수정] 새로운 행동을 결정하기 전, 더 중요한 행동(식사, 수면)을 하는지 확인
         var feedingController = petController.GetComponent<PetFeedingController>();
         var sleepingController = petController.GetComponent<PetSleepingController>();
