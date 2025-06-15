@@ -27,6 +27,13 @@ public class PetController : MonoBehaviour
     public PetAIProperties.Personality personality = PetAIProperties.Personality.Shy;
     public PetAIProperties.DietType dietType = PetAIProperties.DietType.Omnivore;
     public PetAIProperties.Habitat habitat = PetAIProperties.Habitat.Forest;
+   
+    // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
+    [Tooltip("펫이 물에 잠기는 깊이를 설정합니다. 값이 클수록 더 깊이 잠깁니다.")]
+    [Range(0f, 5f)] 
+    public float waterSinkDepth = 1.0f;
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+   
     [Range(0, 100)]
     public float affection;
     [Range(0, 100)]

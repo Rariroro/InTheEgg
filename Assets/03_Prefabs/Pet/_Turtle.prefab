@@ -56,14 +56,18 @@ MonoBehaviour:
   personality: 0
   dietType: 2
   habitat: 0
+  waterSinkDepth: 0.53
   affection: 0
   hunger: 0
+  sleepiness: 0
   petName: Turtle
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
   isGathered: 0
+  isGathering: 0
   gatherCommandVersion: 0
+  isGatheringAnimationOverride: 0
   baseSpeed: 0
   baseAngularSpeed: 0
   baseAcceleration: 0
@@ -72,6 +76,14 @@ MonoBehaviour:
   manuallySetPetType: 0
   isInteracting: 0
   interactionPartner: {fileID: 0}
+  isInWater: 0
+  waterDepthOffset: 0
+  isClimbingTree: 0
+  currentTree: {fileID: 0}
+  climbHeight: 5
+  isSelected: 0
+  isHolding: 0
+  isAnimationLocked: 0
 --- !u!195 &2186325178484760105
 NavMeshAgent:
   m_ObjectHideFlags: 0

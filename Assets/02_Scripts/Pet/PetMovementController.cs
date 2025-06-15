@@ -45,7 +45,6 @@ public class PetMovementController : MonoBehaviour
     // 클래스 상단에 필드 추가
     private bool isInWater = false;
     private float waterSpeedMultiplier = 0.3f;
-    private float waterSinkDepth = 1.0f;
     private float currentDepth = 0f;
     private float depthTransitionSpeed = 2f;
 
@@ -507,7 +506,7 @@ public class PetMovementController : MonoBehaviour
         }
 
         // 부드러운 깊이 전환
-        float targetDepth = isInWater ? -waterSinkDepth : 0f;
+        float targetDepth = isInWater ? -petController.waterSinkDepth : 0f; // (변경 후)
         currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
         petController.waterDepthOffset = currentDepth;
     }
