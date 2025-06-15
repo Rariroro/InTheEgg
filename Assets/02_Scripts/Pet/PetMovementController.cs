@@ -161,7 +161,11 @@ public class PetMovementController : MonoBehaviour
     
     // 나무에 올라가 있으면 다른 움직임 처리 스킵
     if (petController.isClimbingTree)
-    {
+    {  // 선택되지 않은 상태에서만 리턴
+        if (!petController.isSelected)
+        {
+            return;
+        }
         return;
     }
     

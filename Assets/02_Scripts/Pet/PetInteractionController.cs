@@ -522,14 +522,17 @@ private void Select()
     isSelected = true;
     selectionTimer = 0f;
 
-    petController.StopMovement();
-
-    var movementController = petController.GetComponent<PetMovementController>();
-    if (movementController != null)
+    // ★ 나무에 올라가 있지 않을 때만 움직임 정지
+    if (!petController.isClimbingTree)
     {
-        movementController.StopAllCoroutines();
-    }
+        petController.StopMovement();
 
+        var movementController = petController.GetComponent<PetMovementController>();
+        if (movementController != null)
+        {
+            movementController.StopAllCoroutines();
+        }
+    }
     var animController = petController.GetComponent<PetAnimationController>();
     animController?.StopContinuousAnimation();
 
@@ -565,22 +568,31 @@ private void Select()
 
     // 펫 선택을 해제하는 함수
     private void Deselect()
+{
+    petController.isSelected = false;
+    isSelected = false;
+
+    if (!isHolding)
     {
-        petController.isSelected = false;
-        isSelected = false;
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
 
-        if (!isHolding)
+        StopAllCoroutines();
+
+        // ★ 나무에 올라가 있을 때는 특별 처리
+        if (petController.isClimbingTree)
         {
-            if (nameTextObject != null)
-                nameTextObject.SetActive(false);
-
-            StopAllCoroutines();
-
-            // ★ 수정: 애니메이션 정상화 후 이동 시작하도록 코루틴 사용
+            // 나무에서 쉬기 애니메이션으로 돌아가기
+            var animController = petController.GetComponent<PetAnimationController>();
+            animController?.SetContinuousAnimation(5); // 휴식 애니메이션
+        }
+        else
+        {
+            // 일반적인 이동 재개
             StartCoroutine(DelayedMovementResume());
         }
     }
-
+}
 /// <summary>
 /// 펫이 카메라를 바라본 후 공격 애니메이션을 순서대로 재생하는 코루틴입니다.
 /// </summary>
@@ -626,20 +638,23 @@ private IEnumerator AttackSequence()
     }
 
     // 펫이 멈추고 카메라를 바라볼 때까지 기다리는 코루틴
-   private IEnumerator WaitForStopAndLookAtCamera()
+  private IEnumerator WaitForStopAndLookAtCamera()
 {
-    // ★ 추가: 즉시 Idle 애니메이션으로 전환
-    if (petController.animator != null)
+    // ★ 즉시 Idle 애니메이션으로 전환
+    if (petController.animator != null && !petController.isClimbingTree)
     {
         petController.animator.SetInteger("animation", 0);
     }
     
-    // 펫의 에이전트 속도가 0.01f보다 클 동안 대기
-    while (petController.agent != null && 
-           petController.agent.enabled && 
-           petController.agent.velocity.magnitude > 0.01f)
+    // ★ 나무에 올라가 있지 않을 때만 에이전트 속도 체크
+    if (!petController.isClimbingTree)
     {
-        yield return null;
+        while (petController.agent != null && 
+               petController.agent.enabled && 
+               petController.agent.velocity.magnitude > 0.01f)
+        {
+            yield return null;
+        }
     }
 
     // 펫이 멈추면 부드럽게 카메라를 바라보도록 하는 코루틴 시작
