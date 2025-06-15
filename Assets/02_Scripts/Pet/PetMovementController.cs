@@ -297,41 +297,47 @@ public class PetMovementController : MonoBehaviour
     }
 }
     // 나무 올라가기 코루틴
-    private IEnumerator ClimbTree(Transform tree)
-    {
-            // ★ 시작할 때 isHolding 체크
+   // PetMovementController.cs
+
+private IEnumerator ClimbTree(Transform tree)
+{
+    // ★ 시작할 때 isHolding 체크
     if (petController.isHolding)
     {
         yield break;
     }
 
-        petController.isClimbingTree = true;
-        petController.currentTree = tree;
+    petController.isClimbingTree = true;
+    petController.currentTree = tree;
 
-        // NavMeshAgent 비활성화
-        if (petController.agent != null)
-        {
-            petController.agent.enabled = false;
-        }
+    // NavMeshAgent 비활성화
+    if (petController.agent != null)
+    {
+        petController.agent.enabled = false;
+    }
 
-        // 나무의 실제 높이 계산
-        float treeHeight = CalculateTreeHeight(tree);
-        float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
+    // ==================== 수정된 로직 시작 ====================
 
-        // 나무로 이동
-        Vector3 treeBase = tree.position;
-        float moveTime = 2f;
-        float elapsed = 0f;
-        Vector3 startPos = transform.position;
+    // 목표 지점: 나무 바로 아래의 NavMesh 위의 지점
+    Vector3 treeBaseTarget = tree.position;
+    NavMeshHit hit;
+    if (NavMesh.SamplePosition(treeBaseTarget, out hit, 5f, NavMesh.AllAreas))
+    {
+        treeBaseTarget = hit.position;
+    }
 
-        // 걷기 애니메이션
-        var anim = petController.GetComponent<PetAnimationController>();
-        anim?.SetContinuousAnimation(1);
+    // 이동 속도: 펫의 기본 걷기 속도를 사용
+    float moveSpeed = petController.baseSpeed; 
 
-        // 나무 밑으로 이동
-        while (elapsed < moveTime)
-        {
-             if (petController.isHolding)
+    // 걷기 애니메이션 설정
+    var anim = petController.GetComponent<PetAnimationController>();
+    anim?.SetContinuousAnimation(1); // 걷기(Walk) 애니메이션
+
+    // 목표 지점에 도착할 때까지 프레임마다 이동
+    while (Vector3.Distance(transform.position, treeBaseTarget) > 0.1f)
+    {
+        // 도중에 유저가 펫을 잡았는지 체크
+        if (petController.isHolding)
         {
             // 잡혔으면 즉시 중단
             petController.isClimbingTree = false;
@@ -341,48 +347,57 @@ public class PetMovementController : MonoBehaviour
             }
             yield break;
         }
-            elapsed += Time.deltaTime;
-            float t = elapsed / moveTime;
-            transform.position = Vector3.Lerp(startPos, treeBase, t);
+        
+        // Vector3.MoveTowards를 사용하여 일정한 속도로 이동
+        transform.position = Vector3.MoveTowards(transform.position, treeBaseTarget, moveSpeed * Time.deltaTime);
 
-            // 나무를 바라보도록 회전
-            Vector3 lookDir = (treeBase - transform.position).normalized;
-            lookDir.y = 0;
-            if (lookDir != Vector3.zero)
-            {
-                transform.rotation = Quaternion.Slerp(transform.rotation,
-                    Quaternion.LookRotation(lookDir), Time.deltaTime * 5f);
-            }
-
-            yield return null;
-        }
-
-        // 올라가기 애니메이션
-        anim?.SetContinuousAnimation(3);
-
-        // 계산된 높이로 올라가기
-        Vector3 climbTarget = treeBase + Vector3.up * climbTargetHeight;
-        elapsed = 0f;
-        moveTime = 3f;
-        startPos = transform.position;
-
-        while (elapsed < moveTime)
+        // 나무를 바라보도록 부드럽게 회전
+        Vector3 lookDir = (treeBaseTarget - transform.position).normalized;
+        lookDir.y = 0;
+        if (lookDir != Vector3.zero)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / moveTime;
-            transform.position = Vector3.Lerp(startPos, climbTarget, t);
-            yield return null;
+            transform.rotation = Quaternion.Slerp(transform.rotation,
+                Quaternion.LookRotation(lookDir), Time.deltaTime * 5f);
         }
 
-        // 나무 위에서 쉬기
-        anim?.SetContinuousAnimation(5);
-
-        // 5-10초 동안 나무 위에서 쉬기
-        yield return new WaitForSeconds(Random.Range(5f, 10f));
-
-        // 내려오기
-        yield return StartCoroutine(ClimbDownTree());
+        yield return null;
     }
+
+    // 목표 지점에 정확히 위치시키기
+    transform.position = treeBaseTarget;
+    
+    // ==================== 수정된 로직 끝 ====================
+
+    // 올라가기 애니메이션
+    anim?.SetContinuousAnimation(3);
+
+    // 나무의 실제 높이 계산
+    float treeHeight = CalculateTreeHeight(tree);
+    float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
+
+    // 계산된 높이로 올라가기
+    Vector3 climbTarget = transform.position + Vector3.up * climbTargetHeight;
+    float elapsed = 0f;
+    float moveTime = 3f; // 올라가는 시간은 3초로 고정
+    Vector3 startPos = transform.position;
+
+    while (elapsed < moveTime)
+    {
+        elapsed += Time.deltaTime;
+        float t = elapsed / moveTime;
+        transform.position = Vector3.Lerp(startPos, climbTarget, t);
+        yield return null;
+    }
+
+    // 나무 위에서 쉬기
+    anim?.SetContinuousAnimation(5);
+
+    // 5-10초 동안 나무 위에서 쉬기
+    yield return new WaitForSeconds(Random.Range(5f, 10f));
+
+    // 내려오기
+    yield return StartCoroutine(ClimbDownTree());
+}
 
     // 나무의 실제 높이를 계산하는 메서드
     private float CalculateTreeHeight(Transform tree)
