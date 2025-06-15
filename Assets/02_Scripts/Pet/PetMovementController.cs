@@ -221,6 +221,44 @@ public class PetMovementController : MonoBehaviour
                petController.agent.enabled &&
                petController.agent.isOnNavMesh;
     }
+
+public void ForceCancelClimbing()
+{
+    // 1. 진행 중인 모든 행동 코루틴을 중단합니다.
+    if (climbTreeCoroutine != null)
+    {
+        StopCoroutine(climbTreeCoroutine);
+        climbTreeCoroutine = null;
+    }
+    StopAllCoroutines(); // 다른 행동(놀기, 점프 등)도 모두 중단
+
+    // 2. 나무 타기와 관련된 모든 상태 변수를 확실하게 초기화합니다.
+    isSearchingForTree = false;
+    if (petController != null)
+    {
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+    }
+
+    // 3. NavMeshAgent를 즉시 활성화하고 현재 위치에 맞게 동기화합니다.
+    if (petController != null && petController.agent != null && !petController.agent.enabled)
+    {
+        petController.agent.enabled = true;
+        // Warp을 사용해 현재 위치에서 NavMesh를 다시 찾도록 합니다.
+        petController.agent.Warp(transform.position); 
+    }
+
+    // 4. 애니메이션 컨트롤러가 있다면, 모든 특별/연속 애니메이션을 중단하고 기본 상태로 돌립니다.
+    var animController = GetComponent<PetAnimationController>();
+    if (animController != null)
+    {
+        animController.ForceStopAllAnimations();
+    }
+    
+    // 5. 현재 행동 상태를 Idle로 리셋합니다.
+    currentBehaviorState = BehaviorState.Idle;
+    behaviorTimer = 0f; // 타이머 초기화
+}
     private void CheckTreeArea()
     {
         // Tree habitat이 아니면 즉시 리턴
@@ -298,8 +336,14 @@ public class PetMovementController : MonoBehaviour
 }
     // 나무 올라가기 코루틴
    // PetMovementController.cs
-
 private IEnumerator ClimbTree(Transform tree)
+{
+    // 이 코루틴의 시작 부분에 climbTreeCoroutine에 자기 자신을 할당합니다.
+    climbTreeCoroutine = StartCoroutine(ClimbTreeInternal(tree));
+    yield return climbTreeCoroutine;
+    climbTreeCoroutine = null;
+}
+private IEnumerator ClimbTreeInternal(Transform tree)
 {
     // ★ 시작할 때 isHolding 체크
     if (petController.isHolding)
@@ -478,15 +522,8 @@ private IEnumerator ClimbTree(Transform tree)
         {
             Debug.LogWarning($"{petController.petName}: currentTree가 null입니다. 내려오기 중단.");
 
-            // NavMeshAgent 재활성화
-            if (petController.agent != null)
-            {
-                petController.agent.enabled = true;
-                petController.agent.Warp(transform.position);
-            }
-
-            petController.isClimbingTree = false;
-            yield break;
+              ForceCancelClimbing(); // ✅ 문제가 발생했을 때도 상태를 초기화하도록 변경
+        yield break;
         }
 
         var anim = petController.GetComponent<PetAnimationController>();

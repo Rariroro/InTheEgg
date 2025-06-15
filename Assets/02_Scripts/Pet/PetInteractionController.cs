@@ -265,48 +265,37 @@ public class PetInteractionController : MonoBehaviour
     // StartHolding() 메서드 수정
 private void StartHolding()
 {
-   // ★ 나무 올라가기 상태를 가장 먼저 처리
+    
+  var movementController = petController.GetComponent<PetMovementController>();
+
+    // ✅ 나무에 올라가고 있었다면, movementController의 강제 종료 함수를 호출합니다.
     if (petController.isClimbingTree)
     {
-        // 나무 상태를 먼저 false로 설정
-        petController.isClimbingTree = false;
-        
-        // 진행 중인 나무 관련 코루틴 모두 중단
-        var movementController = petController.GetComponent<PetMovementController>();
         if (movementController != null)
         {
-            movementController.StopAllCoroutines(); // 모든 코루틴 중단
-            movementController.StopTreeClimbing();
+            movementController.ForceCancelClimbing();
         }
-        
-        // currentTree는 나중에 null로 설정 (ClimbDownTree에서 사용할 수 있으므로)
-        petController.currentTree = null;
     }
     
     isHolding = true;
     petController.isHolding = true;
 
-    // ★ 버둥거리는 애니메이션 설정 (달리기 애니메이션을 빠르게)
+    // 버둥거리는 애니메이션 설정
     if (petController.animator != null)
     {
-        petController.animator.speed = 3.0f; // 3배속으로 재생하여 버둥거리는 효과
+        petController.animator.speed = 3.0f;
     }
     
-    // ★ 연속 애니메이션 강제 설정으로 UpdateAnimation이 덮어쓰지 못하게 함
     var animController = petController.GetComponent<PetAnimationController>();
     if (animController != null)
     {
-        animController.SetContinuousAnimation(2); // 달리기 애니메이션 고정
+        animController.SetContinuousAnimation(2);
     }
 
-    // NavMeshAgent 비활성화
-    if (petController.agent != null)
+    // ✅ NavMeshAgent 비활성화 로직은 ForceCancelClimbing에서 처리하므로, 여기서 한 번 더 확인합니다.
+    if (petController.agent != null && petController.agent.enabled)
     {
         petController.agent.enabled = false;
-        if (petController.petModelTransform != null)
-        {
-            petController.petModelTransform.rotation = petController.transform.rotation;
-        }
     }
 
     // CameraController 비활성화
@@ -500,22 +489,22 @@ private void ForceStopHolding()
 
     // 펫 배치를 완료하는 함수
     private void CompletePetPlacement()
+{
+    isHolding = false;
+    petController.isHolding = false; // ✅ isHolding 상태도 확실히 변경
+
+    // ✅ 나무 타기 상태였을 경우를 대비해 한 번 더 상태를 정리해줍니다.
+    var movementController = petController.GetComponent<PetMovementController>();
+    if (movementController != null && petController.isClimbingTree)
     {
-        isHolding = false;  // 펫을 들고 있지 않은 상태로 설정
-
-        // ★ 나무 상태 최종 확인 및 초기화
-        if (petController.isClimbingTree)
-        {
-            petController.isClimbingTree = false;
-            petController.currentTree = null;
-            Debug.Log($"{petController.petName}: 나무 상태 최종 초기화");
-        }
-
-        petController.ResumeMovement(); // 펫의 움직임을 다시 시작합니다.
-                                        // 펫에게 랜덤한 목적지를 설정합니다.
-        petController.GetComponent<PetMovementController>().SetRandomDestination();
-        Deselect();       // 펫 선택 해제
+        movementController.ForceCancelClimbing();
     }
+    
+    // 펫의 움직임 재개 및 새 목적지 설정
+    petController.ResumeMovement();
+    movementController?.SetRandomDestination();
+    Deselect();
+}
 
     // 펫을 선택하는 함수
    // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
