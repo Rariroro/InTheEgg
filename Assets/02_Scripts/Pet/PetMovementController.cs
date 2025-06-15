@@ -232,10 +232,16 @@ public void ForceCancelClimbing()
     }
     StopAllCoroutines(); // 다른 행동(놀기, 점프 등)도 모두 중단
 
-    // 2. 나무 타기와 관련된 모든 상태 변수를 확실하게 초기화합니다.
+     // 2. 나무 타기와 관련된 모든 상태 변수를 확실하게 초기화합니다.
     isSearchingForTree = false;
     if (petController != null)
     {
+        // 나무 점유 해제
+        if (petController.currentTree != null)
+        {
+            TreeManager.Instance.ReleaseTree(petController.currentTree);
+        }
+        
         petController.isClimbingTree = false;
         petController.currentTree = null;
     }
@@ -280,30 +286,31 @@ public void ForceCancelClimbing()
     private Coroutine climbTreeCoroutine = null;
 
     // 나무 찾기 및 올라가기 코루틴
-    private IEnumerator SearchAndClimbTree()
+   // SearchAndClimbTree 메서드를 다음과 같이 수정
+private IEnumerator SearchAndClimbTree()
+{
+    isSearchingForTree = true;
+
+    // 비어있는 나무만 찾도록 변경
+    Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
+
+    if (nearestTree != null && Random.value < treeClimbChance)
     {
-        isSearchingForTree = true;
-
-        Transform nearestTree = TreeManager.Instance.FindNearestTree(transform.position);
-
-        // 가장 가까운 나무를 찾았고, 일정 확률을 통과하면 올라가기를 시도합니다.
-        if (nearestTree != null && Random.value < treeClimbChance)
+        // 나무 점유 시도
+        if (TreeManager.Instance.OccupyTree(nearestTree, petController))
         {
-            // 찾은 나무가 너무 멀리 있으면 포기 (선택 사항)
-            if ((nearestTree.position - transform.position).sqrMagnitude > treeDetectionRadius * treeDetectionRadius)
-            {
-                // 너무 멀어서 포기
-            }
-            else
-            {
-                climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
-                yield return climbTreeCoroutine;
-                climbTreeCoroutine = null;
-            }
+            climbTreeCoroutine = StartCoroutine(ClimbTree(nearestTree));
+            yield return climbTreeCoroutine;
+            climbTreeCoroutine = null;
         }
-
-        isSearchingForTree = false;
+        else
+        {
+            Debug.Log($"{petController.petName}: 선택한 나무가 이미 점유되어 있습니다.");
+        }
     }
+
+    isSearchingForTree = false;
+}
     // 나무 올라가기 중단 메서드 추가
    public void StopTreeClimbing()
 {
@@ -566,19 +573,24 @@ private IEnumerator ClimbTreeInternal(Transform tree)
             transform.position = Vector3.Lerp(startPos, groundPos, t);
             yield return null;
         }
+ // NavMeshAgent 재활성화 전에 나무 점유 해제
+    if (petController.currentTree != null)
+    {
+        TreeManager.Instance.ReleaseTree(petController.currentTree);
+    }
 
-        // NavMeshAgent 재활성화
-        if (petController.agent != null)
-        {
-            petController.agent.enabled = true;
-            petController.agent.Warp(transform.position);
-        }
+    // NavMeshAgent 재활성화
+    if (petController.agent != null)
+    {
+        petController.agent.enabled = true;
+        petController.agent.Warp(transform.position);
+    }
 
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
 
-        // 일반 애니메이션으로 복귀
-        anim?.StopContinuousAnimation();
+    // 일반 애니메이션으로 복귀
+    anim?.StopContinuousAnimation();
     }
     // 새 메서드 추가
     private void CheckWaterArea()
