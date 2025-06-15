@@ -192,14 +192,18 @@ public class PetController : MonoBehaviour
     // Update 메서드 수정
     private void Update()
     {
+        // ★ 들고 있는 상태면 나무 관련 업데이트 스킵
+    if (!isHolding)
+    {
         feedingController.UpdateFeeding();
         sleepingController.UpdateSleeping();
+    }
 
-         // 모이기 중이거나 상호작용 중이거나 선택된 상태가 아닐 때만 움직임 업데이트
-        if (!isGathering && !isInteracting && !isSelected)
-        {
-            movementController.UpdateMovement();
-        }
+    // ★ 조건 수정: 들고 있을 때도 움직임 업데이트 스킵
+    if (!isGathering && !isInteracting && !isSelected && !isHolding)
+    {
+        movementController.UpdateMovement();
+    }
 
         // 모이기 중이 아닐 때만 상호작용 처리
         if (!isGathering)

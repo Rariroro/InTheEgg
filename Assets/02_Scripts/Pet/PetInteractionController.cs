@@ -265,27 +265,26 @@ public class PetInteractionController : MonoBehaviour
     // StartHolding() 메서드 수정
 private void StartHolding()
 {
-    isHolding = true;
-        petController.isHolding = true; // ★ 추가: PetController에도 상태 전달
-
-    // ★ 모든 움직임과 행동 즉시 중단
-    petController.StopMovement();
-    
-    // ★ 모든 진행 중인 행동 강제 중단
-    var movementController = petController.GetComponent<PetMovementController>();
-    if (movementController != null)
-    {
-        movementController.StopAllCoroutines();
-        movementController.ForceStopCurrentBehavior(); // 현재 행동 상태 리셋
-    }
-    
-    // ★ 나무 올라가기 상태 초기화
+   // ★ 나무 올라가기 상태를 가장 먼저 처리
     if (petController.isClimbingTree)
     {
-        movementController?.StopTreeClimbing();
+        // 나무 상태를 먼저 false로 설정
         petController.isClimbingTree = false;
+        
+        // 진행 중인 나무 관련 코루틴 모두 중단
+        var movementController = petController.GetComponent<PetMovementController>();
+        if (movementController != null)
+        {
+            movementController.StopAllCoroutines(); // 모든 코루틴 중단
+            movementController.StopTreeClimbing();
+        }
+        
+        // currentTree는 나중에 null로 설정 (ClimbDownTree에서 사용할 수 있으므로)
         petController.currentTree = null;
     }
+    
+    isHolding = true;
+    petController.isHolding = true;
 
     // ★ 버둥거리는 애니메이션 설정 (달리기 애니메이션을 빠르게)
     if (petController.animator != null)

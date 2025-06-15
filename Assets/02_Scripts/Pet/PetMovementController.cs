@@ -144,16 +144,27 @@ public class PetMovementController : MonoBehaviour
     // UpdateMovement() 메서드의 마지막 부분 수정
     public void UpdateMovement()
     {
-        // Debug.Log("#PetMovementController/UpdateMovement");
-        // 물 영역 체크 (NavMeshAgent가 준비된 경우에만)
-        // 물 영역 체크를 가장 먼저 수행
-        CheckWaterArea();
-        CheckTreeArea(); // 추가
-                         // 나무에 올라가 있으면 다른 움직임 처리 스킵
-        if (petController.isClimbingTree)
-        {
-            return;
-        }
+       // ★ 들고 있는 상태면 즉시 리턴 (나무 체크보다 우선)
+    if (petController.isHolding)
+    {
+        return;
+    }
+    
+    // 물 영역 체크
+    CheckWaterArea();
+    
+    // ★ 나무 체크도 isHolding 상태가 아닐 때만
+    if (!petController.isHolding)
+    {
+        CheckTreeArea();
+    }
+    
+    // 나무에 올라가 있으면 다른 움직임 처리 스킵
+    if (petController.isClimbingTree)
+    {
+        return;
+    }
+    
         // 모으기 모드면 즉시 리턴
         if (petController.isGathering)
         {
@@ -256,23 +267,44 @@ public class PetMovementController : MonoBehaviour
         isSearchingForTree = false;
     }
     // 나무 올라가기 중단 메서드 추가
-    public void StopTreeClimbing()
+   public void StopTreeClimbing()
+{
+    // 모든 진행 중인 코루틴 중단
+    StopAllCoroutines();
+    
+    if (climbTreeCoroutine != null)
     {
-        if (climbTreeCoroutine != null)
-        {
-            StopCoroutine(climbTreeCoroutine);
-            climbTreeCoroutine = null;
-        }
-
-        isSearchingForTree = false;
-
-        // 애니메이션 정리
-        var anim = GetComponent<PetAnimationController>();
-        anim?.StopContinuousAnimation();
+        StopCoroutine(climbTreeCoroutine);
+        climbTreeCoroutine = null;
     }
+
+    isSearchingForTree = false;
+    petController.isClimbingTree = false;
+
+    // 애니메이션 완전 초기화
+    var anim = GetComponent<PetAnimationController>();
+    if (anim != null)
+    {
+        anim.StopContinuousAnimation();
+        anim.ForceStopAllAnimations(); // 강제 중단 메서드 호출
+    }
+    
+    // 애니메이터 상태 초기화
+    if (petController.animator != null)
+    {
+        petController.animator.SetInteger("animation", 0);
+        petController.animator.speed = 1.0f;
+    }
+}
     // 나무 올라가기 코루틴
     private IEnumerator ClimbTree(Transform tree)
     {
+            // ★ 시작할 때 isHolding 체크
+    if (petController.isHolding)
+    {
+        yield break;
+    }
+
         petController.isClimbingTree = true;
         petController.currentTree = tree;
 
@@ -299,6 +331,16 @@ public class PetMovementController : MonoBehaviour
         // 나무 밑으로 이동
         while (elapsed < moveTime)
         {
+             if (petController.isHolding)
+        {
+            // 잡혔으면 즉시 중단
+            petController.isClimbingTree = false;
+            if (petController.agent != null)
+            {
+                petController.agent.enabled = true;
+            }
+            yield break;
+        }
             elapsed += Time.deltaTime;
             float t = elapsed / moveTime;
             transform.position = Vector3.Lerp(startPos, treeBase, t);
