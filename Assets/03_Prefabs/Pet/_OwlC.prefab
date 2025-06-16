@@ -55,7 +55,8 @@ MonoBehaviour:
   smoothTime: 0.3
   personality: 0
   dietType: 2
-  habitat: 1
+  habitat: 4
+  waterSinkDepth: 1
   affection: 0
   hunger: 0
   sleepiness: 0
@@ -80,6 +81,9 @@ MonoBehaviour:
   isClimbingTree: 0
   currentTree: {fileID: 0}
   climbHeight: 5
+  isSelected: 0
+  isHolding: 0
+  isAnimationLocked: 0
 --- !u!195 &57102088830101709
 NavMeshAgent:
   m_ObjectHideFlags: 0
