@@ -1,6 +1,6 @@
 # Scene Hierarchy Export
 Scene Name: PetVillge
-Export Date: 6/14/2025 1:54:22 PM
+Export Date: 6/17/2025 9:23:08 PM
 --------------------------------------------
 
 GameObject: Canvas (Active: True)
@@ -1054,384 +1054,6 @@ GameObject: Terrain (Active: True)
         m_TerrainData: TerrainData_caad0602-6324-4f68-82d2-e0d5304c1b3f
         m_EnableTreeColliders: True
 
-GameObject: PondEnvironment 1 (Active: True)
-  Component: Transform
-      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-      m_LocalPosition: (-205.20, 5.70, 30.30)
-      m_LocalScale: (1.00, 1.00, 1.00)
-      m_ConstrainProportionsScale: False
-
-  GameObject: Water_Plane (Active: True)
-    Component: Transform
-        m_LocalRotation: (0.00000, -0.00020, 0.00000, 1.00000)
-        m_LocalPosition: (2.70, 0.00, 3.55)
-        m_LocalScale: (4.00, 4.00, 4.00)
-        m_ConstrainProportionsScale: False
-    Component: MeshFilter
-        m_Mesh: Plane
-    Component: MeshRenderer
-        m_CastShadows: On
-        m_ReceiveShadows: True
-        m_DynamicOccludee: True
-        m_StaticShadowCaster: False
-        m_MotionVectors: Per Object Motion
-        m_LightProbeUsage: 1
-        m_ReflectionProbeUsage: 1
-        m_RayTracingMode: 2
-        m_RayTraceProcedural: False
-        m_RayTracingAccelStructBuildFlagsOverride: False
-        m_RayTracingAccelStructBuildFlags: 1
-        m_SmallMeshCulling: True
-        m_RenderingLayerMask: 1
-        m_RendererPriority: 0
-        m_Materials: (Not representable as string)
-        m_ProbeAnchor: null
-        m_LightProbeVolumeOverride: null
-        m_LightmapParameters: null
-    Component: MeshCollider
-        m_Material: null
-        m_IncludeLayers: (Not representable as string)
-        m_ExcludeLayers: (Not representable as string)
-        m_LayerOverridePriority: 0
-        m_IsTrigger: False
-        m_ProvidesContacts: False
-        m_Convex: False
-        m_CookingOptions: 30
-        m_Mesh: Plane
-    Component: NavMeshModifier
-        m_OverrideArea: True
-        m_Area: 3
-        m_OverrideGenerateLinks: False
-        m_GenerateLinks: False
-        m_IgnoreFromBuild: False
-        m_ApplyToChildren: True
-        m_AffectedAgents: (Not representable as string)
-
-GameObject: #pet (Active: True)
-  Component: Transform
-      m_LocalRotation: (0.00000, -0.99144, 0.00000, 0.13053)
-      m_LocalPosition: (-189.25, 5.73, 61.37)
-      m_LocalScale: (1.00, 1.00, 1.00)
-      m_ConstrainProportionsScale: True
-
-  GameObject: _Alpaca (Active: True)
-    Component: Transform
-        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (-53.96, 6.66, -22.76)
-        m_LocalScale: (1.00, 1.00, 1.00)
-        m_ConstrainProportionsScale: True
-    Component: PetController
-        speed: 3.50
-        angularSpeed: 120.00
-        acceleration: 8.00
-        stoppingDistance: 0.50
-        rotationSpeed: 5.00
-        smoothTime: 0.30
-        personality: Shy
-        dietType: Herbivore
-        habitat: Fence
-        affection: 0.00
-        hunger: 0.00
-        sleepiness: 0.00
-        petName: 알파카
-        petType: Dog
-        manuallySetPetType: False
-    Component: NavMeshAgent
-        m_AgentTypeID: 0
-        m_Radius: 1.78
-        m_Speed: 3.50
-        m_Acceleration: 8.00
-        avoidancePriority: 1
-        m_AngularSpeed: 120.00
-        m_StoppingDistance: 0.00
-        m_AutoTraverseOffMeshLink: True
-        m_AutoBraking: True
-        m_AutoRepath: True
-        m_Height: 5.69
-        m_BaseOffset: 0.00
-        m_WalkableMask: 7
-        m_ObstacleAvoidanceType: High Quality
-    Component: BoxCollider
-        m_Material: null
-        m_IncludeLayers: (Not representable as string)
-        m_ExcludeLayers: (Not representable as string)
-        m_LayerOverridePriority: 0
-        m_IsTrigger: False
-        m_ProvidesContacts: False
-        m_Size: (3.09, 6.26, 4.19)
-        m_Center: (0.00, 2.63, 0.09)
-
-    GameObject: Alpaca (Active: True)
-      Component: Transform
-          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-          m_LocalPosition: (0.00, 0.00, 0.00)
-          m_LocalScale: (20.00, 20.00, 20.00)
-          m_ConstrainProportionsScale: True
-      Component: Animator
-          m_Avatar: AlpacaAvatar
-          m_Controller: TypeB
-          m_CullingMode: Cull Update Transforms
-          m_UpdateMode: Normal
-          m_ApplyRootMotion: False
-          m_LinearVelocityBlending: False
-          m_StabilizeFeet: False
-          m_AnimatePhysics: False
-          m_WarningMessage: 
-          m_HasTransformHierarchy: True
-          m_AllowConstantClipSamplingOptimization: True
-          m_KeepAnimatorStateOnDisable: False
-          m_WriteDefaultValuesOnDisable: False
-
-      GameObject: Alpaca (Active: True)
-        Component: Transform
-            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-            m_LocalPosition: (0.00, 0.00, 0.42)
-            m_LocalScale: (1.11, 1.11, 1.11)
-            m_ConstrainProportionsScale: False
-        Component: SkinnedMeshRenderer
-            m_CastShadows: On
-            m_ReceiveShadows: True
-            m_DynamicOccludee: True
-            m_StaticShadowCaster: False
-            m_MotionVectors: Per Object Motion
-            m_LightProbeUsage: 1
-            m_ReflectionProbeUsage: 1
-            m_RayTracingMode: 3
-            m_RayTraceProcedural: False
-            m_RayTracingAccelStructBuildFlagsOverride: False
-            m_RayTracingAccelStructBuildFlags: 1
-            m_SmallMeshCulling: True
-            m_RenderingLayerMask: 1
-            m_RendererPriority: 0
-            m_Materials: (Not representable as string)
-            m_ProbeAnchor: null
-            m_LightProbeVolumeOverride: null
-            m_LightmapParameters: null
-            m_Quality: Auto
-            m_UpdateWhenOffscreen: False
-            m_SkinnedMotionVectors: True
-            m_Mesh: Alpaca
-            m_BlendShapeWeights: (Not representable as string)
-            m_RootBone: Root
-            m_AABB: (Not representable as string)
-
-      GameObject: Root (Active: True)
-        Component: Transform
-            m_LocalRotation: (0.70705, -0.00927, -0.70705, 0.00927)
-            m_LocalPosition: (0.00, 0.10, -0.02)
-            m_LocalScale: (1.00, 1.00, 1.00)
-            m_ConstrainProportionsScale: False
-
-        GameObject: backRump_L (Active: True)
-          Component: Transform
-              m_LocalRotation: (0.00000, 0.00000, 0.75923, 0.65082)
-              m_LocalPosition: (0.01, 0.05, 0.04)
-              m_LocalScale: (1.00, 1.00, 1.00)
-              m_ConstrainProportionsScale: False
-
-          GameObject: backHip_L (Active: True)
-            Component: Transform
-                m_LocalRotation: (0.00000, 0.00000, -0.19516, 0.98077)
-                m_LocalPosition: (0.01, 0.00, 0.00)
-                m_LocalScale: (1.00, 1.00, 1.00)
-                m_ConstrainProportionsScale: False
-
-            GameObject: backKnee_L (Active: True)
-              Component: Transform
-                  m_LocalRotation: (0.00000, 0.00000, 0.13488, 0.99086)
-                  m_LocalPosition: (0.03, 0.00, 0.00)
-                  m_LocalScale: (1.00, 1.00, 1.00)
-                  m_ConstrainProportionsScale: False
-
-              GameObject: backAnkle_L (Active: True)
-                Component: Transform
-                    m_LocalRotation: (0.00000, 0.00000, -0.02871, 0.99959)
-                    m_LocalPosition: (0.01, 0.00, 0.00)
-                    m_LocalScale: (1.00, 1.00, 1.00)
-                    m_ConstrainProportionsScale: False
-
-                GameObject: backToes_L (Active: True)
-                  Component: Transform
-                      m_LocalRotation: (0.00000, 0.00000, 0.56959, 0.82193)
-                      m_LocalPosition: (0.00, 0.01, 0.00)
-                      m_LocalScale: (1.00, 1.00, 1.00)
-                      m_ConstrainProportionsScale: False
-
-                  GameObject: backToesEnd_L (Active: True)
-                    Component: Transform
-                        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-                        m_LocalPosition: (0.00, 0.00, 0.00)
-                        m_LocalScale: (1.00, 1.00, 1.00)
-                        m_ConstrainProportionsScale: False
-
-        GameObject: backRump_R (Active: True)
-          Component: Transform
-              m_LocalRotation: (0.00000, 0.00000, -0.65082, 0.75923)
-              m_LocalPosition: (0.01, 0.05, -0.04)
-              m_LocalScale: (1.00, 1.00, 1.00)
-              m_ConstrainProportionsScale: False
-
-          GameObject: backHip_R (Active: True)
-            Component: Transform
-                m_LocalRotation: (0.00000, 0.00000, -0.19516, 0.98077)
-                m_LocalPosition: (-0.01, 0.00, 0.00)
-                m_LocalScale: (1.00, 1.00, 1.00)
-                m_ConstrainProportionsScale: False
-
-            GameObject: backKnee_R (Active: True)
-              Component: Transform
-                  m_LocalRotation: (0.00000, 0.00000, 0.13488, 0.99086)
-                  m_LocalPosition: (-0.03, 0.00, 0.00)
-                  m_LocalScale: (1.00, 1.00, 1.00)
-                  m_ConstrainProportionsScale: False
-
-              GameObject: backAnkle_R (Active: True)
-                Component: Transform
-                    m_LocalRotation: (0.00000, 0.00000, -0.02871, 0.99959)
-                    m_LocalPosition: (-0.01, 0.00, 0.00)
-                    m_LocalScale: (1.00, 1.00, 1.00)
-                    m_ConstrainProportionsScale: False
-
-                GameObject: backToes_R (Active: True)
-                  Component: Transform
-                      m_LocalRotation: (0.00000, 0.00000, 0.56959, 0.82193)
-                      m_LocalPosition: (0.00, -0.01, 0.00)
-                      m_LocalScale: (1.00, 1.00, 1.00)
-                      m_ConstrainProportionsScale: False
-
-                  GameObject: backToesEnd_R (Active: True)
-                    Component: Transform
-                        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-                        m_LocalPosition: (0.00, 0.00, 0.00)
-                        m_LocalScale: (1.00, 1.00, 1.00)
-                        m_ConstrainProportionsScale: False
-
-        GameObject: Spine1 (Active: True)
-          Component: Transform
-              m_LocalRotation: (0.00000, 0.00000, 0.01233, 0.99992)
-              m_LocalPosition: (-0.03, 0.00, 0.00)
-              m_LocalScale: (1.00, 1.00, 1.00)
-              m_ConstrainProportionsScale: False
-
-          GameObject: Chest (Active: True)
-            Component: Transform
-                m_LocalRotation: (0.00000, 0.00000, 0.17402, 0.98474)
-                m_LocalPosition: (-0.03, 0.00, 0.00)
-                m_LocalScale: (1.00, 1.00, 1.00)
-                m_ConstrainProportionsScale: False
-
-            GameObject: frontRump_L (Active: True)
-              Component: Transform
-                  m_LocalRotation: (0.93338, 0.35888, 0.00000, 0.00000)
-                  m_LocalPosition: (0.01, 0.05, 0.04)
-                  m_LocalScale: (1.00, 1.00, 1.00)
-                  m_ConstrainProportionsScale: False
-
-              GameObject: frontHip_L (Active: True)
-                Component: Transform
-                    m_LocalRotation: (0.00000, 0.00000, -0.28685, 0.95798)
-                    m_LocalPosition: (0.02, 0.01, 0.00)
-                    m_LocalScale: (1.00, 1.00, 1.00)
-                    m_ConstrainProportionsScale: False
-
-                GameObject: frontKnee_L (Active: True)
-                  Component: Transform
-                      m_LocalRotation: (0.00000, 0.00000, 0.16239, 0.98673)
-                      m_LocalPosition: (0.02, 0.00, 0.00)
-                      m_LocalScale: (1.00, 1.00, 1.00)
-                      m_ConstrainProportionsScale: False
-
-                  GameObject: frontAnkle_L (Active: True)
-                    Component: Transform
-                        m_LocalRotation: (0.00000, 0.00000, -0.09004, 0.99594)
-                        m_LocalPosition: (0.01, 0.00, 0.00)
-                        m_LocalScale: (1.00, 1.00, 1.00)
-                        m_ConstrainProportionsScale: False
-
-                    GameObject: frontToes_L (Active: True)
-                      Component: Transform
-                          m_LocalRotation: (0.80904, -0.58776, 0.00000, 0.00000)
-                          m_LocalPosition: (0.00, -0.01, 0.00)
-                          m_LocalScale: (1.00, 1.00, 1.00)
-                          m_ConstrainProportionsScale: False
-
-                      GameObject: frontToesEnd_L (Active: True)
-                        Component: Transform
-                            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-                            m_LocalPosition: (0.00, 0.00, 0.00)
-                            m_LocalScale: (1.00, 1.00, 1.00)
-                            m_ConstrainProportionsScale: False
-
-            GameObject: frontRump_R (Active: True)
-              Component: Transform
-                  m_LocalRotation: (-0.35888, 0.93338, 0.00000, 0.00000)
-                  m_LocalPosition: (0.01, 0.05, -0.04)
-                  m_LocalScale: (1.00, 1.00, 1.00)
-                  m_ConstrainProportionsScale: False
-
-              GameObject: frontHip_R (Active: True)
-                Component: Transform
-                    m_LocalRotation: (0.00000, 0.00000, -0.28685, 0.95798)
-                    m_LocalPosition: (-0.02, -0.01, 0.00)
-                    m_LocalScale: (1.00, 1.00, 1.00)
-                    m_ConstrainProportionsScale: False
-
-                GameObject: frontKnee_R (Active: True)
-                  Component: Transform
-                      m_LocalRotation: (0.00000, 0.00000, 0.16239, 0.98673)
-                      m_LocalPosition: (-0.02, 0.00, 0.00)
-                      m_LocalScale: (1.00, 1.00, 1.00)
-                      m_ConstrainProportionsScale: False
-
-                  GameObject: frontAnkle_R (Active: True)
-                    Component: Transform
-                        m_LocalRotation: (0.00000, 0.00000, -0.09004, 0.99594)
-                        m_LocalPosition: (-0.01, 0.00, 0.00)
-                        m_LocalScale: (1.00, 1.00, 1.00)
-                        m_ConstrainProportionsScale: False
-
-                    GameObject: frontToes_R (Active: True)
-                      Component: Transform
-                          m_LocalRotation: (0.80904, -0.58776, 0.00000, 0.00000)
-                          m_LocalPosition: (0.00, 0.01, 0.00)
-                          m_LocalScale: (1.00, 1.00, 1.00)
-                          m_ConstrainProportionsScale: False
-
-                      GameObject: frontToesEnd_R (Active: True)
-                        Component: Transform
-                            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-                            m_LocalPosition: (0.00, 0.00, 0.00)
-                            m_LocalScale: (1.00, 1.00, 1.00)
-                            m_ConstrainProportionsScale: False
-
-            GameObject: Neck (Active: True)
-              Component: Transform
-                  m_LocalRotation: (0.00000, 0.00000, 0.27606, 0.96114)
-                  m_LocalPosition: (-0.04, 0.01, 0.00)
-                  m_LocalScale: (1.00, 1.00, 1.00)
-                  m_ConstrainProportionsScale: False
-
-              GameObject: Head (Active: True)
-                Component: Transform
-                    m_LocalRotation: (0.00000, 0.00000, -0.02510, 0.99968)
-                    m_LocalPosition: (-0.08, -0.05, 0.00)
-                    m_LocalScale: (1.00, 1.00, 1.00)
-                    m_ConstrainProportionsScale: False
-
-                GameObject: HeadEnd (Active: True)
-                  Component: Transform
-                      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-                      m_LocalPosition: (-0.08, 0.00, 0.00)
-                      m_LocalScale: (1.00, 1.00, 1.00)
-                      m_ConstrainProportionsScale: False
-
-      GameObject: CameraPoint (Active: True)
-        Component: Transform
-            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-            m_LocalPosition: (0.00, 0.22, 0.12)
-            m_LocalScale: (0.05, 0.05, 0.05)
-            m_ConstrainProportionsScale: False
-
 GameObject: #Managers (Active: True)
   Component: Transform
       m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
@@ -1496,6 +1118,7 @@ GameObject: #Managers (Active: True)
         m_LocalScale: (1.00, 1.00, 1.00)
         m_ConstrainProportionsScale: False
     Component: PetManager
+        petPrefabs: (Not representable as string)
         spawnRadius: 150.00
         maxPets: 60
         firstAppearanceEffectPrefab: TFP_Butterflies_01C (1)
@@ -1605,4 +1228,755 @@ GameObject: EmotionBubbleCanvas (Active: True)
       m_IgnoreReversedGraphics: True
       m_BlockingObjects: None
       m_BlockingMask: (Not representable as string)
+
+GameObject: cameraguide (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (-143.70, 32.90, 230.70)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+
+  GameObject: Cube (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (-145.70, 0.00, -157.90)
+        m_LocalScale: (1.00, 1.00, 317.82)
+        m_ConstrainProportionsScale: False
+    Component: MeshFilter
+        m_Mesh: Cube
+    Component: MeshRenderer
+        m_CastShadows: On
+        m_ReceiveShadows: True
+        m_DynamicOccludee: True
+        m_StaticShadowCaster: False
+        m_MotionVectors: Per Object Motion
+        m_LightProbeUsage: 1
+        m_ReflectionProbeUsage: 1
+        m_RayTracingMode: 2
+        m_RayTraceProcedural: False
+        m_RayTracingAccelStructBuildFlagsOverride: False
+        m_RayTracingAccelStructBuildFlags: 1
+        m_SmallMeshCulling: True
+        m_RenderingLayerMask: 1
+        m_RendererPriority: 0
+        m_Materials: (Not representable as string)
+        m_ProbeAnchor: null
+        m_LightProbeVolumeOverride: null
+        m_LightmapParameters: null
+    Component: BoxCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_IsTrigger: False
+        m_ProvidesContacts: False
+        m_Size: (1.00, 1.00, 1.00)
+        m_Center: (0.00, 0.00, 0.00)
+
+  GameObject: Cube (3) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (113.40, 1.00, -154.70)
+        m_LocalScale: (1.00, 1.00, 317.82)
+        m_ConstrainProportionsScale: False
+    Component: MeshFilter
+        m_Mesh: Cube
+    Component: MeshRenderer
+        m_CastShadows: On
+        m_ReceiveShadows: True
+        m_DynamicOccludee: True
+        m_StaticShadowCaster: False
+        m_MotionVectors: Per Object Motion
+        m_LightProbeUsage: 1
+        m_ReflectionProbeUsage: 1
+        m_RayTracingMode: 2
+        m_RayTraceProcedural: False
+        m_RayTracingAccelStructBuildFlagsOverride: False
+        m_RayTracingAccelStructBuildFlags: 1
+        m_SmallMeshCulling: True
+        m_RenderingLayerMask: 1
+        m_RendererPriority: 0
+        m_Materials: (Not representable as string)
+        m_ProbeAnchor: null
+        m_LightProbeVolumeOverride: null
+        m_LightmapParameters: null
+    Component: BoxCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_IsTrigger: False
+        m_ProvidesContacts: False
+        m_Size: (1.00, 1.00, 1.00)
+        m_Center: (0.00, 0.00, 0.00)
+
+  GameObject: Cube (1) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.70307, 0.00000, 0.71112)
+        m_LocalPosition: (-10.60, 0.00, -315.40)
+        m_LocalScale: (1.00, 1.00, 317.82)
+        m_ConstrainProportionsScale: False
+    Component: MeshFilter
+        m_Mesh: Cube
+    Component: MeshRenderer
+        m_CastShadows: On
+        m_ReceiveShadows: True
+        m_DynamicOccludee: True
+        m_StaticShadowCaster: False
+        m_MotionVectors: Per Object Motion
+        m_LightProbeUsage: 1
+        m_ReflectionProbeUsage: 1
+        m_RayTracingMode: 2
+        m_RayTraceProcedural: False
+        m_RayTracingAccelStructBuildFlagsOverride: False
+        m_RayTracingAccelStructBuildFlags: 1
+        m_SmallMeshCulling: True
+        m_RenderingLayerMask: 1
+        m_RendererPriority: 0
+        m_Materials: (Not representable as string)
+        m_ProbeAnchor: null
+        m_LightProbeVolumeOverride: null
+        m_LightmapParameters: null
+    Component: BoxCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_IsTrigger: False
+        m_ProvidesContacts: False
+        m_Size: (1.00, 1.00, 1.00)
+        m_Center: (0.00, 0.00, 0.00)
+
+  GameObject: Cube (2) (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.70307, 0.00000, 0.71112)
+        m_LocalPosition: (0.00, 0.00, 0.00)
+        m_LocalScale: (1.00, 1.00, 317.82)
+        m_ConstrainProportionsScale: False
+    Component: MeshFilter
+        m_Mesh: Cube
+    Component: MeshRenderer
+        m_CastShadows: On
+        m_ReceiveShadows: True
+        m_DynamicOccludee: True
+        m_StaticShadowCaster: False
+        m_MotionVectors: Per Object Motion
+        m_LightProbeUsage: 1
+        m_ReflectionProbeUsage: 1
+        m_RayTracingMode: 2
+        m_RayTraceProcedural: False
+        m_RayTracingAccelStructBuildFlagsOverride: False
+        m_RayTracingAccelStructBuildFlags: 1
+        m_SmallMeshCulling: True
+        m_RenderingLayerMask: 1
+        m_RendererPriority: 0
+        m_Materials: (Not representable as string)
+        m_ProbeAnchor: null
+        m_LightProbeVolumeOverride: null
+        m_LightmapParameters: null
+    Component: BoxCollider
+        m_Material: null
+        m_IncludeLayers: (Not representable as string)
+        m_ExcludeLayers: (Not representable as string)
+        m_LayerOverridePriority: 0
+        m_IsTrigger: False
+        m_ProvidesContacts: False
+        m_Size: (1.00, 1.00, 1.00)
+        m_Center: (0.00, 0.00, 0.00)
+
+GameObject: _SquirrelA (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (0.00, 0.00, 0.00)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+  Component: PetController
+      speed: 3.50
+      angularSpeed: 120.00
+      acceleration: 8.00
+      stoppingDistance: 0.50
+      rotationSpeed: 5.00
+      smoothTime: 0.30
+      personality: Playful
+      dietType: Omnivore
+      habitat: Tree
+      waterSinkDepth: 1.00
+      affection: 0.00
+      hunger: 0.00
+      sleepiness: 0.00
+      petName: Squirrel
+      petType: Turtle
+      manuallySetPetType: False
+  Component: NavMeshAgent
+      m_AgentTypeID: 0
+      m_Radius: 0.34
+      m_Speed: 3.50
+      m_Acceleration: 8.00
+      avoidancePriority: 56
+      m_AngularSpeed: 120.00
+      m_StoppingDistance: 0.00
+      m_AutoTraverseOffMeshLink: True
+      m_AutoBraking: True
+      m_AutoRepath: True
+      m_Height: 0.96
+      m_BaseOffset: 0.00
+      m_WalkableMask: -1
+      m_ObstacleAvoidanceType: High Quality
+  Component: BoxCollider
+      m_Material: null
+      m_IncludeLayers: (Not representable as string)
+      m_ExcludeLayers: (Not representable as string)
+      m_LayerOverridePriority: 0
+      m_IsTrigger: False
+      m_ProvidesContacts: False
+      m_Size: (1.00, 1.51, 1.51)
+      m_Center: (0.00, 0.74, -0.22)
+
+  GameObject: SquirrelA (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (0.00, 0.00, 0.00)
+        m_LocalScale: (10.00, 10.00, 10.00)
+        m_ConstrainProportionsScale: True
+    Component: Animator
+        m_Avatar: null
+        m_Controller: Squirrel
+        m_CullingMode: Always Animate
+        m_UpdateMode: Normal
+        m_ApplyRootMotion: False
+        m_LinearVelocityBlending: False
+        m_StabilizeFeet: False
+        m_AnimatePhysics: False
+        m_WarningMessage: 
+        m_HasTransformHierarchy: True
+        m_AllowConstantClipSamplingOptimization: True
+        m_KeepAnimatorStateOnDisable: False
+        m_WriteDefaultValuesOnDisable: False
+
+    GameObject: center (Active: True)
+      Component: Transform
+          m_LocalRotation: (-0.21613, 0.67327, -0.21613, 0.67327)
+          m_LocalPosition: (0.00, 0.03, -0.01)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: leg_l1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.21613, -0.67327, 0.21613, 0.67327)
+            m_LocalPosition: (0.00, 0.00, -0.02)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: leg_l2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.47158, 0.52689, 0.47158, 0.52689)
+              m_LocalPosition: (0.00, 0.00, 0.01)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: leg_l3 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.00000, 0.00000, -0.61550, 0.78814)
+                m_LocalPosition: (-0.02, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: leg_l4 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, -0.06701, 0.99775)
+                  m_LocalPosition: (-0.02, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: leg_l5 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (0.00000, -0.70711, 0.00000, 0.70711)
+                    m_LocalPosition: (-0.01, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+      GameObject: leg_r1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.67327, 0.21613, 0.67327, -0.21613)
+            m_LocalPosition: (0.00, 0.00, 0.02)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: leg_r2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.47158, 0.52689, 0.47158, 0.52689)
+              m_LocalPosition: (0.00, 0.00, -0.01)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: leg_r3 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.00000, 0.00000, -0.61550, 0.78814)
+                m_LocalPosition: (0.02, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: leg_r4 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, -0.06701, 0.99775)
+                  m_LocalPosition: (0.02, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: leg_r5 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (0.00000, -0.70711, 0.00000, 0.70711)
+                    m_LocalPosition: (0.01, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+      GameObject: spine1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, -0.20216, 0.97935)
+            m_LocalPosition: (-0.02, 0.00, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: spine2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.34777, -0.61567, 0.34777, 0.61567)
+              m_LocalPosition: (-0.01, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: arm_l1 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.25980, 0.65765, 0.25980, 0.65765)
+                m_LocalPosition: (-0.01, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: arm_l2 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, -0.35694, 0.93413)
+                  m_LocalPosition: (-0.01, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: arm_l3 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (-0.00794, -0.70706, -0.00794, 0.70706)
+                    m_LocalPosition: (-0.01, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+          GameObject: arm_r1 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.65765, -0.25980, 0.65765, -0.25980)
+                m_LocalPosition: (0.01, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: arm_r2 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, -0.35694, 0.93413)
+                  m_LocalPosition: (0.01, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: arm_r3 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (-0.00794, -0.70706, -0.00794, 0.70706)
+                    m_LocalPosition: (0.01, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+          GameObject: head (Active: True)
+            Component: Transform
+                m_LocalRotation: (-0.34902, 0.61497, -0.34902, 0.61497)
+                m_LocalPosition: (0.00, 0.01, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: head2 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.34902, -0.61497, 0.34902, 0.61497)
+                  m_LocalPosition: (-0.04, 0.01, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+      GameObject: tail0 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.21613, -0.67327, 0.21613, 0.67327)
+            m_LocalPosition: (0.02, -0.01, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: tail1 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.28768, -0.64594, -0.28768, 0.64594)
+              m_LocalPosition: (0.00, 0.01, -0.01)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: tail2 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.89262, -0.45081, 0.00000, 0.00000)
+                m_LocalPosition: (-0.03, 0.02, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: tail3 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.92406, -0.38224, 0.00000, 0.00000)
+                  m_LocalPosition: (-0.03, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: tail4 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (0.00000, 0.00000, 0.82667, 0.56269)
+                    m_LocalPosition: (-0.05, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+                GameObject: tail5 (Active: True)
+                  Component: Transform
+                      m_LocalRotation: (0.72157, 0.69234, 0.00000, 0.00000)
+                      m_LocalPosition: (-0.05, 0.00, 0.00)
+                      m_LocalScale: (1.00, 1.00, 1.00)
+                      m_ConstrainProportionsScale: False
+
+                  GameObject: tail6 (Active: True)
+                    Component: Transform
+                        m_LocalRotation: (-0.22737, -0.66956, -0.22737, 0.66956)
+                        m_LocalPosition: (-0.04, 0.00, 0.00)
+                        m_LocalScale: (1.00, 1.00, 1.00)
+                        m_ConstrainProportionsScale: False
+
+    GameObject: Squireel (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+      Component: SkinnedMeshRenderer
+          m_CastShadows: On
+          m_ReceiveShadows: True
+          m_DynamicOccludee: True
+          m_StaticShadowCaster: False
+          m_MotionVectors: Per Object Motion
+          m_LightProbeUsage: 1
+          m_ReflectionProbeUsage: 1
+          m_RayTracingMode: 0
+          m_RayTraceProcedural: False
+          m_RayTracingAccelStructBuildFlagsOverride: False
+          m_RayTracingAccelStructBuildFlags: 1
+          m_SmallMeshCulling: True
+          m_RenderingLayerMask: 1
+          m_RendererPriority: 0
+          m_Materials: (Not representable as string)
+          m_ProbeAnchor: null
+          m_LightProbeVolumeOverride: null
+          m_LightmapParameters: null
+          m_Quality: Auto
+          m_UpdateWhenOffscreen: False
+          m_SkinnedMotionVectors: True
+          m_Mesh: Squireel
+          m_BlendShapeWeights: (Not representable as string)
+          m_RootBone: center
+          m_AABB: (Not representable as string)
+
+    GameObject: CameraPoint (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.07, 0.03)
+          m_LocalScale: (0.05, 0.05, 0.05)
+          m_ConstrainProportionsScale: False
+
+GameObject: _Iguana_A (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (0.00, 0.00, 0.00)
+      m_LocalScale: (0.70, 0.70, 0.70)
+      m_ConstrainProportionsScale: True
+  Component: PetController
+      speed: 3.50
+      angularSpeed: 120.00
+      acceleration: 8.00
+      stoppingDistance: 0.50
+      rotationSpeed: 5.00
+      smoothTime: 0.30
+      personality: Playful
+      dietType: Herbivore
+      habitat: Tree
+      waterSinkDepth: 1.00
+      affection: 0.00
+      hunger: 0.00
+      sleepiness: 0.00
+      petName: Iguana
+      petType: Turtle
+      manuallySetPetType: False
+  Component: NavMeshAgent
+      m_AgentTypeID: 0
+      m_Radius: 0.98
+      m_Speed: 3.50
+      m_Acceleration: 8.00
+      avoidancePriority: 29
+      m_AngularSpeed: 120.00
+      m_StoppingDistance: 0.00
+      m_AutoTraverseOffMeshLink: True
+      m_AutoBraking: True
+      m_AutoRepath: True
+      m_Height: 2.00
+      m_BaseOffset: 0.00
+      m_WalkableMask: -1
+      m_ObstacleAvoidanceType: High Quality
+  Component: BoxCollider
+      m_Material: null
+      m_IncludeLayers: (Not representable as string)
+      m_ExcludeLayers: (Not representable as string)
+      m_LayerOverridePriority: 0
+      m_IsTrigger: False
+      m_ProvidesContacts: False
+      m_Size: (1.62, 2.07, 4.24)
+      m_Center: (0.00, 0.97, -0.28)
+
+  GameObject: Iguana_A (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (0.00, 0.00, 0.00)
+        m_LocalScale: (10.00, 10.00, 10.00)
+        m_ConstrainProportionsScale: True
+    Component: Animator
+        m_Avatar: null
+        m_Controller: Chameleon
+        m_CullingMode: Always Animate
+        m_UpdateMode: Normal
+        m_ApplyRootMotion: False
+        m_LinearVelocityBlending: False
+        m_StabilizeFeet: False
+        m_AnimatePhysics: False
+        m_WarningMessage: 
+        m_HasTransformHierarchy: True
+        m_AllowConstantClipSamplingOptimization: True
+        m_KeepAnimatorStateOnDisable: False
+        m_WriteDefaultValuesOnDisable: False
+
+    GameObject: Iguana (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+      Component: SkinnedMeshRenderer
+          m_CastShadows: On
+          m_ReceiveShadows: True
+          m_DynamicOccludee: True
+          m_StaticShadowCaster: False
+          m_MotionVectors: Per Object Motion
+          m_LightProbeUsage: 1
+          m_ReflectionProbeUsage: 1
+          m_RayTracingMode: 0
+          m_RayTraceProcedural: False
+          m_RayTracingAccelStructBuildFlagsOverride: False
+          m_RayTracingAccelStructBuildFlags: 1
+          m_SmallMeshCulling: True
+          m_RenderingLayerMask: 1
+          m_RendererPriority: 0
+          m_Materials: (Not representable as string)
+          m_ProbeAnchor: null
+          m_LightProbeVolumeOverride: null
+          m_LightmapParameters: null
+          m_Quality: Auto
+          m_UpdateWhenOffscreen: False
+          m_SkinnedMotionVectors: True
+          m_Mesh: Iguana
+          m_BlendShapeWeights: (Not representable as string)
+          m_RootBone: Root
+          m_AABB: (Not representable as string)
+
+    GameObject: Root (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.05229, 0.70517, 0.05229, 0.70517)
+          m_LocalPosition: (0.00, 0.10, -0.05)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: Hip_L2 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.68170, 0.73163, 0.00000, 0.00000)
+            m_LocalPosition: (-0.01, -0.06, -0.05)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: Knee_L2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.94595, 0.32432, 0.00000, 0.00000)
+              m_LocalPosition: (-0.02, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: Foot_L2 (Active: True)
+            Component: Transform
+                m_LocalRotation: (-0.37826, -0.59743, -0.37826, 0.59743)
+                m_LocalPosition: (-0.02, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: Toes_L2 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+                  m_LocalPosition: (0.00, -0.01, 0.01)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+      GameObject: Hip_R2 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.73163, -0.68170, 0.00000, 0.00000)
+            m_LocalPosition: (-0.01, -0.06, 0.05)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: Knee_R2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.94595, 0.32432, 0.00000, 0.00000)
+              m_LocalPosition: (0.02, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: Foot_R2 (Active: True)
+            Component: Transform
+                m_LocalRotation: (-0.37826, -0.59743, -0.37826, 0.59743)
+                m_LocalPosition: (0.02, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: Toes_R2 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+                  m_LocalPosition: (0.00, 0.01, -0.01)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+      GameObject: Spine1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, -0.05282, 0.99860)
+            m_LocalPosition: (-0.03, 0.00, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: Spine2 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, -0.07643, 0.99708)
+              m_LocalPosition: (-0.03, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: Hip_L1 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.58163, 0.81345, 0.00000, 0.00000)
+                m_LocalPosition: (-0.01, -0.06, -0.05)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: Knee_L1 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.94595, 0.32432, 0.00000, 0.00000)
+                  m_LocalPosition: (-0.02, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: Foot_L1 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (-0.37826, -0.59743, -0.37826, 0.59743)
+                    m_LocalPosition: (-0.02, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+                GameObject: Toes_L1 (Active: True)
+                  Component: Transform
+                      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+                      m_LocalPosition: (0.00, -0.01, 0.01)
+                      m_LocalScale: (1.00, 1.00, 1.00)
+                      m_ConstrainProportionsScale: False
+
+          GameObject: Hip_R1 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.81345, -0.58163, 0.00000, 0.00000)
+                m_LocalPosition: (-0.01, -0.06, 0.05)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: Knee_R1 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.94595, 0.32432, 0.00000, 0.00000)
+                  m_LocalPosition: (0.02, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: Foot_R1 (Active: True)
+                Component: Transform
+                    m_LocalRotation: (-0.37826, -0.59743, -0.37826, 0.59743)
+                    m_LocalPosition: (0.02, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+                GameObject: Toes_R1 (Active: True)
+                  Component: Transform
+                      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+                      m_LocalPosition: (0.00, 0.01, -0.01)
+                      m_LocalScale: (1.00, 1.00, 1.00)
+                      m_ConstrainProportionsScale: False
+
+          GameObject: Neck (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.00000, 0.00000, -0.15867, 0.98733)
+                m_LocalPosition: (-0.02, 0.00, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: Head (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.00000, 0.00000, 0.12376, 0.99231)
+                  m_LocalPosition: (-0.02, 0.00, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+              GameObject: Head_end (Active: True)
+                Component: Transform
+                    m_LocalRotation: (0.06398, -0.70421, 0.06398, 0.70421)
+                    m_LocalPosition: (-0.08, 0.00, 0.00)
+                    m_LocalScale: (1.00, 1.00, 1.00)
+                    m_ConstrainProportionsScale: False
+
+      GameObject: tail_01 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.25098, 0.96799, 0.00000, 0.00000)
+            m_LocalPosition: (0.04, 0.00, 0.00)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+
+        GameObject: tail_02 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, -0.08068, 0.99674)
+              m_LocalPosition: (-0.08, 0.02, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+
+          GameObject: tail_03 (Active: True)
+            Component: Transform
+                m_LocalRotation: (0.00000, 0.00000, 0.04871, 0.99881)
+                m_LocalPosition: (-0.07, -0.03, 0.00)
+                m_LocalScale: (1.00, 1.00, 1.00)
+                m_ConstrainProportionsScale: False
+
+            GameObject: tail_04 (Active: True)
+              Component: Transform
+                  m_LocalRotation: (0.10402, 0.69941, -0.10402, 0.69941)
+                  m_LocalPosition: (0.01, -0.04, 0.00)
+                  m_LocalScale: (1.00, 1.00, 1.00)
+                  m_ConstrainProportionsScale: False
+
+    GameObject: CameraPoint (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.13, 0.15)
+          m_LocalScale: (0.01, 0.01, 0.01)
+          m_ConstrainProportionsScale: False
 

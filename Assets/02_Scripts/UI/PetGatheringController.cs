@@ -76,356 +76,364 @@ public class PetGatheringController : MonoBehaviour
         }
     }
 
-   // PetGatheringController.cs의 Update 메서드 내부 수정 부분
+    // PetGatheringController.cs의 Update 메서드 내부 수정 부분
 
-void Update()
-{
-    // UI 위에서의 터치를 무시하기 위한 처리
-    bool isOverUI = false;
-    if (Input.touchCount > 0)
+    void Update()
     {
-        isOverUI = EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
-    }
-    else
-    {
-        isOverUI = EventSystem.current.IsPointerOverGameObject();
-    }
-    if (isOverUI)
-        return;
-
-    // 지형 터치 입력 처리 (모으기 대기 상태일 때)
-    if (waitingForTerrainInput && Input.GetMouseButtonDown(0))
-    {
-        LayerMask terrainMask = LayerMask.GetMask("Terrain");
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainMask))
+        // UI 위에서의 터치를 무시하기 위한 처리
+        bool isOverUI = false;
+        if (Input.touchCount > 0)
         {
-            PetController[] pets = Object.FindObjectsByType<PetController>(FindObjectsSortMode.None);
-            int petCount = pets.Length;
-            Vector3 centerPoint = hit.point;
-            List<Vector3> targetPositions = GenerateGridPositions(centerPoint, gatherRadius, petCount);
-
-            // ★ 새로운 스마트 위치 배정 시스템 적용
-            Dictionary<PetController, Vector3> smartAssignments = OptimizePositionAssignment(pets, targetPositions);
-
-           // ★ 1단계: 모든 펫을 우선 모이기 상태로 설정
-foreach (PetController pet in pets)
-{
-    if (pet != null)
-    {
-        pet.gatherCommandVersion++;
-        pet.isGathered = false;
-        pet.isGathering = true;
-
-        // ★ 나무에 올라가 있는 펫 강제로 내려오게 하기
-        if (pet.isClimbingTree)
-        {
-            StartCoroutine(ForceClimbDownForGathering(pet));
-            continue; // 나무에서 내려오는 중이므로 다른 처리는 스킵
-        }
-
-        // 현재 움직임 중단
-        if (pet.agent != null && pet.agent.enabled)
-        {
-            try
-            {
-                pet.agent.isStopped = true;
-            }
-            catch { }
-        }
-    }
-}
-
-            // ★ 2단계: 최적화된 배정에 따라 개별 펫 처리
-            int successfulAssignments = 0;
-            foreach (var assignment in smartAssignments)
-            {
-                PetController pet = assignment.Key;
-                Vector3 targetPoint = assignment.Value;
-
-                // Agent 상태 체크
-                if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
-                {
-                    Debug.LogWarning($"[Gathering] {pet?.petName}: Agent 상태 불량 - 현재 위치에서 대기");
-                    continue;
-                }
-
-                // NavMesh 위치 검증
-                NavMeshHit navHit;
-                bool foundValidPosition = false;
-                float searchRadius = gatherRadius;
-
-                for (int attempt = 0; attempt < 3 && !foundValidPosition; attempt++)
-                {
-                    if (NavMesh.SamplePosition(targetPoint, out navHit, searchRadius, NavMesh.AllAreas))
-                    {
-                        NavMeshPath testPath = new NavMeshPath();
-                        if (pet.agent.CalculatePath(navHit.position, testPath) && testPath.status == NavMeshPathStatus.PathComplete)
-                        {
-                            targetPoint = navHit.position;
-                            foundValidPosition = true;
-                        }
-                    }
-                    searchRadius *= 1.5f;
-                }
-
-                if (!foundValidPosition)
-                {
-                    Debug.LogWarning($"[Gathering] {pet.petName}: 유효한 경로 없음 - 현재 위치에서 대기");
-                    StartCoroutine(StayAndLookAtCamera(pet));
-                    continue;
-                }
-
-                // 속도 설정 및 이동 시작
-                try
-                {
-                    float originalSpeed = pet.baseSpeed;
-                    float originalAngularSpeed = pet.baseAngularSpeed;
-                    float originalAcceleration = pet.baseAcceleration;
-                    float originalStoppingDistance = pet.baseStoppingDistance;
-
-                    pet.agent.speed = originalSpeed * speedMultiplier;
-                    pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
-                    pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
-                    pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
-                    pet.agent.isStopped = false;
-
-                    pet.isGatheringAnimationOverride = true;
-                    // pet.isGatheringRotationOverride = true;
-
-                    if (pet.animator != null)
-                    {
-                        pet.animator.SetInteger("animation", 2);
-                    }
-
-                    Debug.Log($"[Smart Gathering] {pet.petName}: 최적 거리 {Vector3.Distance(pet.transform.position, targetPoint):F1}m");
-
-                    if (pet.agent.SetDestination(targetPoint))
-                    {
-                        StartCoroutine(StopAndLookAtCameraWhenArrived(pet, originalSpeed, originalAngularSpeed, originalAcceleration, originalStoppingDistance));
-                        successfulAssignments++;
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[Gathering] {pet.petName}: SetDestination 실패 - 현재 위치에서 대기");
-                        StartCoroutine(StayAndLookAtCamera(pet));
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogError($"[Gathering] {pet.petName}: 오류 발생 - {e.Message}");
-                    StartCoroutine(StayAndLookAtCamera(pet));
-                }
-            }
-
-            Debug.Log($"스마트 모이기 명령 완료: 총 {petCount}마리 중 {successfulAssignments}마리 이동");
-
-            if (feedbackText != null)
-                feedbackText.gameObject.SetActive(false);
-
-            waitingForTerrainInput = false;
-            isGatheringActive = true;
-        }
-    }
-}
-// 나무에 올라가 있는 펫을 강제로 내려오게 하는 코루틴
-private IEnumerator ForceClimbDownForGathering(PetController pet)
-{
-    Debug.Log($"{pet.petName}: 모이기 명령으로 나무에서 내려옵니다.");
-    
-    // 나무 올라가기 상태 해제
-    pet.isClimbingTree = false;
-    
-    // 현재 나무 올라가기 코루틴들 중단
-    pet.StopAllCoroutines();
-    
-    // NavMeshAgent 재활성화 및 지면으로 이동
-    if (pet.agent != null)
-    {
-        pet.agent.enabled = true;
-        
-        // 현재 위치에서 지면으로 NavMesh 위치 찾기
-        NavMeshHit navHit;
-        Vector3 groundPosition = pet.transform.position;
-        groundPosition.y = 0; // 지면 높이로 설정
-        
-        if (NavMesh.SamplePosition(groundPosition, out navHit, 10f, NavMesh.AllAreas))
-        {
-            pet.transform.position = navHit.position;
-            pet.agent.Warp(navHit.position);
-        }
-        
-        // 모이기 설정 적용
-        float originalSpeed = pet.baseSpeed;
-        float originalAngularSpeed = pet.baseAngularSpeed;
-        float originalAcceleration = pet.baseAcceleration;
-        float originalStoppingDistance = pet.baseStoppingDistance;
-
-        pet.agent.speed = originalSpeed * speedMultiplier;
-        pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
-        pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
-        pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
-        
-        pet.isGatheringAnimationOverride = true;
-        
-        if (pet.animator != null)
-        {
-            pet.animator.SetInteger("animation", 2); // 뛰기 애니메이션
-        }
-        
-        // 모이기 목표 위치로 이동 (기존 로직과 연결)
-        yield return new WaitForSeconds(0.5f); // 잠시 대기 후 모이기 진행
-    }
-    
-    pet.currentTree = null;
-}
-// ★ 새로 추가되는 스마트 위치 배정 메서드들
-
-/// <summary>
-/// 거리 기반 최적 위치 배정 시스템
-/// 각 펫을 가장 가까운 목표 위치에 배정하여 전체 이동 거리를 최소화
-/// </summary>
-private Dictionary<PetController, Vector3> OptimizePositionAssignment(PetController[] pets, List<Vector3> positions)
-{
-    Dictionary<PetController, Vector3> assignments = new Dictionary<PetController, Vector3>();
-    List<PetController> remainingPets = new List<PetController>(pets);
-    List<Vector3> remainingPositions = new List<Vector3>(positions);
-
-    Debug.Log($"[Smart Assignment] 시작: {pets.Length}마리 펫, {positions.Count}개 위치");
-
-    // 그리디 방식으로 가장 가까운 펫-위치 쌍을 순차적으로 매칭
-    while (remainingPets.Count > 0 && remainingPositions.Count > 0)
-    {
-        float minDistance = float.MaxValue;
-        PetController closestPet = null;
-        Vector3 closestPosition = Vector3.zero;
-        int closestPetIndex = -1;
-        int closestPositionIndex = -1;
-
-        // 모든 펫-위치 조합에서 최단 거리 찾기
-        for (int petIndex = 0; petIndex < remainingPets.Count; petIndex++)
-        {
-            var pet = remainingPets[petIndex];
-            if (pet == null) continue;
-
-            for (int posIndex = 0; posIndex < remainingPositions.Count; posIndex++)
-            {
-                var position = remainingPositions[posIndex];
-                float distance = Vector3.Distance(pet.transform.position, position);
-                
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    closestPet = pet;
-                    closestPosition = position;
-                    closestPetIndex = petIndex;
-                    closestPositionIndex = posIndex;
-                }
-            }
-        }
-
-        // 최적 쌍을 찾았다면 배정하고 리스트에서 제거
-        if (closestPet != null)
-        {
-            assignments[closestPet] = closestPosition;
-            remainingPets.RemoveAt(closestPetIndex);
-            remainingPositions.RemoveAt(closestPositionIndex);
-            
-            Debug.Log($"[Smart Assignment] {closestPet.petName} → 거리 {minDistance:F1}m");
+            isOverUI = EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
         }
         else
         {
-            Debug.LogWarning("[Smart Assignment] 유효한 펫-위치 쌍을 찾을 수 없음");
-            break;
+            isOverUI = EventSystem.current.IsPointerOverGameObject();
         }
-    }
+        if (isOverUI)
+            return;
 
-    // 배정되지 않은 펫들은 가장 가까운 할당된 위치 근처에 배치
-    foreach (var unassignedPet in remainingPets)
-    {
-        if (unassignedPet != null && assignments.Count > 0)
+        // 지형 터치 입력 처리 (모으기 대기 상태일 때)
+        if (waitingForTerrainInput && Input.GetMouseButtonDown(0))
         {
-            Vector3 nearestAssignedPosition = FindNearestAssignedPosition(unassignedPet.transform.position, assignments.Values);
-            Vector3 fallbackPosition = GetFallbackPosition(nearestAssignedPosition, assignments.Values);
-            assignments[unassignedPet] = fallbackPosition;
-            
-            Debug.Log($"[Smart Assignment] {unassignedPet.petName} → 대체 위치 배정");
-        }
-    }
-
-    // 배정 결과 통계 출력
-    float totalDistance = 0f;
-    foreach (var assignment in assignments)
-    {
-        totalDistance += Vector3.Distance(assignment.Key.transform.position, assignment.Value);
-    }
-    Debug.Log($"[Smart Assignment] 완료: 평균 이동 거리 {totalDistance / assignments.Count:F1}m");
-
-    return assignments;
-}
-
-/// <summary>
-/// 배정된 위치들 중에서 가장 가까운 위치 찾기
-/// </summary>
-private Vector3 FindNearestAssignedPosition(Vector3 petPosition, IEnumerable<Vector3> assignedPositions)
-{
-    Vector3 nearest = Vector3.zero;
-    float minDistance = float.MaxValue;
-
-    foreach (var pos in assignedPositions)
-    {
-        float distance = Vector3.Distance(petPosition, pos);
-        if (distance < minDistance)
-        {
-            minDistance = distance;
-            nearest = pos;
-        }
-    }
-
-    return nearest;
-}
-
-/// <summary>
-/// 이미 배정된 위치들과 겹치지 않는 대체 위치 생성
-/// </summary>
-private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> occupiedPositions)
-{
-    float searchRadius = 2f;
-    int maxAttempts = 8;
-
-    for (int attempt = 0; attempt < maxAttempts; attempt++)
-    {
-        // 기준 위치 주변에 원형으로 대체 위치 생성
-        float angle = (360f / maxAttempts) * attempt;
-        Vector3 offset = new Vector3(
-            Mathf.Cos(angle * Mathf.Deg2Rad) * searchRadius,
-            0f,
-            Mathf.Sin(angle * Mathf.Deg2Rad) * searchRadius
-        );
-        
-        Vector3 candidatePosition = basePosition + offset;
-        
-        // 다른 배정된 위치들과 최소 거리 유지 확인
-        bool tooClose = false;
-        foreach (var occupiedPos in occupiedPositions)
-        {
-            if (Vector3.Distance(candidatePosition, occupiedPos) < 1.5f)
+            LayerMask terrainMask = LayerMask.GetMask("Terrain");
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainMask))
             {
-                tooClose = true;
+                PetController[] pets = Object.FindObjectsByType<PetController>(FindObjectsSortMode.None);
+                int petCount = pets.Length;
+                Vector3 centerPoint = hit.point;
+                List<Vector3> targetPositions = GenerateGridPositions(centerPoint, gatherRadius, petCount);
+
+                // ★ 새로운 스마트 위치 배정 시스템 적용
+                Dictionary<PetController, Vector3> smartAssignments = OptimizePositionAssignment(pets, targetPositions);
+
+                // ★ 1단계: 모든 펫을 우선 모이기 상태로 설정
+                  foreach (PetController pet in pets)
+        {
+            if (pet != null)
+            {
+                pet.gatherCommandVersion++;
+                pet.isGathered = false;
+                pet.isGathering = true;
+
+                // ▼▼▼▼▼ [이 부분을 수정합니다] ▼▼▼▼▼
+                // ★ 나무에 올라가 있는 펫 강제로 내려오게 하기
+                if (pet.isClimbingTree)
+                {
+                    // 기존의 StartCoroutine(ForceClimbDownForGathering(pet)) 대신
+                    // PetMovementController의 ForceCancelClimbing()을 직접 호출합니다.
+                    var movementController = pet.GetComponent<PetMovementController>();
+                    if (movementController != null)
+                    {
+                        movementController.ForceCancelClimbing();
+                    }
+                    // 'continue'를 제거하여, 나무에서 내려온 펫이 바로 다음 모이기 로직을 타도록 합니다.
+                }
+                // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
+
+                // 현재 움직임 중단
+                if (pet.agent != null && pet.agent.enabled)
+                {
+                    try
+                    {
+                        pet.agent.isStopped = true;
+                    }
+                    catch { }
+                }
+            }
+        }
+
+                // ★ 2단계: 최적화된 배정에 따라 개별 펫 처리
+                int successfulAssignments = 0;
+                foreach (var assignment in smartAssignments)
+                {
+                    PetController pet = assignment.Key;
+                    Vector3 targetPoint = assignment.Value;
+
+                    // Agent 상태 체크
+                    if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+                    {
+                        Debug.LogWarning($"[Gathering] {pet?.petName}: Agent 상태 불량 - 현재 위치에서 대기");
+                        continue;
+                    }
+
+                    // NavMesh 위치 검증
+                    NavMeshHit navHit;
+                    bool foundValidPosition = false;
+                    float searchRadius = gatherRadius;
+
+                    for (int attempt = 0; attempt < 3 && !foundValidPosition; attempt++)
+                    {
+                        if (NavMesh.SamplePosition(targetPoint, out navHit, searchRadius, NavMesh.AllAreas))
+                        {
+                            NavMeshPath testPath = new NavMeshPath();
+                            if (pet.agent.CalculatePath(navHit.position, testPath) && testPath.status == NavMeshPathStatus.PathComplete)
+                            {
+                                targetPoint = navHit.position;
+                                foundValidPosition = true;
+                            }
+                        }
+                        searchRadius *= 1.5f;
+                    }
+
+                    if (!foundValidPosition)
+                    {
+                        Debug.LogWarning($"[Gathering] {pet.petName}: 유효한 경로 없음 - 현재 위치에서 대기");
+                        StartCoroutine(StayAndLookAtCamera(pet));
+                        continue;
+                    }
+
+                    // 속도 설정 및 이동 시작
+                    try
+                    {
+                        float originalSpeed = pet.baseSpeed;
+                        float originalAngularSpeed = pet.baseAngularSpeed;
+                        float originalAcceleration = pet.baseAcceleration;
+                        float originalStoppingDistance = pet.baseStoppingDistance;
+
+                        pet.agent.speed = originalSpeed * speedMultiplier;
+                        pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
+                        pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
+                        pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
+                        pet.agent.isStopped = false;
+
+                        pet.isGatheringAnimationOverride = true;
+                        // pet.isGatheringRotationOverride = true;
+
+                        if (pet.animator != null)
+                        {
+                            pet.animator.SetInteger("animation", 2);
+                        }
+
+                        Debug.Log($"[Smart Gathering] {pet.petName}: 최적 거리 {Vector3.Distance(pet.transform.position, targetPoint):F1}m");
+
+                        if (pet.agent.SetDestination(targetPoint))
+                        {
+                            StartCoroutine(StopAndLookAtCameraWhenArrived(pet, originalSpeed, originalAngularSpeed, originalAcceleration, originalStoppingDistance));
+                            successfulAssignments++;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[Gathering] {pet.petName}: SetDestination 실패 - 현재 위치에서 대기");
+                            StartCoroutine(StayAndLookAtCamera(pet));
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"[Gathering] {pet.petName}: 오류 발생 - {e.Message}");
+                        StartCoroutine(StayAndLookAtCamera(pet));
+                    }
+                }
+
+                Debug.Log($"스마트 모이기 명령 완료: 총 {petCount}마리 중 {successfulAssignments}마리 이동");
+
+                if (feedbackText != null)
+                    feedbackText.gameObject.SetActive(false);
+
+                waitingForTerrainInput = false;
+                isGatheringActive = true;
+            }
+        }
+    }
+    // 나무에 올라가 있는 펫을 강제로 내려오게 하는 코루틴
+    private IEnumerator ForceClimbDownForGathering(PetController pet)
+    {
+        Debug.Log($"{pet.petName}: 모이기 명령으로 나무에서 내려옵니다.");
+
+        // 나무 올라가기 상태 해제
+        pet.isClimbingTree = false;
+
+        // 현재 나무 올라가기 코루틴들 중단
+        pet.StopAllCoroutines();
+
+        // NavMeshAgent 재활성화 및 지면으로 이동
+        if (pet.agent != null)
+        {
+            pet.agent.enabled = true;
+
+            // 현재 위치에서 지면으로 NavMesh 위치 찾기
+            NavMeshHit navHit;
+            Vector3 groundPosition = pet.transform.position;
+            groundPosition.y = 0; // 지면 높이로 설정
+
+            if (NavMesh.SamplePosition(groundPosition, out navHit, 10f, NavMesh.AllAreas))
+            {
+                pet.transform.position = navHit.position;
+                pet.agent.Warp(navHit.position);
+            }
+
+            // 모이기 설정 적용
+            float originalSpeed = pet.baseSpeed;
+            float originalAngularSpeed = pet.baseAngularSpeed;
+            float originalAcceleration = pet.baseAcceleration;
+            float originalStoppingDistance = pet.baseStoppingDistance;
+
+            pet.agent.speed = originalSpeed * speedMultiplier;
+            pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
+            pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
+            pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
+
+            pet.isGatheringAnimationOverride = true;
+
+            if (pet.animator != null)
+            {
+                pet.animator.SetInteger("animation", 2); // 뛰기 애니메이션
+            }
+
+            // 모이기 목표 위치로 이동 (기존 로직과 연결)
+            yield return new WaitForSeconds(0.5f); // 잠시 대기 후 모이기 진행
+        }
+
+        pet.currentTree = null;
+    }
+    // ★ 새로 추가되는 스마트 위치 배정 메서드들
+
+    /// <summary>
+    /// 거리 기반 최적 위치 배정 시스템
+    /// 각 펫을 가장 가까운 목표 위치에 배정하여 전체 이동 거리를 최소화
+    /// </summary>
+    private Dictionary<PetController, Vector3> OptimizePositionAssignment(PetController[] pets, List<Vector3> positions)
+    {
+        Dictionary<PetController, Vector3> assignments = new Dictionary<PetController, Vector3>();
+        List<PetController> remainingPets = new List<PetController>(pets);
+        List<Vector3> remainingPositions = new List<Vector3>(positions);
+
+        Debug.Log($"[Smart Assignment] 시작: {pets.Length}마리 펫, {positions.Count}개 위치");
+
+        // 그리디 방식으로 가장 가까운 펫-위치 쌍을 순차적으로 매칭
+        while (remainingPets.Count > 0 && remainingPositions.Count > 0)
+        {
+            float minDistance = float.MaxValue;
+            PetController closestPet = null;
+            Vector3 closestPosition = Vector3.zero;
+            int closestPetIndex = -1;
+            int closestPositionIndex = -1;
+
+            // 모든 펫-위치 조합에서 최단 거리 찾기
+            for (int petIndex = 0; petIndex < remainingPets.Count; petIndex++)
+            {
+                var pet = remainingPets[petIndex];
+                if (pet == null) continue;
+
+                for (int posIndex = 0; posIndex < remainingPositions.Count; posIndex++)
+                {
+                    var position = remainingPositions[posIndex];
+                    float distance = Vector3.Distance(pet.transform.position, position);
+
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        closestPet = pet;
+                        closestPosition = position;
+                        closestPetIndex = petIndex;
+                        closestPositionIndex = posIndex;
+                    }
+                }
+            }
+
+            // 최적 쌍을 찾았다면 배정하고 리스트에서 제거
+            if (closestPet != null)
+            {
+                assignments[closestPet] = closestPosition;
+                remainingPets.RemoveAt(closestPetIndex);
+                remainingPositions.RemoveAt(closestPositionIndex);
+
+                Debug.Log($"[Smart Assignment] {closestPet.petName} → 거리 {minDistance:F1}m");
+            }
+            else
+            {
+                Debug.LogWarning("[Smart Assignment] 유효한 펫-위치 쌍을 찾을 수 없음");
                 break;
             }
         }
-        
-        if (!tooClose)
+
+        // 배정되지 않은 펫들은 가장 가까운 할당된 위치 근처에 배치
+        foreach (var unassignedPet in remainingPets)
         {
-            return candidatePosition;
+            if (unassignedPet != null && assignments.Count > 0)
+            {
+                Vector3 nearestAssignedPosition = FindNearestAssignedPosition(unassignedPet.transform.position, assignments.Values);
+                Vector3 fallbackPosition = GetFallbackPosition(nearestAssignedPosition, assignments.Values);
+                assignments[unassignedPet] = fallbackPosition;
+
+                Debug.Log($"[Smart Assignment] {unassignedPet.petName} → 대체 위치 배정");
+            }
         }
+
+        // 배정 결과 통계 출력
+        float totalDistance = 0f;
+        foreach (var assignment in assignments)
+        {
+            totalDistance += Vector3.Distance(assignment.Key.transform.position, assignment.Value);
+        }
+        Debug.Log($"[Smart Assignment] 완료: 평균 이동 거리 {totalDistance / assignments.Count:F1}m");
+
+        return assignments;
     }
 
-    // 모든 시도가 실패하면 기준 위치에서 약간 떨어진 곳 반환
-    return basePosition + Vector3.right * searchRadius;
-}
+    /// <summary>
+    /// 배정된 위치들 중에서 가장 가까운 위치 찾기
+    /// </summary>
+    private Vector3 FindNearestAssignedPosition(Vector3 petPosition, IEnumerable<Vector3> assignedPositions)
+    {
+        Vector3 nearest = Vector3.zero;
+        float minDistance = float.MaxValue;
+
+        foreach (var pos in assignedPositions)
+        {
+            float distance = Vector3.Distance(petPosition, pos);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                nearest = pos;
+            }
+        }
+
+        return nearest;
+    }
+
+    /// <summary>
+    /// 이미 배정된 위치들과 겹치지 않는 대체 위치 생성
+    /// </summary>
+    private Vector3 GetFallbackPosition(Vector3 basePosition, IEnumerable<Vector3> occupiedPositions)
+    {
+        float searchRadius = 2f;
+        int maxAttempts = 8;
+
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            // 기준 위치 주변에 원형으로 대체 위치 생성
+            float angle = (360f / maxAttempts) * attempt;
+            Vector3 offset = new Vector3(
+                Mathf.Cos(angle * Mathf.Deg2Rad) * searchRadius,
+                0f,
+                Mathf.Sin(angle * Mathf.Deg2Rad) * searchRadius
+            );
+
+            Vector3 candidatePosition = basePosition + offset;
+
+            // 다른 배정된 위치들과 최소 거리 유지 확인
+            bool tooClose = false;
+            foreach (var occupiedPos in occupiedPositions)
+            {
+                if (Vector3.Distance(candidatePosition, occupiedPos) < 1.5f)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (!tooClose)
+            {
+                return candidatePosition;
+            }
+        }
+
+        // 모든 시도가 실패하면 기준 위치에서 약간 떨어진 곳 반환
+        return basePosition + Vector3.right * searchRadius;
+    }
 
 
 

@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 3
   dietType: 2
   habitat: 4
+  waterSinkDepth: 1
   affection: 0
   hunger: 0
   sleepiness: 0
@@ -80,6 +81,9 @@ MonoBehaviour:
   isClimbingTree: 0
   currentTree: {fileID: 0}
   climbHeight: 5
+  isSelected: 0
+  isHolding: 0
+  isAnimationLocked: 0
 --- !u!195 &5652795953799218221
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -89,7 +93,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 4354006400901286281}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.34
+  m_Radius: 0.54
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 56
