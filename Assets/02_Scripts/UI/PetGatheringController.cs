@@ -110,40 +110,43 @@ public class PetGatheringController : MonoBehaviour
                 Dictionary<PetController, Vector3> smartAssignments = OptimizePositionAssignment(pets, targetPositions);
 
                 // ★ 1단계: 모든 펫을 우선 모이기 상태로 설정
-                  foreach (PetController pet in pets)
-        {
-            if (pet != null)
-            {
-                pet.gatherCommandVersion++;
-                pet.isGathered = false;
-                pet.isGathering = true;
-
-                // ▼▼▼▼▼ [이 부분을 수정합니다] ▼▼▼▼▼
-                // ★ 나무에 올라가 있는 펫 강제로 내려오게 하기
-                if (pet.isClimbingTree)
+                foreach (PetController pet in pets)
                 {
-                    // 기존의 StartCoroutine(ForceClimbDownForGathering(pet)) 대신
-                    // PetMovementController의 ForceCancelClimbing()을 직접 호출합니다.
-                    var movementController = pet.GetComponent<PetMovementController>();
-                    if (movementController != null)
+                    if (pet != null)
                     {
-                        movementController.ForceCancelClimbing();
-                    }
-                    // 'continue'를 제거하여, 나무에서 내려온 펫이 바로 다음 모이기 로직을 타도록 합니다.
-                }
-                // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
+                        pet.gatherCommandVersion++;
+                        pet.isGathered = false;
+                        pet.isGathering = true;
 
-                // 현재 움직임 중단
-                if (pet.agent != null && pet.agent.enabled)
-                {
-                    try
-                    {
-                        pet.agent.isStopped = true;
+                        // ▼▼▼▼▼ [이 부분을 수정합니다] ▼▼▼▼▼
+                        // ★ 나무에 올라가 있는 펫 강제로 내려오게 하기
+                        if (pet.isClimbingTree)
+                        {
+                            // 기존의 StartCoroutine(ForceClimbDownForGathering(pet)) 대신
+                            // PetMovementController의 ForceCancelClimbing()을 직접 호출합니다.
+                            var movementController = pet.GetComponent<PetMovementController>();
+                            if (movementController != null)
+                            {
+                                movementController.ForceCancelClimbing();
+                            }
+                            // 'continue'를 제거하여, 나무에서 내려온 펫이 바로 다음 모이기 로직을 타도록 합니다.
+                        }
+                        // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
+
+
+
+
+                        // 현재 움직임 중단
+                        if (pet.agent != null && pet.agent.enabled)
+                        {
+                            try
+                            {
+                                pet.agent.isStopped = true;
+                            }
+                            catch { }
+                        }
                     }
-                    catch { }
                 }
-            }
-        }
 
                 // ★ 2단계: 최적화된 배정에 따라 개별 펫 처리
                 int successfulAssignments = 0;
