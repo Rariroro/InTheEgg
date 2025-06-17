@@ -152,68 +152,99 @@ public class EnvironmentPetAttractor : MonoBehaviour
         yield return null;
     }
 
-    private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, string environmentId)
+   private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, string environmentId)
+{
+    // ✅ 나무에 올라가있는 펫 처리
+    if (pet.isClimbingTree)
     {
-        // 기존 속도 저장
-        float originalSpeed = pet.agent.speed;
-        float originalAngularSpeed = pet.agent.angularSpeed;
-        float originalAcceleration = pet.agent.acceleration;
-
-        // 빠른 이동 설정
-        pet.isGathering = true;
-        pet.agent.speed = originalSpeed * 3f; // 3배 속도
-        pet.agent.angularSpeed = originalAngularSpeed * 2f;
-        pet.agent.acceleration = originalAcceleration * 3f;
-        pet.agent.isStopped = false;
-
-        // 달리기 애니메이션
-        if (pet.animator != null)
+        Debug.Log($"{pet.petName}이(가) 나무에서 내려옵니다.");
+        
+        // PetMovementController의 ForceCancelClimbing 호출
+        var movementController = pet.GetComponent<PetMovementController>();
+        if (movementController != null)
         {
-            pet.animator.SetInteger("animation", 2); // Run animation
+            movementController.ForceCancelClimbing();
         }
-
-        // 목적지 설정
-        pet.agent.SetDestination(targetPosition);
-
-        // 도착할 때까지 대기
-        while (pet.agent.pathPending || pet.agent.remainingDistance > 2f)
+        
+        // NavMeshAgent가 활성화될 때까지 대기
+        float waitTime = 0f;
+        while ((!pet.agent.enabled || !pet.agent.isOnNavMesh) && waitTime < 2f)
         {
             yield return new WaitForSeconds(0.1f);
-
-            // 펫이 삭제되었거나 agent가 비활성화된 경우 중단
-            if (pet == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
-            {
-                yield break;
-            }
+            waitTime += 0.1f;
         }
+        
+        // 추가 안정화 대기
+        yield return new WaitForSeconds(0.5f);
+    }
+    
+    // ✅ NavMeshAgent 상태 재확인
+    if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+    {
+        Debug.LogWarning($"{pet?.petName ?? "Unknown"}: NavMeshAgent가 준비되지 않아 환경 이동을 취소합니다.");
+        yield break;
+    }
 
-        // 도착 후 속도 복원
-        pet.agent.speed = originalSpeed;
-        pet.agent.angularSpeed = originalAngularSpeed;
-        pet.agent.acceleration = originalAcceleration;
-        pet.agent.isStopped = true;
+    // 기존 속도 저장
+    float originalSpeed = pet.agent.speed;
+    float originalAngularSpeed = pet.agent.angularSpeed;
+    float originalAcceleration = pet.agent.acceleration;
 
-        // 환경을 바라보도록 회전
-        Vector3 lookDirection = (targetPosition - pet.transform.position).normalized;
-        lookDirection.y = 0;
-        if (lookDirection != Vector3.zero)
+    // 빠른 이동 설정
+    pet.isGathering = true;
+    pet.agent.speed = originalSpeed * 3f;
+    pet.agent.angularSpeed = originalAngularSpeed * 2f;
+    pet.agent.acceleration = originalAcceleration * 3f;
+    pet.agent.isStopped = false;
+
+    // 달리기 애니메이션
+    if (pet.animator != null)
+    {
+        pet.animator.SetInteger("animation", 2);
+    }
+
+    // 목적지 설정
+    pet.agent.SetDestination(targetPosition);
+
+    // 도착할 때까지 대기
+    while (pet.agent.pathPending || pet.agent.remainingDistance > 2f)
+    {
+        yield return new WaitForSeconds(0.1f);
+
+        // 펫이 삭제되었거나 agent가 비활성화된 경우 중단
+        if (pet == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
         {
-            pet.transform.rotation = Quaternion.LookRotation(lookDirection);
-        }
-
-        // 기쁨 표현 (점프 및 감정 표현)
-        yield return StartCoroutine(CelebratePet(pet, environmentId));
-
-        // 상태 복원
-        pet.isGathering = false;
-        pet.agent.isStopped = false;
-
-        // 이동 재개
-        if (pet != null)
-        {
-            pet.SetRandomDestination();
+            yield break;
         }
     }
+
+    // 도착 후 속도 복원
+    pet.agent.speed = originalSpeed;
+    pet.agent.angularSpeed = originalAngularSpeed;
+    pet.agent.acceleration = originalAcceleration;
+    pet.agent.isStopped = true;
+
+    // 환경을 바라보도록 회전
+    Vector3 lookDirection = (targetPosition - pet.transform.position).normalized;
+    lookDirection.y = 0;
+    if (lookDirection != Vector3.zero)
+    {
+        pet.transform.rotation = Quaternion.LookRotation(lookDirection);
+    }
+
+    // 기쁨 표현 (점프 및 감정 표현)
+    yield return StartCoroutine(CelebratePet(pet, environmentId));
+
+    // 상태 복원
+    pet.isGathering = false;
+    pet.agent.isStopped = false;
+
+    // 이동 재개
+    if (pet != null)
+    {
+        pet.SetRandomDestination();
+    }
+}
 
     private IEnumerator CelebratePet(PetController pet, string environmentId)
     {
