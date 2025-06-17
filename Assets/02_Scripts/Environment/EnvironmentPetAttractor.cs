@@ -166,16 +166,21 @@ public class EnvironmentPetAttractor : MonoBehaviour
             movementController.ForceCancelClimbing();
         }
         
-        // NavMeshAgent가 활성화될 때까지 대기
+       // --- 수정된 대기 로직 ---
         float waitTime = 0f;
-        while ((!pet.agent.enabled || !pet.agent.isOnNavMesh) && waitTime < 2f)
+        // 2초 동안 매 프레임 확인하며 NavMeshAgent가 준비될 때까지 충분히 기다립니다.
+        while (waitTime < 2f) 
         {
-            yield return new WaitForSeconds(0.1f);
-            waitTime += 0.1f;
+            // NavMeshAgent가 준비되면 즉시 대기 종료
+            if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+            {
+                break;
+            }
+            // 아직 준비 안 됐으면 다음 프레임까지 대기
+            yield return null; 
+            waitTime += Time.deltaTime;
         }
-        
-        // 추가 안정화 대기
-        yield return new WaitForSeconds(0.5f);
+        // -------------------------
     }
     
     // ✅ NavMeshAgent 상태 재확인
