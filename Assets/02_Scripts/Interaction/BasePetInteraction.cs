@@ -21,33 +21,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 상호작용 시작");
         StartCoroutine(InteractionSequence(pet1, pet2));
     }
-    // InteractionType을 이용한 감정 표현 추가
-    // protected void ShowInteractionEmotions(PetController pet1, PetController pet2, InteractionType interactionType)
-    // {
-    //     if (pet1 != null)
-    //     {
-    //         pet1.ShowInteractionEmotion(interactionType, true);
-    //     }
-
-    //     if (pet2 != null)
-    //     {
-    //         pet2.ShowInteractionEmotion(interactionType, false);
-    //     }
-    // }
-
-    // 승자/패자 감정 표현
-    // protected void ShowResultEmotions(PetController winner, PetController loser)
-    // {
-    //     if (winner != null)
-    //     {
-    //         winner.ShowResultEmotion(true);
-    //     }
-
-    //     if (loser != null)
-    //     {
-    //         loser.ShowResultEmotion(false);
-    //     }
-    // }
+    
 
     // 상호작용 시퀀스 관리
     private IEnumerator InteractionSequence(PetController pet1, PetController pet2)
@@ -75,6 +49,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 상호작용 종료
         EndInteraction(pet1, pet2);
     }
+
     // 새로운 메서드 추가 - 펫이 NavMesh 위에 있는지 확인하고 보정
     private IEnumerator EnsurePetsOnNavMesh(PetController pet1, PetController pet2)
     {
@@ -120,6 +95,7 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
     }
+
     // 상호작용 종료 처리 수정
     protected void EndInteraction(PetController pet1, PetController pet2)
     {
@@ -161,6 +137,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 기본 구현은 InteractionType.WalkTogether 반환
         return InteractionType.WalkTogether;
     }
+    
     // 유틸리티 메서드들
     // 두 펫이 서로 마주보게 하는 함수
     protected void LookAtEachOther(PetController pet1, PetController pet2)
