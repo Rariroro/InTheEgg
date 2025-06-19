@@ -19,12 +19,15 @@ public class ItemSelectionUI : MonoBehaviour
     }
     
     [Header("아이템 설정")]
-    public List<ItemUIData> itemConfigs = new List<ItemUIData>()
+      public List<ItemUIData> itemConfigs = new List<ItemUIData>()
     {
-        new ItemUIData { itemType = "meat", itemColor = Color.red },
-        new ItemUIData { itemType = "fish",  itemColor = Color.blue },
-        new ItemUIData { itemType = "fruit",  itemColor = Color.green },
-        new ItemUIData { itemType = "vegetable",  itemColor = Color.yellow }
+        new ItemUIData { itemType = "meat", itemColor = new Color(1f, 0.5f, 0.5f) },
+        new ItemUIData { itemType = "fish",  itemColor = new Color(0.5f, 0.5f, 1f) },
+        new ItemUIData { itemType = "fruit",  itemColor = new Color(0.5f, 1f, 0.5f) },
+        new ItemUIData { itemType = "vegetable",  itemColor = new Color(1f, 1f, 0.5f) },
+        new ItemUIData { itemType = "Grain",  itemColor = new Color(0.8f, 0.7f, 0.5f) }, // 곡물
+        new ItemUIData { itemType = "Grass",  itemColor = new Color(0.2f, 0.8f, 0.2f) }, // 풀
+        new ItemUIData { itemType = "hay",  itemColor = new Color(0.7f, 0.6f, 0.2f) }   // 건초
     };
     
     private Dictionary<string, TMP_Text> countTexts = new Dictionary<string, TMP_Text>();

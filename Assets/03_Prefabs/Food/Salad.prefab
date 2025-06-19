@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  foodType: 0
+  foodType: 2
 --- !u!64 &356019873988462727
 MeshCollider:
   m_ObjectHideFlags: 0

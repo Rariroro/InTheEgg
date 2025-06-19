@@ -373,8 +373,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1471443685}
   m_HandleRect: {fileID: 1471443684}
   m_Direction: 2
-  m_Value: 1.0000001
-  m_Size: 0.0915
+  m_Value: 1.0000002
+  m_Size: 0.09150001
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -625,8 +625,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1128617686}
   m_HandleRect: {fileID: 1128617685}
   m_Direction: 2
-  m_Value: 0.000000035547558
-  m_Size: 0.14149778
+  m_Value: 0
+  m_Size: 0.14142255
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2492,13 +2492,19 @@ MonoBehaviour:
   totalItemsText: {fileID: 1651949734}
   itemConfigs:
   - itemType: meat
-    itemColor: {r: 1, g: 0, b: 0, a: 1}
+    itemColor: {r: 1, g: 0.5, b: 0.5, a: 1}
   - itemType: fish
-    itemColor: {r: 0, g: 0, b: 1, a: 1}
+    itemColor: {r: 0.5, g: 0.5, b: 1, a: 1}
   - itemType: fruit
-    itemColor: {r: 0, g: 1, b: 0, a: 1}
+    itemColor: {r: 0.5, g: 1, b: 0.5, a: 1}
   - itemType: vegetable
-    itemColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    itemColor: {r: 1, g: 1, b: 0.5, a: 1}
+  - itemType: Grain
+    itemColor: {r: 0.8, g: 0.7, b: 0.5, a: 1}
+  - itemType: Grass
+    itemColor: {r: 0.2, g: 0.8, b: 0.2, a: 1}
+  - itemType: hay
+    itemColor: {r: 0.7, g: 0.6, b: 0.2, a: 1}
 --- !u!1 &1407411030
 GameObject:
   m_ObjectHideFlags: 0
@@ -2821,7 +2827,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1433950230}
   m_HandleRect: {fileID: 1433950229}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3097,8 +3103,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1508244025}
   m_HandleRect: {fileID: 1508244024}
   m_Direction: 2
-  m_Value: 0.000000071095116
-  m_Size: 0.14149778
+  m_Value: 0.00000003554756
+  m_Size: 0.14142255
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3705,7 +3711,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1434965452}
   m_HandleRect: {fileID: 1434965451}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

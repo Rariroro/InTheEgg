@@ -36,7 +36,7 @@ public class ItemSelectionManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
     private void InitializeItems()
     {
         selectedItems.Clear();
@@ -44,6 +44,11 @@ public class ItemSelectionManager : MonoBehaviour
         selectedItems.Add(new ItemData("fish", 0));
         selectedItems.Add(new ItemData("fruit", 0));
         selectedItems.Add(new ItemData("vegetable", 0));
+        selectedItems.Add(new ItemData("Grain", 0));
+        selectedItems.Add(new ItemData("Grass", 0));
+
+        selectedItems.Add(new ItemData("hay", 0));
+
     }
     
     public void SetItemCount(string itemType, int count)

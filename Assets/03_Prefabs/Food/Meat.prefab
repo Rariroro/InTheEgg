@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2317269265181873126}
   - component: {fileID: 8593724864787604088}
   m_Layer: 0
-  m_Name: Meet
+  m_Name: Meat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd5271172341842e891f29d38becaa08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  foodType: 0
+  foodType: 16
 --- !u!64 &8593724864787604088
 MeshCollider:
   m_ObjectHideFlags: 0

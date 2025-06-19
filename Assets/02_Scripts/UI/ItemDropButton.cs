@@ -20,7 +20,9 @@ public class ItemDropButton : MonoBehaviour
     public GameObject fishPrefab;
     public GameObject fruitPrefab;
     public GameObject vegetablePrefab;
-    
+      public GameObject GrainPrefab;
+    public GameObject GrassPrefab;
+    public GameObject hayPrefab;
     private Dictionary<string, GameObject> itemPrefabs = new Dictionary<string, GameObject>();
     private Dictionary<string, int> itemCounts = new Dictionary<string, int>();
     private Dictionary<string, Button> itemButtons = new Dictionary<string, Button>();
@@ -31,10 +33,13 @@ public class ItemDropButton : MonoBehaviour
     void Start()
     {
         // 아이템 프리팹 딕셔너리 초기화
-        itemPrefabs["meat"] = meatPrefab;
+          itemPrefabs["meat"] = meatPrefab;
         itemPrefabs["fish"] = fishPrefab;
         itemPrefabs["fruit"] = fruitPrefab;
         itemPrefabs["vegetable"] = vegetablePrefab;
+        itemPrefabs["Grain"] = GrainPrefab;
+        itemPrefabs["Grass"] = GrassPrefab;
+        itemPrefabs["hay"] = hayPrefab;
         
         // ItemSelectionManager에서 아이템 정보 가져오기
         if (ItemSelectionManager.Instance != null)
@@ -78,6 +83,9 @@ public class ItemDropButton : MonoBehaviour
                 case "fish": buttonImage.color = new Color(0.5f, 0.5f, 1f); break;
                 case "fruit": buttonImage.color = new Color(0.5f, 1f, 0.5f); break;
                 case "vegetable": buttonImage.color = new Color(1f, 1f, 0.5f); break;
+                case "Grain": buttonImage.color = new Color(0.8f, 0.7f, 0.5f); break;
+                case "Grass": buttonImage.color = new Color(0.2f, 0.8f, 0.2f); break;
+                case "hay": buttonImage.color = new Color(0.7f, 0.6f, 0.2f); break;
             }
         }
         
