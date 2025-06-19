@@ -291,26 +291,34 @@ public class PetFeedingController : MonoBehaviour
     }
 
     // --- 5‑2. 일반 음식 탐색 -------------------------------------------
-    private void DetectFoodOptimized()
+      private void DetectFoodOptimized()
     {
         UpdateFoodCache(); // 정적 캐시 갱신 (필요 시)
 
         GameObject nearestFood = null;
-        float       nearestDistSqr = float.MaxValue;
-        Vector3     myPos = transform.position;
-        float       detectionRadiusSqr = detectionRadius * detectionRadius;
+        float nearestDistSqr = float.MaxValue;
+        Vector3 myPos = transform.position;
+        float detectionRadiusSqr = detectionRadius * detectionRadius;
 
         for (int i = allFoodItems.Count - 1; i >= 0; i--)
         {
             GameObject food = allFoodItems[i];
             if (food == null) { allFoodItems.RemoveAt(i); continue; }
-
-            float distSqr = (food.transform.position - myPos).sqrMagnitude;
-            if (distSqr < detectionRadiusSqr && distSqr < nearestDistSqr)
+            
+            // ▼▼▼▼▼ [새로운 부분] 식성 확인 로직 추가 ▼▼▼▼▼
+            FoodItem foodItem = food.GetComponent<FoodItem>();
+            // 음식이 FoodItem 정보를 가지고 있고, 펫이 이 음식을 먹을 수 있을 때만
+            if (foodItem != null && (petController.diet & foodItem.foodType) != 0)
             {
-                nearestFood = food;
-                nearestDistSqr = distSqr;
+                float distSqr = (food.transform.position - myPos).sqrMagnitude;
+                if (distSqr < detectionRadiusSqr && distSqr < nearestDistSqr)
+                {
+                    nearestFood = food;
+                    nearestDistSqr = distSqr;
+                }
             }
+            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         }
 
         if (nearestFood != null)
@@ -322,7 +330,7 @@ public class PetFeedingController : MonoBehaviour
             {
                 petController.agent.SetDestination(targetFood.transform.position);
             }
-            Debug.Log($"{petController.petName} 음식 발견: 거리 {Mathf.Sqrt(nearestDistSqr):F1}m");
+            Debug.Log($"{petController.petName} 먹을 수 있는 음식 발견: {nearestFood.name}, 거리 {Mathf.Sqrt(nearestDistSqr):F1}m");
         }
     }
 

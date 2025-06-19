@@ -54,7 +54,7 @@ MonoBehaviour:
   rotationSpeed: 5
   smoothTime: 0.3
   personality: 3
-  dietType: 2
+  diet: 18
   habitat: 2
   waterSinkDepth: 0.33
   affection: 0

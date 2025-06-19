@@ -8,7 +8,27 @@ using UnityEngine.AI;
 public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
-    public enum DietType { Carnivore, Herbivore, Omnivore }
+    
+    // public enum DietType { Carnivore, Herbivore, Omnivore } // << 기존 DietType 주석 처리 또는 삭제
+
+    // ▼▼▼▼▼ [새로운 부분] Flags 열거형으로 식성 재정의 ▼▼▼▼▼
+    [Flags] // 여러 값을 가질 수 있도록 Flags 특성 추가
+    public enum DietaryFlags
+    {
+        None = 0, // 아무것도 먹지 않음
+        SeedsAndGrains = 1 << 0, // 씨앗 및 곡물 (값: 1)
+        FruitsAndVegetables = 1 << 1, // 과일 및 채소 (값: 2)
+        Grass = 1 << 2, // 풀(초목) (값: 4)
+        Honey = 1 << 3, // 꿀 (값: 8)
+        Meat = 1 << 4, // 고기(육류) (값: 16)
+        Fish = 1 << 5, // 생선(어류) (값: 32)
+        
+        // (선택) 조합 예시
+        Omnivore_General = SeedsAndGrains | FruitsAndVegetables | Meat | Fish, // 일반적인 잡식
+        Herbivore_General = FruitsAndVegetables | Grass | SeedsAndGrains // 일반적인 초식
+    }
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
     public enum Habitat { Water, Forest, Field, Fence, Tree }
 }
 
@@ -25,15 +45,18 @@ public class PetController : MonoBehaviour
 
     [Header("Pet Properties")]
     public PetAIProperties.Personality personality = PetAIProperties.Personality.Shy;
-    public PetAIProperties.DietType dietType = PetAIProperties.DietType.Omnivore;
+   // ▼▼▼▼▼ [새로운 부분] 새로운 식성 변수 추가 ▼▼▼▼▼
+    [Tooltip("펫이 먹는 음식의 종류를 중복 선택할 수 있습니다.")]
+    public PetAIProperties.DietaryFlags diet = PetAIProperties.DietaryFlags.None;
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     public PetAIProperties.Habitat habitat = PetAIProperties.Habitat.Forest;
-   
+
     // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
     [Tooltip("펫이 물에 잠기는 깊이를 설정합니다. 값이 클수록 더 깊이 잠깁니다.")]
-    [Range(0f, 5f)] 
+    [Range(0f, 5f)]
     public float waterSinkDepth = 1.0f;
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-   
+
     [Range(0, 100)]
     public float affection;
     [Range(0, 100)]
@@ -85,8 +108,8 @@ public class PetController : MonoBehaviour
     [HideInInspector] public Transform currentTree = null;
     [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이
     [HideInInspector] public bool isSelected = false;
-[HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
-[HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
+    [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
+    [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
 
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
@@ -188,33 +211,33 @@ public class PetController : MonoBehaviour
         }
     }
 
-     // PetController.cs의 Update 메서드 수정
+    // PetController.cs의 Update 메서드 수정
     // Update 메서드 수정
     private void Update()
     {
         // ★ 들고 있는 상태면 나무 관련 업데이트 스킵
-    if (!isHolding)
-    {
-        feedingController.UpdateFeeding();
-        sleepingController.UpdateSleeping();
-    }
+        if (!isHolding)
+        {
+            feedingController.UpdateFeeding();
+            sleepingController.UpdateSleeping();
+        }
 
-    // ★ 조건 수정: 들고 있을 때도 움직임 업데이트 스킵
-    if (!isGathering && !isInteracting && !isSelected && !isHolding)
-    {
-        movementController.UpdateMovement();
-    }
+        // ★ 조건 수정: 들고 있을 때도 움직임 업데이트 스킵
+        if (!isGathering && !isInteracting && !isSelected && !isHolding)
+        {
+            movementController.UpdateMovement();
+        }
 
         // 모이기 중이 아닐 때만 상호작용 처리
         if (!isGathering)
         {
             interactionController.HandleInput();
         }
-       // 선택되지 않은 상태에서만 회전 처리
-    if (!isSelected)
-    {
-        HandleRotation();
-    }
+        // 선택되지 않은 상태에서만 회전 처리
+        if (!isSelected)
+        {
+            HandleRotation();
+        }
         // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
         if (!isGatheringAnimationOverride)
         {
@@ -222,17 +245,17 @@ public class PetController : MonoBehaviour
         }
 
         // ★ 물에 있을 때는 Y 오프셋 적용, 아니면 원위치
-      if (petModelTransform != null)
-    {
-        Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-        petModelTransform.localPosition = targetLocalPos;
-        
-        // 선택된 상태에서는 회전을 초기화하지 않음
-        if (!isSelected)
+        if (petModelTransform != null)
         {
-            petModelTransform.localRotation = Quaternion.identity;
+            Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+            petModelTransform.localPosition = targetLocalPos;
+
+            // 선택된 상태에서는 회전을 초기화하지 않음
+            if (!isSelected)
+            {
+                petModelTransform.localRotation = Quaternion.identity;
+            }
         }
-    }
     }
     // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
     /// <summary>
@@ -241,12 +264,12 @@ public class PetController : MonoBehaviour
     /// </summary>
     private void HandleRotation()
     {
-       // 선택된 상태에서는 자동 회전하지 않음
+        // 선택된 상태에서는 자동 회전하지 않음
         if (isGathered || isInteracting || isSelected)
         {
             return;
         }
-        
+
         // ★ NavMeshAgent 상태 체크 추가
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
@@ -393,43 +416,43 @@ public class PetController : MonoBehaviour
         }
     }
 
-   
+
     // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
-   public void StopMovement()
-{
-    if (agent != null && agent.enabled && agent.isOnNavMesh)
+    public void StopMovement()
     {
-        try
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            agent.isStopped = true;
-            agent.ResetPath();  // ★ 추가: 경로 완전히 초기화
-            agent.velocity = Vector3.zero;  // ★ 추가: 속도도 0으로
-            agent.updateRotation = false;  // ★ 추가: 자동 회전 중지
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
+            try
+            {
+                agent.isStopped = true;
+                agent.ResetPath();  // ★ 추가: 경로 완전히 초기화
+                agent.velocity = Vector3.zero;  // ★ 추가: 속도도 0으로
+                agent.updateRotation = false;  // ★ 추가: 자동 회전 중지
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
+            }
         }
     }
-}
 
-public void ResumeMovement()
-{
-    if (isGathering) return;
-
-    if (agent != null && agent.enabled && agent.isOnNavMesh)
+    public void ResumeMovement()
     {
-        try
+        if (isGathering) return;
+
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
-            agent.updateRotation = true;  // ★ 추가: 자동 회전 재개
-            agent.isStopped = false;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
+            try
+            {
+                agent.updateRotation = true;  // ★ 추가: 자동 회전 재개
+                agent.isStopped = false;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
+            }
         }
     }
-}
 
     // 감정 표현 메서드
     public void ShowEmotion(EmotionType emotion, float duration = 10f)

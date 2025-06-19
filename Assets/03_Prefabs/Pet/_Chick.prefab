@@ -54,8 +54,9 @@ MonoBehaviour:
   rotationSpeed: 5
   smoothTime: 0.3
   personality: 0
-  dietType: 2
+  diet: 3
   habitat: 3
+  waterSinkDepth: 1
   affection: 0
   hunger: 0
   sleepiness: 0
@@ -75,6 +76,14 @@ MonoBehaviour:
   manuallySetPetType: 0
   isInteracting: 0
   interactionPartner: {fileID: 0}
+  isInWater: 0
+  waterDepthOffset: 0
+  isClimbingTree: 0
+  currentTree: {fileID: 0}
+  climbHeight: 5
+  isSelected: 0
+  isHolding: 0
+  isAnimationLocked: 0
 --- !u!65 &9138684377108434026
 BoxCollider:
   m_ObjectHideFlags: 0

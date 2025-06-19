@@ -93,8 +93,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
         PetController otherPet = pet1.PetType == PetType.Chameleon ? pet2 : pet1;
         
         // 육식/잡식 여부 확인 (PetAIProperties.DietType 사용)
-        bool isPredator = otherPet.dietType == PetAIProperties.DietType.Carnivore ;
-                         
+bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;                         
         
         return hasChameleon && isPredator;
     }

@@ -54,16 +54,20 @@ MonoBehaviour:
   rotationSpeed: 5
   smoothTime: 0.3
   personality: 1
-  dietType: 0
+  diet: 16
   habitat: 1
+  waterSinkDepth: 1
   affection: 0
   hunger: 0
+  sleepiness: 0
   petName: Tiger
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
   isGathered: 0
+  isGathering: 0
   gatherCommandVersion: 0
+  isGatheringAnimationOverride: 0
   baseSpeed: 0
   baseAngularSpeed: 0
   baseAcceleration: 0
@@ -72,6 +76,14 @@ MonoBehaviour:
   manuallySetPetType: 0
   isInteracting: 0
   interactionPartner: {fileID: 0}
+  isInWater: 0
+  waterDepthOffset: 0
+  isClimbingTree: 0
+  currentTree: {fileID: 0}
+  climbHeight: 5
+  isSelected: 0
+  isHolding: 0
+  isAnimationLocked: 0
 --- !u!195 &7544075429379280384
 NavMeshAgent:
   m_ObjectHideFlags: 0

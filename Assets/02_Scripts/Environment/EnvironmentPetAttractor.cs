@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI; // NavMeshAgent 사용을 위해 추가
 
 public class EnvironmentPetAttractor : MonoBehaviour
 {
@@ -55,7 +56,6 @@ public class EnvironmentPetAttractor : MonoBehaviour
 
         foreach (PetController pet in allPets)
         {
-            // 이미 다른 환경으로 가고 있거나 상호작용 중인 펫은 제외
             if (pet.isGathering || pet.isInteracting)
                 continue;
 
@@ -66,70 +66,49 @@ public class EnvironmentPetAttractor : MonoBehaviour
                 case "env_fence":
                     shouldAttract = pet.habitat == PetAIProperties.Habitat.Fence;
                     break;
-
                 case "env_berryfield":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore ||
-                                   pet.dietType == PetAIProperties.DietType.Omnivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.FruitsAndVegetables) != 0;
                     break;
-
                 case "env_sunflower":
                     shouldAttract = pet.personality == PetAIProperties.Personality.Playful;
                     break;
-
                 case "env_honeypot":
-
-
-                case "env_forest":
-                    shouldAttract = pet.habitat == PetAIProperties.Habitat.Forest ||
-                    pet.habitat == PetAIProperties.Habitat.Tree;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.Honey) != 0;
                     break;
-
+                case "env_forest":
+                    shouldAttract = pet.habitat == PetAIProperties.Habitat.Forest || pet.habitat == PetAIProperties.Habitat.Tree;
+                    break;
                 case "env_pond":
                     shouldAttract = pet.habitat == PetAIProperties.Habitat.Water;
                     break;
-
                 case "env_ricefield":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.SeedsAndGrains) != 0;
                     break;
-
                 case "env_cucumber":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.FruitsAndVegetables) != 0;
                     break;
-
-
                 case "env_watermelon":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore ||
-                                   pet.dietType == PetAIProperties.DietType.Omnivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.FruitsAndVegetables) != 0;
                     break;
-
                 case "env_foodstore":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Carnivore ||
-                                   pet.dietType == PetAIProperties.DietType.Omnivore;
+                    shouldAttract = (pet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;
                     break;
-
                 case "env_flowers":
-                    shouldAttract = pet.personality == PetAIProperties.Personality.Shy ||
-                                   pet.personality == PetAIProperties.Personality.Playful;
+                    shouldAttract = pet.personality == PetAIProperties.Personality.Shy || pet.personality == PetAIProperties.Personality.Playful;
                     break;
-
                 case "env_cornfield":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore ||
-                                   pet.dietType == PetAIProperties.DietType.Omnivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.SeedsAndGrains) != 0;
                     break;
-
                 case "env_orchard":
-                    shouldAttract = pet.dietType == PetAIProperties.DietType.Herbivore ||
-                                   pet.dietType == PetAIProperties.DietType.Omnivore;
+                    shouldAttract = (pet.diet & PetAIProperties.DietaryFlags.FruitsAndVegetables) != 0;
                     break;
             }
 
-            // 거리 체크 - 너무 멀리 있는 펫은 제외
             if (shouldAttract && Vector3.Distance(pet.transform.position, position) <= attractionRadius)
             {
                 matchingPets.Add(pet);
             }
         }
-
         return matchingPets;
     }
 
@@ -138,152 +117,123 @@ public class EnvironmentPetAttractor : MonoBehaviour
     {
         Debug.Log($"{environmentId} 환경에 {pets.Count}마리의 펫이 반응합니다!");
 
-        // 각 펫에게 목적지 설정
         foreach (PetController pet in pets)
         {
-            // 랜덤한 위치 (환경 주변)
             Vector2 randomCircle = Random.insideUnitCircle * gatherRadius;
             Vector3 targetPosition = centerPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
-
-            // 펫을 빠르게 이동시키기
-            StartCoroutine(MovePetToEnvironment(pet, targetPosition, environmentId));
+            
+            // ▼▼▼ [수정된 부분] centerPosition을 전달해줍니다. ▼▼▼
+            StartCoroutine(MovePetToEnvironment(pet, targetPosition, centerPosition, environmentId));
         }
 
         yield return null;
     }
 
-   private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, string environmentId)
-{
-    // ✅ 나무에 올라가있는 펫 처리
-    if (pet.isClimbingTree)
+    // ▼▼▼ [수정된 부분] centerPosition 파라미터를 받도록 변경합니다. ▼▼▼
+    private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, Vector3 centerPosition, string environmentId)
     {
-        Debug.Log($"{pet.petName}이(가) 나무에서 내려옵니다.");
-        
-        // PetMovementController의 ForceCancelClimbing 호출
-        var movementController = pet.GetComponent<PetMovementController>();
-        if (movementController != null)
+        if (pet.isClimbingTree)
         {
-            movementController.ForceCancelClimbing();
-        }
-        
-       // --- 수정된 대기 로직 ---
-        float waitTime = 0f;
-        // 2초 동안 매 프레임 확인하며 NavMeshAgent가 준비될 때까지 충분히 기다립니다.
-        while (waitTime < 2f) 
-        {
-            // NavMeshAgent가 준비되면 즉시 대기 종료
-            if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+            Debug.Log($"{pet.petName}이(가) 나무에서 내려옵니다.");
+            var movementController = pet.GetComponent<PetMovementController>();
+            if (movementController != null)
             {
-                break;
+                movementController.ForceCancelClimbing();
             }
-            // 아직 준비 안 됐으면 다음 프레임까지 대기
-            yield return null; 
-            waitTime += Time.deltaTime;
+            float waitTime = 0f;
+            while (waitTime < 2f) 
+            {
+                if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+                {
+                    break;
+                }
+                yield return null; 
+                waitTime += Time.deltaTime;
+            }
         }
-        // -------------------------
-    }
-    
-    // ✅ NavMeshAgent 상태 재확인
-    if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
-    {
-        Debug.LogWarning($"{pet?.petName ?? "Unknown"}: NavMeshAgent가 준비되지 않아 환경 이동을 취소합니다.");
-        yield break;
-    }
-
-    // 기존 속도 저장
-    float originalSpeed = pet.agent.speed;
-    float originalAngularSpeed = pet.agent.angularSpeed;
-    float originalAcceleration = pet.agent.acceleration;
-
-    // 빠른 이동 설정
-    pet.isGathering = true;
-    pet.agent.speed = originalSpeed * 3f;
-    pet.agent.angularSpeed = originalAngularSpeed * 2f;
-    pet.agent.acceleration = originalAcceleration * 3f;
-    pet.agent.isStopped = false;
-
-    // 달리기 애니메이션
-    if (pet.animator != null)
-    {
-        pet.animator.SetInteger("animation", 2);
-    }
-
-    // 목적지 설정
-    pet.agent.SetDestination(targetPosition);
-
-    // 도착할 때까지 대기
-    while (pet.agent.pathPending || pet.agent.remainingDistance > 2f)
-    {
-        yield return new WaitForSeconds(0.1f);
-
-        // 펫이 삭제되었거나 agent가 비활성화된 경우 중단
-        if (pet == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+        
+        if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
         {
+            Debug.LogWarning($"{pet?.petName ?? "Unknown"}: NavMeshAgent가 준비되지 않아 환경 이동을 취소합니다.");
             yield break;
         }
+
+        float originalSpeed = pet.baseSpeed;
+        float originalAngularSpeed = pet.baseAngularSpeed;
+        float originalAcceleration = pet.baseAcceleration;
+
+        pet.isGathering = true;
+        pet.agent.speed = originalSpeed * 3f;
+        pet.agent.angularSpeed = originalAngularSpeed * 2f;
+        pet.agent.acceleration = originalAcceleration * 3f;
+        pet.agent.isStopped = false;
+
+        if (pet.animator != null)
+        {
+            pet.animator.SetInteger("animation", 2);
+        }
+
+        pet.agent.SetDestination(targetPosition);
+
+        while (pet != null && pet.agent.enabled && (pet.agent.pathPending || pet.agent.remainingDistance > 2f))
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+        
+        if (pet == null || !pet.agent.enabled) yield break;
+
+        pet.agent.speed = originalSpeed;
+        pet.agent.angularSpeed = originalAngularSpeed;
+        pet.agent.acceleration = originalAcceleration;
+        pet.agent.isStopped = true;
+
+        // ▼▼▼ [수정된 부분] 전달받은 centerPosition을 사용합니다. ▼▼▼
+        Vector3 lookDirection = (centerPosition - pet.transform.position).normalized;
+        lookDirection.y = 0;
+        if (lookDirection != Vector3.zero)
+        {
+            pet.transform.rotation = Quaternion.LookRotation(lookDirection);
+        }
+
+        yield return StartCoroutine(CelebratePet(pet, environmentId));
+        
+        if (pet != null)
+        {
+            pet.isGathering = false;
+            if(pet.agent.enabled) pet.agent.isStopped = false;
+            pet.SetRandomDestination();
+        }
     }
-
-    // 도착 후 속도 복원
-    pet.agent.speed = originalSpeed;
-    pet.agent.angularSpeed = originalAngularSpeed;
-    pet.agent.acceleration = originalAcceleration;
-    pet.agent.isStopped = true;
-
-    // 환경을 바라보도록 회전
-    Vector3 lookDirection = (targetPosition - pet.transform.position).normalized;
-    lookDirection.y = 0;
-    if (lookDirection != Vector3.zero)
-    {
-        pet.transform.rotation = Quaternion.LookRotation(lookDirection);
-    }
-
-    // 기쁨 표현 (점프 및 감정 표현)
-    yield return StartCoroutine(CelebratePet(pet, environmentId));
-
-    // 상태 복원
-    pet.isGathering = false;
-    pet.agent.isStopped = false;
-
-    // 이동 재개
-    if (pet != null)
-    {
-        pet.SetRandomDestination();
-    }
-}
 
     private IEnumerator CelebratePet(PetController pet, string environmentId)
     {
-        // 기쁨 감정 표현
         pet.ShowEmotion(GetEmotionForEnvironment(environmentId), celebrationDuration);
-
         float celebrationTime = 0f;
 
         while (celebrationTime < celebrationDuration)
         {
-            // 점프 애니메이션
+            if (pet == null) yield break;
+
             if (pet.animator != null)
             {
-                // 랜덤하게 점프 또는 다른 기쁨 표현
                 int randomAnimation = Random.Range(0, 3);
-
                 switch (randomAnimation)
                 {
-                    case 0: // 점프
+                    case 0:
                         pet.animator.SetInteger("animation", 3);
                         yield return new WaitForSeconds(1f);
                         break;
-
-                    case 1: // 제자리 뛰기
+                    case 1:
                         pet.animator.SetInteger("animation", 2);
                         yield return new WaitForSeconds(0.5f);
-                        pet.animator.SetInteger("animation", 0);
+                        if(pet.animator != null) pet.animator.SetInteger("animation", 0);
                         yield return new WaitForSeconds(0.3f);
                         break;
-
-                    case 2: // 빙글빙글 돌기
+                    case 2:
                         float rotateTime = 0f;
                         while (rotateTime < 1f)
                         {
+                            if (pet == null) yield break;
                             pet.transform.Rotate(0, 360 * Time.deltaTime, 0);
                             rotateTime += Time.deltaTime;
                             yield return null;
@@ -291,15 +241,13 @@ public class EnvironmentPetAttractor : MonoBehaviour
                         break;
                 }
             }
-
             celebrationTime += 1.5f;
             yield return new WaitForSeconds(0.5f);
         }
-
-        // 감정 숨기기
+        
+        if (pet == null) yield break;
         pet.HideEmotion();
 
-        // 기본 애니메이션으로 복귀
         if (pet.animator != null)
         {
             pet.animator.SetInteger("animation", 0);
@@ -308,24 +256,18 @@ public class EnvironmentPetAttractor : MonoBehaviour
 
     private EmotionType GetEmotionForEnvironment(string environmentId)
     {
-        // 환경별로 적절한 감정 반환
         switch (environmentId)
         {
-            case "env_foodstore":
-            case "env_berryfield":
-            case "env_honeypot":
-                return EmotionType.Happy; // 음식 관련은 행복
-
-            case "env_sunflower":
-            case "env_flowers":
-                return EmotionType.Love; // 꽃 관련은 사랑
-
+            case "env_foodstore": case "env_berryfield": case "env_honeypot":
+            case "env_ricefield": case "env_cucumber": case "env_watermelon":
+            case "env_cornfield": case "env_orchard":
+                return EmotionType.Happy;
+            case "env_sunflower": case "env_flowers":
+                return EmotionType.Love;
             case "env_pond":
-            case "env_ricefield":
-                return EmotionType.Happy; // 물 관련은 시원함
-
+                return EmotionType.Happy; 
             default:
-                return EmotionType.Happy; // 기본은 행복
+                return EmotionType.Happy;
         }
     }
 }

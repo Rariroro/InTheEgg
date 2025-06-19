@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class FoodItem : MonoBehaviour
 {
+     [Tooltip("이 음식이 어떤 종류에 속하는지 선택하세요. (단일 선택)")]
+    public PetAIProperties.DietaryFlags foodType;
     public void Initialize()
     {
         // 음식 아이템이 생성되었음을 로그로 확인
