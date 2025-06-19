@@ -180,7 +180,7 @@ public class PetInteractionController : MonoBehaviour
         if (didHit)
         {
             // 펫 카메라 모드가 활성화된 상태라면
-            if (PetCameraSwitcher.Instance != null && PetCameraSwitcher.Instance.petCameraModeActivated)
+            if (PetCameraSwitcherButton.Instance != null && PetCameraSwitcherButton.Instance.petCameraModeActivated)
             {
                 // 터치한 오브젝트가 이 펫이라면
                 if (hit.collider.gameObject == petController.gameObject)
@@ -189,7 +189,7 @@ public class PetInteractionController : MonoBehaviour
                     Transform cameraPoint = petController.petModelTransform.Find("CameraPoint");
                     if (cameraPoint != null)
                     {
-                        PetCameraSwitcher.Instance.SwitchToPetCamera(cameraPoint);
+                        PetCameraSwitcherButton.Instance.SwitchToPetCamera(cameraPoint);
                     }
                     return; // 일반 선택 로직을 실행하지 않음
                 }
@@ -413,12 +413,19 @@ private void ForceStopHolding()
 
     private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
     {
-        Vector3 startPosition = petController.transform.position;
-        float startY = startPosition.y;
-        float targetY = groundPoint.y;
+         // ★ 추가: 나무 타기 상태 완전히 클리어
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
+    
+    // ★ 추가: 모든 Y 오프셋 초기화
+    petController.waterDepthOffset = 0f;
+    
+    Vector3 startPosition = petController.transform.position;
+    float startY = startPosition.y;
+    float targetY = groundPoint.y;
 
-        float duration = 0.8f;
-        float elapsed = 0f;
+    float duration = 0.8f;
+    float elapsed = 0f;
 
         Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
         Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
@@ -466,16 +473,20 @@ private void ForceStopHolding()
         {
             petController.petModelTransform.rotation = originalRotation;
             petController.transform.rotation = originalRotation;
+            // ★ 추가: 모델의 로컬 위치 초기화
+        petController.petModelTransform.localPosition = Vector3.zero;
+
         }
 
         yield return new WaitForSeconds(0.1f); // 약간의 지연 추가
 
-        // NavMeshAgent 재활성화
-        if (petController.agent != null)
-        {
-            petController.agent.enabled = true;
-            petController.agent.updateRotation = true;
-        }
+        // ★ 수정: NavMeshAgent 재활성화 시 Warp 사용
+    if (petController.agent != null)
+    {
+        petController.agent.enabled = true;
+        petController.agent.Warp(groundPoint); // ★ SetDestination 대신 Warp 사용
+        petController.agent.updateRotation = true;
+    }
 
         // CameraController 재활성화
         CameraController camController = FindObjectOfType<CameraController>();
@@ -487,15 +498,31 @@ private void ForceStopHolding()
         CompletePetPlacement();
     }
 
-    // 펫 배치를 완료하는 함수
-    private void CompletePetPlacement()
+   private void CompletePetPlacement()
 {
     isHolding = false;
-    petController.isHolding = false; // ✅ isHolding 상태도 확실히 변경
-
-    // ✅ 나무 타기 상태였을 경우를 대비해 한 번 더 상태를 정리해줍니다.
+    petController.isHolding = false;
+    
+    // ★ 추가: 나무 타기 관련 상태 완전 초기화
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
+    petController.waterDepthOffset = 0f;
+    
+    // ★ 추가: 펫 모델 위치 초기화
+    if (petController.petModelTransform != null)
+    {
+        petController.petModelTransform.localPosition = Vector3.zero;
+        petController.petModelTransform.localRotation = Quaternion.identity;
+    }
+    
+    // ★ 수정: NavMeshAgent 위치 동기화 확실히 하기
+    if (petController.agent != null && petController.agent.enabled)
+    {
+        petController.agent.Warp(petController.transform.position);
+    }
+    
     var movementController = petController.GetComponent<PetMovementController>();
-    if (movementController != null && petController.isClimbingTree)
+    if (movementController != null)
     {
         movementController.ForceCancelClimbing();
     }

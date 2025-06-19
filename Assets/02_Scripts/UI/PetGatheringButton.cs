@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class PetGatheringController : MonoBehaviour
+public class PetGatheringButton : MonoBehaviour
 {
     [Header("Gathering Settings")]
     public Button gatherButton;    // 인스펙터에서 할당
@@ -76,7 +76,7 @@ public class PetGatheringController : MonoBehaviour
         }
     }
 
-    // PetGatheringController.cs의 Update 메서드 내부 수정 부분
+    // PetGatheringButton.cs의 Update 메서드 내부 수정 부분
 
     void Update()
     {

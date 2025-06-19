@@ -3,9 +3,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class PetCameraSwitcher : MonoBehaviour
+public class PetCameraSwitcherButton : MonoBehaviour
 {
-    public static PetCameraSwitcher Instance { get; private set; }
+    public static PetCameraSwitcherButton Instance { get; private set; }
 
     // UI 버튼과 텍스트 컴포넌트 (인스펙터에서 할당)
     public Button petCameraButton;

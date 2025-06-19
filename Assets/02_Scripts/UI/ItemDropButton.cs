@@ -1,4 +1,4 @@
-// ItemDropController.cs 수정 버전
+// Button.cs 수정 버전
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine.EventSystems;
 
-public class ItemDropController : MonoBehaviour
+public class ItemDropButton : MonoBehaviour
 {
     [Header("아이템 드롭 설정")]
     public Transform itemButtonContainer;
