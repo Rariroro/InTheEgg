@@ -1,18 +1,18 @@
 # Scene Hierarchy Export
 Scene Name: PetVillge
-Export Date: 6/19/2025 1:29:38 PM
+Export Date: 6/21/2025 8:18:57 PM
 --------------------------------------------
 
 GameObject: Canvas (Active: True)
   Component: RectTransform
       m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-      m_LocalPosition: (585.00, 1266.00, 0.00)
-      m_LocalScale: (2.53, 2.53, 2.53)
+      m_LocalPosition: (540.00, 1170.00, 0.00)
+      m_LocalScale: (2.34, 2.34, 2.34)
       m_ConstrainProportionsScale: False
       m_AnchorMin: (0.00, 0.00)
       m_AnchorMax: (0.00, 0.00)
-      m_AnchoredPosition: (585.00, 1266.00)
-      m_SizeDelta: (461.57, 998.88)
+      m_AnchoredPosition: (540.00, 1170.00)
+      m_SizeDelta: (461.29, 999.45)
       m_Pivot: (0.50, 0.50)
   Component: Canvas
       m_RenderMode: Screen Space - Overlay
@@ -46,7 +46,7 @@ GameObject: Canvas (Active: True)
   GameObject: PetCamera Button (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (138.80, -426.84, 0.00)
+        m_LocalPosition: (138.65, -427.13, 0.00)
         m_LocalScale: (0.64, 0.64, 0.64)
         m_ConstrainProportionsScale: True
         m_AnchorMin: (1.00, 0.00)
@@ -208,7 +208,7 @@ GameObject: Canvas (Active: True)
   GameObject: Gathering Button (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (138.18, -357.34, 0.00)
+        m_LocalPosition: (138.04, -357.63, 0.00)
         m_LocalScale: (0.60, 0.60, 0.60)
         m_ConstrainProportionsScale: True
         m_AnchorMin: (1.00, 0.00)
@@ -578,7 +578,7 @@ GameObject: Canvas (Active: True)
   GameObject: ItemButtonContainer (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (-180.79, -199.44, 0.00)
+        m_LocalPosition: (-180.64, -199.73, 0.00)
         m_LocalScale: (1.00, 1.00, 1.00)
         m_ConstrainProportionsScale: False
         m_AnchorMin: (0.00, 0.00)
@@ -1075,7 +1075,7 @@ GameObject: #pet (Active: True)
         rotationSpeed: 5.00
         smoothTime: 0.30
         personality: Shy
-        dietType: Herbivore
+        diet: [Invalid enum index: -1]
         habitat: Fence
         waterSinkDepth: 1.00
         affection: 0.00
@@ -1432,10 +1432,13 @@ GameObject: #Managers (Active: True)
         feedbackText: info (TMP)
         dropHeight: 10.00
         dropForce: 5.00
-        meatPrefab: ham
-        fishPrefab: hamburger
-        fruitPrefab: grape
-        vegetablePrefab: banana
+        meatPrefab: Meat
+        fishPrefab: Fish
+        fruitPrefab: Banana
+        vegetablePrefab: Salad
+        GrainPrefab: Vege-Corn
+        GrassPrefab: Grass clump
+        hayPrefab: Hay bale
 
   GameObject: #Pet&EnvironmentManager (Active: True)
     Component: Transform
@@ -1464,7 +1467,7 @@ GameObject: #Managers (Active: True)
         pondEnvironment: PondEnvironment
         flowersEnvironment: FlowersEnvironment
         fenceEnvironment: FenceEnvironment
-        firstAppearanceEffectPrefab: TFP_Bees_01A
+        firstAppearanceEffectPrefab: null
         firstAppearanceDelay: 1.00
         giftPrefab: giftbox
         celebrationEffectPrefab: null
@@ -1569,63 +1572,26 @@ GameObject: #Environments (Active: True)
         m_LocalScale: (1.00, 1.00, 1.00)
         m_ConstrainProportionsScale: False
 
+    GameObject: FeedingArea (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (48.20, 3.20, -20.20)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: FeedPoint_1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-63.16, -2.13, 16.99)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Meat
+
 GameObject: Item (Active: True)
   Component: Transform
       m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
       m_LocalPosition: (-143.70, 32.90, 230.70)
       m_LocalScale: (1.00, 1.00, 1.00)
       m_ConstrainProportionsScale: False
-
-  GameObject: grape (Active: True)
-    Component: Transform
-        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (0.00, 0.00, 0.00)
-        m_LocalScale: (2.00, 2.00, 2.00)
-        m_ConstrainProportionsScale: True
-    Component: MeshFilter
-        m_Mesh: grape
-    Component: MeshRenderer
-        m_CastShadows: On
-        m_ReceiveShadows: True
-        m_DynamicOccludee: True
-        m_StaticShadowCaster: False
-        m_MotionVectors: Per Object Motion
-        m_LightProbeUsage: 1
-        m_ReflectionProbeUsage: 1
-        m_RayTracingMode: 2
-        m_RayTraceProcedural: False
-        m_RayTracingAccelStructBuildFlagsOverride: False
-        m_RayTracingAccelStructBuildFlags: 1
-        m_SmallMeshCulling: True
-        m_RenderingLayerMask: 1
-        m_RendererPriority: 0
-        m_Materials: (Not representable as string)
-        m_ProbeAnchor: null
-        m_LightProbeVolumeOverride: null
-        m_LightmapParameters: null
-    Component: Animator
-        m_Avatar: grapeAvatar
-        m_Controller: null
-        m_CullingMode: Always Animate
-        m_UpdateMode: Normal
-        m_ApplyRootMotion: False
-        m_LinearVelocityBlending: False
-        m_StabilizeFeet: False
-        m_AnimatePhysics: False
-        m_WarningMessage: 
-        m_HasTransformHierarchy: True
-        m_AllowConstantClipSamplingOptimization: True
-        m_KeepAnimatorStateOnDisable: False
-        m_WriteDefaultValuesOnDisable: False
-    Component: FoodItem
-    Component: MeshCollider
-        m_Material: null
-        m_IncludeLayers: (Not representable as string)
-        m_ExcludeLayers: (Not representable as string)
-        m_LayerOverridePriority: 0
-        m_IsTrigger: False
-        m_ProvidesContacts: False
-        m_Convex: True
-        m_CookingOptions: 30
-        m_Mesh: grape
 

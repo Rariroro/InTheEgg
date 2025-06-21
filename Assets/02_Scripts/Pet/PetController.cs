@@ -222,8 +222,7 @@ public class PetController : MonoBehaviour
             sleepingController.UpdateSleeping();
         }
 
-        // ★ 조건 수정: 들고 있을 때도 움직임 업데이트 스킵
-        if (!isGathering && !isInteracting && !isSelected && !isHolding)
+      if (!isGathering && !isInteracting && !isSelected && !isHolding && !feedingController.IsEatingOrSeeking())
         {
             movementController.UpdateMovement();
         }
