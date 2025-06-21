@@ -89,6 +89,7 @@ public class PetController : MonoBehaviour
     private PetInteractionController interactionController;
     private PetFeedingController feedingController;
     private PetSleepingController sleepingController; // 추가: 수면 컨트롤러
+    private PetWaterBehaviorController waterBehaviorController; // ★ 추가
 
     // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
@@ -185,7 +186,10 @@ public class PetController : MonoBehaviour
 
         // 디버그 로그에 펫 타입 출력
         // Debug.Log($"[PetController] {gameObject.name} - 펫 타입: {petType}");
-
+  // ★ waterBehaviorController를 movementController보다 먼저 초기화
+    waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
+    waterBehaviorController.Init(this);
+    
         // 각 기능별 컨트롤러 추가 및 초기화
         movementController = gameObject.AddComponent<PetMovementController>();
         movementController.Init(this);
@@ -215,6 +219,13 @@ public class PetController : MonoBehaviour
     // Update 메서드 수정
     private void Update()
     {
+
+// ★ 물 영역 체크를 가장 먼저, 항상 수행하도록 이동
+    if (waterBehaviorController != null)
+    {
+        waterBehaviorController.CheckWaterArea();
+    }
+    
         // ★ 들고 있는 상태면 나무 관련 업데이트 스킵
         if (!isHolding)
         {
@@ -254,6 +265,15 @@ public class PetController : MonoBehaviour
             {
                 petModelTransform.localRotation = Quaternion.identity;
             }
+        }
+    }
+
+      // ★ 물 속도 조정을 위한 public 메소드 추가
+    public void AdjustSpeedForWater()
+    {
+        if (waterBehaviorController != null)
+        {
+            waterBehaviorController.AdjustSpeedForWater();
         }
     }
     // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.

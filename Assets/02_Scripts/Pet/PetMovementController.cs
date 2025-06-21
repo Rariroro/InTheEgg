@@ -14,7 +14,7 @@ public class PetMovementController : MonoBehaviour
 
     private PetController petController;
     private PetTreeClimbingController treeClimbingController;
-    private PetWaterBehaviorController waterBehaviorController;
+    // private PetWaterBehaviorController waterBehaviorController;
     
     private float behaviorTimer = 0f;
     private float nextBehaviorChange = 0f;
@@ -63,8 +63,8 @@ public class PetMovementController : MonoBehaviour
         treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
         treeClimbingController.Init(controller);
         
-        waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
-        waterBehaviorController.Init(controller);
+        // waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
+        // waterBehaviorController.Init(controller);
 
         InitializePersonalityBehavior();
         StartCoroutine(DelayedStart());
@@ -127,7 +127,7 @@ public class PetMovementController : MonoBehaviour
         if (petController.isHolding) return;
         
         // 물 영역 체크 위임
-        waterBehaviorController.CheckWaterArea();
+        // waterBehaviorController.CheckWaterArea();
         
         // 나무 체크 위임
         if (!petController.isHolding)
@@ -307,7 +307,7 @@ public class PetMovementController : MonoBehaviour
         }
 
         // 물에 있으면 속도 재조정
-        waterBehaviorController.AdjustSpeedForWater();
+    petController.AdjustSpeedForWater();
     }
 
     // 새 메서드 추가
