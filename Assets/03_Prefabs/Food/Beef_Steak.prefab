@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 1765371552705801291}
   - component: {fileID: 1134425190184874188}
   - component: {fileID: 4797551377922988203}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Beef_Steak
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

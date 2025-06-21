@@ -355,9 +355,9 @@ GameObject:
   - component: {fileID: 7428208348399526504}
   - component: {fileID: -6244148952705230222}
   - component: {fileID: 1700471751422948181}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Vege-Corn
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

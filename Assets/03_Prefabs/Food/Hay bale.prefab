@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 5659936726786333243}
   - component: {fileID: 6435001576391952050}
   - component: {fileID: 2646209186637539891}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Hay bale
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

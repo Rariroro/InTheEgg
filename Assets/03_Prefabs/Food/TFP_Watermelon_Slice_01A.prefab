@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 3027380918510914174}
   - component: {fileID: 8313626105321752377}
   - component: {fileID: 3536140924032175300}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TFP_Watermelon_Slice_01A
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

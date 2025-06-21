@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 8638421269760623605}
   - component: {fileID: 1397484260505808020}
   - component: {fileID: -7262971509092026001}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TFP_Apple_03A
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

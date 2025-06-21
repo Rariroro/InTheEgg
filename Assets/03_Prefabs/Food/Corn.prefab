@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 5553702506929098518}
   - component: {fileID: 6022513278174372253}
   - component: {fileID: -5606048961818639280}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Corn
-  m_TagString: Untagged
+  m_TagString: Food
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
