@@ -109,21 +109,24 @@ public class PetInteractionController : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // 레이와 충돌하는 오브젝트가 있는지 확인합니다.
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity))
+           // ★★★ 수정: 물 레이어를 무시하고 레이캐스트 수행 ★★★
+        int layerMask = ~LayerMask.GetMask("Water"); // Water 레이어 제외
+        
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+        {
+            // ★★★ 추가: 펫이 물에 있어도 상호작용 가능하도록 콜라이더 체크 개선 ★★★
+            PetController hitPet = hit.collider.GetComponent<PetController>();
+            if (hitPet == petController || 
+                (hit.collider.transform.IsChildOf(petController.transform) && petController.isInWater))
             {
-                // 충돌한 오브젝트가 펫인 경우
-                if (hit.collider.gameObject == petController.gameObject)
-                {
-                    isTouchingPet = true; // 펫 터치 상태를 true로 설정
-                    holdTimer = 0f;        // 홀드 타이머 초기화
-                }
-                // 펫이 선택된 상태에서 다른 곳을 터치하면 선택 해제
-                else if (isSelected)
-                {
-                    Deselect();
-                }
+                isTouchingPet = true;
+                holdTimer = 0f;
             }
+            else if (isSelected)
+            {
+                Deselect();
+            }
+        }
         }
         // 마우스 왼쪽 버튼을 누르고 있고, 펫을 터치하고 있는 경우
         else if (Input.GetMouseButton(0) && isTouchingPet)

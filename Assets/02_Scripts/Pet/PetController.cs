@@ -254,18 +254,30 @@ public class PetController : MonoBehaviour
             animationController.UpdateAnimation();
         }
 
-        // ★ 물에 있을 때는 Y 오프셋 적용, 아니면 원위치
-        if (petModelTransform != null)
-        {
-            Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-            petModelTransform.localPosition = targetLocalPos;
+        // ★★★ 수정: 물에 있을 때 콜라이더도 함께 이동 ★★★
+    if (petModelTransform != null)
+    {
+        Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+        petModelTransform.localPosition = targetLocalPos;
 
-            // 선택된 상태에서는 회전을 초기화하지 않음
-            if (!isSelected)
+        // 콜라이더가 있다면 위치 조정
+        Collider col = GetComponent<Collider>();
+        if (col != null && isInWater)
+        {
+            // BoxCollider인 경우 center 조정
+            if (col is BoxCollider boxCol)
             {
-                petModelTransform.localRotation = Quaternion.identity;
+                Vector3 originalCenter = new Vector3(0, 2.63f, 0.09f); // 기본 center 값
+                boxCol.center = originalCenter + new Vector3(0, waterDepthOffset, 0);
             }
+            // 다른 타입의 콜라이더도 필요시 추가
         }
+
+        if (!isSelected)
+        {
+            petModelTransform.localRotation = Quaternion.identity;
+        }
+    }
     }
 
       // ★ 물 속도 조정을 위한 public 메소드 추가
