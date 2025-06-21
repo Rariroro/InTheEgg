@@ -222,7 +222,7 @@ public class PetController : MonoBehaviour
             sleepingController.UpdateSleeping();
         }
 
-      if (!isGathering && !isInteracting && !isSelected && !isHolding && !feedingController.IsEatingOrSeeking())
+    if (!isGathering && !isInteracting && !isHolding && !feedingController.IsEatingOrSeeking() && !sleepingController.IsSleepingOrSeeking())
         {
             movementController.UpdateMovement();
         }

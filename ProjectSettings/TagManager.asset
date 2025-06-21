@@ -20,12 +20,12 @@ TagManager:
   - Water
   - UI
   - Pet
-  - Food
+  - FoodItem
   - Terrain
   - NavMeshIgnore
   - Tree
-  - 
-  - 
+  - FeedingArea
+  - SleepingArea
   - 
   - 
   - 

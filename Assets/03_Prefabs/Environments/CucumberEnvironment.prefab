@@ -424,9 +424,10 @@ GameObject:
   m_Component:
   - component: {fileID: 186690162864539242}
   - component: {fileID: 2865386682620308815}
-  m_Layer: 8
+  - component: {fileID: 2537116560185496440}
+  m_Layer: 11
   m_Name: FeedPoint_1
-  m_TagString: FeedingArea
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -459,6 +460,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   foodType: 2
+--- !u!135 &2537116560185496440
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9138416021510071627}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &39147084827791609
 PrefabInstance:
   m_ObjectHideFlags: 0
