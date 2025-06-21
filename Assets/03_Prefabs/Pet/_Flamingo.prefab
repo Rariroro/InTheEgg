@@ -56,7 +56,7 @@ MonoBehaviour:
   personality: 0
   diet: 32
   habitat: 0
-  waterSinkDepth: 2
+  waterSinkDepth: 1.2
   affection: 0
   hunger: 0
   sleepiness: 0
