@@ -1,4 +1,4 @@
-// PetSleepingController.cs - 완성된 버전
+// PetSleepingController.cs - 'Tree' 서식지 펫 로직 추가 버전
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -14,17 +14,13 @@ public class PetSleepingController : MonoBehaviour
     private bool isSleeping = false;
     private float sleepDuration = 15f;
     private float sleepIncreaseRate = 0.1f;
-    private float lastSleepyEmotionTime = 0f;
-    private float sleepyEmotionInterval = 30f;
     private int sleepingAreaLayer;
 
-    // 졸음 관련 변수
-    private float minSpeedFactor = 0.3f;
-    private float lastSleepinessCheck = 0f;
-    private float sleepinessCheckInterval = 5f;
+    // ★★★ 추가: 나무 펫 수면 관련 상태 플래그
+    private bool isSeekingTreeToSleep = false;
 
     // 성격별 강제 수면 임계값
-    private float forceSleepThreshold = 95f; // 기본 강제 수면 임계값
+    private float forceSleepThreshold = 95f;
     private float lazyForceSleepThreshold = 80f;
     private float playfulForceSleepThreshold = 95f;
     private float braveForceSleepThreshold = 100f;
@@ -33,11 +29,15 @@ public class PetSleepingController : MonoBehaviour
     public void Init(PetController controller)
     {
         petController = controller;
-        sleepingAreaLayer = LayerMask.GetMask("SleepingArea"); // 필요시 "SleepingArea" 레이어로 변경 가능
+        sleepingAreaLayer = LayerMask.GetMask("SleepingArea");
     }
 
     public void UpdateSleeping()
     {
+
+                if (petController.isActionLocked) return;
+
+        // 공통 방해 조건 (상호작용, 들기 등)
         if (petController.isGathering || petController.isInteracting || petController.isHolding ||
             (petController.GetComponent<PetFeedingController>() != null && petController.GetComponent<PetFeedingController>().IsEatingOrSeeking()))
         {
@@ -45,36 +45,115 @@ public class PetSleepingController : MonoBehaviour
             return;
         }
 
-        if (!isSleeping)
+        // 이미 자고 있다면 로직 중단
+        if (isSleeping) return;
+
+        // 졸음 수치 증가
+        petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
+
+        // ★★★ 'Tree' 서식지 펫을 위한 특별 로직 분기 ★★★
+        if (petController.habitat == PetAIProperties.Habitat.Tree)
         {
-            // 졸음 수치 증가
-            petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
+            HandleTreePetSleeping();
+            return; // Tree 펫 로직을 수행했으면 아래 일반 로직은 건너뜀
+        }
 
-            // 졸음이 70%를 넘으면 잠자리 탐색 시작
-            if (petController.sleepiness > 70f && targetSleepingArea == null && !isSleeping)
+        // --- 기존 수면 로직 (Tree 서식지가 아닌 펫들) ---
+        if (petController.sleepiness > 70f && targetSleepingArea == null)
+        {
+            if (petController.habitat == PetAIProperties.Habitat.Field)
             {
-                // ★★★ 'Field' 서식지 펫 특별 처리 ★★★
-                if (petController.habitat == PetAIProperties.Habitat.Field)
-                {
-                    // '들판' 펫은 졸리면 바로 그 자리에서 편안하게 잠듭니다.
-                    StartCoroutine(Sleep(true)); // isProperArea = true로 완전 회복
-                    return;
-                }
-                
-                // 그 외 서식지 펫은 알맞은 잠자리를 탐색합니다.
-                DetectSleepingArea();
+                StartCoroutine(SleepInPlace(true));
+                return;
             }
+            DetectSleepingArea();
+        }
 
-            // ★★★ 강제 수면 로직 ★★★
-            // 알맞은 잠자리를 못 찾고 졸음이 임계치를 넘으면 아무 데서나 잠듭니다.
-            float personalityThreshold = GetPersonalityForceSleepThreshold();
-            if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null && !isSleeping)
-            {
-                StartCoroutine(ForceSleepAtCurrentLocation());
-            }
+        float personalityThreshold = GetPersonalityForceSleepThreshold();
+        if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null)
+        {
+            StartCoroutine(ForceSleepAtCurrentLocation());
         }
 
         HandleMovementToTarget();
+    }
+
+    /// <summary>
+    /// ★★★ 새로 추가: 'Tree' 서식지 펫의 수면 로직을 처리합니다.
+    /// </summary>
+    private void HandleTreePetSleeping()
+    {
+        // 졸음이 70%를 넘었을 때 행동 개시
+        if (petController.sleepiness > 70f)
+        {
+            // 1. 이미 나무에 올라가 쉬고 있는 경우
+            if (petController.isClimbingTree)
+            {
+                // 그 자리에서 바로 잠자기 시작
+                StartCoroutine(SleepInTree());
+            }
+            // 2. 땅에 있고, 아직 나무를 찾기 시작하지 않은 경우
+            else if (!isSeekingTreeToSleep)
+            {
+                // 잠을 자기 위해 나무를 찾고 올라가는 전체 과정을 시작
+                StartCoroutine(FindAndClimbTreeToSleep());
+            }
+        }
+
+        // 3. 나무를 못 찾은 상태에서 졸음이 한계에 도달한 경우
+        float personalityThreshold = GetPersonalityForceSleepThreshold();
+        if (petController.sleepiness >= personalityThreshold && !petController.isClimbingTree && !isSeekingTreeToSleep)
+        {
+            Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
+            StartCoroutine(ForceSleepAtCurrentLocation()); // 불완전 회복 수면
+        }
+    }
+
+    /// <summary>
+    /// ★★★ 새로 추가: 잠잘 나무를 찾고, 올라가서 잠드는 전체 과정을 관리하는 코루틴
+    /// </summary>
+    private IEnumerator FindAndClimbTreeToSleep()
+    {
+        isSeekingTreeToSleep = true;
+        ResetPetStateForSeeking();
+
+        var treeClimber = petController.GetComponent<PetTreeClimbingController>();
+        if (treeClimber != null)
+        {
+            // 나무에 올라가서 잠을 자는 행동을 위임하고 끝날 때까지 대기
+            yield return StartCoroutine(treeClimber.ClimbAndExecuteAction(SleepInTree()));
+        }
+
+        isSeekingTreeToSleep = false;
+    }
+
+    /// <summary>
+    /// ★★★ 새로 추가: 나무 위에서 잠을 자는 코루틴
+    /// </summary>
+    public IEnumerator SleepInTree()
+    {
+        if (isSleeping) yield break; // 중복 실행 방지
+
+        isSleeping = true;
+        petController.StopMovement(); // 혹시 모를 움직임 방지
+
+        Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
+
+        // 수면 애니메이션 재생
+        yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
+
+        // 피로 완전 회복
+        petController.sleepiness = 0f;
+        petController.ShowEmotion(EmotionType.Happy, 3f);
+
+        Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
+
+        isSleeping = false;
+
+        // 잠에서 깨면 나무 위에서 쉬는 상태로 전환됩니다.
+        // 이후 행동(내려오기 등)은 PetTreeClimbingController의 로직에 따라 결정됩니다.
+        var animController = petController.GetComponent<PetAnimationController>();
+        animController?.SetContinuousAnimation(5); // 다시 휴식 애니메이션으로
     }
     
     /// <summary>
@@ -103,61 +182,52 @@ public class PetSleepingController : MonoBehaviour
         }
 
         if (nearestMatchingArea != null)
-        {            ResetPetStateForSeeking();
-
+        {            
+            ResetPetStateForSeeking();
             targetSleepingArea = nearestMatchingArea;
             petController.agent.SetDestination(targetSleepingArea.transform.position);
             petController.ResumeMovement();
         }
     }
-   /// <summary>
-    /// 펫이 잠자리를 찾아가기 직전에 현재 행동과 애니메이션을 강제로 초기화합니다.
-    /// </summary>
-    private void ResetPetStateForSeeking()
-    {
-        // 현재 진행 중인 행동(휴식, 둘러보기 등) 코루틴을 강제로 중단시킵니다.
-        var moveController = petController.GetComponent<PetMovementController>();
-        moveController?.ForceStopCurrentBehavior();
-
-        // 재생 중인 연속 애니메이션(휴식 등)을 중단하고 Idle 상태로 되돌립니다.
-        var animController = petController.GetComponent<PetAnimationController>();
-        animController?.StopContinuousAnimation();
-
-        // 휴식 등으로 인해 멈춰있었을 수 있으므로, NavMeshAgent의 이동을 다시 활성화합니다.
-        petController.ResumeMovement();
-    }
+    
     private void HandleMovementToTarget()
     {
         if (isSleeping || targetSleepingArea == null || !petController.agent.enabled) return;
 
         if (petController.agent.remainingDistance < sleepingDistance && !petController.agent.pathPending)
         {
-            StartCoroutine(Sleep(true)); // 지정된 장소에서 자므로 완전 회복
+            StartCoroutine(SleepInPlace(true)); // 지정된 장소에서 자므로 완전 회복
         }
+    }
+    
+    /// <summary>
+    /// 잠을 자기 위해 이동해야 할 때, 다른 행동들을 강제로 중지시킵니다.
+    /// </summary>
+    private void ResetPetStateForSeeking()
+    {
+        petController.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
+        petController.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+        petController.ResumeMovement();
     }
 
     /// <summary>
-    /// ★★★ 수정된 수면 코루틴 ★★★
+    /// 지정된 장소나 들판에서 편안하게 잠을 잡니다. (피로 완전 회복)
     /// </summary>
-    /// <param name="isProperArea">알맞은 장소(서식지 일치 또는 Field 펫)에서 자는지 여부</param>
-    private IEnumerator Sleep(bool isProperArea)
+    private IEnumerator SleepInPlace(bool isProperArea)
     {
         isSleeping = true;
         petController.StopMovement();
 
-        // 수면 애니메이션 재생 (PlayAnimationWithCustomDuration 사용)
+        // 수면 애니메이션 재생
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, true, false));
 
-        // ★ 수면의 질에 따라 피로 회복량 조절 ★
         if (isProperArea)
         {
             petController.sleepiness = 0f; // 완전 회복
-            Debug.Log($"{petController.petName}이(가) 편안한 잠을 자고 완벽히 회복했습니다.");
         }
         else
         {
-            petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 60만 회복 (불완전 회복)
-            Debug.Log($"{petController.petName}이(가) 불편한 잠을 자고 조금만 회복했습니다.");
+            petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 불완전 회복
         }
 
         petController.ShowEmotion(EmotionType.Happy, 3f);
@@ -170,27 +240,40 @@ public class PetSleepingController : MonoBehaviour
     }
 
     /// <summary>
-    /// 너무 졸려서 현재 위치에서 강제로 잠드는 코루틴
+    /// 너무 졸려서 현재 위치에서 강제로 잠듭니다. (피로 불완전 회복)
     /// </summary>
     private IEnumerator ForceSleepAtCurrentLocation()
     {
-        Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 잠듭니다.");
-        yield return StartCoroutine(Sleep(false)); // isProperArea = false로 불완전 회복
+        isSleeping = true;
+        petController.StopMovement();
+
+        Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, true, false));
+
+        // 불완전 회복
+        petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f);
+        petController.ShowEmotion(EmotionType.Sleepy, 3f);
+
+        // 상태 초기화
+        isSleeping = false;
+        targetSleepingArea = null;
+        petController.ResumeMovement();
+        petController.GetComponent<PetMovementController>().SetRandomDestination();
     }
-    
-    // 외부에서 현재 수면 관련 행동 중인지 확인하는 메서드
+
     public bool IsSleepingOrSeeking()
     {
-        return isSleeping || (targetSleepingArea != null);
+        // ★★★ 나무 찾는 상태도 포함
+        return isSleeping || (targetSleepingArea != null) || isSeekingTreeToSleep;
     }
     
-    // 잠을 방해받았을 때 호출
     public void InterruptSleep()
     {
         if (isSleeping)
         {
             StopAllCoroutines();
             isSleeping = false;
+            isSeekingTreeToSleep = false;
             targetSleepingArea = null;
             petController.ShowEmotion(EmotionType.Angry, 3f);
             petController.ResumeMovement();
@@ -198,8 +281,7 @@ public class PetSleepingController : MonoBehaviour
             Debug.Log($"{petController.petName}의 잠을 깨웠습니다!");
         }
     }
-
-    // 성격별 강제 수면 임계값을 반환하는 헬퍼 함수
+    
     private float GetPersonalityForceSleepThreshold()
     {
         switch (petController.personality)

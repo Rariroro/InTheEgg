@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 3
   diet: 1
   habitat: 4
+  treeClimbChance: 0.496
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,7 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
 --- !u!195 &5652795953799218221
 NavMeshAgent:
   m_ObjectHideFlags: 0

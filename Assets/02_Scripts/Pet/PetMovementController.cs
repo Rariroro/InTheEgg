@@ -15,7 +15,7 @@ public class PetMovementController : MonoBehaviour
     private PetController petController;
     private PetTreeClimbingController treeClimbingController;
     // private PetWaterBehaviorController waterBehaviorController;
-    
+
     private float behaviorTimer = 0f;
     private float nextBehaviorChange = 0f;
     private BehaviorState currentBehaviorState = BehaviorState.Walking;
@@ -62,7 +62,7 @@ public class PetMovementController : MonoBehaviour
         // 서브 컨트롤러 초기화
         treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
         treeClimbingController.Init(controller);
-        
+
         // waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
         // waterBehaviorController.Init(controller);
 
@@ -123,18 +123,24 @@ public class PetMovementController : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     public void UpdateMovement()
     {
+        if (petController.isActionLocked) return;
+
         // 들고 있는 상태면 즉시 리턴
         if (petController.isHolding) return;
-        
+
         // 물 영역 체크 위임
         // waterBehaviorController.CheckWaterArea();
-        
+        var sleepingController = petController.GetComponent<PetSleepingController>();
+        if (sleepingController != null && sleepingController.IsSleepingOrSeeking())
+        {
+            return;
+        }
         // 나무 체크 위임
         if (!petController.isHolding)
         {
             treeClimbingController.CheckForTreeClimbing();
         }
-        
+
         // 나무에 올라가 있으면 다른 움직임 처리 스킵
         if (petController.isClimbingTree)
         {
@@ -144,7 +150,7 @@ public class PetMovementController : MonoBehaviour
             }
             return;
         }
-        
+
         // 모으기 모드면 즉시 리턴
         if (petController.isGathering)
         {
@@ -213,7 +219,7 @@ public class PetMovementController : MonoBehaviour
 
         var feedingController = petController.GetComponent<PetFeedingController>();
         var sleepingController = petController.GetComponent<PetSleepingController>();
-        
+
         if (petController.isClimbingTree)
         {
             behaviorTimer = 0f;
@@ -307,7 +313,7 @@ public class PetMovementController : MonoBehaviour
         }
 
         // 물에 있으면 속도 재조정
-    petController.AdjustSpeedForWater();
+        petController.AdjustSpeedForWater();
     }
 
     // 새 메서드 추가

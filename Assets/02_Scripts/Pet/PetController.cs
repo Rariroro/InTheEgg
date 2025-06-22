@@ -51,6 +51,12 @@ public class PetController : MonoBehaviour
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     public PetAIProperties.Habitat habitat = PetAIProperties.Habitat.Forest;
 
+
+// ▼▼▼ [수정된 부분] 이 아래에 새로운 변수를 추가합니다. ▼▼▼
+[Tooltip("서식지가 'Tree'인 펫이 평소에 나무에 오를 확률 (0.0 ~ 1.0 사이 값)")]
+[Range(0f, 1f)]
+public float treeClimbChance = 0.1f; // 기본값 10%
+// ▲▲▲ [수정된 부분] 여기까지 추가합니다. ▲▲▲
     // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
     [Tooltip("펫이 물에 잠기는 깊이를 설정합니다. 값이 클수록 더 깊이 잠깁니다.")]
     [Range(0f, 5f)]
@@ -111,6 +117,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isSelected = false;
     [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
     [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
+    [HideInInspector] public bool isActionLocked = false;
 
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
@@ -219,7 +226,13 @@ public class PetController : MonoBehaviour
     // Update 메서드 수정
     private void Update()
     {
-
+ // ★★★ 행동 잠금 상태에서는 대부분의 업데이트를 실행하지 않음 ★★★
+        if (isActionLocked)
+        {
+            // 예외적으로 사용자 입력 처리는 계속 받을 수 있도록 함 (들어서 구출 등)
+            interactionController.HandleInput();
+            return;
+        }
 // ★ 물 영역 체크를 가장 먼저, 항상 수행하도록 이동
     if (waterBehaviorController != null)
     {
