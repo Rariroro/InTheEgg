@@ -123,6 +123,12 @@ public class PetMovementController : MonoBehaviour
     // ────────────────────────────────────────────────────────────────────
     public void UpdateMovement()
     {
+
+         // ★★★ 추가: 나무를 오르거나 찾고 있는 중이라면, 일반 이동 로직 전체를 건너뜁니다.
+    if (petController.isClimbingTree || (treeClimbingController != null && treeClimbingController.IsSearchingForTree()))
+    {
+        return;
+    }
         if (petController.isActionLocked) return;
 
         // 들고 있는 상태면 즉시 리턴
@@ -211,6 +217,13 @@ public class PetMovementController : MonoBehaviour
     // 행동 전환 시 호출
     private void DecideNextBehavior()
     {
+
+         // ★★★ 추가: 나무를 찾고 있다면, 새로운 행동을 결정하지 않습니다.
+    if (treeClimbingController != null && treeClimbingController.IsSearchingForTree())
+    {
+        behaviorTimer = 0f;
+        return;
+    }
         if (petController.isSelected)
         {
             behaviorTimer = 0f;
