@@ -90,20 +90,17 @@ public class PetTreeClimbingController : MonoBehaviour
     /// <summary>
     /// 일반적인 주기에 따라 나무에 오르고, 잠시 쉬다 내려옵니다.
     /// </summary>
-   private IEnumerator SearchAndClimbTreeRegularly()
-{
-    // ★★★ 수정: isSearchingForTree 플래그를 코루틴 최상단으로 이동
-    isSearchingForTree = true;
+   // PetTreeClimbingController.cs의 SearchAndClimbTreeRegularly 메서드 수정
 
-    // ★★★ 추가: 나무 탐색 전, 기존의 모든 일반 행동을 강제로 중지시킵니다.
+private IEnumerator SearchAndClimbTreeRegularly()
+{
+    isSearchingForTree = true;
     ResetPetStateForSeeking(); 
 
     Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
 
     if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
     {
-        // ... (이하 코드는 거의 동일)
-        // (finally 블록을 사용하여 어떤 상황에서든 isSearchingForTree가 false가 되도록 보장)
         try
         {
             petController.currentTree = nearestTree;
@@ -118,16 +115,23 @@ public class PetTreeClimbingController : MonoBehaviour
             
             float waitTime = UnityEngine.Random.Range(5f, 10f);
             float waited = 0f;
+            
             while(waited < waitTime)
             {
+                // ★★★ 추가: 배고픔 체크 ★★★
+                if (petController.hunger > 70f)
+                {
+                    Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려옵니다.");
+                    break; // 루프 탈출하여 내려가기 시작
+                }
+                
                 var sleepingController = petController.GetComponent<PetSleepingController>();
                 if((sleepingController != null && sleepingController.IsSleepingOrSeeking()) || petController.isHolding)
                 {
-                    // 잠들거나 들리면, 내려오는 로직을 타지 않고 제어권을 위임합니다.
-                    // isSearchingForTree는 false로 만들고 코루틴을 종료해야 합니다.
                     isSearchingForTree = false; 
                     yield break;
                 }
+                
                 yield return null;
                 waited += Time.deltaTime;
             }
@@ -141,13 +145,11 @@ public class PetTreeClimbingController : MonoBehaviour
         }
         finally
         {
-            // ★★★ 추가: 코루틴이 어떤 이유로든 종료될 때 항상 상태를 리셋하도록 보장
             isSearchingForTree = false;
         }
     }
     else
     {
-        // 나무를 찾지 못했어도 상태는 반드시 리셋
         isSearchingForTree = false;
     }
 }
@@ -245,7 +247,7 @@ private void ResetPetStateForSeeking()
     /// <summary>
     /// ★★★ 리팩토링: 나무에서 내려오는 단계만 수행하는 코루틴
     /// </summary>
-      private IEnumerator ClimbDownTree()
+      public IEnumerator ClimbDownTree()
     {
         if (petController.currentTree == null)
         {

@@ -124,11 +124,18 @@ public class PetMovementController : MonoBehaviour
     public void UpdateMovement()
     {
 
-        // ★★★ 추가: 나무를 오르거나 찾고 있는 중이라면, 일반 이동 로직 전체를 건너뜁니다.
-        if (petController.isClimbingTree || (treeClimbingController != null && treeClimbingController.IsSearchingForTree()))
+        // ★★★ 추가: 나무 위에 있을 때 배고픔 체크 ★★★
+    if (petController.isClimbingTree && !treeClimbingController.IsSearchingForTree())
+    {
+        // 배가 고프면 나무에서 내려오도록 처리
+        if (petController.hunger > 70f)
         {
+            Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려오기 시작합니다.");
+            StartCoroutine(ForceClimbDownFromTree());
             return;
         }
+        return; // 배가 안 고프면 계속 나무에 있음
+    }
         if (petController.isActionLocked) return;
 
         // 들고 있는 상태면 즉시 리턴
@@ -197,7 +204,25 @@ public class PetMovementController : MonoBehaviour
             petController.petModelTransform.position = transform.position;
         }
     }
-
+// ★★★ 새로운 메서드 추가 ★★★
+private IEnumerator ForceClimbDownFromTree()
+{
+    if (!petController.isClimbingTree) yield break;
+    
+    // 애니메이션 정지
+    var animController = petController.GetComponent<PetAnimationController>();
+    animController?.StopContinuousAnimation();
+    
+    // 나무에서 내려오기
+    yield return StartCoroutine(treeClimbingController.ClimbDownTree());
+    
+    // 상태 초기화
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
+    
+    // 음식 찾기 시작하도록 다음 행동 결정
+    DecideNextBehavior();
+}
     // 헬퍼 메서드
     private bool IsAgentReady()
     {

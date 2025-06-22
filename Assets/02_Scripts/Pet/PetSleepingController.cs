@@ -130,32 +130,48 @@ public class PetSleepingController : MonoBehaviour
     /// <summary>
     /// ★★★ 새로 추가: 나무 위에서 잠을 자는 코루틴
     /// </summary>
-    public IEnumerator SleepInTree()
+   // PetSleepingController.cs의 SleepInTree 메서드 수정
+
+public IEnumerator SleepInTree()
+{
+    if (isSleeping) yield break;
+
+    isSleeping = true;
+    petController.StopMovement();
+
+    Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
+
+    // 수면 애니메이션 재생
+    yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
+
+    // 피로 완전 회복
+    petController.sleepiness = 0f;
+    petController.ShowEmotion(EmotionType.Happy, 3f);
+
+    Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
+
+    isSleeping = false;
+
+    // ★★★ 추가: 잠에서 깬 후 배고픔 체크 ★★★
+    if (petController.hunger > 70f)
     {
-        if (isSleeping) yield break; // 중복 실행 방지
-
-        isSleeping = true;
-        petController.StopMovement(); // 혹시 모를 움직임 방지
-
-        Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
-
-        // 수면 애니메이션 재생
-        yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
-
-        // 피로 완전 회복
-        petController.sleepiness = 0f;
-        petController.ShowEmotion(EmotionType.Happy, 3f);
-
-        Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
-
-        isSleeping = false;
-
-        // 잠에서 깨면 나무 위에서 쉬는 상태로 전환됩니다.
-        // 이후 행동(내려오기 등)은 PetTreeClimbingController의 로직에 따라 결정됩니다.
-        var animController = petController.GetComponent<PetAnimationController>();
-        animController?.SetContinuousAnimation(5); // 다시 휴식 애니메이션으로
+        Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려가기로 결정했습니다.");
+        
+        // 나무에서 즉시 내려가도록 신호 전송
+        var treeClimber = petController.GetComponent<PetTreeClimbingController>();
+        if (treeClimber != null)
+        {
+            // 나무에서 내려가기 위해 강제로 쉬는 상태 종료
+            yield break; // SleepInTree 종료하면 ClimbAndExecuteAction이 내려가기 시작
+        }
     }
-    
+    else
+    {
+        // 배가 고프지 않으면 다시 휴식 애니메이션으로
+        var animController = petController.GetComponent<PetAnimationController>();
+        animController?.SetContinuousAnimation(5);
+    }
+}
     /// <summary>
     /// ★★★ 수정된 잠자리 탐색 로직 ★★★
     /// 자신의 서식지(Habitat)와 일치하는 가장 가까운 수면 공간을 찾습니다.
