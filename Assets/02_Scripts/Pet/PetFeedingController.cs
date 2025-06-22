@@ -46,7 +46,11 @@ public class PetFeedingController : MonoBehaviour
         {
             return;
         }
-
+   // ★ 추가: 나무 위에 있을 때는 음식 찾기 로직 실행하지 않음
+        if (petController.isClimbingTree)
+        {
+            return;
+        }
         petController.hunger = Mathf.Clamp(petController.hunger + Time.deltaTime * hungerIncreaseRate, 0, 100);
 
         if (petController.hunger > 70f && Time.time - lastDetectionTime > detectionInterval)

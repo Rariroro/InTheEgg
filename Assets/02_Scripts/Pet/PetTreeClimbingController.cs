@@ -25,10 +25,16 @@ public class PetTreeClimbingController : MonoBehaviour
     /// </summary>
     public void CheckForTreeClimbing()
     {
+        
+        // ★★★ 추가: 배고플 때는 나무에 오르지 않음
+    if (petController.hunger > 70f)
+    {
+        return;
+    }
         // ★★★ 잠을 자려 하거나, 특정 상태일 때는 일반 등반 로직 실행 안 함
-        if (petController.habitat != PetAIProperties.Habitat.Tree || 
-            petController.isClimbingTree || petController.isInWater || isSearchingForTree || 
-            petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()) 
+        if (petController.habitat != PetAIProperties.Habitat.Tree ||
+            petController.isClimbingTree || petController.isInWater || isSearchingForTree ||
+            petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking())
         {
             return;
         }
