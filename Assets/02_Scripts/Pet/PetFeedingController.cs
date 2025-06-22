@@ -35,11 +35,11 @@ public class PetFeedingController : MonoBehaviour
         foodItemLayer = LayerMask.GetMask("FoodItem"); // "FoodItem"이라는 이름의 레이어를 사용한다고 가정
         feedingAreaLayer = LayerMask.GetMask("FeedingArea");
     }
-    
 
-   
 
-  public void UpdateFeeding()
+
+
+    public void UpdateFeeding()
     {
         if (petController.isInteracting || petController.isGathering || isEating || petController.isHolding ||
             (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()))
@@ -88,7 +88,7 @@ public class PetFeedingController : MonoBehaviour
         // 2순위: 음식 아이템을 못 찾았으면 환경 먹이 장소 탐색 (FeedingArea 레이어)
         Collider[] areaColliders = Physics.OverlapSphere(transform.position, detectionRadius, feedingAreaLayer);
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
-        
+
         if (nearestArea != null)
         {
             ResetPetStateForSeeking();
@@ -110,7 +110,7 @@ public class PetFeedingController : MonoBehaviour
         foreach (var col in colliders)
         {
             PetAIProperties.DietaryFlags foodType = PetAIProperties.DietaryFlags.None;
-            
+
             // FoodItem 또는 FeedingArea 컴포넌트에서 음식 타입 가져오기
             FoodItem foodItem = col.GetComponent<FoodItem>();
             if (foodItem != null) foodType = foodItem.foodType;
@@ -166,6 +166,12 @@ public class PetFeedingController : MonoBehaviour
     {
         isEating = true;
         petController.StopMovement();
+        // ★★★ 추가된 부분 시작 ★★★
+        if (targetFood != null)
+        {
+            yield return StartCoroutine(LookAtTarget(targetFood.transform));
+        }
+        // ★★★ 추가된 부분 끝 ★★★
 
         // 먹기 애니메이션 재생 (PlaySpecialAnimation 사용)
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(eatAnimationIndex));
@@ -194,7 +200,10 @@ public class PetFeedingController : MonoBehaviour
     {
         isEating = true;
         petController.StopMovement();
-
+        // ★★★ 추가된 부분 시작 ★★★
+        // 먹기 전에 목표물을 부드럽게 바라보도록 회전시킵니다.
+        yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
+        // ★★★ 추가된 부분 끝 ★★★
         // 먹기 애니메이션 재생 (PlayAnimationWithCustomDuration으로 일정 시간동안 재생)
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(eatAnimationIndex, 5f, true, true));
 
@@ -207,12 +216,42 @@ public class PetFeedingController : MonoBehaviour
         isEating = false;
         // PlayAnimationWithCustomDuration에서 움직임 재개를 처리하므로 여기서는 호출하지 않음
     }
+    /// <summary>
+    /// ★★★ 새로 추가된 코루틴 ★★★
+    /// 지정된 목표물을 부드럽게 바라보게 하는 코루틴입니다.
+    /// </summary>
+    /// <param name="target">바라볼 대상의 Transform</param>
+    private IEnumerator LookAtTarget(Transform target)
+    {
+        if (target == null) yield break;
+
+        Vector3 direction = (target.position - transform.position).normalized;
+        direction.y = 0; // 펫이 위아래로 기울어지는 것을 방지
+
+        // 바라볼 방향이 거의 0벡터에 가까우면 (너무 가까이 붙어있으면) 실행하지 않음
+        if (direction.sqrMagnitude < 0.01f) yield break;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        float timer = 0f;
+        float duration = 0.5f; // 0.5초 동안 회전
+        Quaternion startRotation = transform.rotation;
+
+        while (timer < duration)
+        {
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, timer / duration);
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.rotation = targetRotation; // 정확하게 목표 방향으로 설정
+    }
     public bool IsEatingOrSeeking()
     {
         // 현재 밥을 먹고 있거나, 음식을 찾아가는 중이면 true를 반환
         return isEating || (targetFood != null) || (targetFeedingArea != null);
     }
-       /// <summary>
+    /// <summary>
     /// 펫이 음식을 찾아가기 직전에 현재 행동과 애니메이션을 강제로 초기화합니다.
     /// </summary>
     private void ResetPetStateForSeeking()
