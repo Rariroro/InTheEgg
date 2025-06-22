@@ -197,39 +197,39 @@ public class TreeManager : MonoBehaviour
 
 
     // TreeManager.cs의 OnDrawGizmos 메서드 수정
-//     private void OnDrawGizmos()
-//     {
-//         if (treeGrid == null) return;
+    private void OnDrawGizmos()
+    {
+        if (treeGrid == null) return;
 
-//         // 그리드 표시
-//         Gizmos.color = Color.cyan;
-//         foreach (var cell in treeGrid.Keys)
-//         {
-//             Vector3 center = new Vector3(
-//                 (cell.x * gridSize) + gridSize / 2f + worldOrigin.x,
-//                 worldOrigin.y,
-//                 (cell.y * gridSize) + gridSize / 2f + worldOrigin.z
-//             );
-//             Gizmos.DrawWireCube(center, new Vector3(gridSize, 1f, gridSize));
-//         }
+        // 그리드 표시
+        Gizmos.color = Color.cyan;
+        foreach (var cell in treeGrid.Keys)
+        {
+            Vector3 center = new Vector3(
+                (cell.x * gridSize) + gridSize / 2f + worldOrigin.x,
+                worldOrigin.y,
+                (cell.y * gridSize) + gridSize / 2f + worldOrigin.z
+            );
+            Gizmos.DrawWireCube(center, new Vector3(gridSize, 1f, gridSize));
+        }
 
-//         // 점유된 나무 표시
-//         Gizmos.color = Color.red;
-//         foreach (var kvp in treeOccupancy)
-//         {
-//             if (kvp.Key != null && kvp.Value != null)
-//             {
-//                 // 점유된 나무 위에 빨간 구 표시
-//                 Gizmos.DrawWireSphere(kvp.Key.position + Vector3.up * 10f, 2f);
+        // 점유된 나무 표시
+        Gizmos.color = Color.red;
+        foreach (var kvp in treeOccupancy)
+        {
+            if (kvp.Key != null && kvp.Value != null)
+            {
+                // 점유된 나무 위에 빨간 구 표시
+                Gizmos.DrawWireSphere(kvp.Key.position + Vector3.up * 10f, 2f);
 
-//                 // 펫 이름 표시 (에디터에서만)
-// #if UNITY_EDITOR
-//                 UnityEditor.Handles.Label(
-//                     kvp.Key.position + Vector3.up * 12f,
-//                     kvp.Value.petName
-//                 );
-// #endif
-//             }
-//         }
-//     }
+                // 펫 이름 표시 (에디터에서만)
+#if UNITY_EDITOR
+                UnityEditor.Handles.Label(
+                    kvp.Key.position + Vector3.up * 12f,
+                    kvp.Value.petName
+                );
+#endif
+            }
+        }
+    }
 }
