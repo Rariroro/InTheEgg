@@ -425,9 +425,40 @@ public class PetInteractionManager : MonoBehaviour
     }
 
     private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
-    {
-        interaction.StartInteraction(pet1, pet2);
+{
+    // 1. 각 펫의 isInteracting 플래그를 true로 설정합니다.
+    // 이렇게 하면 다음 AI 업데이트 때 InteractWithPetAction이 최고 우선순위를 갖게 됩니다.
+    pet1.isInteracting = true;
+    pet1.interactionPartner = pet2;
+    
+    pet2.isInteracting = true;
+    pet2.interactionPartner = pet1;
+
+    // 2. 현재 행동을 즉시 중단시키고, AI가 새 행동을 선택하도록 합니다.
+    // (선택사항) 더 빠른 반응을 원하면 PetController의 UpdateAI()를 직접 호출할 수도 있습니다.
+    // pet1.UpdateAI(); 
+    // pet2.UpdateAI();
+
+    // 3. 실제 상호작용 로직 시작 (이 부분은 BasePetInteraction 클래스가 담당)
+    interaction.StartInteraction(pet1, pet2);
+}
+
+// 상호작용 종료 시 isInteracting 플래그를 false로 만들어줘야 합니다.
+public void NotifyInteractionEnded(PetController pet1, PetController pet2)
+{
+    if (pet1 != null) {
+        interactingPets.Remove(pet1);
+        pet1.isInteracting = false;
+        pet1.interactionPartner = null;
     }
+    if (pet2 != null) {
+        interactingPets.Remove(pet2);
+        pet2.isInteracting = false;
+        pet2.interactionPartner = null;
+    }
+    
+    Debug.Log($"[PetInteractionManager] 상호작용 종료: {pet1?.petName} - {pet2?.petName}");
+}
 
     private bool IsInteracting(PetController pet)
     {
@@ -443,13 +474,7 @@ public class PetInteractionManager : MonoBehaviour
         return false;
     }
 
-    public void NotifyInteractionEnded(PetController pet1, PetController pet2)
-    {
-        if (pet1 != null) interactingPets.Remove(pet1);
-        if (pet2 != null) interactingPets.Remove(pet2);
-        
-        Debug.Log($"[PetInteractionManager] 상호작용 종료: {pet1?.petName} - {pet2?.petName}");
-    }
+  
 
     // 디버그용 메서드들
     [ContextMenu("펫 리스트 새로고침")]

@@ -2,13 +2,14 @@
 // 공통 열거형은 별도 static 클래스에 모아둡니다.
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public static class PetAIProperties
 {
     public enum Personality { Shy, Brave, Lazy, Playful }
-    
+
     // public enum DietType { Carnivore, Herbivore, Omnivore } // << 기존 DietType 주석 처리 또는 삭제
 
     // ▼▼▼▼▼ [새로운 부분] Flags 열거형으로 식성 재정의 ▼▼▼▼▼
@@ -22,7 +23,7 @@ public static class PetAIProperties
         Honey = 1 << 3, // 꿀 (값: 8)
         Meat = 1 << 4, // 고기(육류) (값: 16)
         Fish = 1 << 5, // 생선(어류) (값: 32)
-        
+
         // (선택) 조합 예시
         Omnivore_General = SeedsAndGrains | FruitsAndVegetables | Meat | Fish, // 일반적인 잡식
         Herbivore_General = FruitsAndVegetables | Grass | SeedsAndGrains // 일반적인 초식
@@ -45,19 +46,19 @@ public class PetController : MonoBehaviour
 
     [Header("Pet Properties")]
     public PetAIProperties.Personality personality = PetAIProperties.Personality.Shy;
-   // ▼▼▼▼▼ [새로운 부분] 새로운 식성 변수 추가 ▼▼▼▼▼
+    // ▼▼▼▼▼ [새로운 부분] 새로운 식성 변수 추가 ▼▼▼▼▼
     [Tooltip("펫이 먹는 음식의 종류를 중복 선택할 수 있습니다.")]
     public PetAIProperties.DietaryFlags diet = PetAIProperties.DietaryFlags.None;
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
     public PetAIProperties.Habitat habitat = PetAIProperties.Habitat.Forest;
 
 
-// ▼▼▼ [수정된 부분] 이 아래에 새로운 변수를 추가합니다. ▼▼▼
-[Tooltip("서식지가 'Tree'인 펫이 평소에 나무에 오를 확률 (0.0 ~ 1.0 사이 값)")]
-[Range(0f, 1f)]
-public float treeClimbChance = 0.1f; // 기본값 10%
-// ▲▲▲ [수정된 부분] 여기까지 추가합니다. ▲▲▲
-    // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
+    // ▼▼▼ [수정된 부분] 이 아래에 새로운 변수를 추가합니다. ▼▼▼
+    [Tooltip("서식지가 'Tree'인 펫이 평소에 나무에 오를 확률 (0.0 ~ 1.0 사이 값)")]
+    [Range(0f, 1f)]
+    public float treeClimbChance = 0.1f; // 기본값 10%
+                                         // ▲▲▲ [수정된 부분] 여기까지 추가합니다. ▲▲▲
+                                         // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
     [Tooltip("펫이 물에 잠기는 깊이를 설정합니다. 값이 클수록 더 깊이 잠깁니다.")]
     [Range(0f, 5f)]
     public float waterSinkDepth = 1.0f;
@@ -96,7 +97,7 @@ public float treeClimbChance = 0.1f; // 기본값 10%
     private PetFeedingController feedingController;
     private PetSleepingController sleepingController; // 추가: 수면 컨트롤러
     private PetWaterBehaviorController waterBehaviorController; // ★ 추가
-
+    private PetTreeClimbingController treeClimbingController;
     // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
 
@@ -118,7 +119,11 @@ public float treeClimbChance = 0.1f; // 기본값 10%
     [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
     [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
     [HideInInspector] public bool isActionLocked = false;
+    [HideInInspector] public Vector3 gatherTargetPosition; 
 
+    // ... 다른 변수들 ...
+    private float _aiUpdateTimer = 0f;
+    private float _aiUpdateInterval = 0.2f; // 1초에 5번만 AI 의사결정을 하도록 설정 (조절 가능)
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
     {
@@ -129,7 +134,9 @@ public float treeClimbChance = 0.1f; // 기본값 10%
             manuallySetPetType = true; // 값이 설정되면 수동 설정됨으로 표시
         }
     }
-
+    // 행동 시스템 관련 변수
+    private List<IPetAction> _allActions;
+    private IPetAction _currentAction;
     // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
     private void Awake()
     {
@@ -193,10 +200,10 @@ public float treeClimbChance = 0.1f; // 기본값 10%
 
         // 디버그 로그에 펫 타입 출력
         // Debug.Log($"[PetController] {gameObject.name} - 펫 타입: {petType}");
-  // ★ waterBehaviorController를 movementController보다 먼저 초기화
-    waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
-    waterBehaviorController.Init(this);
-    
+        // ★ waterBehaviorController를 movementController보다 먼저 초기화
+        waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
+        waterBehaviorController.Init(this);
+
         // 각 기능별 컨트롤러 추가 및 초기화
         movementController = gameObject.AddComponent<PetMovementController>();
         movementController.Init(this);
@@ -211,6 +218,13 @@ public float treeClimbChance = 0.1f; // 기본값 10%
         feedingController.Init(this);
         sleepingController = gameObject.AddComponent<PetSleepingController>();
         sleepingController.Init(this);
+        treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
+        treeClimbingController.Init(this);
+
+        // 행동 리스트 초기화
+        InitializeActions();
+
+
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
         StartCoroutine(EnsureNavMeshPlacement());
 
@@ -221,79 +235,120 @@ public float treeClimbChance = 0.1f; // 기본값 10%
             StartCoroutine(RegisterToPetManager());
         }
     }
+    /// <summary>
+    /// 펫이 수행할 수 있는 모든 행동을 생성하고 리스트에 추가합니다.
+    /// </summary>
+    private void InitializeActions()
+{
+    _allActions = new List<IPetAction>
+    {
+        // === 최상위 우선순위: 외부 명령 ===
+        new GatherAction(this),                  // isGathering 플래그로 제어
+        new InteractWithPetAction(this),         // isInteracting 플래그로 제어
 
-    // PetController.cs의 Update 메서드 수정
-    // Update 메서드 수정
+        // === 중간 우선순위: 긴급한 욕구 ===
+        new EatAction(this, feedingController),
+        new SleepAction(this, sleepingController),
+
+        // === 낮은 우선순위: 자율 행동 ===
+        new ClimbTreeAction(this, treeClimbingController),
+
+        // === 최하위 우선순위: 기본 행동 ===
+        new WanderAction(this, movementController)
+    };
+
+    // 기본 행동 설정
+    _currentAction = _allActions.Find(a => a is WanderAction);
+    _currentAction?.OnEnter();
+        Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
+    }
+
+    // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
-    {
- // ★★★ 행동 잠금 상태에서는 대부분의 업데이트를 실행하지 않음 ★★★
-        if (isActionLocked)
-        {
-            // 예외적으로 사용자 입력 처리는 계속 받을 수 있도록 함 (들어서 구출 등)
-            interactionController.HandleInput();
-            return;
-        }
-// ★ 물 영역 체크를 가장 먼저, 항상 수행하도록 이동
-    if (waterBehaviorController != null)
-    {
-        waterBehaviorController.CheckWaterArea();
-    }
+{
+    // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
+    // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
+    interactionController?.HandleInput();
+    if (isHolding) return;
+
+    // isActionLocked는 특별 애니메이션 재생 등에 사용되므로 유지합니다.
+    if (isActionLocked) return;
     
-        // ★ 들고 있는 상태면 나무 관련 업데이트 스킵
-        if (!isHolding)
-        {
-            feedingController.UpdateFeeding();
-            sleepingController.UpdateSleeping();
-        }
+    // 2. 환경 상태 업데이트 (매 프레임)
+    waterBehaviorController?.CheckWaterArea();
 
-    if (!isGathering && !isInteracting && !isHolding && !feedingController.IsEatingOrSeeking() && !sleepingController.IsSleepingOrSeeking())
-        {
-            movementController.UpdateMovement();
-        }
-
-        // 모이기 중이 아닐 때만 상호작용 처리
-        if (!isGathering)
-        {
-            interactionController.HandleInput();
-        }
-        // 선택되지 않은 상태에서만 회전 처리
-        if (!isSelected)
-        {
-            HandleRotation();
-        }
-        // 모이기 애니메이션 오버라이드 중이 아닐 때만 일반 애니메이션 업데이트
-        if (!isGatheringAnimationOverride)
-        {
-            animationController.UpdateAnimation();
-        }
-
-        // ★★★ 수정: 물에 있을 때 콜라이더도 함께 이동 ★★★
-    if (petModelTransform != null)
+    // 3. AI 의사결정 (주기적으로)
+    _aiUpdateTimer += Time.deltaTime;
+    if (_aiUpdateTimer >= _aiUpdateInterval)
     {
-        Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-        petModelTransform.localPosition = targetLocalPos;
+        UpdateAI();
+        _aiUpdateTimer = 0f;
+    }
 
-        // 콜라이더가 있다면 위치 조정
-        Collider col = GetComponent<Collider>();
-        if (col != null && isInWater)
+    // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
+    _currentAction?.OnUpdate(); 
+
+    // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
+    // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
+    // 하지만 현재 구조를 유지한다면 그대로 둬도 괜찮습니다.
+    if (!isGatheringAnimationOverride)
+    {
+        animationController?.UpdateAnimation();
+    }
+    HandleRotation();
+
+        if (petModelTransform != null)
         {
-            // BoxCollider인 경우 center 조정
-            if (col is BoxCollider boxCol)
+            Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+            petModelTransform.localPosition = Vector3.Lerp(petModelTransform.localPosition, targetLocalPos, Time.deltaTime * 5f);
+        }
+    }
+
+    /// <summary>
+    /// AI의 핵심 의사결정 루프. 매 프레임 호출됩니다.
+    /// </summary>
+    private void UpdateAI()
+    {
+        if (isActionLocked) return;
+
+        IPetAction bestAction = null;
+        float maxPriority = -1f;
+
+        foreach (var action in _allActions)
+        {
+            float currentPriority = action.GetPriority();
+            if (currentPriority > maxPriority)
             {
-                Vector3 originalCenter = new Vector3(0, 2.63f, 0.09f); // 기본 center 값
-                boxCol.center = originalCenter + new Vector3(0, waterDepthOffset, 0);
+                maxPriority = currentPriority;
+                bestAction = action;
             }
-            // 다른 타입의 콜라이더도 필요시 추가
         }
 
-        if (!isSelected)
+        if (bestAction != null && bestAction != _currentAction)
         {
-            petModelTransform.localRotation = Quaternion.identity;
+            _currentAction?.OnExit();
+            _currentAction = bestAction;
+            _currentAction.OnEnter();
         }
-    }
-    }
 
-      // ★ 물 속도 조정을 위한 public 메소드 추가
+        // _currentAction?.OnUpdate(); // 이 줄을 Update() 메서드로 이동
+    }
+   public void InterruptCurrentActionFor(InteractionType type)
+{
+    if (_currentAction != null)
+    {
+        Debug.Log($"{petName}의 현재 행동 '{_currentAction.GetType().Name}'이 '{type}'으로 인해 중단됩니다.");
+        // isInteracting, isGathering 등의 플래그가 설정되면
+        // 다음 UpdateAI에서 자동으로 새 Action으로 전환되므로 OnExit()만 호출해도 충분합니다.
+        _currentAction.OnExit();
+        
+        // 특정 Action으로 즉시 전환해야 할 경우
+        // IPetAction newAction = _allActions.Find(a => a is InteractWithPetAction);
+        // _currentAction = newAction;
+        // _currentAction.OnEnter();
+    }
+}
+    // ★ 물 속도 조정을 위한 public 메소드 추가
     public void AdjustSpeedForWater()
     {
         if (waterBehaviorController != null)

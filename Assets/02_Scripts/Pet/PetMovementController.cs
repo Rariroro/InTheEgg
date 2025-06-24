@@ -148,11 +148,7 @@ public class PetMovementController : MonoBehaviour
         {
             return;
         }
-        // 나무 체크 위임
-        if (!petController.isHolding)
-        {
-            treeClimbingController.CheckForTreeClimbing();
-        }
+        
 
         // 나무에 올라가 있으면 다른 움직임 처리 스킵
         if (petController.isClimbingTree)
@@ -240,7 +236,7 @@ private IEnumerator ForceClimbDownFromTree()
     }
 
     // 행동 전환 시 호출
-    private void DecideNextBehavior()
+    public void DecideNextBehavior()
     {
 
         // ★★★ 추가: 나무를 찾고 있다면, 새로운 행동을 결정하지 않습니다.

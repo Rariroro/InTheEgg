@@ -101,9 +101,10 @@ public class PetGatheringButton : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainMask))
             {
+                Vector3 centerPoint = hit.point;
+
                 PetController[] pets = Object.FindObjectsByType<PetController>(FindObjectsSortMode.None);
                 int petCount = pets.Length;
-                Vector3 centerPoint = hit.point;
                 List<Vector3> targetPositions = GenerateGridPositions(centerPoint, gatherRadius, petCount);
 
                 // ★ 새로운 스마트 위치 배정 시스템 적용
@@ -155,80 +156,33 @@ public class PetGatheringButton : MonoBehaviour
                     PetController pet = assignment.Key;
                     Vector3 targetPoint = assignment.Value;
 
-                    // Agent 상태 체크
-                    if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
-                    {
-                        Debug.LogWarning($"[Gathering] {pet?.petName}: Agent 상태 불량 - 현재 위치에서 대기");
-                        continue;
-                    }
+                    if (pet == null) continue;
 
-                    // NavMesh 위치 검증
-                    NavMeshHit navHit;
-                    bool foundValidPosition = false;
-                    float searchRadius = gatherRadius;
+            // ▼▼▼ 핵심 변경 부분 ▼▼▼
+            // 펫을 직접 제어하는 대신, 상태와 목표만 설정해줍니다.
+            pet.isGathering = true;
+            pet.gatherTargetPosition = targetPoint; // Controller에 새로 만든 변수에 목표 위치 저장
 
-                    for (int attempt = 0; attempt < 3 && !foundValidPosition; attempt++)
-                    {
-                        if (NavMesh.SamplePosition(targetPoint, out navHit, searchRadius, NavMesh.AllAreas))
-                        {
-                            NavMeshPath testPath = new NavMeshPath();
-                            if (pet.agent.CalculatePath(navHit.position, testPath) && testPath.status == NavMeshPathStatus.PathComplete)
-                            {
-                                targetPoint = navHit.position;
-                                foundValidPosition = true;
-                            }
-                        }
-                        searchRadius *= 1.5f;
-                    }
-
-                    if (!foundValidPosition)
-                    {
-                        Debug.LogWarning($"[Gathering] {pet.petName}: 유효한 경로 없음 - 현재 위치에서 대기");
-                        StartCoroutine(StayAndLookAtCamera(pet));
-                        continue;
-                    }
-
-                    // 속도 설정 및 이동 시작
-                    try
-                    {
-                        float originalSpeed = pet.baseSpeed;
-                        float originalAngularSpeed = pet.baseAngularSpeed;
-                        float originalAcceleration = pet.baseAcceleration;
-                        float originalStoppingDistance = pet.baseStoppingDistance;
-
-                        pet.agent.speed = originalSpeed * speedMultiplier;
-                        pet.agent.angularSpeed = originalAngularSpeed * angularSpeedMultiplier;
-                        pet.agent.acceleration = originalAcceleration * accelerationMultiplier;
-                        pet.agent.stoppingDistance = originalStoppingDistance * stoppingDistanceMultiplier;
-                        pet.agent.isStopped = false;
-
-                        pet.isGatheringAnimationOverride = true;
-                        // pet.isGatheringRotationOverride = true;
-
-                        if (pet.animator != null)
-                        {
-                            pet.animator.SetInteger("animation", 2);
-                        }
-
-                        Debug.Log($"[Smart Gathering] {pet.petName}: 최적 거리 {Vector3.Distance(pet.transform.position, targetPoint):F1}m");
-
-                        if (pet.agent.SetDestination(targetPoint))
-                        {
-                            StartCoroutine(StopAndLookAtCameraWhenArrived(pet, originalSpeed, originalAngularSpeed, originalAcceleration, originalStoppingDistance));
-                            successfulAssignments++;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[Gathering] {pet.petName}: SetDestination 실패 - 현재 위치에서 대기");
-                            StartCoroutine(StayAndLookAtCamera(pet));
-                        }
-                    }
-                    catch (System.Exception e)
-                    {
-                        Debug.LogError($"[Gathering] {pet.petName}: 오류 발생 - {e.Message}");
-                        StartCoroutine(StayAndLookAtCamera(pet));
-                    }
+            // 에이전트 속도 설정 (이 부분은 GatherAction의 OnEnter로 옮겨도 좋고, 여기서 해도 괜찮습니다)
+            if (pet.agent != null && pet.agent.enabled)
+            {
+                pet.agent.speed = pet.baseSpeed * speedMultiplier;
+                pet.agent.angularSpeed = pet.baseAngularSpeed * angularSpeedMultiplier;
+                pet.agent.acceleration = pet.baseAcceleration * accelerationMultiplier;
+                pet.agent.stoppingDistance = pet.baseStoppingDistance * stoppingDistanceMultiplier;
+            }
+            
+            // 나무에 있는 펫 처리 로직 등은 유지
+            if (pet.isClimbingTree)
+            {
+                var movementController = pet.GetComponent<PetMovementController>();
+                if (movementController != null)
+                {
+                    movementController.ForceCancelClimbing();
                 }
+            }
+            // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+        }
 
                 Debug.Log($"스마트 모이기 명령 완료: 총 {petCount}마리 중 {successfulAssignments}마리 이동");
 
@@ -800,26 +754,7 @@ public class PetGatheringButton : MonoBehaviour
             PetController[] pets = Object.FindObjectsByType<PetController>(FindObjectsSortMode.None);
             foreach (PetController pet in pets)
             {
-                pet.gatherCommandVersion++;
-                pet.isGathered = false;
-                pet.isGathering = false;
-                pet.isGatheringAnimationOverride = false;
-                // pet.isGatheringRotationOverride = false; // ★ 방향 오버라이드 해제
-
-                if (pet.agent != null)
-                {
-                    pet.agent.speed = pet.baseSpeed;
-                    pet.agent.angularSpeed = pet.baseAngularSpeed;
-                    pet.agent.acceleration = pet.baseAcceleration;
-                    pet.agent.stoppingDistance = pet.baseStoppingDistance;
-                    pet.agent.isStopped = false;
-
-                    if (pet.animator != null)
-                    {
-                        pet.animator.SetInteger("animation", 0);
-                    }
-                    pet.GetComponent<PetMovementController>().SetRandomDestination();
-                }
+             pet.isGathering = false;
             }
             isGatheringActive = false;
             if (feedbackText != null)

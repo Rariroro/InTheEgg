@@ -92,7 +92,7 @@ public class PetTreeClimbingController : MonoBehaviour
     /// </summary>
    // PetTreeClimbingController.cs의 SearchAndClimbTreeRegularly 메서드 수정
 
-private IEnumerator SearchAndClimbTreeRegularly()
+public IEnumerator SearchAndClimbTreeRegularly()
 {
     isSearchingForTree = true;
     ResetPetStateForSeeking(); 
