@@ -289,4 +289,25 @@ public class PetFeedingController : MonoBehaviour
         // 휴식 등으로 인해 멈춰있었을 수 있으므로, NavMeshAgent의 이동을 다시 활성화합니다.
         petController.ResumeMovement();
     }
+    /// <summary>
+/// ★★★ 추가: 외부에서 먹기 행동을 강제로 중단시키는 메서드입니다.
+/// </summary>
+public void CancelFeeding()
+{
+    // 진행 중인 모든 먹기 관련 코루틴을 중지합니다.
+    StopAllCoroutines();
+
+    // 상태 변수들을 초기화합니다.
+    isEating = false;
+    targetFood = null;
+    targetFeedingArea = null;
+
+    // 펫이 멈춰있었다면 다시 움직이도록 합니다.
+    if (petController.agent != null && petController.agent.isStopped)
+    {
+        petController.ResumeMovement();
+    }
+    
+    Debug.Log($"{petController.petName}의 식사가 중단되었습니다.");
+}
 }

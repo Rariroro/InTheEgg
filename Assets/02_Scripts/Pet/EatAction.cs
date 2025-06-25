@@ -47,5 +47,7 @@ public class EatAction : IPetAction
         // ★★★ 추가: 행동이 중단될 경우, 진행중인 먹기 코루틴을 중지하고 목표를 초기화하는 것이 안전합니다.
         // 이 로직은 PetFeedingController에 추가하는 것이 좋습니다.
         // 예: _feedingController.CancelFeeding();
+            _feedingController.CancelFeeding();
+
     }
 }

@@ -109,24 +109,24 @@ public class PetInteractionController : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-           // ★★★ 수정: 물 레이어를 무시하고 레이캐스트 수행 ★★★
-        int layerMask = ~LayerMask.GetMask("Water"); // Water 레이어 제외
-        
-        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
-        {
-            // ★★★ 추가: 펫이 물에 있어도 상호작용 가능하도록 콜라이더 체크 개선 ★★★
-            PetController hitPet = hit.collider.GetComponent<PetController>();
-            if (hitPet == petController || 
-                (hit.collider.transform.IsChildOf(petController.transform) && petController.isInWater))
+            // ★★★ 수정: 물 레이어를 무시하고 레이캐스트 수행 ★★★
+            int layerMask = ~LayerMask.GetMask("Water"); // Water 레이어 제외
+
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {
-                isTouchingPet = true;
-                holdTimer = 0f;
+                // ★★★ 추가: 펫이 물에 있어도 상호작용 가능하도록 콜라이더 체크 개선 ★★★
+                PetController hitPet = hit.collider.GetComponent<PetController>();
+                if (hitPet == petController ||
+                    (hit.collider.transform.IsChildOf(petController.transform) && petController.isInWater))
+                {
+                    isTouchingPet = true;
+                    holdTimer = 0f;
+                }
+                else if (isSelected)
+                {
+                    Deselect();
+                }
             }
-            else if (isSelected)
-            {
-                Deselect();
-            }
-        }
         }
         // 마우스 왼쪽 버튼을 누르고 있고, 펫을 터치하고 있는 경우
         else if (Input.GetMouseButton(0) && isTouchingPet)
@@ -266,169 +266,170 @@ public class PetInteractionController : MonoBehaviour
 
     // PetInteractionController.cs 내의 수정이 필요한 부분
     // StartHolding() 메서드 수정
-private void StartHolding()
-{
-    
-  var movementController = petController.GetComponent<PetMovementController>();
-
-    // ✅ 나무에 올라가고 있었다면, movementController의 강제 종료 함수를 호출합니다.
-    if (petController.isClimbingTree)
+    private void StartHolding()
     {
-        if (movementController != null)
+
+        var movementController = petController.GetComponent<PetMovementController>();
+
+        // ✅ 나무에 올라가고 있었다면, movementController의 강제 종료 함수를 호출합니다.
+        if (petController.isClimbingTree)
         {
-            movementController.ForceCancelClimbing();
+            if (movementController != null)
+            {
+                movementController.ForceCancelClimbing();
+            }
+        }
+
+        isHolding = true;
+        petController.isHolding = true;
+
+        // 버둥거리는 애니메이션 설정
+        if (petController.animator != null)
+        {
+            petController.animator.speed = 3.0f;
+        }
+
+        var animController = petController.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.SetContinuousAnimation(2);
+        }
+
+        // ✅ NavMeshAgent 비활성화 로직은 ForceCancelClimbing에서 처리하므로, 여기서 한 번 더 확인합니다.
+        if (petController.agent != null && petController.agent.enabled)
+        {
+            petController.agent.enabled = false;
+        }
+
+        // CameraController 비활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = false;
+        }
+
+        // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
+        {
+            Vector3 surfacePoint = hit.position;
+            targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
+            petController.transform.position = targetPosition;
+        }
+
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
+    }
+
+    // StopHolding() 메서드 수정
+    private void StopHolding()
+    {
+        petController.isHolding = false; // ★ 추가: 들기 상태 해제
+
+        // ★ 애니메이션 속도 원래대로 복구
+        if (petController.animator != null)
+        {
+            petController.animator.speed = 1.0f;
+            petController.animator.SetInteger("animation", 0);
+        }
+
+        // ★ 연속 애니메이션 해제
+        var animController = petController.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
+
+        isHolding = false;
+
+        // 현재 회전값 저장
+        Quaternion currentRotation = petController.petModelTransform != null
+            ? petController.petModelTransform.rotation
+            : petController.transform.rotation;
+
+        // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainLayer))
+        {
+            StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
+        }
+        else
+        {
+            Vector3 groundPoint = new Vector3(
+                petController.transform.position.x,
+                0,
+                petController.transform.position.z
+            );
+            StartCoroutine(SmoothlyPlacePet(groundPoint, currentRotation));
         }
     }
-    
-    isHolding = true;
-    petController.isHolding = true;
 
-    // 버둥거리는 애니메이션 설정
-    if (petController.animator != null)
+    // ForceStopHolding() 메서드 수정
+    private void ForceStopHolding()
     {
-        petController.animator.speed = 3.0f;
+        if (!isHolding) return;
+        petController.isHolding = false; // ★ 추가: 들기 상태 해제
+
+        // ★ 애니메이션 정상화
+        if (petController.animator != null)
+        {
+            petController.animator.speed = 1.0f;
+            petController.animator.SetInteger("animation", 0);
+        }
+
+        // ★ 연속 애니메이션 해제
+        var animController = petController.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
+
+        isHolding = false;
+        isTouchingPet = false;
+        holdTimer = 0f;
+
+        // NavMeshAgent 재활성화
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = true;
+        }
+
+        // CameraController 재활성화
+        CameraController camController = FindObjectOfType<CameraController>();
+        if (camController != null)
+        {
+            camController.enabled = true;
+        }
+
+        // 펫을 지면에 즉시 배치
+        NavMeshHit navHit;
+        if (NavMesh.SamplePosition(petController.transform.position, out navHit, 10f, NavMesh.AllAreas))
+        {
+            petController.transform.position = navHit.position;
+        }
+
+        if (nameTextObject != null)
+            nameTextObject.SetActive(false);
+
+        Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
     }
-    
-    var animController = petController.GetComponent<PetAnimationController>();
-    if (animController != null)
-    {
-        animController.SetContinuousAnimation(2);
-    }
-
-    // ✅ NavMeshAgent 비활성화 로직은 ForceCancelClimbing에서 처리하므로, 여기서 한 번 더 확인합니다.
-    if (petController.agent != null && petController.agent.enabled)
-    {
-        petController.agent.enabled = false;
-    }
-
-    // CameraController 비활성화
-    CameraController camController = FindObjectOfType<CameraController>();
-    if (camController != null)
-    {
-        camController.enabled = false;
-    }
-
-    // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
-    NavMeshHit hit;
-    if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
-    {
-        Vector3 surfacePoint = hit.position;
-        targetPosition = new Vector3(surfacePoint.x, surfacePoint.y + holdHeight, surfacePoint.z);
-        petController.transform.position = targetPosition;
-    }
-
-    if (nameTextObject != null)
-        nameTextObject.SetActive(false);
-}
-
-// StopHolding() 메서드 수정
-private void StopHolding()
-{    petController.isHolding = false; // ★ 추가: 들기 상태 해제
-
-    // ★ 애니메이션 속도 원래대로 복구
-    if (petController.animator != null)
-    {
-        petController.animator.speed = 1.0f;
-        petController.animator.SetInteger("animation", 0);
-    }
-    
-    // ★ 연속 애니메이션 해제
-    var animController = petController.GetComponent<PetAnimationController>();
-    if (animController != null)
-    {
-        animController.StopContinuousAnimation();
-    }
-
-    isHolding = false;
-
-    // 현재 회전값 저장
-    Quaternion currentRotation = petController.petModelTransform != null
-        ? petController.petModelTransform.rotation
-        : petController.transform.rotation;
-
-    // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
-    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-    RaycastHit hit;
-    if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainLayer))
-    {
-        StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
-    }
-    else
-    {
-        Vector3 groundPoint = new Vector3(
-            petController.transform.position.x,
-            0,
-            petController.transform.position.z
-        );
-        StartCoroutine(SmoothlyPlacePet(groundPoint, currentRotation));
-    }
-}
-
-// ForceStopHolding() 메서드 수정
-private void ForceStopHolding()
-{
-    if (!isHolding) return;
-    petController.isHolding = false; // ★ 추가: 들기 상태 해제
-
-    // ★ 애니메이션 정상화
-    if (petController.animator != null)
-    {
-        petController.animator.speed = 1.0f;
-        petController.animator.SetInteger("animation", 0);
-    }
-    
-    // ★ 연속 애니메이션 해제
-    var animController = petController.GetComponent<PetAnimationController>();
-    if (animController != null)
-    {
-        animController.StopContinuousAnimation();
-    }
-
-    isHolding = false;
-    isTouchingPet = false;
-    holdTimer = 0f;
-
-    // NavMeshAgent 재활성화
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = true;
-    }
-
-    // CameraController 재활성화
-    CameraController camController = FindObjectOfType<CameraController>();
-    if (camController != null)
-    {
-        camController.enabled = true;
-    }
-
-    // 펫을 지면에 즉시 배치
-    NavMeshHit navHit;
-    if (NavMesh.SamplePosition(petController.transform.position, out navHit, 10f, NavMesh.AllAreas))
-    {
-        petController.transform.position = navHit.position;
-    }
-
-    if (nameTextObject != null)
-        nameTextObject.SetActive(false);
-
-    Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
-}
 
     private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
     {
-         // ★ 추가: 나무 타기 상태 완전히 클리어
-    petController.isClimbingTree = false;
-    petController.currentTree = null;
-    
-    // ★ 추가: 모든 Y 오프셋 초기화
-    petController.waterDepthOffset = 0f;
-    
-    Vector3 startPosition = petController.transform.position;
-    float startY = startPosition.y;
-    float targetY = groundPoint.y;
+        // ★ 추가: 나무 타기 상태 완전히 클리어
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
 
-    float duration = 0.8f;
-    float elapsed = 0f;
+        // ★ 추가: 모든 Y 오프셋 초기화
+        petController.waterDepthOffset = 0f;
+
+        Vector3 startPosition = petController.transform.position;
+        float startY = startPosition.y;
+        float targetY = groundPoint.y;
+
+        float duration = 0.8f;
+        float elapsed = 0f;
 
         Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
         Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
@@ -477,19 +478,19 @@ private void ForceStopHolding()
             petController.petModelTransform.rotation = originalRotation;
             petController.transform.rotation = originalRotation;
             // ★ 추가: 모델의 로컬 위치 초기화
-        petController.petModelTransform.localPosition = Vector3.zero;
+            petController.petModelTransform.localPosition = Vector3.zero;
 
         }
 
         yield return new WaitForSeconds(0.1f); // 약간의 지연 추가
 
         // ★ 수정: NavMeshAgent 재활성화 시 Warp 사용
-    if (petController.agent != null)
-    {
-        petController.agent.enabled = true;
-        petController.agent.Warp(groundPoint); // ★ SetDestination 대신 Warp 사용
-        petController.agent.updateRotation = true;
-    }
+        if (petController.agent != null)
+        {
+            petController.agent.enabled = true;
+            petController.agent.Warp(groundPoint); // ★ SetDestination 대신 Warp 사용
+            petController.agent.updateRotation = true;
+        }
 
         // CameraController 재활성화
         CameraController camController = FindObjectOfType<CameraController>();
@@ -501,165 +502,120 @@ private void ForceStopHolding()
         CompletePetPlacement();
     }
 
-   private void CompletePetPlacement()
-{
-    isHolding = false;
-    petController.isHolding = false;
-    
-    // ★ 추가: 나무 타기 관련 상태 완전 초기화
-    petController.isClimbingTree = false;
-    petController.currentTree = null;
-    petController.waterDepthOffset = 0f;
-    
-    // ★ 추가: 펫 모델 위치 초기화
-    if (petController.petModelTransform != null)
+    private void CompletePetPlacement()
     {
-        petController.petModelTransform.localPosition = Vector3.zero;
-        petController.petModelTransform.localRotation = Quaternion.identity;
-    }
-    
-    // ★ 수정: NavMeshAgent 위치 동기화 확실히 하기
-    if (petController.agent != null && petController.agent.enabled)
-    {
-        petController.agent.Warp(petController.transform.position);
-    }
-    
-    var movementController = petController.GetComponent<PetMovementController>();
-    if (movementController != null)
-    {
-        movementController.ForceCancelClimbing();
-    }
-    
-    // 펫의 움직임 재개 및 새 목적지 설정
-    petController.ResumeMovement();
-    movementController?.SetRandomDestination();
-    Deselect();
-}
+        isHolding = false;
+        petController.isHolding = false;
 
-    // 펫을 선택하는 함수
-   // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
+        // ★ 추가: 나무 타기 관련 상태 완전 초기화
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+        petController.waterDepthOffset = 0f;
 
-private void Select()
-{
-    // ★ 애니메이션 잠금 확인 (이 부분은 그대로 유지)
-    if (petController.isAnimationLocked)
-    {
-        return;
-    }
-    
-    // ... (isSelected, StopMovement 등 다른 코드는 모두 그대로) ...
-    petController.isSelected = true;
-    isSelected = true;
-    selectionTimer = 0f;
+        // ★ 추가: 펫 모델 위치 초기화
+        if (petController.petModelTransform != null)
+        {
+            petController.petModelTransform.localPosition = Vector3.zero;
+            petController.petModelTransform.localRotation = Quaternion.identity;
+        }
 
-    // ★ 나무에 올라가 있지 않을 때만 움직임 정지
-    if (!petController.isClimbingTree)
-    {
-        petController.StopMovement();
+        // ★ 수정: NavMeshAgent 위치 동기화 확실히 하기
+        if (petController.agent != null && petController.agent.enabled)
+        {
+            petController.agent.Warp(petController.transform.position);
+        }
 
         var movementController = petController.GetComponent<PetMovementController>();
         if (movementController != null)
         {
-            movementController.StopAllCoroutines();
+            movementController.ForceCancelClimbing();
+        }
+
+        // 펫의 움직임 재개 및 새 목적지 설정
+        petController.ResumeMovement();
+        movementController?.SetRandomDestination();
+        Deselect();
+    }
+
+    // 펫을 선택하는 함수
+    // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
+
+    // 펫을 선택하는 함수
+    private void Select()
+    {
+        if (petController.isAnimationLocked)
+        {
+            return;
+        }
+
+        // ★★★ 수정: isSelected 플래그만 true로 설정합니다. ★★★
+        // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
+        petController.isSelected = true;
+        isSelected = true;
+        selectionTimer = 0f;
+
+        touchCount++;
+        lastTouchTime = Time.time;
+
+        var animController = petController.GetComponent<PetAnimationController>();
+
+        // 터치 횟수에 따른 특수 애니메이션 재생 로직은 유지합니다. (이것은 일회성 이벤트이므로)
+        if (touchCount >= maxTouchCount) // 10번 이상 터치 (죽음)
+        {
+            StartCoroutine(animController.PlaySpecialAnimation(8, true));
+            touchCount = 0;
+        }
+        else if (touchCount >= 5) // 5번 이상 터치 (공격)
+        {
+            // 공격 애니메이션은 카메라를 본 후에 재생되어야 하므로, isSelected가 활성화 된 후 잠시 기다렸다가 실행합니다.
+            StartCoroutine(AttackAfterDelay());
+        }
+        else // 일반 터치
+        {
+            if (nameTextObject != null)
+                nameTextObject.SetActive(true);
         }
     }
-    var animController = petController.GetComponent<PetAnimationController>();
-    animController?.StopContinuousAnimation();
-
-    if (petController.animator != null)
-    {
-        petController.animator.SetInteger("animation", 0);
-    }
-
-    touchCount++;
-    lastTouchTime = Time.time;
-
-    // 터치 횟수에 따라 다른 애니메이션을 호출합니다.
-    if (touchCount >= maxTouchCount) // 10번 이상 터치 (죽음)
-    {
-        StartCoroutine(animController.PlaySpecialAnimation(8, true));
-        touchCount = 0; 
-    }
-    else if (touchCount >= 5) // 5번 이상 터치 (공격)
-    {
-        // ★★★ 수정된 부분 ★★★
-        // 직접 애니메이션을 재생하는 대신, 순서가 보장된 새 코루틴을 호출합니다.
-        StartCoroutine(AttackSequence());
-    }
-    else // 일반 터치
-    {
-        if (nameTextObject != null)
-            nameTextObject.SetActive(true);
-
-        if (!isHolding)
-            StartCoroutine(WaitForStopAndLookAtCamera());
-    }
-}
-
     // 펫 선택을 해제하는 함수
     private void Deselect()
-{
-    petController.isSelected = false;
-    isSelected = false;
-
-    if (!isHolding)
     {
-        if (nameTextObject != null)
-            nameTextObject.SetActive(false);
+        // ★★★ 수정: isSelected 플래그만 false로 설정합니다. ★★★
+        // AI 시스템이 이 상태 변화를 감지하고 자동으로 WanderAction으로 전환할 것입니다.
+        petController.isSelected = false;
+        isSelected = false;
 
-        StopAllCoroutines();
-
-        // ★ 나무에 올라가 있을 때는 특별 처리
-        if (petController.isClimbingTree)
+        if (!isHolding)
         {
-            // 나무에서 쉬기 애니메이션으로 돌아가기
+            if (nameTextObject != null)
+                nameTextObject.SetActive(false);
+
+            StopAllCoroutines();
+
+            if (petController.isClimbingTree)
+            {
+                var animController = petController.GetComponent<PetAnimationController>();
+                animController?.SetContinuousAnimation(5);
+            }
+        }
+    }
+
+    // 5번 터치 시 공격 애니메이션을 위한 새로운 코루틴
+    private IEnumerator AttackAfterDelay()
+    {
+        // SelectedAction이 활성화되어 카메라를 어느정도 바라볼 시간을 줍니다.
+        yield return new WaitForSeconds(0.5f);
+
+        // isSelected 상태가 여전히 유효할 때만 공격을 실행합니다.
+        if (isSelected)
+        {
             var animController = petController.GetComponent<PetAnimationController>();
-            animController?.SetContinuousAnimation(5); // 휴식 애니메이션
-        }
-        else
-        {
-            // 일반적인 이동 재개
-            StartCoroutine(DelayedMovementResume());
+            if (animController != null)
+            {
+                yield return StartCoroutine(animController.PlaySpecialAnimation(6, false));
+            }
         }
     }
-}
-/// <summary>
-/// 펫이 카메라를 바라본 후 공격 애니메이션을 순서대로 재생하는 코루틴입니다.
-/// </summary>
-private IEnumerator AttackSequence()
-{
-    // 1. 펫이 멈추고 카메라를 바라보는 동작이 끝날 때까지 기다립니다.
-    yield return StartCoroutine(WaitForStopAndLookAtCamera());
 
-    // 2. 카메라를 모두 바라본 후, 공격 애니메이션을 재생합니다.
-    var animController = petController.GetComponent<PetAnimationController>();
-    if (animController != null)
-    {
-        // PlaySpecialAnimation 내부에서 입력 잠금을 처리하므로 그대로 호출합니다.
-        yield return StartCoroutine(animController.PlaySpecialAnimation(6, false));
-    }
-}
-    // ★ 새로운 코루틴 추가: 애니메이션 정상화 후 이동 재개
-    private IEnumerator DelayedMovementResume()
-    {
-        // ★ 먼저 agent 상태 확인
-        if (petController.agent != null && petController.agent.enabled)
-        {
-            // ★ 기존 경로가 남아있을 수 있으므로 한 번 더 초기화
-            petController.agent.ResetPath();
-            yield return new WaitForSeconds(0.1f);
-        }
-
-        // 이동 재개
-        petController.ResumeMovement();
-
-        // ★ 새 목적지 설정 전 약간 더 대기
-        yield return new WaitForSeconds(0.3f);
-
-        // ★ 새로운 목적지 설정
-        var movementController = petController.GetComponent<PetMovementController>();
-        movementController?.SetRandomDestination();
-    }
     // 특별한 애니메이션을 재생하는 코루틴
     private IEnumerator TriggerSpecialAnimation(int animationNumber)
     {
@@ -667,54 +623,6 @@ private IEnumerator AttackSequence()
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(animationNumber));
     }
 
-    // 펫이 멈추고 카메라를 바라볼 때까지 기다리는 코루틴
-  private IEnumerator WaitForStopAndLookAtCamera()
-{
-    // ★ 즉시 Idle 애니메이션으로 전환
-    if (petController.animator != null && !petController.isClimbingTree)
-    {
-        petController.animator.SetInteger("animation", 0);
-    }
-    
-    // ★ 나무에 올라가 있지 않을 때만 에이전트 속도 체크
-    if (!petController.isClimbingTree)
-    {
-        while (petController.agent != null && 
-               petController.agent.enabled && 
-               petController.agent.velocity.magnitude > 0.01f)
-        {
-            yield return null;
-        }
-    }
 
-    // 펫이 멈추면 부드럽게 카메라를 바라보도록 하는 코루틴 시작
-    yield return StartCoroutine(SmoothLookAtCamera());
-}
-    // 펫이 부드럽게 카메라를 바라보도록 하는 코루틴
-    private IEnumerator SmoothLookAtCamera()
-    {
-        if (Camera.main != null && petController.petModelTransform != null)
-        {
-            // 카메라에서 펫으로의 방향 벡터 계산
-            Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
-            directionToCamera.y = 0; // Y축 회전은 무시
 
-            if (directionToCamera != Vector3.zero)
-            {
-                // 목표 회전값 계산
-                Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
-
-                // 부모 오브젝트(PetController)를 회전시킴
-                while (Quaternion.Angle(petController.transform.rotation, targetRotation) > 1f && isSelected)
-                {
-                    petController.transform.rotation = Quaternion.Slerp(
-                        petController.transform.rotation,
-                        targetRotation,
-                        Time.deltaTime * petController.rotationSpeed * 2f // 조금 더 빠르게
-                    );
-                    yield return null;
-                }
-            }
-        }
-    }
 }

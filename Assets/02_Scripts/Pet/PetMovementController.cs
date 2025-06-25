@@ -117,39 +117,38 @@ public class PetMovementController : MonoBehaviour
         }
         DecideNextBehavior();
     }
-    /// <summary>
-    /// ★★★ 추가: 배회 행동의 핵심 로직을 담당하는 새로운 public 메서드입니다.
-    /// WanderAction의 OnUpdate에서 매 프레임 호출됩니다.
-    /// </summary>
-    public void ExecuteWanderBehavior()
+    // PetMovementController.cs
+
+public void ExecuteWanderBehavior()
+{
+    // 이 메서드가 호출되었다는 것은 WanderAction이 활성화되었다는 의미이므로,
+    // 아래의 중복 검사는 제거하거나 간소화할 수 있습니다.
+    /* if (petController.isClimbingTree || petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering)
     {
-        // 나무 위에 있거나, 선택/들기/상호작용 등 다른 행동에 의해 잠겨있으면 배회하지 않습니다.
-        // 이 검사는 GetPriority()에서 이미 처리되지만, 여기서 한 번 더 방어 코드를 넣는 것도 좋습니다.
-        if (petController.isClimbingTree || petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering)
-        {
-            ForceStopCurrentBehavior(); // 현재 배회 행동을 즉시 중지
-            return;
-        }
-
-        // NavMeshAgent가 준비되지 않았다면 실행하지 않습니다.
-        if (!IsAgentReady()) return;
-
-        // 행동 전환 타이머를 업데이트합니다.
-        behaviorTimer += Time.deltaTime;
-
-        // 현재 이동 중(걷기 또는 뛰기)이라면 목표 지점 도착 여부를 체크합니다.
-        if (!petController.agent.isStopped &&
-            (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
-        {
-            HandleMovement();
-        }
-
-        // 다음 행동을 결정할 시간이 되었는지 체크합니다.
-        if (behaviorTimer >= nextBehaviorChange)
-        {
-            DecideNextBehavior();
-        }
+        ForceStopCurrentBehavior(); 
+        return;
     }
+    */
+
+    // NavMeshAgent 준비 여부만 체크하는 것으로 충분합니다.
+    if (!IsAgentReady()) return;
+
+    // 행동 전환 타이머를 업데이트합니다.
+    behaviorTimer += Time.deltaTime;
+
+    // 현재 이동 중(걷기 또는 뛰기)이라면 목표 지점 도착 여부를 체크합니다.
+    if (!petController.agent.isStopped &&
+        (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+    {
+        HandleMovement();
+    }
+
+    // 다음 행동을 결정할 시간이 되었는지 체크합니다.
+    if (behaviorTimer >= nextBehaviorChange)
+    {
+        DecideNextBehavior();
+    }
+}
 
     private IEnumerator ForceClimbDownFromTree()
     {
@@ -304,6 +303,14 @@ public class PetMovementController : MonoBehaviour
             currentBehaviorCoroutine = null;
         }
 
+        // ★★★ 추가: 진행 중이던 배회 관련 애니메이션(걷기, 휴식 등)을 확실히 중지시킵니다. ★★★
+        var animController = petController.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
+
+        // 배회 상태를 Idle로 초기화하고 타이머를 리셋합니다.
         currentBehaviorState = BehaviorState.Idle;
         behaviorTimer = 0f;
     }

@@ -119,7 +119,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
     [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
     [HideInInspector] public bool isActionLocked = false;
-    [HideInInspector] public Vector3 gatherTargetPosition; 
+    [HideInInspector] public Vector3 gatherTargetPosition;
 
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
@@ -233,56 +233,58 @@ public class PetController : MonoBehaviour
     _allActions = new List<IPetAction>
     {
         // === 최상위 우선순위: 외부 명령 ===
-        new GatherAction(this),                  // isGathering 플래그로 제어
-        new InteractWithPetAction(this),         // isInteracting 플래그로 제어
+        new GatherAction(this),                  // 모이기 [우선순위: 20.0]
+        new InteractWithPetAction(this),         // 펫 간 상호작용 [우선순위: 10.0]
+
+        // ★★★ 추가: 플레이어 선택 행동 ★★★
+        new SelectedAction(this),                // 플레이어 선택 [우선순위: 5.0]
 
         // === 중간 우선순위: 긴급한 욕구 ===
-        new EatAction(this, feedingController),
-        new SleepAction(this, sleepingController),
+        new EatAction(this, feedingController),      // 식사 [우선순위: ~1.0]
+        new SleepAction(this, sleepingController),   // 수면 [우선순위: ~1.0]
 
         // === 낮은 우선순위: 자율 행동 ===
-        new ClimbTreeAction(this, treeClimbingController),
+        new ClimbTreeAction(this, treeClimbingController), // 나무 오르기 [우선순위: 0.3]
 
         // === 최하위 우선순위: 기본 행동 ===
-        new WanderAction(this, movementController)
+        new WanderAction(this, movementController)   // 배회 [우선순위: 0.1]
     };
 
     // 기본 행동 설정
     _currentAction = _allActions.Find(a => a is WanderAction);
     _currentAction?.OnEnter();
-        Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
-    }
-
+    Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
+}
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
-{
-    // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
-    // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
-      interactionController?.HandleInput();
+    {
+        // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
+        // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
+        interactionController?.HandleInput();
         if (isHolding || isActionLocked) return;
-    
-    // 2. 환경 상태 업데이트 (매 프레임)
-    waterBehaviorController?.CheckWaterArea();
 
-    // 3. AI 의사결정 (주기적으로)
-    _aiUpdateTimer += Time.deltaTime;
-    if (_aiUpdateTimer >= _aiUpdateInterval)
-    {
-        UpdateAI();
-        _aiUpdateTimer = 0f;
-    }
+        // 2. 환경 상태 업데이트 (매 프레임)
+        waterBehaviorController?.CheckWaterArea();
 
-    // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
-    _currentAction?.OnUpdate(); 
+        // 3. AI 의사결정 (주기적으로)
+        _aiUpdateTimer += Time.deltaTime;
+        if (_aiUpdateTimer >= _aiUpdateInterval)
+        {
+            UpdateAI();
+            _aiUpdateTimer = 0f;
+        }
 
-    // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
-    // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
-    // 하지만 현재 구조를 유지한다면 그대로 둬도 괜찮습니다.
-    if (!isGatheringAnimationOverride)
-    {
-        animationController?.UpdateAnimation();
-    }
-    // HandleRotation();
+        // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
+        _currentAction?.OnUpdate();
+
+        // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
+        // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
+        // 하지만 현재 구조를 유지한다면 그대로 둬도 괜찮습니다.
+        if (!isGatheringAnimationOverride)
+        {
+            animationController?.UpdateAnimation();
+        }
+        // HandleRotation();
 
         // if (petModelTransform != null)
         // {
@@ -294,7 +296,7 @@ public class PetController : MonoBehaviour
     /// <summary>
     /// AI의 핵심 의사결정 루프. 매 프레임 호출됩니다.
     /// </summary>
-    private void UpdateAI()
+    public void UpdateAI()
     {
         if (isActionLocked) return;
 
@@ -320,21 +322,21 @@ public class PetController : MonoBehaviour
 
         // _currentAction?.OnUpdate(); // 이 줄을 Update() 메서드로 이동
     }
-   public void InterruptCurrentActionFor(InteractionType type)
-{
-    if (_currentAction != null)
+    public void InterruptCurrentActionFor(InteractionType type)
     {
-        Debug.Log($"{petName}의 현재 행동 '{_currentAction.GetType().Name}'이 '{type}'으로 인해 중단됩니다.");
-        // isInteracting, isGathering 등의 플래그가 설정되면
-        // 다음 UpdateAI에서 자동으로 새 Action으로 전환되므로 OnExit()만 호출해도 충분합니다.
-        _currentAction.OnExit();
-        
-        // 특정 Action으로 즉시 전환해야 할 경우
-        // IPetAction newAction = _allActions.Find(a => a is InteractWithPetAction);
-        // _currentAction = newAction;
-        // _currentAction.OnEnter();
+        if (_currentAction != null)
+        {
+            Debug.Log($"{petName}의 현재 행동 '{_currentAction.GetType().Name}'이 '{type}'으로 인해 중단됩니다.");
+            // isInteracting, isGathering 등의 플래그가 설정되면
+            // 다음 UpdateAI에서 자동으로 새 Action으로 전환되므로 OnExit()만 호출해도 충분합니다.
+            _currentAction.OnExit();
+
+            // 특정 Action으로 즉시 전환해야 할 경우
+            // IPetAction newAction = _allActions.Find(a => a is InteractWithPetAction);
+            // _currentAction = newAction;
+            // _currentAction.OnEnter();
+        }
     }
-}
     // ★ 물 속도 조정을 위한 public 메소드 추가
     public void AdjustSpeedForWater()
     {

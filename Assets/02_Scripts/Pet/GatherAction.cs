@@ -29,39 +29,44 @@ public class GatherAction : IPetAction
         return _pet.isGathering ? 20.0f : 0f;
     }
 
-    public void OnEnter()
+    // OnEnter 메서드를 아래와 같이 수정합니다.
+public void OnEnter()
+{
+    // OnEnter 자체는 코루틴일 수 없으므로, PetController에서 코루틴을 시작하도록 합니다.
+    _pet.StartCoroutine(EnterSequence());
+}
+
+private System.Collections.IEnumerator EnterSequence()
+{
+    Debug.Log($"{_pet.petName}: 모이기 행동 시작.");
+    _hasArrived = false;
+    _pet.isGathered = false; // 도착 상태 초기화
+
+    // 나무에 올라가고 있었다면, 강제로 내려오게 합니다.
+    if (_pet.isClimbingTree)
     {
-        Debug.Log($"{_pet.petName}: 모이기 행동 시작.");
-        _hasArrived = false;
-        _pet.isGathered = false; // 도착 상태 초기화
+        var treeClimber = _pet.GetComponent<PetTreeClimbingController>();
+        treeClimber?.ForceCancelClimbing();
 
-        // 나무에 올라가고 있었다면, 강제로 내려오게 합니다.
-        if (_pet.isClimbingTree)
-        {
-            var movementController = _pet.GetComponent<PetMovementController>();
-            if (movementController != null)
-            {
-                movementController.ForceCancelClimbing();
-            }
-            // ForceCancelClimbing()이 NavMeshAgent를 재활성화하는데 시간이 걸릴 수 있으므로
-            // 다음 로직이 안전하게 실행되도록 코루틴으로 처리하거나, 약간의 지연을 주는 것이 좋습니다.
-            // 이 예제에서는 즉시 실행하지만, 문제가 발생하면 지연 처리를 고려해야 합니다.
-        }
-        
-        if (_agent != null && _agent.enabled)
-        {
-            // ★★★ 모이기 행동의 실제 로직을 여기서 책임집니다. ★★★
-            _agent.speed = _pet.baseSpeed * SPEED_MULTIPLIER;
-            _agent.angularSpeed = _pet.baseAngularSpeed * ANGULAR_SPEED_MULTIPLIER;
-            _agent.acceleration = _pet.baseAcceleration * ACCELERATION_MULTIPLIER;
-            _agent.stoppingDistance = _pet.baseStoppingDistance * STOPPING_DISTANCE_MULTIPLIER;
-            
-            _agent.SetDestination(_pet.gatherTargetPosition);
-            _agent.isStopped = false;
-
-            if (_pet.animator) _pet.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
-        }
+        // NavMeshAgent가 다시 활성화되고 안정될 시간을 벌어줍니다.
+        yield return null; 
     }
+    
+    if (_agent != null && _agent.enabled)
+    {
+        // ★★★ 모이기 행동의 실제 로직을 여기서 책임집니다. ★★★
+        _agent.speed = _pet.baseSpeed * SPEED_MULTIPLIER;
+        _agent.angularSpeed = _pet.baseAngularSpeed * ANGULAR_SPEED_MULTIPLIER;
+        _agent.acceleration = _pet.baseAcceleration * ACCELERATION_MULTIPLIER;
+        _agent.stoppingDistance = _pet.baseStoppingDistance * STOPPING_DISTANCE_MULTIPLIER;
+        
+        _agent.SetDestination(_pet.gatherTargetPosition);
+        _agent.isStopped = false;
+
+        if (_pet.animator) _pet.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
+    }
+}
+
 
     public void OnUpdate()
     {
@@ -81,25 +86,26 @@ public class GatherAction : IPetAction
     }
 
     public void OnExit()
+{
+    Debug.Log($"{_pet.petName}: 모이기 행동 종료.");
+    _pet.isGathered = false; 
+    
+    if (_agent != null && _agent.enabled)
     {
-        Debug.Log($"{_pet.petName}: 모이기 행동 종료.");
-        _pet.isGathered = false; // 모이기 상태 완전 종료
-        
-        // 행동이 끝날 때, 펫의 속도를 원래대로 복구합니다.
-        if (_agent != null && _agent.enabled)
-        {
-            _agent.speed = _pet.baseSpeed;
-            _agent.angularSpeed = _pet.baseAngularSpeed;
-            _agent.acceleration = _pet.baseAcceleration;
-            _agent.stoppingDistance = _pet.baseStoppingDistance;
-            
-            // 다른 행동으로 바로 이어질 수 있도록 isStopped를 false로 설정
-            _agent.isStopped = false;
-        }
-
-        // 카메라 바라보기 코루틴 중단
-        _pet.StopCoroutine(LookAtCameraCoroutine());
+        _agent.speed = _pet.baseSpeed;
+        _agent.angularSpeed = _pet.baseAngularSpeed;
+        _agent.acceleration = _pet.baseAcceleration;
+        _agent.stoppingDistance = _pet.baseStoppingDistance;
+        _agent.isStopped = false;
     }
+
+    // ★★★ 추가: 행동이 종료되면, 뛰기 애니메이션을 확실하게 중지하고 기본 상태로 돌립니다. ★★★
+    _pet.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+
+     // EnterSequence 코루틴이 실행 중일 수 있으므로 중지시킵니다.
+    _pet.StopCoroutine(EnterSequence()); 
+    _pet.StopCoroutine(LookAtCameraCoroutine());
+}
 
     private System.Collections.IEnumerator LookAtCameraCoroutine()
     {
