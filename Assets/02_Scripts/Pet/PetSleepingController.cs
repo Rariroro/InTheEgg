@@ -32,81 +32,96 @@ public class PetSleepingController : MonoBehaviour
         sleepingAreaLayer = LayerMask.GetMask("SleepingArea");
     }
 
-    public void UpdateSleeping()
+   /// <summary>
+    /// ★★★ 추가: SleepAction의 OnEnter에서 호출될 메서드입니다.
+    /// 잠잘 곳을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
+    /// </summary>
+    public bool TryStartSleepingSequence()
     {
-
-                if (petController.isActionLocked) return;
-
-        // 공통 방해 조건 (상호작용, 들기 등)
-        if (petController.isGathering || petController.isInteracting || petController.isHolding ||
-            (petController.GetComponent<PetFeedingController>() != null && petController.GetComponent<PetFeedingController>().IsEatingOrSeeking()))
+        // 다른 중요 행동 중이면 시작하지 않음
+        if (petController.isActionLocked || petController.isGathering || petController.isInteracting || petController.isHolding || isSleeping)
         {
-            if (isSleeping) InterruptSleep();
-            return;
+            return false;
         }
 
-        // 이미 자고 있다면 로직 중단
-        if (isSleeping) return;
+        if (IsSleepingOrSeeking()) return true; // 이미 잠을 자러 가는 중
 
-        // 졸음 수치 증가
+        // 졸음 수치 증가 (상태 업데이트는 Action에서 담당하는게 더 좋지만, 편의상 여기에 유지)
         petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
 
-        // ★★★ 'Tree' 서식지 펫을 위한 특별 로직 분기 ★★★
+        if (petController.sleepiness < 70f) return false;
+
+        // 'Tree' 서식지 펫 로직
         if (petController.habitat == PetAIProperties.Habitat.Tree)
         {
-            HandleTreePetSleeping();
-            return; // Tree 펫 로직을 수행했으면 아래 일반 로직은 건너뜀
+            return HandleTreePetSleeping(); // 잠잘 나무를 찾거나, 이미 나무 위면 자기 시작
         }
 
-        // --- 기존 수면 로직 (Tree 서식지가 아닌 펫들) ---
-        if (petController.sleepiness > 70f && targetSleepingArea == null)
+        // 일반 펫 로직
+        if (targetSleepingArea == null)
         {
             if (petController.habitat == PetAIProperties.Habitat.Field)
             {
                 StartCoroutine(SleepInPlace(true));
-                return;
+                return true; // 들판 펫은 바로 잠
             }
-            DetectSleepingArea();
+            DetectSleepingArea(); // 잠잘 곳 탐색
         }
-
+        
+        // 강제 수면 체크
         float personalityThreshold = GetPersonalityForceSleepThreshold();
-        if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null)
+        if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null && !isSeekingTreeToSleep)
         {
             StartCoroutine(ForceSleepAtCurrentLocation());
+            return true; // 강제로 잠
         }
 
-        HandleMovementToTarget();
+        return targetSleepingArea != null;
     }
 
     /// <summary>
-    /// ★★★ 새로 추가: 'Tree' 서식지 펫의 수면 로직을 처리합니다.
+    /// ★★★ 추가: SleepAction의 OnUpdate에서 호출될 메서드입니다.
+    /// (지상 펫 전용) 목표에 도착했는지 확인하고 잠자기 코루틴을 시작합니다.
     /// </summary>
-    private void HandleTreePetSleeping()
+    public void UpdateMovementToSleep()
+    {
+        // 나무 펫은 코루틴이 모든 것을 처리하므로 이 메서드는 지상 펫에게만 의미가 있습니다.
+        if (petController.habitat == PetAIProperties.Habitat.Tree) return;
+        
+        HandleMovementToTarget();
+    }
+    
+
+      /// <summary>
+    /// ★★★ 수정: 메서드 반환 타입을 void에서 bool로 변경하고, 행동 시작 시 true를 반환하도록 수정합니다.
+    /// </summary>
+    private bool HandleTreePetSleeping()
     {
         // 졸음이 70%를 넘었을 때 행동 개시
         if (petController.sleepiness > 70f)
         {
-            // 1. 이미 나무에 올라가 쉬고 있는 경우
             if (petController.isClimbingTree)
             {
-                // 그 자리에서 바로 잠자기 시작
                 StartCoroutine(SleepInTree());
+                return true; // 행동 시작
             }
-            // 2. 땅에 있고, 아직 나무를 찾기 시작하지 않은 경우
             else if (!isSeekingTreeToSleep)
             {
-                // 잠을 자기 위해 나무를 찾고 올라가는 전체 과정을 시작
                 StartCoroutine(FindAndClimbTreeToSleep());
+                return true; // 행동 시작
             }
         }
 
-        // 3. 나무를 못 찾은 상태에서 졸음이 한계에 도달한 경우
+        // 나무를 못 찾은 상태에서 졸음이 한계에 도달한 경우
         float personalityThreshold = GetPersonalityForceSleepThreshold();
         if (petController.sleepiness >= personalityThreshold && !petController.isClimbingTree && !isSeekingTreeToSleep)
         {
             Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
-            StartCoroutine(ForceSleepAtCurrentLocation()); // 불완전 회복 수면
+            StartCoroutine(ForceSleepAtCurrentLocation());
+            return true; // 행동 시작
         }
+
+        return false; // 아무 행동도 시작하지 않음
     }
 
     /// <summary>
@@ -277,9 +292,9 @@ public IEnumerator SleepInTree()
         petController.GetComponent<PetMovementController>().SetRandomDestination();
     }
 
+    // IsSleepingOrSeeking() 메서드는 계속 유용하게 사용됩니다.
     public bool IsSleepingOrSeeking()
     {
-        // ★★★ 나무 찾는 상태도 포함
         return isSleeping || (targetSleepingArea != null) || isSeekingTreeToSleep;
     }
     

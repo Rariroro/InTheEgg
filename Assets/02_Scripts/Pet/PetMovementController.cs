@@ -117,114 +117,71 @@ public class PetMovementController : MonoBehaviour
         }
         DecideNextBehavior();
     }
-
-    // ────────────────────────────────────────────────────────────────────
-    // 3) 매 프레임 호출
-    // ────────────────────────────────────────────────────────────────────
-    public void UpdateMovement()
+    /// <summary>
+    /// ★★★ 추가: 배회 행동의 핵심 로직을 담당하는 새로운 public 메서드입니다.
+    /// WanderAction의 OnUpdate에서 매 프레임 호출됩니다.
+    /// </summary>
+    public void ExecuteWanderBehavior()
     {
-
-        // ★★★ 추가: 나무 위에 있을 때 배고픔 체크 ★★★
-    if (petController.isClimbingTree && !treeClimbingController.IsSearchingForTree())
-    {
-        // 배가 고프면 나무에서 내려오도록 처리
-        if (petController.hunger > 70f)
+        // 나무 위에 있거나, 선택/들기/상호작용 등 다른 행동에 의해 잠겨있으면 배회하지 않습니다.
+        // 이 검사는 GetPriority()에서 이미 처리되지만, 여기서 한 번 더 방어 코드를 넣는 것도 좋습니다.
+        if (petController.isClimbingTree || petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering)
         {
-            Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려오기 시작합니다.");
-            StartCoroutine(ForceClimbDownFromTree());
-            return;
-        }
-        return; // 배가 안 고프면 계속 나무에 있음
-    }
-        if (petController.isActionLocked) return;
-
-        // 들고 있는 상태면 즉시 리턴
-        if (petController.isHolding) return;
-
-        // 물 영역 체크 위임
-        // waterBehaviorController.CheckWaterArea();
-        var sleepingController = petController.GetComponent<PetSleepingController>();
-        if (sleepingController != null && sleepingController.IsSleepingOrSeeking())
-        {
-            return;
-        }
-        
-
-        // 나무에 올라가 있으면 다른 움직임 처리 스킵
-        if (petController.isClimbingTree)
-        {
-            if (!petController.isSelected)
-            {
-                return;
-            }
+            ForceStopCurrentBehavior(); // 현재 배회 행동을 즉시 중지
             return;
         }
 
-        // 모으기 모드면 즉시 리턴
-        if (petController.isGathering)
-        {
-            if (petController.isGathered && Camera.main != null)
-            {
-                Vector3 dir = Camera.main.transform.position - transform.position;
-                dir.y = 0f;
-                if (dir.magnitude > 0.1f)
-                {
-                    Quaternion target = Quaternion.LookRotation(dir);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, target,
-                        petController.rotationSpeed * Time.deltaTime);
-                }
-            }
-            return;
-        }
-
+        // NavMeshAgent가 준비되지 않았다면 실행하지 않습니다.
         if (!IsAgentReady()) return;
 
+        // 행동 전환 타이머를 업데이트합니다.
         behaviorTimer += Time.deltaTime;
 
-        // 현재 행동에 따른 처리
+        // 현재 이동 중(걷기 또는 뛰기)이라면 목표 지점 도착 여부를 체크합니다.
         if (!petController.agent.isStopped &&
             (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
         {
             HandleMovement();
         }
 
-        // 행동 전환 시점 도달 체크
+        // 다음 행동을 결정할 시간이 되었는지 체크합니다.
         if (behaviorTimer >= nextBehaviorChange)
         {
             DecideNextBehavior();
         }
-
-        // 모델 위치와 회전을 NavMeshAgent와 동기화
-        if (petController.petModelTransform != null)
-        {
-            petController.petModelTransform.position = transform.position;
-        }
     }
-// ★★★ 새로운 메서드 추가 ★★★
-private IEnumerator ForceClimbDownFromTree()
-{
-    if (!petController.isClimbingTree) yield break;
-    
-    // 애니메이션 정지
-    var animController = petController.GetComponent<PetAnimationController>();
-    animController?.StopContinuousAnimation();
-    
-    // 나무에서 내려오기
-    yield return StartCoroutine(treeClimbingController.ClimbDownTree());
-    
-    // 상태 초기화
-    petController.isClimbingTree = false;
-    petController.currentTree = null;
-    
-    // 음식 찾기 시작하도록 다음 행동 결정
-    DecideNextBehavior();
-}
+
+    private IEnumerator ForceClimbDownFromTree()
+    {
+        if (!petController.isClimbingTree) yield break;
+
+        // 애니메이션 정지
+        var animController = petController.GetComponent<PetAnimationController>();
+        animController?.StopContinuousAnimation();
+
+        // 나무에서 내려오기
+        yield return StartCoroutine(treeClimbingController.ClimbDownTree());
+
+        // 상태 초기화
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+
+        // 음식 찾기 시작하도록 다음 행동 결정
+        DecideNextBehavior();
+    }
     // 헬퍼 메서드
     private bool IsAgentReady()
     {
         return petController.agent != null &&
                petController.agent.enabled &&
                petController.agent.isOnNavMesh;
+    }
+
+    // HandleMovement는 ExecuteWanderBehavior에서만 호출되므로 private으로 유지해도 좋습니다.
+    private void HandleMovement()
+    {
+        if (!petController.agent.pathPending && petController.agent.remainingDistance < 1f)
+            SetRandomDestination();
     }
 
     // 나무 타기 강제 취소 (외부 호출용)
@@ -239,33 +196,21 @@ private IEnumerator ForceClimbDownFromTree()
     public void DecideNextBehavior()
     {
 
-        // ★★★ 추가: 나무를 찾고 있다면, 새로운 행동을 결정하지 않습니다.
-        if (treeClimbingController != null && treeClimbingController.IsSearchingForTree())
-        {
-            behaviorTimer = 0f;
-            return;
-        }
-        if (petController.isSelected)
-        {
-            behaviorTimer = 0f;
-            return;
-        }
+        // GetPriority()에서 이미 확인된 조건들이지만, 안전을 위해 유지하거나 간소화 할 수 있습니다.
+        if (treeClimbingController != null && treeClimbingController.IsSearchingForTree()) return;
+        if (petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering) return;
+        if (petController.isClimbingTree) return;
 
+        // 욕구 관련 컨트롤러 확인
         var feedingController = petController.GetComponent<PetFeedingController>();
         var sleepingController = petController.GetComponent<PetSleepingController>();
-
-        if (petController.isClimbingTree)
-        {
-            behaviorTimer = 0f;
-            return;
-        }
-
         if ((feedingController != null && feedingController.IsEatingOrSeeking()) ||
             (sleepingController != null && sleepingController.IsSleepingOrSeeking()))
         {
-            behaviorTimer = 0f;
             return;
         }
+
+        if (!IsAgentReady()) return;
 
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
             return;
@@ -377,11 +322,7 @@ private IEnumerator ForceClimbDownFromTree()
         catch { /* 예외 무시 */ }
     }
 
-    private void HandleMovement()
-    {
-        if (!petController.agent.pathPending && petController.agent.remainingDistance < 1f)
-            SetRandomDestination();
-    }
+
 
     private IEnumerator PerformJump()
     {
@@ -497,4 +438,5 @@ private IEnumerator ForceClimbDownFromTree()
             }
         }
     }
+
 }

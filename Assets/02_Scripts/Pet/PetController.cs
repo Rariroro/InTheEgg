@@ -123,7 +123,7 @@ public class PetController : MonoBehaviour
 
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
-    private float _aiUpdateInterval = 0.2f; // 1초에 5번만 AI 의사결정을 하도록 설정 (조절 가능)
+    private float _aiUpdateInterval = 0.5f; // 1초에 2번만 AI 의사결정을 하도록 설정 (조절 가능)
     // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
     public PetType PetType
     {
@@ -163,9 +163,6 @@ public class PetController : MonoBehaviour
             baseStoppingDistance = stoppingDistance;
         }
 
-        // ... 나머지 코드는 동일
-
-
         // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
         if (transform.childCount > 0)
         {
@@ -198,22 +195,15 @@ public class PetController : MonoBehaviour
             SetPetTypeFromName();
         }
 
-        // 디버그 로그에 펫 타입 출력
-        // Debug.Log($"[PetController] {gameObject.name} - 펫 타입: {petType}");
         // ★ waterBehaviorController를 movementController보다 먼저 초기화
         waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
         waterBehaviorController.Init(this);
-
-        // 각 기능별 컨트롤러 추가 및 초기화
         movementController = gameObject.AddComponent<PetMovementController>();
         movementController.Init(this);
-
         animationController = gameObject.AddComponent<PetAnimationController>();
         animationController.Init(this);
-
         interactionController = gameObject.AddComponent<PetInteractionController>();
         interactionController.Init(this);
-
         feedingController = gameObject.AddComponent<PetFeedingController>();
         feedingController.Init(this);
         sleepingController = gameObject.AddComponent<PetSleepingController>();

@@ -38,34 +38,54 @@ public class PetFeedingController : MonoBehaviour
 
 
 
-
-    public void UpdateFeeding()
+/// <summary>
+    /// ★★★ 추가: EatAction의 OnEnter에서 호출될 메서드입니다.
+    /// 먹을 것을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
+    /// </summary>
+    public bool TryStartFeedingSequence()
     {
+        // 다른 중요 행동 중이면 시작하지 않음
         if (petController.isInteracting || petController.isGathering || isEating || petController.isHolding ||
-            (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()))
+            (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()) ||
+            petController.isClimbingTree)
         {
-            return;
-        }
-   // ★ 추가: 나무 위에 있을 때는 음식 찾기 로직 실행하지 않음
-        if (petController.isClimbingTree)
-        {
-            return;
-        }
-        petController.hunger = Mathf.Clamp(petController.hunger + Time.deltaTime * hungerIncreaseRate, 0, 100);
-
-        if (petController.hunger > 70f && Time.time - lastDetectionTime > detectionInterval)
-        {
-            lastDetectionTime = Time.time;
-
-            if (targetFood == null && targetFeedingArea == null)
-            {
-                // ★★★ 수정: 레이어 기반 탐색 메서드 호출 ★★★
-                DetectNearbyFeedingSources();
-            }
+            return false;
         }
 
+        // 이미 목표가 있다면 성공으로 간주
+        if (targetFood != null || targetFeedingArea != null)
+        {
+            return true;
+        }
+
+        // 음식을 탐색합니다.
+        DetectNearbyFeedingSources();
+
+        // 탐색에 성공했다면 true를 반환합니다.
+        if (targetFood != null || targetFeedingArea != null)
+        {
+            ResetPetStateForSeeking();
+            Vector3 destination = (targetFood != null) ? targetFood.transform.position : targetFeedingArea.transform.position;
+            petController.agent.SetDestination(destination);
+            petController.ResumeMovement();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// ★★★ 추가: EatAction의 OnUpdate에서 호출될 메서드입니다.
+    /// 목표에 도착했는지 확인하고 먹기 코루틴을 시작합니다.
+    /// </summary>
+    public void UpdateMovementToFood()
+    {
+        if (isEating || petController.agent == null || !petController.agent.enabled) return;
+        
+        // HandleMovementToTarget의 로직을 그대로 사용합니다.
         HandleMovementToTarget();
     }
+  
 
     /// <summary>
     /// 캐시된 목록에서 자신의 식성에 맞는 가장 가까운 '음식 아이템'을 찾습니다.
@@ -141,21 +161,18 @@ public class PetFeedingController : MonoBehaviour
 
     private void HandleMovementToTarget()
     {
+        // (내용 변경 없음)
         if (isEating || petController.agent == null || !petController.agent.enabled) return;
 
-        // 목표가 '음식 아이템'인 경우
         if (targetFood != null)
         {
-            // 목표에 충분히 가까워졌으면 먹기 시작
             if (petController.agent.remainingDistance < eatingDistance && !petController.agent.pathPending)
             {
                 StartCoroutine(EatFoodCoroutine());
             }
         }
-        // 목표가 '먹이 장소'인 경우
         else if (targetFeedingArea != null)
         {
-            // 목표에 충분히 가까워졌으면 먹기 시작
             if (petController.agent.remainingDistance < feedingAreaDistance && !petController.agent.pathPending)
             {
                 StartCoroutine(EatAtAreaCoroutine());
@@ -250,9 +267,8 @@ public class PetFeedingController : MonoBehaviour
 
         transform.rotation = targetRotation; // 정확하게 목표 방향으로 설정
     }
-    public bool IsEatingOrSeeking()
+     public bool IsEatingOrSeeking()
     {
-        // 현재 밥을 먹고 있거나, 음식을 찾아가는 중이면 true를 반환
         return isEating || (targetFood != null) || (targetFeedingArea != null);
     }
     /// <summary>
