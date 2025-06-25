@@ -87,7 +87,8 @@ public class PetSleepingController : MonoBehaviour
     {
         // 나무 펫은 코루틴이 모든 것을 처리하므로 이 메서드는 지상 펫에게만 의미가 있습니다.
         if (petController.habitat == PetAIProperties.Habitat.Tree) return;
-        
+                petController.HandleRotation();
+
         HandleMovementToTarget();
     }
     

@@ -27,7 +27,18 @@ public class PetAnimationController : MonoBehaviour
     // PetAnimationController.cs
 
     public void UpdateAnimation()
-    { // ★ 추가: 선택되었거나 들고 있는 상태에서는 애니메이션 업데이트 스킵
+    { 
+         // ★★★ 추가: 물 깊이에 따른 모델의 Y좌표 오프셋을 처리하는 로직을 이곳으로 이전합니다. ★★★
+        if (petController.petModelTransform != null)
+        {
+            Vector3 targetLocalPos = new Vector3(0, petController.waterDepthOffset, 0);
+            petController.petModelTransform.localPosition = Vector3.Lerp(
+                petController.petModelTransform.localPosition, 
+                targetLocalPos, 
+                Time.deltaTime * 5f // 부드러운 전환을 위한 Lerp
+            );
+        }
+        // ★ 추가: 선택되었거나 들고 있는 상태에서는 애니메이션 업데이트 스킵
         if (petController.isSelected || petController.isHolding)
         {
             return;

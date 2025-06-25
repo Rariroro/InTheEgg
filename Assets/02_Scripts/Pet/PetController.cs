@@ -258,11 +258,8 @@ public class PetController : MonoBehaviour
 {
     // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
     // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
-    interactionController?.HandleInput();
-    if (isHolding) return;
-
-    // isActionLocked는 특별 애니메이션 재생 등에 사용되므로 유지합니다.
-    if (isActionLocked) return;
+      interactionController?.HandleInput();
+        if (isHolding || isActionLocked) return;
     
     // 2. 환경 상태 업데이트 (매 프레임)
     waterBehaviorController?.CheckWaterArea();
@@ -285,13 +282,13 @@ public class PetController : MonoBehaviour
     {
         animationController?.UpdateAnimation();
     }
-    HandleRotation();
+    // HandleRotation();
 
-        if (petModelTransform != null)
-        {
-            Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-            petModelTransform.localPosition = Vector3.Lerp(petModelTransform.localPosition, targetLocalPos, Time.deltaTime * 5f);
-        }
+        // if (petModelTransform != null)
+        // {
+        //     Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
+        //     petModelTransform.localPosition = Vector3.Lerp(petModelTransform.localPosition, targetLocalPos, Time.deltaTime * 5f);
+        // }
     }
 
     /// <summary>
@@ -351,7 +348,7 @@ public class PetController : MonoBehaviour
     /// 펫의 회전을 중앙에서 관리합니다.
     /// NavMeshAgent의 이동 방향(velocity)에 맞춰 펫을 부드럽게 회전시킵니다.
     /// </summary>
-    private void HandleRotation()
+    public void HandleRotation()
     {
         // 선택된 상태에서는 자동 회전하지 않음
         if (isGathered || isInteracting || isSelected)

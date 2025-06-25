@@ -38,6 +38,7 @@ public class WanderAction : IPetAction
     {
         // ★★★ 수정: PetMovementController의 새로운 핵심 메서드를 호출합니다. ★★★
         _moveController.ExecuteWanderBehavior();
+        _pet.HandleRotation();
     }
 
     public void OnExit()

@@ -82,6 +82,8 @@ public class PetFeedingController : MonoBehaviour
     {
         if (isEating || petController.agent == null || !petController.agent.enabled) return;
         
+                petController.HandleRotation();
+
         // HandleMovementToTarget의 로직을 그대로 사용합니다.
         HandleMovementToTarget();
     }
