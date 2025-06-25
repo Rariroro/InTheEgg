@@ -120,6 +120,7 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
     [HideInInspector] public bool isActionLocked = false;
     [HideInInspector] public Vector3 gatherTargetPosition;
+[HideInInspector] public BasePetInteraction currentInteractionLogic;
 
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
@@ -322,6 +323,16 @@ public class PetController : MonoBehaviour
 
         // _currentAction?.OnUpdate(); // 이 줄을 Update() 메서드로 이동
     }
+
+    public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
+{
+    isInteracting = true;
+    interactionPartner = partner;
+    currentInteractionLogic = interactionLogic;
+    // 여기서 UpdateAI()를 강제 호출하지 않습니다.
+    // 다음 AI 업데이트 주기 때 자연스럽게 InteractWithPetAction으로 전환될 것입니다.
+}
+
     public void InterruptCurrentActionFor(InteractionType type)
     {
         if (_currentAction != null)

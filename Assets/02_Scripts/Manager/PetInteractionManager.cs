@@ -426,21 +426,20 @@ public class PetInteractionManager : MonoBehaviour
 
    // PetInteractionManager.cs
 
+// 수정 제안 1: PetInteractionManager.cs
 private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
 {
-    // 1. 각 펫의 상호작용 상태를 설정합니다.
-    pet1.isInteracting = true;
-    pet1.interactionPartner = pet2;
-    // 2. AI 상태를 즉시 업데이트하여 InteractWithPetAction으로 전환시킵니다.
-    pet1.UpdateAI(); 
-    
-    pet2.isInteracting = true;
-    pet2.interactionPartner = pet1;
-    // 3. 상대 펫도 즉시 AI 상태를 업데이트합니다.
-    pet2.UpdateAI();
+    // PetController의 상태 플래그만 설정해줍니다.
+    // UpdateAI() 호출과 interaction.StartInteraction()을 제거합니다.
+    pet1.BeginInteraction(pet2, interaction);
+    pet2.BeginInteraction(pet1, interaction);
 
-    // 4. 실제 상호작용 로직을 시작합니다.
-    interaction.StartInteraction(pet1, pet2);
+    // 상호작용 기록
+    float currentTime = Time.time;
+    lastInteractionTime[pet1] = currentTime;
+    lastInteractionTime[pet2] = currentTime;
+    interactingPets[pet1] = pet2;
+    interactingPets[pet2] = pet1;
 }
 
 // 상호작용 종료 시 isInteracting 플래그를 false로 만들어줘야 합니다.

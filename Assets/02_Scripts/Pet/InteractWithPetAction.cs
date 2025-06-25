@@ -21,10 +21,14 @@ public class InteractWithPetAction : IPetAction
 
     public void OnEnter()
     {
-        // Debug.Log($"{_pet.petName}: 펫 간 상호작용 상태 진입.");
-        // PetInteractionManager가 이미 움직임을 제어하고 있으므로, 여기서는 특별한 로직이 필요 없을 수 있습니다.
-        // 또는 상호작용 시작 애니메이션 등을 여기서 제어할 수 있습니다.
+        Debug.Log($"{_pet.petName}: 펫 간 상호작용 상태 진입.");
         _pet.StopMovement();
+
+        // PetController에 저장된 상호작용 로직을 여기서 실행합니다.
+        if (_pet.currentInteractionLogic != null)
+        {
+            _pet.currentInteractionLogic.StartInteraction(_pet, _pet.interactionPartner);
+        }
     }
 
     public void OnUpdate()
