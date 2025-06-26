@@ -28,6 +28,11 @@ public class PetFeedingController : MonoBehaviour
     private int foodItemLayer;
     private int feedingAreaLayer;
 
+    // ★★★ 추가: 움직이는 목표 추적을 위한 변수들 ★★★
+    private float _chaseUpdateTimer = 0f;
+    private Vector3 _lastTargetPosition;
+    private const float CHASE_UPDATE_INTERVAL = 0.25f; // 0.25초마다 목표 위치 갱신
+    // ★★★ 여기까지 추가 ★★★
 
     public void Init(PetController controller)
     {
@@ -37,59 +42,79 @@ public class PetFeedingController : MonoBehaviour
     }
 
     /// <summary>
-    /// ★★★ 수정된 메서드: EatAction의 OnEnter에서 호출됩니다.
-    /// 먹을 것을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
+    /// ★★★ 수정된 메서드: 먹을 것을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
     /// </summary>
     public bool TryStartFeedingSequence()
     {
-        // 다른 중요 행동 중이면 시작하지 않음
         if (petController.isInteracting || petController.isGathering || isEating || petController.isHolding ||
             (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()) ||
             petController.isClimbingTree)
         {
             return false;
         }
-
-        // 이미 목표가 있다면 성공으로 간주
+        
         if (targetFood != null || targetFeedingArea != null)
         {
             return true;
         }
-
-        // 음식을 탐색하고, 성공하면 이 메서드가 목적지까지 설정해줍니다.
+        
         DetectNearbyFeedingSources();
 
-        // DetectNearbyFeedingSources가 성공적으로 타겟을 설정했는지 여부만 반환합니다.
-        // 여기서 SetDestination을 중복 호출하던 로직을 삭제했습니다.
+        // ★★★ 추가: 추적 관련 변수 초기화 ★★★
+        if (targetFood != null)
+        {
+            _chaseUpdateTimer = 0f;
+            _lastTargetPosition = targetFood.transform.position;
+        }
+        // ★★★ 여기까지 추가 ★★★
+
         return (targetFood != null || targetFeedingArea != null);
     }
 
     /// <summary>
-    /// UpdateMovementToFood는 그대로 유지합니다.
+    /// ★★★ 핵심 수정: 움직이는 음식을 실시간으로 추적하도록 로직 변경 ★★★
     /// </summary>
     public void UpdateMovementToFood()
     {
         if (isEating || petController.agent == null || !petController.agent.enabled) return;
+
+        // 목표가 '음식 아이템'일 경우에만 추적 로직을 실행합니다.
+        if (targetFood != null)
+        {
+            _chaseUpdateTimer += Time.deltaTime;
+            
+            // 지정된 간격마다 목표의 위치를 갱신합니다.
+            if (_chaseUpdateTimer >= CHASE_UPDATE_INTERVAL)
+            {
+                _chaseUpdateTimer = 0f;
+                
+                // 목표물이 실제로 움직였을 때만 경로를 재계산하여 성능을 아낍니다.
+                if (Vector3.Distance(targetFood.transform.position, _lastTargetPosition) > 0.1f)
+                {
+                    if (petController.agent.isOnNavMesh)
+                    {
+                        petController.agent.SetDestination(targetFood.transform.position);
+                        _lastTargetPosition = targetFood.transform.position;
+                    }
+                }
+            }
+        }
         
+        // 회전 및 도착 처리 로직은 그대로 유지합니다.
         petController.HandleRotation();
         HandleMovementToTarget();
     }
   
-
-    /// <summary>
-    /// ★★★ 수정된 메서드: NavMeshAgent 준비 상태를 먼저 확인합니다.
-    /// 레이어 마스크를 사용하여 주변의 음식 아이템과 먹이 장소를 한 번에 탐색합니다.
-    /// </summary>
+    // ... (이하 다른 메서드들은 수정할 필요 없음) ...
+    // DetectNearbyFeedingSources, FindClosestMatchingFood, ValidateCurrentTargets, 
+    // HandleMovementToTarget, EatFoodCoroutine 등은 그대로 유지합니다.
     private void DetectNearbyFeedingSources()
     {
-        // ★★★ 핵심 수정: NavMeshAgent가 준비되지 않았다면, 탐색을 시도하지 않고 즉시 종료합니다. ★★★
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
         {
-            // 에이전트가 준비되지 않아 먹이 탐색을 시작할 수 없습니다. 다음 AI 업데이트 시 다시 시도됩니다.
             return;
         }
 
-        // 1순위: 소모성 음식 아이템 탐색 (FoodItem 레이어)
         Collider[] foodColliders = Physics.OverlapSphere(transform.position, detectionRadius, foodItemLayer);
         GameObject nearestFood = FindClosestMatchingFood(foodColliders);
 
@@ -97,12 +122,11 @@ public class PetFeedingController : MonoBehaviour
         {
             ResetPetStateForSeeking();
             targetFood = nearestFood;
-            petController.agent.SetDestination(targetFood.transform.position); // 이 호출은 이제 안전합니다.
+            petController.agent.SetDestination(targetFood.transform.position); 
             petController.ResumeMovement();
-            return; // 음식 아이템을 찾았으면 즉시 종료
+            return;
         }
-
-        // 2순위: 음식 아이템을 못 찾았으면 환경 먹이 장소 탐색 (FeedingArea 레이어)
+        
         Collider[] areaColliders = Physics.OverlapSphere(transform.position, detectionRadius, feedingAreaLayer);
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
 
@@ -110,15 +134,10 @@ public class PetFeedingController : MonoBehaviour
         {
             ResetPetStateForSeeking();
             targetFeedingArea = nearestArea;
-            petController.agent.SetDestination(nearestArea.transform.position); // 이 호출도 이제 안전합니다.
+            petController.agent.SetDestination(nearestArea.transform.position);
             petController.ResumeMovement();
         }
     }
-    
-    // (이하 다른 메서드들은 변경 없습니다)
-    // FindClosestMatchingFood, ValidateCurrentTargets, HandleMovementToTarget,
-    // EatFoodCoroutine, EatAtAreaCoroutine, LookAtTarget, IsEatingOrSeeking,
-    // ResetPetStateForSeeking, CancelFeeding 메서드는 그대로 유지합니다.
     
     private GameObject FindClosestMatchingFood(Collider[] colliders)
     {
@@ -274,30 +293,21 @@ public class PetFeedingController : MonoBehaviour
         animController?.StopContinuousAnimation();
         petController.ResumeMovement();
     }
-/// <summary>
-/// ★★★ 새로 추가된 메서드 ★★★
-/// 지정된 반경 내에 펫이 먹을 수 있는 음식이 있는지 간단히 확인만 합니다.
-/// GetPriority() 와 같이 자주 호출되는 곳에서 사용하기에 안전합니다.
-/// </summary>
-/// <param name="radius">탐색할 반경</param>
-/// <returns>먹을 수 있는 음식이 있으면 true, 없으면 false</returns>
+
 public bool IsFoodInRange(float radius)
 {
-    // 1순위: 소모성 음식 아이템 탐색
     Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, foodItemLayer);
     if (FindClosestMatchingFood(foodColliders) != null)
     {
-        return true; // 먹을 수 있는 아이템을 찾으면 즉시 true 반환
+        return true; 
     }
-
-    // 2순위: 환경 먹이 장소 탐색
+    
     Collider[] areaColliders = Physics.OverlapSphere(transform.position, radius, feedingAreaLayer);
     if (FindClosestMatchingFood(areaColliders) != null)
     {
-        return true; // 먹을 수 있는 장소를 찾으면 즉시 true 반환
+        return true; 
     }
-
-    // 탐색 반경 내에 먹을 것이 없음
+    
     return false;
 }
    public void CancelFeeding()
@@ -306,11 +316,9 @@ public bool IsFoodInRange(float radius)
     isEating = false;
     targetFood = null;
     targetFeedingArea = null;
-
-    // ★★★ 수정: NavMeshAgent가 활성화되어 있고, NavMesh 위에 있을 때만 isStopped를 체크하도록 조건을 추가합니다. ★★★
+    
     if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
     {
-        // 에이전트가 멈춰있었다면 다시 움직이게 합니다.
         if (petController.agent.isStopped)
         {
             petController.ResumeMovement();
