@@ -20,27 +20,51 @@ public class EatAction : IPetAction
         _feedingController = feedingController;
     }
 
-    public float GetPriority()
+   // EatAction.cs
+
+public float GetPriority()
+{
+    // ★★★ 최상위 우선순위 부여 로직 추가 ★★★
+    // 만약 펫이 탈진 상태이고, 아주 가까운 거리(3유닛) 내에 먹을 것이 있다면
+    // 다른 모든 행동을 중단하고 즉시 식사를 시작하도록 최상위 우선순위(60)를 부여합니다.
+    if (_pet.isExhausted && _feedingController.IsFoodInRange(3f))
     {
-        // ... (기존 GetPriority 로직은 변경 없음) ...
-        if (_feedingController.IsEatingOrSeeking())
-        {
-            return 2.0f;
-        }
-        if (_pet.isClimbingTree) return 0f;
-        if (_pet.hunger >= 70f)
-        {
-            return (_pet.hunger - 70f) / 30f;
-        }
-        return 0f;
+        return 60.0f; // ExhaustedAction의 우선순위(50)보다 높게 설정
+    }
+    // ★★★ 여기까지 추가 ★★★
+
+    // --- 이하 기존 로직 유지 ---
+
+    // 이미 음식을 먹고 있거나 찾으러 가는 중이라면, 행동을 계속 유지합니다.
+    if (_feedingController.IsEatingOrSeeking())
+    {
+        return 2.0f;
     }
 
-    public void OnEnter()
+    // 나무 위에 있다면 식사 행동을 시작하지 않습니다.
+    if (_pet.isClimbingTree) return 0f;
+
+    // 배고픔 수치가 70 이상일 때만 새로운 식사 행동을 시작할 수 있습니다.
+    if (_pet.hunger >= 70f)
     {
-        // Debug.Log($"{_pet.petName}: 식사 행동 시작.");
-        _hasFoundFood = _feedingController.TryStartFeedingSequence();
-        _searchTimer = 0f; // 탐색 타이머 초기화
+        // 배고픔 수치에 비례하여 우선순위가 증가합니다 (0.0 ~ 1.0).
+        return (_pet.hunger - 70f) / 30f;
     }
+
+    // 그 외의 경우는 우선순위가 없습니다.
+    return 0f;
+}
+
+   public void OnEnter()
+{
+    // Debug.Log($"{_pet.petName}: 식사 행동 시작.");
+    
+    // ★★★ 행동 시작 전에 음식 타겟 유효성 재확인 ★★★
+    _feedingController.ValidateCurrentTargets();
+    
+    _hasFoundFood = _feedingController.TryStartFeedingSequence();
+    _searchTimer = 0f;
+}
 
     public void OnUpdate()
     {

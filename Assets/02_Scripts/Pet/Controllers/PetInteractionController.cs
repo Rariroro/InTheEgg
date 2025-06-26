@@ -76,15 +76,22 @@ public class PetInteractionController : MonoBehaviour
     // 사용자 입력을 처리하는 함수입니다.
     public void HandleInput()
     {
-        if (petController.isExhausted)
+        // ★★★ 수정: 탈진 상태일 때 로직 변경 ★★★
+    if (petController.isExhausted)
+    {
+        // 만약 탈진 상태가 되었을 때 펫을 들고 있었다면, 강제로 놓게 합니다.
+        if (isHolding)
         {
-            // 탈진 상태에서는 들고 있던 펫도 강제로 놓게 할 수 있습니다. (선택적)
-            if (isHolding)
-            {
-                ForceStopHolding();
-            }
-            return;
+            ForceStopHolding();
         }
+        
+        // 이전에는 여기서 return하여 모든 입력을 막았지만,
+        // 이제는 '들기' 관련 입력(GetMouseButton, GetMouseButtonUp)은 처리할 수 있도록
+        // 아래 로직을 계속 진행시킵니다.
+        // 단, 짧은 터치(Select)와 같은 상호작용은 isExhausted 플래그를 통해
+        // 다른 곳에서 제한되므로 안전합니다.
+    }
+    // ★★★ 여기까지 수정 ★★★
         // 모이기 중이거나 이미 모였을 때는 일반적인 상호작용을 제한
         if (petController.isGathering || petController.isGathered)
         {
@@ -273,14 +280,16 @@ public class PetInteractionController : MonoBehaviour
         }
     }
 
-    // PetInteractionController.cs 내의 수정이 필요한 부분
-    // StartHolding() 메서드 수정
+    // PetInteractionController.cs
+
     private void StartHolding()
     {
+        // ★★★ 최상단에 이 코드를 추가하여 AI 상태를 즉시 리셋합니다. ★★★
+        petController.InterruptAndResetAI();
+        // ★★★ 여기까지 추가 ★★★
 
         var movementController = petController.GetComponent<PetMovementController>();
 
-        // ✅ 나무에 올라가고 있었다면, movementController의 강제 종료 함수를 호출합니다.
         if (petController.isClimbingTree)
         {
             if (movementController != null)
@@ -292,7 +301,6 @@ public class PetInteractionController : MonoBehaviour
         isHolding = true;
         petController.isHolding = true;
 
-        // 버둥거리는 애니메이션 설정
         if (petController.animator != null)
         {
             petController.animator.speed = 3.0f;
@@ -304,20 +312,17 @@ public class PetInteractionController : MonoBehaviour
             animController.SetContinuousAnimation(2);
         }
 
-        // ✅ NavMeshAgent 비활성화 로직은 ForceCancelClimbing에서 처리하므로, 여기서 한 번 더 확인합니다.
         if (petController.agent != null && petController.agent.enabled)
         {
             petController.agent.enabled = false;
         }
 
-        // CameraController 비활성화
         CameraController camController = FindObjectOfType<CameraController>();
         if (camController != null)
         {
             camController.enabled = false;
         }
 
-        // NavMesh 상의 가까운 지점을 찾고 펫 위치 보정
         NavMeshHit hit;
         if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
         {
@@ -329,6 +334,7 @@ public class PetInteractionController : MonoBehaviour
         if (nameTextObject != null)
             nameTextObject.SetActive(false);
     }
+
 
     // StopHolding() 메서드 수정
     private void StopHolding()
@@ -511,41 +517,42 @@ public class PetInteractionController : MonoBehaviour
         CompletePetPlacement();
     }
 
-    private void CompletePetPlacement()
+    // PetInteractionController.cs
+
+   private void CompletePetPlacement()
+{
+    isHolding = false;
+    petController.isHolding = false;
+
+    petController.isClimbingTree = false;
+    petController.currentTree = null;
+    petController.waterDepthOffset = 0f;
+
+    if (petController.petModelTransform != null)
     {
-        isHolding = false;
-        petController.isHolding = false;
-
-        // ★ 추가: 나무 타기 관련 상태 완전 초기화
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
-        petController.waterDepthOffset = 0f;
-
-        // ★ 추가: 펫 모델 위치 초기화
-        if (petController.petModelTransform != null)
-        {
-            petController.petModelTransform.localPosition = Vector3.zero;
-            petController.petModelTransform.localRotation = Quaternion.identity;
-        }
-
-        // ★ 수정: NavMeshAgent 위치 동기화 확실히 하기
-        if (petController.agent != null && petController.agent.enabled)
-        {
-            petController.agent.Warp(petController.transform.position);
-        }
-
-        var movementController = petController.GetComponent<PetMovementController>();
-        if (movementController != null)
-        {
-            movementController.ForceCancelClimbing();
-        }
-
-        // 펫의 움직임 재개 및 새 목적지 설정
-        petController.ResumeMovement();
-        movementController?.SetRandomDestination();
-        Deselect();
+        petController.petModelTransform.localPosition = Vector3.zero;
+        petController.petModelTransform.localRotation = Quaternion.identity;
     }
 
+    if (petController.agent != null && petController.agent.enabled)
+    {
+        petController.agent.Warp(petController.transform.position);
+    }
+
+    var movementController = petController.GetComponent<PetMovementController>();
+    if (movementController != null)
+    {
+        movementController.ForceCancelClimbing();
+    }
+
+    // 펫의 움직임 재개
+    petController.ResumeMovement();
+    
+    // ★★★ 중요: AI를 완전히 리셋하여 현재 상태를 다시 평가하도록 함 ★★★
+    petController.InterruptAndResetAI();
+    
+    Deselect();
+}
     // 펫을 선택하는 함수
     // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
 
