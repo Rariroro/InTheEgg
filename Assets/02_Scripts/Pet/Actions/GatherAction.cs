@@ -69,7 +69,8 @@ private System.Collections.IEnumerator EnterSequence()
 
 
     public void OnUpdate()
-    {
+    {    _pet.HandleRotation(); 
+
         if (_hasArrived || _agent == null || !_agent.enabled) return;
 
         // 목표 지점 도착 체크

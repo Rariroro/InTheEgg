@@ -112,147 +112,174 @@ public class EnvironmentPetAttractor : MonoBehaviour
         return matchingPets;
     }
 
-    // 펫들을 환경으로 끌어들이고 축하 애니메이션 실행
-    private IEnumerator AttractPetsToEnvironment(List<PetController> pets, Vector3 centerPosition, string environmentId)
+   // 환경으로 펫들을 유인하는 로직
+private IEnumerator AttractPetsToEnvironment(List<PetController> pets, Vector3 centerPosition, string environmentId)
+{
+    Debug.Log($"{environmentId} 환경에 {pets.Count}마리의 펫이 반응합니다!");
+
+    foreach (PetController pet in pets)
     {
-        Debug.Log($"{environmentId} 환경에 {pets.Count}마리의 펫이 반응합니다!");
-
-        foreach (PetController pet in pets)
+        Vector2 randomCircle = Random.insideUnitCircle * gatherRadius;
+        Vector3 targetPosition = centerPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
+        
+        // ▼▼▼ 수정된 부분 시작 ▼▼▼
+        // 더 이상 MovePetToEnvironment 코루틴을 직접 호출하지 않습니다.
+        if (pet != null && !pet.isGathering) // 플레이어 모이기가 아닐 때만
         {
-            Vector2 randomCircle = Random.insideUnitCircle * gatherRadius;
-            Vector3 targetPosition = centerPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
-            
-            // ▼▼▼ [수정된 부분] centerPosition을 전달해줍니다. ▼▼▼
-            StartCoroutine(MovePetToEnvironment(pet, targetPosition, centerPosition, environmentId));
+            // 펫 컨트롤러의 상태 플래그만 설정해줍니다.
+            pet.environmentTargetPosition = targetPosition;
+            pet.isAttractedToEnvironment = true;
         }
-
-        yield return null;
+        // ▲▲▲ 수정된 부분 끝 ▲▲▲
     }
+    
+    // 축하 행동은 도착 후 Action 내부에서 처리하거나,
+    // 여기서 별도의 타이머를 두고 실행할 수 있습니다.
+    // 여기서는 간단히 로직을 제거합니다.
+    yield return new WaitForSeconds(celebrationDuration + 2f); // 대략적인 대기 시간
 
-    // ▼▼▼ [수정된 부분] centerPosition 파라미터를 받도록 변경합니다. ▼▼▼
-    private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, Vector3 centerPosition, string environmentId)
+    foreach (PetController pet in pets)
     {
-        if (pet.isClimbingTree)
+        if(pet != null)
         {
-            Debug.Log($"{pet.petName}이(가) 나무에서 내려옵니다.");
-            var movementController = pet.GetComponent<PetMovementController>();
-            if (movementController != null)
-            {
-                movementController.ForceCancelClimbing();
-            }
-            float waitTime = 0f;
-            while (waitTime < 2f) 
-            {
-                if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
-                {
-                    break;
-                }
-                yield return null; 
-                waitTime += Time.deltaTime;
-            }
-        }
-        
-        if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
-        {
-            Debug.LogWarning($"{pet?.petName ?? "Unknown"}: NavMeshAgent가 준비되지 않아 환경 이동을 취소합니다.");
-            yield break;
-        }
-
-        float originalSpeed = pet.baseSpeed;
-        float originalAngularSpeed = pet.baseAngularSpeed;
-        float originalAcceleration = pet.baseAcceleration;
-
-        pet.isGathering = true;
-        pet.agent.speed = originalSpeed * 3f;
-        pet.agent.angularSpeed = originalAngularSpeed * 2f;
-        pet.agent.acceleration = originalAcceleration * 3f;
-        pet.agent.isStopped = false;
-
-        if (pet.animator != null)
-        {
-            pet.animator.SetInteger("animation", 2);
-        }
-
-        pet.agent.SetDestination(targetPosition);
-
-        while (pet != null && pet.agent.enabled && (pet.agent.pathPending || pet.agent.remainingDistance > 2f))
-        {
-            yield return new WaitForSeconds(0.1f);
-        }
-        
-        if (pet == null || !pet.agent.enabled) yield break;
-
-        pet.agent.speed = originalSpeed;
-        pet.agent.angularSpeed = originalAngularSpeed;
-        pet.agent.acceleration = originalAcceleration;
-        pet.agent.isStopped = true;
-
-        // ▼▼▼ [수정된 부분] 전달받은 centerPosition을 사용합니다. ▼▼▼
-        Vector3 lookDirection = (centerPosition - pet.transform.position).normalized;
-        lookDirection.y = 0;
-        if (lookDirection != Vector3.zero)
-        {
-            pet.transform.rotation = Quaternion.LookRotation(lookDirection);
-        }
-
-        yield return StartCoroutine(CelebratePet(pet, environmentId));
-        
-        if (pet != null)
-        {
-            pet.isGathering = false;
-            if(pet.agent.enabled) pet.agent.isStopped = false;
-            pet.SetRandomDestination();
+            // Action의 OnExit에서 자동으로 isGathering = false가 되므로 여기서 제어할 필요 없음.
+            // pet.isGathering = false; 
         }
     }
+}
 
-    private IEnumerator CelebratePet(PetController pet, string environmentId)
-    {
-        pet.ShowEmotion(GetEmotionForEnvironment(environmentId), celebrationDuration);
-        float celebrationTime = 0f;
-
-        while (celebrationTime < celebrationDuration)
-        {
-            if (pet == null) yield break;
-
-            if (pet.animator != null)
-            {
-                int randomAnimation = Random.Range(0, 3);
-                switch (randomAnimation)
-                {
-                    case 0:
-                        pet.animator.SetInteger("animation", 3);
-                        yield return new WaitForSeconds(1f);
-                        break;
-                    case 1:
-                        pet.animator.SetInteger("animation", 2);
-                        yield return new WaitForSeconds(0.5f);
-                        if(pet.animator != null) pet.animator.SetInteger("animation", 0);
-                        yield return new WaitForSeconds(0.3f);
-                        break;
-                    case 2:
-                        float rotateTime = 0f;
-                        while (rotateTime < 1f)
-                        {
-                            if (pet == null) yield break;
-                            pet.transform.Rotate(0, 360 * Time.deltaTime, 0);
-                            rotateTime += Time.deltaTime;
-                            yield return null;
-                        }
-                        break;
-                }
-            }
-            celebrationTime += 1.5f;
-            yield return new WaitForSeconds(0.5f);
-        }
+    // // ▼▼▼ [수정된 부분] centerPosition 파라미터를 받도록 변경합니다. ▼▼▼
+    // private IEnumerator MovePetToEnvironment(PetController pet, Vector3 targetPosition, Vector3 centerPosition, string environmentId)
+    // {
+    //     if (pet.isClimbingTree)
+    //     {
+    //         Debug.Log($"{pet.petName}이(가) 나무에서 내려옵니다.");
+    //         var movementController = pet.GetComponent<PetMovementController>();
+    //         if (movementController != null)
+    //         {
+    //             movementController.ForceCancelClimbing();
+    //         }
+    //         float waitTime = 0f;
+    //         while (waitTime < 2f) 
+    //         {
+    //             if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+    //             {
+    //                 break;
+    //             }
+    //             yield return null; 
+    //             waitTime += Time.deltaTime;
+    //         }
+    //     }
         
-        if (pet == null) yield break;
-        pet.HideEmotion();
+    //     if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+    //     {
+    //         Debug.LogWarning($"{pet?.petName ?? "Unknown"}: NavMeshAgent가 준비되지 않아 환경 이동을 취소합니다.");
+    //         yield break;
+    //     }
 
-        if (pet.animator != null)
-        {
-            pet.animator.SetInteger("animation", 0);
-        }
-    }
+    //     float originalSpeed = pet.baseSpeed;
+    //     float originalAngularSpeed = pet.baseAngularSpeed;
+    //     float originalAcceleration = pet.baseAcceleration;
+
+    //     pet.isGathering = true;
+    //     pet.agent.speed = originalSpeed * 3f;
+    //     pet.agent.angularSpeed = originalAngularSpeed * 2f;
+    //     pet.agent.acceleration = originalAcceleration * 3f;
+    //     pet.agent.isStopped = false;
+
+    //     if (pet.animator != null)
+    //     {
+    //         pet.animator.SetInteger("animation", 2);
+    //     }
+
+    //     pet.agent.SetDestination(targetPosition);
+
+    //    // ▼▼▼ 수정된 부분 시작 ▼▼▼
+    // // 목표 지점에 도착할 때까지 반복
+    // while (pet != null && pet.agent.enabled && (pet.agent.pathPending || pet.agent.remainingDistance > 2f))
+    // {
+    //     // 매 프레임 펫의 회전을 업데이트합니다.
+    //     pet.HandleRotation(); 
+    //     yield return null; // 다음 프레임까지 대기 (WaitForSeconds(0.1f) 보다 부드러움)
+    // }
+    
+    // if (pet == null || !pet.agent.enabled) yield break;
+
+    // pet.agent.speed = originalSpeed;
+    // pet.agent.angularSpeed = originalAngularSpeed;
+    // pet.agent.acceleration = originalAcceleration;
+    // pet.agent.isStopped = true;
+
+    // // [기존 회전 로직]
+    // // 이 부분은 이제 HandleRotation()이 대체하므로 제거하거나 주석 처리합니다.
+    // /*
+    // Vector3 lookDirection = (centerPosition - pet.transform.position).normalized;
+    // lookDirection.y = 0;
+    // if (lookDirection != Vector3.zero)
+    // {
+    //     pet.transform.rotation = Quaternion.LookRotation(lookDirection);
+    // }
+    // */
+    // // ▲▲▲ 수정된 부분 끝 ▲▲▲
+
+    //     yield return StartCoroutine(CelebratePet(pet, environmentId));
+        
+    //     if (pet != null)
+    //     {
+    //         pet.isGathering = false;
+    //         if(pet.agent.enabled) pet.agent.isStopped = false;
+    //         pet.SetRandomDestination();
+    //     }
+    // }
+
+    // private IEnumerator CelebratePet(PetController pet, string environmentId)
+    // {
+    //     pet.ShowEmotion(GetEmotionForEnvironment(environmentId), celebrationDuration);
+    //     float celebrationTime = 0f;
+
+    //     while (celebrationTime < celebrationDuration)
+    //     {
+    //         if (pet == null) yield break;
+
+    //         if (pet.animator != null)
+    //         {
+    //             int randomAnimation = Random.Range(0, 3);
+    //             switch (randomAnimation)
+    //             {
+    //                 case 0:
+    //                     pet.animator.SetInteger("animation", 3);
+    //                     yield return new WaitForSeconds(1f);
+    //                     break;
+    //                 case 1:
+    //                     pet.animator.SetInteger("animation", 2);
+    //                     yield return new WaitForSeconds(0.5f);
+    //                     if(pet.animator != null) pet.animator.SetInteger("animation", 0);
+    //                     yield return new WaitForSeconds(0.3f);
+    //                     break;
+    //                 case 2:
+    //                     float rotateTime = 0f;
+    //                     while (rotateTime < 1f)
+    //                     {
+    //                         if (pet == null) yield break;
+    //                         pet.transform.Rotate(0, 360 * Time.deltaTime, 0);
+    //                         rotateTime += Time.deltaTime;
+    //                         yield return null;
+    //                     }
+    //                     break;
+    //             }
+    //         }
+    //         celebrationTime += 1.5f;
+    //         yield return new WaitForSeconds(0.5f);
+    //     }
+        
+    //     if (pet == null) yield break;
+    //     pet.HideEmotion();
+
+    //     if (pet.animator != null)
+    //     {
+    //         pet.animator.SetInteger("animation", 0);
+    //     }
+    // }
 
     private EmotionType GetEmotionForEnvironment(string environmentId)
     {

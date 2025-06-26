@@ -122,6 +122,9 @@ public class PetController : MonoBehaviour
     [HideInInspector] public Vector3 gatherTargetPosition;
     [HideInInspector] public BasePetInteraction currentInteractionLogic;
 
+    [HideInInspector] public bool isAttractedToEnvironment = false;
+    [HideInInspector] public Vector3 environmentTargetPosition;
+
     [Header("Pet Needs Settings")] // 인스펙터에서 편하게 관리하기 위해 헤더 추가
     [Tooltip("초당 배고픔 증가량")]
     [SerializeField] private float hungerIncreaseRate = 0.2f;
@@ -240,6 +243,9 @@ public class PetController : MonoBehaviour
     {
         // === 최상위 우선순위: 외부 명령 ===
         new GatherAction(this),                  // 모이기 [우선순위: 20.0]
+
+        
+                new EnvironmentGatherAction(this),       // 환경 스폰 모이기 [우선순위: 15.0]
         new InteractWithPetAction(this),         // 펫 간 상호작용 [우선순위: 10.0]
 
         // ★★★ 추가: 플레이어 선택 행동 ★★★
