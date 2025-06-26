@@ -119,36 +119,36 @@ public class PetMovementController : MonoBehaviour
     }
     // PetMovementController.cs
 
-public void ExecuteWanderBehavior()
-{
-    // 이 메서드가 호출되었다는 것은 WanderAction이 활성화되었다는 의미이므로,
-    // 아래의 중복 검사는 제거하거나 간소화할 수 있습니다.
-    /* if (petController.isClimbingTree || petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering)
+    public void ExecuteWanderBehavior()
     {
-        ForceStopCurrentBehavior(); 
-        return;
+        // 이 메서드가 호출되었다는 것은 WanderAction이 활성화되었다는 의미이므로,
+        // 아래의 중복 검사는 제거하거나 간소화할 수 있습니다.
+        /* if (petController.isClimbingTree || petController.isSelected || petController.isHolding || petController.isInteracting || petController.isGathering)
+        {
+            ForceStopCurrentBehavior(); 
+            return;
+        }
+        */
+
+        // NavMeshAgent 준비 여부만 체크하는 것으로 충분합니다.
+        if (!IsAgentReady()) return;
+
+        // 행동 전환 타이머를 업데이트합니다.
+        behaviorTimer += Time.deltaTime;
+
+        // 현재 이동 중(걷기 또는 뛰기)이라면 목표 지점 도착 여부를 체크합니다.
+        if (!petController.agent.isStopped &&
+            (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+        {
+            HandleMovement();
+        }
+
+        // 다음 행동을 결정할 시간이 되었는지 체크합니다.
+        if (behaviorTimer >= nextBehaviorChange)
+        {
+            DecideNextBehavior();
+        }
     }
-    */
-
-    // NavMeshAgent 준비 여부만 체크하는 것으로 충분합니다.
-    if (!IsAgentReady()) return;
-
-    // 행동 전환 타이머를 업데이트합니다.
-    behaviorTimer += Time.deltaTime;
-
-    // 현재 이동 중(걷기 또는 뛰기)이라면 목표 지점 도착 여부를 체크합니다.
-    if (!petController.agent.isStopped &&
-        (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
-    {
-        HandleMovement();
-    }
-
-    // 다음 행동을 결정할 시간이 되었는지 체크합니다.
-    if (behaviorTimer >= nextBehaviorChange)
-    {
-        DecideNextBehavior();
-    }
-}
 
     private IEnumerator ForceClimbDownFromTree()
     {
@@ -404,7 +404,50 @@ public void ExecuteWanderBehavior()
         }
         SafeSetAgentMovement(petController.baseSpeed * pb.speedMultiplier, false);
     }
+    /// <summary>
+    /// 지정된 탐색 반경 내에서 무작위 목적지를 설정합니다.
+    /// </summary>
+    /// <param name="searchRadius">목적지를 찾을 반경</param>
+    public void SetRandomDestination(float searchRadius)
+    {
+        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+            return;
 
+        int waterArea = NavMesh.GetAreaFromName("Water");
+        int mask;
+
+        // 물/육지 선호도에 따른 영역 마스크 설정 (기존 로직과 동일)
+        if (petController.habitat == PetAIProperties.Habitat.Water && waterArea != -1)
+        {
+            mask = (Random.value < waterDestinationChance) ? (1 << waterArea) : NavMesh.AllAreas;
+        }
+        else
+        {
+            mask = (waterArea != -1) ? (NavMesh.AllAreas & ~(1 << waterArea)) : NavMesh.AllAreas;
+        }
+
+        // 핵심 수정: 파라미터로 받은 searchRadius를 사용합니다.
+        Vector3 dir = Random.insideUnitSphere * searchRadius + transform.position;
+        if (NavMesh.SamplePosition(dir, out NavMeshHit hit, searchRadius, mask))
+        {
+            try
+            {
+                petController.agent.SetDestination(hit.position);
+                petController.ResumeMovement(); // 멈춰있었다면 다시 움직이게 함
+
+                var anim = petController.GetComponent<PetAnimationController>();
+                if (anim != null)
+                {
+                    if (currentBehaviorState == BehaviorState.Walking) anim.SetContinuousAnimation(1);
+                    else if (currentBehaviorState == BehaviorState.Running) anim.SetContinuousAnimation(2);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PetMovementController] {petController.petName}: SetDestination 실패 - {e.Message}");
+            }
+        }
+    }
     public void SetRandomDestination()
     {
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)

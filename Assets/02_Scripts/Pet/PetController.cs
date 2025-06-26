@@ -130,6 +130,9 @@ public class PetController : MonoBehaviour
     [SerializeField] private float hungerIncreaseRate = 0.2f;
     [Tooltip("초당 졸림 증가량")]
     [SerializeField] private float sleepinessIncreaseRate = 0.1f;
+
+        [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
+    [HideInInspector] public bool isExhausted = false;
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
     private float _aiUpdateInterval = 0.5f; // 1초에 2번만 AI 의사결정을 하도록 설정 (조절 가능)
@@ -241,6 +244,9 @@ public class PetController : MonoBehaviour
     {
         _allActions = new List<IPetAction>
     {
+
+                new ExhaustedAction(this),               // 탈진 [우선순위: 50.0]
+
         // === 최상위 우선순위: 외부 명령 ===
         new GatherAction(this),                  // 모이기 [우선순위: 20.0]
 

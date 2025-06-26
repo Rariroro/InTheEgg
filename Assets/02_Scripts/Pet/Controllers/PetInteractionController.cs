@@ -76,6 +76,15 @@ public class PetInteractionController : MonoBehaviour
     // 사용자 입력을 처리하는 함수입니다.
     public void HandleInput()
     {
+        if (petController.isExhausted)
+        {
+            // 탈진 상태에서는 들고 있던 펫도 강제로 놓게 할 수 있습니다. (선택적)
+            if (isHolding)
+            {
+                ForceStopHolding();
+            }
+            return;
+        }
         // 모이기 중이거나 이미 모였을 때는 일반적인 상호작용을 제한
         if (petController.isGathering || petController.isGathered)
         {
@@ -540,7 +549,7 @@ public class PetInteractionController : MonoBehaviour
     // 펫을 선택하는 함수
     // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
 
-   // 펫을 선택하는 함수
+    // 펫을 선택하는 함수
     private void Select()
     {
         // 펫이 특별 애니메이션 재생으로 잠겨있다면 선택하지 않습니다.
@@ -551,7 +560,7 @@ public class PetInteractionController : MonoBehaviour
 
         // ★★★ 수정: isSelected 플래그만 true로 설정합니다. ★★★
         // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
-        petController.isSelected = true; 
+        petController.isSelected = true;
         isSelected = true; // 내부 상태 추적용 플래그는 유지
         selectionTimer = 0f;
 
@@ -578,7 +587,7 @@ public class PetInteractionController : MonoBehaviour
         }
     }
 
-      // 펫 선택을 해제하는 함수
+    // 펫 선택을 해제하는 함수
     private void Deselect()
     {
         // ★★★ 수정: isSelected 플래그만 false로 설정합니다. ★★★

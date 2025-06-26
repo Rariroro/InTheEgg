@@ -6,7 +6,13 @@ public class EatAction : IPetAction
 {
     private PetController _pet;
     private PetFeedingController _feedingController;
-    private bool _hasFoundFood; // ★★★ 추가: 음식을 찾았는지 여부를 저장하는 상태 변수
+    private bool _hasFoundFood;
+
+    // ▼▼▼ 음식을 찾지 못했을 때의 광역 배회 로직을 위한 변수 추가 ▼▼▼
+    private float _searchTimer = 0f;
+    private const float WIDE_WANDER_INTERVAL = 5.0f; // 5초마다 새로운 목적지 탐색
+    private const float FOOD_SEARCH_RADIUS = 150f;   // 음식 탐색 시 배회 반경
+    // ▲▲▲ 여기까지 추가 ▲▲▲
 
     public EatAction(PetController pet, PetFeedingController feedingController)
     {
@@ -14,55 +20,55 @@ public class EatAction : IPetAction
         _feedingController = feedingController;
     }
 
-   // Pet.zip/EatAction.cs
-
-public float GetPriority()
-{
-    // 1. 이미 식사/탐색 중이라면, 다른 행동으로 전환되지 않도록 높은 우선순위를 유지합니다.
-    if (_feedingController.IsEatingOrSeeking())
+    public float GetPriority()
     {
-        // 이 값은 배회(0.1)나 나무타기(0.3) 등 자율 행동보다는 높고,
-        // 플레이어 선택(5.0), 상호작용(10.0), 모이기(20.0)보다는 낮아야 합니다.
-        return 2.0f; // 예: 2.0의 고정 우선순위
+        // ... (기존 GetPriority 로직은 변경 없음) ...
+        if (_feedingController.IsEatingOrSeeking())
+        {
+            return 2.0f;
+        }
+        if (_pet.isClimbingTree) return 0f;
+        if (_pet.hunger >= 70f)
+        {
+            return (_pet.hunger - 70f) / 30f;
+        }
+        return 0f;
     }
-
-    // 2. 나무 위에서는 먹을 수 없습니다.
-    if (_pet.isClimbingTree) return 0f;
-
-    // 3. 배고픔 수치가 70 이상일 때만 새로운 식사 행동을 시작할 수 있습니다.
-    if (_pet.hunger >= 70f)
-    {
-        // 욕구 기반 우선순위 계산 (기존 로직 유지)
-        return (_pet.hunger - 70f) / 30f; // 0.0 ~ 1.0 사이의 값
-    }
-
-    // 그 외의 경우는 우선순위가 없습니다.
-    return 0f;
-}
 
     public void OnEnter()
     {
         // Debug.Log($"{_pet.petName}: 식사 행동 시작.");
-        // ★★★ 수정: 행동이 시작되면, 음식을 찾고 이동을 시작합니다.
         _hasFoundFood = _feedingController.TryStartFeedingSequence();
+        _searchTimer = 0f; // 탐색 타이머 초기화
     }
 
     public void OnUpdate()
     {
-        // ★★★ 수정: 음식을 성공적으로 찾았다면, 목표에 도착할 때까지 계속 상태를 업데이트합니다.
         if (_hasFoundFood)
         {
             _feedingController.UpdateMovementToFood();
         }
+        // ▼▼▼ 음식을 찾지 못했을 때의 로직 추가 ▼▼▼
+        else
+        {
+            // 음식을 찾을 때까지 또는 배고픔이 해결될 때까지 계속 주변을 배회합니다.
+            _searchTimer += Time.deltaTime;
+            if (_searchTimer >= WIDE_WANDER_INTERVAL)
+            {
+                Debug.Log($"{_pet.petName}이(가) 음식을 찾기 위해 주변을 넓게 탐색합니다.");
+                _searchTimer = 0f;
+
+                // PetMovementController를 통해 더 넓은 반경으로 목적지를 설정합니다.
+                _pet.GetComponent<PetMovementController>()?.SetRandomDestination(FOOD_SEARCH_RADIUS);
+            }
+             _pet.HandleRotation();
+        }
+        // ▲▲▲ 여기까지 추가 ▲▲▲
     }
 
     public void OnExit()
     {
         // Debug.Log($"{_pet.petName}: 식사 행동 종료.");
-        // ★★★ 추가: 행동이 중단될 경우, 진행중인 먹기 코루틴을 중지하고 목표를 초기화하는 것이 안전합니다.
-        // 이 로직은 PetFeedingController에 추가하는 것이 좋습니다.
-        // 예: _feedingController.CancelFeeding();
-            _feedingController.CancelFeeding();
-
+        _feedingController.CancelFeeding();
     }
 }
