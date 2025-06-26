@@ -137,30 +137,43 @@ public class PetTreeClimbingController : MonoBehaviour
             isSearchingForTree = false;
         }
     }
-    /// <summary>
-    /// ★★★ 새로 추가: 나무 위에서 쉬는 행동을 별도 코루틴으로 분리
-    /// </summary>
-    private IEnumerator RestOnTree()
+   // PetTreeClimbingController.cs의 RestOnTree 메서드
+
+private IEnumerator RestOnTree()
+{
+    var animController = petController.GetComponent<PetAnimationController>();
+    animController?.SetContinuousAnimation(5); // 휴식 애니메이션
+
+    float waitTime = UnityEngine.Random.Range(5f, 10f);
+    float waited = 0f;
+
+    while (waited < waitTime)
     {
-        var animController = petController.GetComponent<PetAnimationController>();
-        animController?.SetContinuousAnimation(5); // 휴식 애니메이션
-
-        float waitTime = UnityEngine.Random.Range(5f, 10f);
-        float waited = 0f;
-
-        while (waited < waitTime)
+        // ★★★ 수정: 펫이 선택되면 휴식을 잠시 멈춥니다. ★★★
+        if (petController.isSelected)
         {
-            // 배고픔, 졸음, 플레이어 상호작용 등 다른 긴급한 행동이 필요한지 체크
-            if (ShouldInterruptTreeRest())
-            {
-                Debug.Log($"{petController.petName}이(가) 다른 할 일이 생겨 나무에서 내려옵니다.");
-                yield break; // 휴식 종료하고 즉시 내려가기
-            }
-
+            // ClimbTreeAction의 OnUpdate가 카메라 보기와 Idle 애니메이션을 처리하므로,
+            // 여기서는 선택이 해제될 때까지 그냥 기다리기만 하면 됩니다.
             yield return null;
-            waited += Time.deltaTime;
+            continue; // 아래 로직(시간 증가, 휴식 중단 조건 체크)을 건너뜁니다.
         }
+        else
+        {
+            // 선택이 해제되면 다시 휴식 애니메이션으로 돌아가도록 보장합니다.
+            animController?.SetContinuousAnimation(5);
+        }
+
+        // 다른 긴급한 행동이 필요한지 체크
+        if (ShouldInterruptTreeRest())
+        {
+            Debug.Log($"{petController.petName}이(가) 다른 할 일이 생겨 나무에서 내려옵니다.");
+            yield break; // 휴식 종료하고 즉시 내려가기
+        }
+
+        yield return null;
+        waited += Time.deltaTime;
     }
+}
 
     /// <summary>
     /// ★★★ 새로 추가: 나무 위 휴식을 중단해야 할 조건들을 모아놓은 헬퍼 메서드

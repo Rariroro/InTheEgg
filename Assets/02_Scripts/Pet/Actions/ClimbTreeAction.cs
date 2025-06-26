@@ -6,20 +6,23 @@ public class ClimbTreeAction : IPetAction
 {
     private readonly PetController _pet;
     private readonly PetTreeClimbingController _climbingController;
+    private readonly PetAnimationController _animController; // ★ 애니메이션 컨트롤러 참조 추가
 
     public ClimbTreeAction(PetController pet, PetTreeClimbingController climbingController)
     {
         _pet = pet;
         _climbingController = climbingController;
+        _animController = pet.GetComponent<PetAnimationController>(); // ★ 초기화
     }
 
     public float GetPriority()
     {
-        // 1. 이미 나무에 오르기 시작했거나, 나무 위에 있다면 높은 우선순위를 유지하여 행동이 중단되지 않도록 함
+        // 1. 이미 나무에 오르기 시작했거나, 나무 위에 있다면 최상위 우선순위를 가짐
         if (_pet.isClimbingTree || _climbingController.IsSearchingForTree())
         {
-            // 플레이어의 직접적인 명령(모이기, 들기)보다는 낮고, 일반 욕구(식사, 수면)보다는 높은 우선순위(예: 4.0f)를 반환
-            return 4.0f;
+            // ★★★ 수정: SelectedAction(5.0f)보다 높은 우선순위로 변경 ★★★
+            // 이렇게 하면 펫이 나무 위에 있을 때 선택되어도 ClimbTreeAction 상태가 유지됩니다.
+            return 6.0f;
         }
 
         // 2. 'Tree' 서식지 펫이 아니면 실행하지 않음
@@ -31,10 +34,9 @@ public class ClimbTreeAction : IPetAction
             return 0f;
         }
 
-        // 4. 설정된 확률(treeClimbChance)에 따라 우선순위를 가끔씩 높게 줌 (새로운 행동 시작 조건)
+        // 4. 설정된 확률(treeClimbChance)에 따라 우선순위를 가끔씩 높게 줌
         if (Random.value < _pet.treeClimbChance * 0.1f)
         {
-            // 나무에 오르는 것은 일반 배회(0.1)보다는 높은 우선순위를 가짐
             return 0.3f;
         }
 
@@ -44,20 +46,50 @@ public class ClimbTreeAction : IPetAction
     public void OnEnter()
     {
         // Debug.Log($"{_pet.petName}: 나무 오르기 행동 시작.");
-        // PetTreeClimbingController의 핵심 로직(나무 찾고 오르기)을 코루틴으로 실행
-        _pet.StartCoroutine(_climbingController.SearchAndClimbTreeRegularly());
+        // ★★★ 수정: 이미 나무 위에 있는 상태에서 이 액션이 다시 시작될 수 있으므로,
+        // isClimbingTree가 false일 때만 새로 나무를 찾도록 합니다.
+        if (!_pet.isClimbingTree)
+        {
+            _pet.StartCoroutine(_climbingController.SearchAndClimbTreeRegularly());
+        }
     }
 
     public void OnUpdate()
     {
-        // OnEnter에서 시작된 코루틴이 모든 로직을 처리하므로, 여기서는 할 일이 없습니다.
+        // ★★★ 핵심 수정: OnUpdate 로직 추가 ★★★
+        // 이 액션이 활성화된 상태(즉, 나무 위에 있을 때) 펫이 선택되었다면,
+        // 나무 위에서 카메라를 바라보도록 처리합니다.
+        if (_pet.isClimbingTree && _pet.isSelected)
+        {
+            // 1. 카메라 바라보기
+            if (Camera.main != null)
+            {
+                Vector3 directionToCamera = Camera.main.transform.position - _pet.transform.position;
+                directionToCamera.y = 0; // 펫이 위아래로 기울지 않도록 Y축 고정
+
+                if (directionToCamera != Vector3.zero)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                    // 나무 위에 있을 때는 NavMeshAgent가 비활성화되어 있으므로, transform을 직접 회전시켜도 안전합니다.
+                    _pet.transform.rotation = Quaternion.Slerp(
+                        _pet.transform.rotation,
+                        targetRotation,
+                        _pet.rotationSpeed * Time.deltaTime
+                    );
+                }
+            }
+
+            // 2. 애니메이션 처리
+            // 나무 위에서 선택되었을 때는 '휴식' 애니메이션을 멈추고 '기본(Idle)' 자세를 취하게 합니다.
+            _animController?.SetContinuousAnimation(0); // Idle 애니메이션
+        }
     }
 
     public void OnExit()
     {
         // Debug.Log($"{_pet.petName}: 나무 오르기 행동 중단.");
         // 다른 고순위 행동(예: 모이기 명령)에 의해 중단될 경우,
-        // 나무타기 상태를 강제로 취소합니다.
+        // 나무타기 상태를 강제로 취소합니다. (이 로직은 그대로 유지)
         _climbingController.ForceCancelClimbing();
     }
 }
