@@ -14,14 +14,26 @@ public class SleepAction : IPetAction
         _sleepingController = sleepingController;
     }
 
-    public float GetPriority()
+  // Pet.zip/SleepAction.cs
+
+public float GetPriority()
+{
+    // 1. 이미 잠을 자거나 잠잘 곳을 찾는 중이라면, 높은 우선순위를 유지하여 행동을 중단시키지 않습니다.
+    if (_sleepingController.IsSleepingOrSeeking())
     {
-        // 졸음 수치가 70 이상이고, 현재 자고 있거나 자러 가는 중이 아닐 때 우선순위를 계산합니다.
-        if (_pet.sleepiness < 70f || _sleepingController.IsSleepingOrSeeking()) return 0f;
-        
-        return (_pet.sleepiness - 70f) / 30f;
+        return 2.0f; // 식사 행동과 동일한 우선순위 레벨을 부여하여 안정성을 확보합니다.
     }
 
+    // 2. 졸음 수치가 70 이상일 때만 새로운 수면 행동을 시작할 수 있습니다.
+    if (_pet.sleepiness >= 70f)
+    {
+        // 욕구에 따라 우선순위가 증가합니다.
+        return (_pet.sleepiness - 70f) / 30f; // 0.0 ~ 1.0 사이의 값
+    }
+
+    // 그 외의 경우는 우선순위가 없습니다.
+    return 0f;
+}
     public void OnEnter()
     {
         // Debug.Log($"{_pet.petName}: 수면 행동 시작.");
