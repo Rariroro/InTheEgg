@@ -7,7 +7,7 @@ using UnityEngine.AI;
 public class PetTreeClimbingController : MonoBehaviour
 {
     private PetController petController;
-    
+
     // 나무 탐지 설정
     private float treeDetectionRadius = 50f;
     // private float treeClimbChance = 0.1f; // 일반적인 상황에서 나무에 오를 확률
@@ -25,12 +25,12 @@ public class PetTreeClimbingController : MonoBehaviour
     /// </summary>
     public void CheckForTreeClimbing()
     {
-        
+
         // ★★★ 추가: 배고플 때는 나무에 오르지 않음
-    if (petController.hunger > 70f)
-    {
-        return;
-    }
+        if (petController.hunger > 70f)
+        {
+            return;
+        }
         // ★★★ 잠을 자려 하거나, 특정 상태일 때는 일반 등반 로직 실행 안 함
         if (petController.habitat != PetAIProperties.Habitat.Tree ||
             petController.isClimbingTree || petController.isInWater || isSearchingForTree ||
@@ -55,7 +55,7 @@ public class PetTreeClimbingController : MonoBehaviour
     public IEnumerator ClimbAndExecuteAction(IEnumerator actionOnTree)
     {
         isSearchingForTree = true;
-        
+
         Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
 
         if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
@@ -81,7 +81,7 @@ public class PetTreeClimbingController : MonoBehaviour
         }
         else
         {
-             Debug.LogWarning($"{petController.petName}: 행동을 수행할 나무를 찾지 못했습니다.");
+            Debug.LogWarning($"{petController.petName}: 행동을 수행할 나무를 찾지 못했습니다.");
         }
 
         isSearchingForTree = false;
@@ -90,89 +90,123 @@ public class PetTreeClimbingController : MonoBehaviour
     /// <summary>
     /// 일반적인 주기에 따라 나무에 오르고, 잠시 쉬다 내려옵니다.
     /// </summary>
-   // PetTreeClimbingController.cs의 SearchAndClimbTreeRegularly 메서드 수정
+    // PetTreeClimbingController.cs의 SearchAndClimbTreeRegularly 메서드 수정
 
-public IEnumerator SearchAndClimbTreeRegularly()
-{
-    isSearchingForTree = true;
-    ResetPetStateForSeeking(); 
+    // PetTreeClimbingController.cs
 
-    Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
-
-    if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
+    public IEnumerator SearchAndClimbTreeRegularly()
     {
-        try
+        isSearchingForTree = true;
+        ResetPetStateForSeeking();
+
+        // ★★★ 행동 잠금 시작 ★★★
+        petController.isActionLocked = true;
+
+        Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
+
+        if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
         {
-            petController.currentTree = nearestTree;
-            petController.isClimbingTree = true;
-
-            // 1. 나무 오르기
-            yield return StartCoroutine(ClimbUpPhase(nearestTree));
-
-            // 2. 나무 위에서 잠시 쉬기
-            var animController = petController.GetComponent<PetAnimationController>();
-            animController?.SetContinuousAnimation(5); // 휴식 애니메이션
-            
-            float waitTime = UnityEngine.Random.Range(5f, 10f);
-            float waited = 0f;
-            
-            while(waited < waitTime)
+            try
             {
-                // ★★★ 추가: 배고픔 체크 ★★★
-                if (petController.hunger > 70f)
-                {
-                    Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려옵니다.");
-                    break; // 루프 탈출하여 내려가기 시작
-                }
-                
-                var sleepingController = petController.GetComponent<PetSleepingController>();
-                if((sleepingController != null && sleepingController.IsSleepingOrSeeking()) || petController.isHolding)
-                {
-                    isSearchingForTree = false; 
-                    yield break;
-                }
-                
-                yield return null;
-                waited += Time.deltaTime;
+                petController.currentTree = nearestTree;
+                petController.isClimbingTree = true;
+
+                // 1. 나무 오르기
+                // ClimbUpPhase 내부에서는 isActionLocked를 제어할 필요가 없어졌습니다.
+                yield return StartCoroutine(ClimbUpPhase(nearestTree));
+
+                // 2. 나무 위에서 휴식
+                yield return StartCoroutine(RestOnTree());
+
+                // 3. 나무 내려오기
+                // ClimbDownTree 내부에서도 isActionLocked를 제어할 필요가 없어졌습니다.
+                yield return StartCoroutine(ClimbDownTree());
             }
-
-            // 3. 나무 내려오기
-            yield return StartCoroutine(ClimbDownTree());
-
-            // 4. 상태 초기화
-            petController.isClimbingTree = false;
-            petController.currentTree = null;
+            finally
+            {
+                // 4. 모든 상태 최종 정리 및 ★★★ 행동 잠금 해제 ★★★
+                ReleaseTreeAndResetState();
+                petController.isActionLocked = false;
+                isSearchingForTree = false;
+            }
         }
-        finally
+        else
         {
+            // 나무를 못 찾았을 경우에도 잠금 해제
+            petController.isActionLocked = false;
             isSearchingForTree = false;
         }
     }
-    else
+    /// <summary>
+    /// ★★★ 새로 추가: 나무 위에서 쉬는 행동을 별도 코루틴으로 분리
+    /// </summary>
+    private IEnumerator RestOnTree()
     {
-        isSearchingForTree = false;
-    }
-}
-// ★★★ 추가: 다른 스크립트에서 이 상태를 확인할 수 있도록 public 메서드 추가
-public bool IsSearchingForTree()
-{
-    return isSearchingForTree;
-}
+        var animController = petController.GetComponent<PetAnimationController>();
+        animController?.SetContinuousAnimation(5); // 휴식 애니메이션
 
-// ★★★ 추가: 탐색 시작 시 펫의 상태를 초기화하는 헬퍼 메서드
-private void ResetPetStateForSeeking()
-{
-    // PetMovementController의 현재 행동(휴식, 점프 등) 코루틴 강제 종료
-    petController.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
-    // PetAnimationController의 연속 애니메이션(휴식 등) 중지 후 Idle로
-    petController.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
-    // 멈춰있을 수 있으니 이동 재개
-    petController.ResumeMovement();
-}
+        float waitTime = UnityEngine.Random.Range(5f, 10f);
+        float waited = 0f;
+
+        while (waited < waitTime)
+        {
+            // 배고픔, 졸음, 플레이어 상호작용 등 다른 긴급한 행동이 필요한지 체크
+            if (ShouldInterruptTreeRest())
+            {
+                Debug.Log($"{petController.petName}이(가) 다른 할 일이 생겨 나무에서 내려옵니다.");
+                yield break; // 휴식 종료하고 즉시 내려가기
+            }
+
+            yield return null;
+            waited += Time.deltaTime;
+        }
+    }
+
+    /// <summary>
+    /// ★★★ 새로 추가: 나무 위 휴식을 중단해야 할 조건들을 모아놓은 헬퍼 메서드
+    /// </summary>
+    private bool ShouldInterruptTreeRest()
+    {
+        return petController.hunger > 70f ||
+               petController.sleepiness > 90f || // 나무에서 졸다가 바로 잠들지는 않도록
+               petController.isGathering ||
+               petController.isHolding;
+    }
+
+    /// <summary>
+    /// ★★★ 새로 추가: 나무에서 내려온 후 상태를 확실하게 초기화하는 메서드
+    /// </summary>
+    private void ReleaseTreeAndResetState()
+    {
+        if (petController.currentTree != null)
+        {
+            TreeManager.Instance.ReleaseTree(petController.currentTree);
+        }
+        petController.isClimbingTree = false;
+        petController.currentTree = null;
+        petController.isActionLocked = false;
+        // NavMeshAgent 재활성화는 ClimbDownTree에서 이미 처리됨
+    }
+    // ★★★ 추가: 다른 스크립트에서 이 상태를 확인할 수 있도록 public 메서드 추가
+    public bool IsSearchingForTree()
+    {
+        return isSearchingForTree;
+    }
+
+    // ★★★ 추가: 탐색 시작 시 펫의 상태를 초기화하는 헬퍼 메서드
+    private void ResetPetStateForSeeking()
+    {
+        // PetMovementController의 현재 행동(휴식, 점프 등) 코루틴 강제 종료
+        petController.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
+        // PetAnimationController의 연속 애니메이션(휴식 등) 중지 후 Idle로
+        petController.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+        // 멈춰있을 수 있으니 이동 재개
+        petController.ResumeMovement();
+    }
     /// <summary>
     /// ★★★ 리팩토링: 나무에 올라가는 단계만 수행하는 코루틴
     /// </summary>
-   private IEnumerator ClimbUpPhase(Transform tree)
+    private IEnumerator ClimbUpPhase(Transform tree)
     {
         // ★★★ 행동 잠금 시작 ★★★
         petController.isActionLocked = true;
@@ -211,14 +245,14 @@ private void ResetPetStateForSeeking()
 
             // 2단계: NavMeshAgent 비활성화 후 나무 오르기
             if (petController.agent != null) petController.agent.enabled = false;
-            
+
             petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(3);
 
             // ... (나무 오르는 Lerp 로직) ...
             float treeHeight = CalculateTreeHeight(tree);
             float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
             Vector3 climbTarget = new Vector3(transform.position.x, transform.position.y + climbTargetHeight, transform.position.z);
-            
+
             float elapsed = 0f;
             float moveTime = 3f;
             Vector3 startPos = transform.position;
@@ -247,14 +281,14 @@ private void ResetPetStateForSeeking()
     /// <summary>
     /// ★★★ 리팩토링: 나무에서 내려오는 단계만 수행하는 코루틴
     /// </summary>
-      public IEnumerator ClimbDownTree()
+    public IEnumerator ClimbDownTree()
     {
         if (petController.currentTree == null)
         {
             ForceCancelClimbing();
             yield break;
         }
-        
+
         // ★★★ 행동 잠금 시작 ★★★
         petController.isActionLocked = true;
         try
@@ -274,10 +308,10 @@ private void ResetPetStateForSeeking()
 
             while (elapsed < moveTime)
             {
-                 if (petController.isHolding)
+                if (petController.isHolding)
                 {
-                     ForceCancelClimbing();
-                     yield break;
+                    ForceCancelClimbing();
+                    yield break;
                 }
                 transform.position = Vector3.Lerp(startPos, groundPos, elapsed / moveTime);
                 elapsed += Time.deltaTime;
@@ -286,13 +320,13 @@ private void ResetPetStateForSeeking()
             transform.position = groundPos;
 
             TreeManager.Instance.ReleaseTree(petController.currentTree);
-            
+
             if (petController.agent != null && !petController.agent.enabled)
             {
                 petController.agent.enabled = true;
                 petController.agent.Warp(transform.position);
             }
-            
+
             petController.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
         }
         finally
@@ -326,11 +360,11 @@ private void ResetPetStateForSeeking()
         }
 
         GetComponent<PetAnimationController>()?.ForceStopAllAnimations();
-        
-                if(petController != null) petController.isActionLocked = false;
+
+        if (petController != null) petController.isActionLocked = false;
 
     }
-    
+
     private float CalculateTreeHeight(Transform tree)
     {
         float height = 5f;

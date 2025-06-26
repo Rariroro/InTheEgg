@@ -120,8 +120,13 @@ public class PetController : MonoBehaviour
     [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
     [HideInInspector] public bool isActionLocked = false;
     [HideInInspector] public Vector3 gatherTargetPosition;
-[HideInInspector] public BasePetInteraction currentInteractionLogic;
+    [HideInInspector] public BasePetInteraction currentInteractionLogic;
 
+    [Header("Pet Needs Settings")] // 인스펙터에서 편하게 관리하기 위해 헤더 추가
+    [Tooltip("초당 배고픔 증가량")]
+    [SerializeField] private float hungerIncreaseRate = 0.2f;
+    [Tooltip("초당 졸림 증가량")]
+    [SerializeField] private float sleepinessIncreaseRate = 0.1f;
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
     private float _aiUpdateInterval = 0.5f; // 1초에 2번만 AI 의사결정을 하도록 설정 (조절 가능)
@@ -230,8 +235,8 @@ public class PetController : MonoBehaviour
     /// 펫이 수행할 수 있는 모든 행동을 생성하고 리스트에 추가합니다.
     /// </summary>
     private void InitializeActions()
-{
-    _allActions = new List<IPetAction>
+    {
+        _allActions = new List<IPetAction>
     {
         // === 최상위 우선순위: 외부 명령 ===
         new GatherAction(this),                  // 모이기 [우선순위: 20.0]
@@ -251,11 +256,11 @@ public class PetController : MonoBehaviour
         new WanderAction(this, movementController)   // 배회 [우선순위: 0.1]
     };
 
-    // 기본 행동 설정
-    _currentAction = _allActions.Find(a => a is WanderAction);
-    _currentAction?.OnEnter();
-    Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
-}
+        // 기본 행동 설정
+        _currentAction = _allActions.Find(a => a is WanderAction);
+        _currentAction?.OnEnter();
+        Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
+    }
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
     {
@@ -263,7 +268,10 @@ public class PetController : MonoBehaviour
         // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
         interactionController?.HandleInput();
         if (isHolding || isActionLocked) return;
-
+        // ★★★★★ 새로 추가된 부분 ★★★★★
+        // 2. 욕구 상태 업데이트 (매 프레임)
+        UpdateNeeds();
+        // ★★★★★ 여기까지 추가 ★★★★★
         // 2. 환경 상태 업데이트 (매 프레임)
         waterBehaviorController?.CheckWaterArea();
 
@@ -295,11 +303,11 @@ public class PetController : MonoBehaviour
     }
 
     /// <summary>
-    /// AI의 핵심 의사결정 루프. 매 프레임 호출됩니다.
+    /// AI의 핵심 의사결정 루프. 주기적으로 호출됩니다.
     /// </summary>
     public void UpdateAI()
     {
-        if (isActionLocked) return;
+        if (isActionLocked || isHolding) return; // isHolding 상태도 AI 결정 중지 조건에 추가
 
         IPetAction bestAction = null;
         float maxPriority = -1f;
@@ -314,24 +322,46 @@ public class PetController : MonoBehaviour
             }
         }
 
-        if (bestAction != null && bestAction != _currentAction)
+        // ★★★ 수정: 행동 전환 로직 개선 ★★★
+        if (bestAction != null && bestAction.GetType() != _currentAction?.GetType())
         {
+            // Debug.Log($"[AI] 행동 전환: {_currentAction?.GetType().Name} -> {bestAction.GetType().Name} (우선순위: {maxPriority})");
+
+            // 1. 이전 행동의 종료 처리
             _currentAction?.OnExit();
+
+            // 2. 현재 행동을 새로운 행동으로 교체
             _currentAction = bestAction;
+
+            // 3. 새로운 행동의 시작 처리
             _currentAction.OnEnter();
         }
-
-        // _currentAction?.OnUpdate(); // 이 줄을 Update() 메서드로 이동
     }
+    /// <summary>
+    /// 펫의 배고픔과 졸림 수치를 시간에 따라 지속적으로 업데이트합니다.
+    /// </summary>
+    private void UpdateNeeds()
+    {
+        // 펫이 먹고 있거나, 먹을 것을 찾아가는 중이 아닐 때만 배고픔 증가
+        if (feedingController != null && !feedingController.IsEatingOrSeeking())
+        {
+            hunger = Mathf.Clamp(hunger + hungerIncreaseRate * Time.deltaTime, 0f, 100f);
+        }
 
+        // 펫이 자고 있거나, 잠잘 곳을 찾아가는 중이 아닐 때만 졸림 증가
+        if (sleepingController != null && !sleepingController.IsSleepingOrSeeking())
+        {
+            sleepiness = Mathf.Clamp(sleepiness + sleepinessIncreaseRate * Time.deltaTime, 0f, 100f);
+        }
+    }
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
-{
-    isInteracting = true;
-    interactionPartner = partner;
-    currentInteractionLogic = interactionLogic;
-    // 여기서 UpdateAI()를 강제 호출하지 않습니다.
-    // 다음 AI 업데이트 주기 때 자연스럽게 InteractWithPetAction으로 전환될 것입니다.
-}
+    {
+        isInteracting = true;
+        interactionPartner = partner;
+        currentInteractionLogic = interactionLogic;
+        // 여기서 UpdateAI()를 강제 호출하지 않습니다.
+        // 다음 AI 업데이트 주기 때 자연스럽게 InteractWithPetAction으로 전환될 것입니다.
+    }
 
     public void InterruptCurrentActionFor(InteractionType type)
     {

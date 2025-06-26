@@ -540,9 +540,10 @@ public class PetInteractionController : MonoBehaviour
     // 펫을 선택하는 함수
     // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
 
-    // 펫을 선택하는 함수
+   // 펫을 선택하는 함수
     private void Select()
     {
+        // 펫이 특별 애니메이션 재생으로 잠겨있다면 선택하지 않습니다.
         if (petController.isAnimationLocked)
         {
             return;
@@ -550,24 +551,24 @@ public class PetInteractionController : MonoBehaviour
 
         // ★★★ 수정: isSelected 플래그만 true로 설정합니다. ★★★
         // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
-        petController.isSelected = true;
-        isSelected = true;
+        petController.isSelected = true; 
+        isSelected = true; // 내부 상태 추적용 플래그는 유지
         selectionTimer = 0f;
 
+        // 터치 횟수 관련 로직은 유지
         touchCount++;
         lastTouchTime = Time.time;
 
         var animController = petController.GetComponent<PetAnimationController>();
 
-        // 터치 횟수에 따른 특수 애니메이션 재생 로직은 유지합니다. (이것은 일회성 이벤트이므로)
-        if (touchCount >= maxTouchCount) // 10번 이상 터치 (죽음)
+        // 터치 횟수에 따른 특수 애니메이션 재생
+        if (touchCount >= maxTouchCount) // 10번 이상 터치
         {
             StartCoroutine(animController.PlaySpecialAnimation(8, true));
             touchCount = 0;
         }
-        else if (touchCount >= 5) // 5번 이상 터치 (공격)
+        else if (touchCount >= 5) // 5번 이상 터치
         {
-            // 공격 애니메이션은 카메라를 본 후에 재생되어야 하므로, isSelected가 활성화 된 후 잠시 기다렸다가 실행합니다.
             StartCoroutine(AttackAfterDelay());
         }
         else // 일반 터치
@@ -576,21 +577,24 @@ public class PetInteractionController : MonoBehaviour
                 nameTextObject.SetActive(true);
         }
     }
-    // 펫 선택을 해제하는 함수
+
+      // 펫 선택을 해제하는 함수
     private void Deselect()
     {
         // ★★★ 수정: isSelected 플래그만 false로 설정합니다. ★★★
         // AI 시스템이 이 상태 변화를 감지하고 자동으로 WanderAction으로 전환할 것입니다.
         petController.isSelected = false;
-        isSelected = false;
+        isSelected = false; // 내부 상태 추적용 플래그
 
         if (!isHolding)
         {
             if (nameTextObject != null)
                 nameTextObject.SetActive(false);
 
+            // 현재 진행중인 AttackAfterDelay 같은 코루틴을 중지합니다.
             StopAllCoroutines();
 
+            // 나무 위에서 선택 해제 시, 휴식 애니메이션으로 돌려놓습니다.
             if (petController.isClimbingTree)
             {
                 var animController = petController.GetComponent<PetAnimationController>();
@@ -598,7 +602,6 @@ public class PetInteractionController : MonoBehaviour
             }
         }
     }
-
     // 5번 터치 시 공격 애니메이션을 위한 새로운 코루틴
     private IEnumerator AttackAfterDelay()
     {

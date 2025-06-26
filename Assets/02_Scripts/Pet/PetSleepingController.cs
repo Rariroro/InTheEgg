@@ -32,7 +32,7 @@ public class PetSleepingController : MonoBehaviour
         sleepingAreaLayer = LayerMask.GetMask("SleepingArea");
     }
 
-   /// <summary>
+    /// <summary>
     /// ★★★ 추가: SleepAction의 OnEnter에서 호출될 메서드입니다.
     /// 잠잘 곳을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
     /// </summary>
@@ -47,7 +47,7 @@ public class PetSleepingController : MonoBehaviour
         if (IsSleepingOrSeeking()) return true; // 이미 잠을 자러 가는 중
 
         // 졸음 수치 증가 (상태 업데이트는 Action에서 담당하는게 더 좋지만, 편의상 여기에 유지)
-        petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
+        // petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
 
         if (petController.sleepiness < 70f) return false;
 
@@ -67,7 +67,7 @@ public class PetSleepingController : MonoBehaviour
             }
             DetectSleepingArea(); // 잠잘 곳 탐색
         }
-        
+
         // 강제 수면 체크
         float personalityThreshold = GetPersonalityForceSleepThreshold();
         if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null && !isSeekingTreeToSleep)
@@ -87,13 +87,13 @@ public class PetSleepingController : MonoBehaviour
     {
         // 나무 펫은 코루틴이 모든 것을 처리하므로 이 메서드는 지상 펫에게만 의미가 있습니다.
         if (petController.habitat == PetAIProperties.Habitat.Tree) return;
-                petController.HandleRotation();
+        petController.HandleRotation();
 
         HandleMovementToTarget();
     }
-    
 
-      /// <summary>
+
+    /// <summary>
     /// ★★★ 수정: 메서드 반환 타입을 void에서 bool로 변경하고, 행동 시작 시 true를 반환하도록 수정합니다.
     /// </summary>
     private bool HandleTreePetSleeping()
@@ -143,51 +143,34 @@ public class PetSleepingController : MonoBehaviour
         isSeekingTreeToSleep = false;
     }
 
-    /// <summary>
-    /// ★★★ 새로 추가: 나무 위에서 잠을 자는 코루틴
-    /// </summary>
-   // PetSleepingController.cs의 SleepInTree 메서드 수정
+    // PetSleepingController.cs
 
-public IEnumerator SleepInTree()
-{
-    if (isSleeping) yield break;
-
-    isSleeping = true;
-    petController.StopMovement();
-
-    Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
-
-    // 수면 애니메이션 재생
-    yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
-
-    // 피로 완전 회복
-    petController.sleepiness = 0f;
-    petController.ShowEmotion(EmotionType.Happy, 3f);
-
-    Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
-
-    isSleeping = false;
-
-    // ★★★ 추가: 잠에서 깬 후 배고픔 체크 ★★★
-    if (petController.hunger > 70f)
+    public IEnumerator SleepInTree()
     {
-        Debug.Log($"{petController.petName}이(가) 배가 고파서 나무에서 내려가기로 결정했습니다.");
-        
-        // 나무에서 즉시 내려가도록 신호 전송
-        var treeClimber = petController.GetComponent<PetTreeClimbingController>();
-        if (treeClimber != null)
+        if (isSleeping) yield break;
+
+        isSleeping = true;
+        petController.isActionLocked = true; // 자는 동안에는 다른 액션 방지
+
+        try
         {
-            // 나무에서 내려가기 위해 강제로 쉬는 상태 종료
-            yield break; // SleepInTree 종료하면 ClimbAndExecuteAction이 내려가기 시작
+            Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
+
+            // 수면 애니메이션 재생
+            yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
+
+            // 피로 완전 회복
+            petController.sleepiness = 0f;
+            petController.ShowEmotion(EmotionType.Happy, 3f);
+
+            Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
+        }
+        finally
+        {
+            isSleeping = false;
+            petController.isActionLocked = false; // 잠에서 깨면 액션 잠금 해제
         }
     }
-    else
-    {
-        // 배가 고프지 않으면 다시 휴식 애니메이션으로
-        var animController = petController.GetComponent<PetAnimationController>();
-        animController?.SetContinuousAnimation(5);
-    }
-}
     /// <summary>
     /// ★★★ 수정된 잠자리 탐색 로직 ★★★
     /// 자신의 서식지(Habitat)와 일치하는 가장 가까운 수면 공간을 찾습니다.
@@ -214,14 +197,14 @@ public IEnumerator SleepInTree()
         }
 
         if (nearestMatchingArea != null)
-        {            
+        {
             ResetPetStateForSeeking();
             targetSleepingArea = nearestMatchingArea;
             petController.agent.SetDestination(targetSleepingArea.transform.position);
             petController.ResumeMovement();
         }
     }
-    
+
     private void HandleMovementToTarget()
     {
         if (isSleeping || targetSleepingArea == null || !petController.agent.enabled) return;
@@ -231,7 +214,7 @@ public IEnumerator SleepInTree()
             StartCoroutine(SleepInPlace(true)); // 지정된 장소에서 자므로 완전 회복
         }
     }
-    
+
     /// <summary>
     /// 잠을 자기 위해 이동해야 할 때, 다른 행동들을 강제로 중지시킵니다.
     /// </summary>
@@ -298,7 +281,7 @@ public IEnumerator SleepInTree()
     {
         return isSleeping || (targetSleepingArea != null) || isSeekingTreeToSleep;
     }
-    
+
     public void InterruptSleep()
     {
         if (isSleeping)
@@ -313,7 +296,7 @@ public IEnumerator SleepInTree()
             Debug.Log($"{petController.petName}의 잠을 깨웠습니다!");
         }
     }
-    
+
     private float GetPersonalityForceSleepThreshold()
     {
         switch (petController.personality)
