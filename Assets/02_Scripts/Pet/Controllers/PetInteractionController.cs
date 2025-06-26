@@ -556,43 +556,43 @@ public class PetInteractionController : MonoBehaviour
     // 펫을 선택하는 함수
     // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
 
-    // 펫을 선택하는 함수
-    private void Select()
+   // 펫을 선택하는 함수
+private void Select()
+{
+    // ★★★ 수정: isAnimationLocked 체크를 제거하거나 isExhausted 예외를 추가합니다. ★★★
+    // 탈진 상태에서도 펫을 선택하여 상태를 확인하거나 들어올릴 수 있어야 합니다.
+    if (petController.isAnimationLocked && !petController.isExhausted)
     {
-        // 펫이 특별 애니메이션 재생으로 잠겨있다면 선택하지 않습니다.
-        if (petController.isAnimationLocked)
-        {
-            return;
-        }
-
-        // ★★★ 수정: isSelected 플래그만 true로 설정합니다. ★★★
-        // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
-        petController.isSelected = true;
-        isSelected = true; // 내부 상태 추적용 플래그는 유지
-        selectionTimer = 0f;
-
-        // 터치 횟수 관련 로직은 유지
-        touchCount++;
-        lastTouchTime = Time.time;
-
-        var animController = petController.GetComponent<PetAnimationController>();
-
-        // 터치 횟수에 따른 특수 애니메이션 재생
-        if (touchCount >= maxTouchCount) // 10번 이상 터치
-        {
-            StartCoroutine(animController.PlaySpecialAnimation(8, true));
-            touchCount = 0;
-        }
-        else if (touchCount >= 5) // 5번 이상 터치
-        {
-            StartCoroutine(AttackAfterDelay());
-        }
-        else // 일반 터치
-        {
-            if (nameTextObject != null)
-                nameTextObject.SetActive(true);
-        }
+        return;
     }
+
+    // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
+    petController.isSelected = true;
+    isSelected = true; // 내부 상태 추적용 플래그는 유지
+    selectionTimer = 0f;
+
+    // 터치 횟수 관련 로직은 유지
+    touchCount++;
+    lastTouchTime = Time.time;
+
+    var animController = petController.GetComponent<PetAnimationController>();
+
+    // 터치 횟수에 따른 특수 애니메이션 재생
+    if (touchCount >= maxTouchCount) // 10번 이상 터치
+    {
+        StartCoroutine(animController.PlaySpecialAnimation(8, true));
+        touchCount = 0;
+    }
+    else if (touchCount >= 5) // 5번 이상 터치
+    {
+        StartCoroutine(AttackAfterDelay());
+    }
+    else // 일반 터치
+    {
+        if (nameTextObject != null)
+            nameTextObject.SetActive(true);
+    }
+}
 
     // 펫 선택을 해제하는 함수
     private void Deselect()

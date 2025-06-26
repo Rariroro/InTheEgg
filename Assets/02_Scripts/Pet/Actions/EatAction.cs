@@ -20,21 +20,12 @@ public class EatAction : IPetAction
         _feedingController = feedingController;
     }
 
-   // EatAction.cs
+  // EatAction.cs
 
 public float GetPriority()
 {
-    // ★★★ 최상위 우선순위 부여 로직 추가 ★★★
-    // 만약 펫이 탈진 상태이고, 아주 가까운 거리(3유닛) 내에 먹을 것이 있다면
-    // 다른 모든 행동을 중단하고 즉시 식사를 시작하도록 최상위 우선순위(60)를 부여합니다.
-    if (_pet.isExhausted && _feedingController.IsFoodInRange(3f))
-    {
-        return 60.0f; // ExhaustedAction의 우선순위(50)보다 높게 설정
-    }
-    // ★★★ 여기까지 추가 ★★★
-
-    // --- 이하 기존 로직 유지 ---
-
+    // ★★★ 수정: 탈진 관련 특별 우선순위 로직을 제거합니다. (ExhaustedAction이 전담) ★★★
+    
     // 이미 음식을 먹고 있거나 찾으러 가는 중이라면, 행동을 계속 유지합니다.
     if (_feedingController.IsEatingOrSeeking())
     {
