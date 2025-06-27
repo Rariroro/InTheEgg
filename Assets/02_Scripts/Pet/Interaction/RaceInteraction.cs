@@ -137,7 +137,7 @@ public class RaceInteraction : BasePetInteraction
                     rabbitWokeUp = true;
                     if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
                     fixPositionCoroutine = null;
-    // 1. 놀라는 감정 표현과 함께 잠에서 깨는 애니메이션을 재생합니다.
+                    // 1. 놀라는 감정 표현과 함께 잠에서 깨는 애니메이션을 재생합니다.
                     rabbit.ShowEmotion(EmotionType.Scared, 10f);
                     // 애니메이션이 끝나면 Idle 상태로 돌아가도록 returnToIdle을 true로 설정합니다.
                     yield return StartCoroutine(rabbit.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, true, false));
@@ -148,7 +148,7 @@ public class RaceInteraction : BasePetInteraction
                         // 기존 경로를 완전히 초기화하여 제자리걸음 문제를 방지합니다. (가장 중요한 부분)
                         rabbit.agent.ResetPath();
                     }
-                    
+
                     // 3. 속도를 높이고, 새로운 목적지(결승선)를 설정한 뒤 다시 달리게 합니다.
                     rabbit.agent.speed = rabbitState.originalSpeed * 5.0f; // 깬 후에는 더 빠르게
                     rabbit.agent.SetDestination(finishLine);
@@ -156,7 +156,7 @@ public class RaceInteraction : BasePetInteraction
 
                     // 4. 달리기 애니메이션을 다시 설정합니다.
                     rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-                    
+
                 }
 
                 // 거북이가 결승선에 도착하면 경주 종료
@@ -189,7 +189,7 @@ public class RaceInteraction : BasePetInteraction
         }
         finally
         {
-             if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
+            if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
             rabbit.HideEmotion();
             turtle.HideEmotion();
             rabbitState.Restore(rabbit);
