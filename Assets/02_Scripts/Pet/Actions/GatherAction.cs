@@ -63,7 +63,7 @@ private System.Collections.IEnumerator EnterSequence()
         _agent.SetDestination(_pet.gatherTargetPosition);
         _agent.isStopped = false;
 
-        if (_pet.animator) _pet.animator.SetInteger("animation", 2); // 뛰기(Run) 애니메이션
+        if (_pet.animator) _pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run); // 뛰기(Run) 애니메이션
     }
 }
 
@@ -79,7 +79,7 @@ private System.Collections.IEnumerator EnterSequence()
             _hasArrived = true;
             _pet.isGathered = true; // 도착 완료 플래그 설정
             _agent.isStopped = true;
-            if (_pet.animator) _pet.animator.SetInteger("animation", 0); // 정지(Idle) 애니메이션
+            if (_pet.animator) _pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle); // 정지(Idle) 애니메이션
 
             // 카메라 바라보기 로직 시작
             _pet.StartCoroutine(LookAtCameraCoroutine());

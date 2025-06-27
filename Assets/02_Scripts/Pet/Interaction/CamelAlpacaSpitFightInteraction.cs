@@ -234,7 +234,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             Debug.Log($"[CamelAlpacaSpitFight] {camel.petName}이(가) 침을 뱉기 시작합니다!");
             
             // 낙타 침 뱉기 준비 애니메이션 (머리를 뒤로 젖히는 모션)
-            yield return StartCoroutine(camel.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 1.0f, false, false));
+            yield return StartCoroutine(camel.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.0f, false, false));
             
             // 침 뱉기 위치 계산 (머리 앞쪽)
             Vector3 camelSpitStart = camel.transform.position + camel.transform.forward * 1.0f + Vector3.up * 2.0f;
@@ -245,7 +245,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             
             // 알파카가 맞는 애니메이션 (약간 지연 후)
             yield return new WaitForSeconds(0.8f);
-            yield return StartCoroutine(alpaca.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(7, 1.0f, false, false));
+            yield return StartCoroutine(alpaca.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, 1.0f, false, false));
             
             // 알파카 반응 - 화남
             alpaca.ShowEmotion(EmotionType.Angry, 5f);
@@ -255,7 +255,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             Debug.Log($"[CamelAlpacaSpitFight] {alpaca.petName}이(가) 반격으로 침을 뱉습니다!");
             
             // 알파카 침 뱉기 준비 애니메이션
-            yield return StartCoroutine(alpaca.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 1.0f, false, false));
+            yield return StartCoroutine(alpaca.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.0f, false, false));
             
             // 알파카 침 뱉기 위치 계산
             Vector3 alpacaSpitStart = alpaca.transform.position + alpaca.transform.forward * 0.8f + Vector3.up * 2.0f;
@@ -266,7 +266,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             
             // 낙타가 맞는 애니메이션
             yield return new WaitForSeconds(0.8f);
-            yield return StartCoroutine(camel.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(7, 1.0f, false, false));
+            yield return StartCoroutine(camel.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, 1.0f, false, false));
             
             // 낙타 반응 - 더 화남
             camel.ShowEmotion(EmotionType.Angry, 5f);
@@ -292,7 +292,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
                                    Vector3.up * (target == camel ? 2.5f : 2.0f);
                 
                 // 침 뱉기 애니메이션
-                yield return StartCoroutine(spitter.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 0.8f, false, false));
+                yield return StartCoroutine(spitter.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 0.8f, false, false));
                 
                 // 침 효과 생성
                 StartCoroutine(CreateSpitEffect(spitStart, targetPos, 0.8f));
@@ -307,14 +307,14 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
                 {
                     // 회피 성공
                     Debug.Log($"[CamelAlpacaSpitFight] {target.petName}이(가) 침을 피했습니다!");
-                    yield return StartCoroutine(target.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.0f, false, false));
+                    yield return StartCoroutine(target.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, false, false));
                     target.ShowEmotion(EmotionType.Happy, 3f);
                     spitter.ShowEmotion(EmotionType.Surprised, 3f);
                 }
                 else
                 {
                     // 맞음
-                    yield return StartCoroutine(target.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(7, 1.0f, false, false));
+                    yield return StartCoroutine(target.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, 1.0f, false, false));
                     target.ShowEmotion(EmotionType.Angry, 3f);
                 }
                 
@@ -325,7 +325,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             Debug.Log($"[CamelAlpacaSpitFight] 최종 결정전! 두 동물이 동시에 침을 뱉습니다!");
             
             // 두 동물 모두 공격 준비 애니메이션
-            yield return StartCoroutine(PlaySimultaneousAnimations(camel, alpaca, 6, 6, 1.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(camel, alpaca, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Attack, 1.0f));
             
             // 동시에 침 뱉기 효과
             Vector3 finalCamelSpitStart = camel.transform.position + camel.transform.forward * 1.0f + Vector3.up * 2.0f;
@@ -336,7 +336,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             
             // 두 동물 모두 맞는 애니메이션
             yield return new WaitForSeconds(0.8f);
-            yield return StartCoroutine(PlaySimultaneousAnimations(camel, alpaca, 7, 7, 1.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(camel, alpaca, PetAnimationController.PetAnimationType.Damage, PetAnimationController.PetAnimationType.Damage, 1.0f));
             
             // 7. 승자 결정 (랜덤)
             PetController winner = Random.value > 0.5f ? camel : alpaca;
@@ -349,10 +349,10 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             loser.ShowEmotion(EmotionType.Angry, 5f);
             
             // 승자는 기뻐하는 애니메이션
-            yield return StartCoroutine(winner.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2.0f, false, false));
+            yield return StartCoroutine(winner.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
             
             // 패자는 실망하는 애니메이션
-            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 2.0f, false, false));
+            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
             
             // 9. 상호작용 마무리
             yield return new WaitForSeconds(1.0f);

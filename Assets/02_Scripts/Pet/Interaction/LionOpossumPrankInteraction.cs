@@ -122,7 +122,7 @@ public class LionPossumPrankInteraction : BasePetInteraction
             );
             
             // 사자 잠자기 애니메이션 재생
-          StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 10f, true, false));
+          StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 10f, true, false));
             
             Debug.Log($"[LionPossumPrank] {lion.petName}이(가) 잠들었습니다.");
             
@@ -136,7 +136,7 @@ public class LionPossumPrankInteraction : BasePetInteraction
             Possum.agent.SetDestination(frontPosition);
             
             // 걷기 애니메이션 설정
-            Possum.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
+            Possum.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             
             // 주머니쥐가 접근할 때까지 대기
             float approachTimeout = 8f;
@@ -164,7 +164,7 @@ public class LionPossumPrankInteraction : BasePetInteraction
             
             // 장난치는 애니메이션 (애니메이션 6 - 공격/놀기 사용)
             Possum.ShowEmotion(EmotionType.Joke, 5f);
-            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 2.5f, false, false));
+            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 2.5f, false, false));
             
             // 4. 사자가 깨어남
             // 위치 고정 코루틴 중지 (사자가 움직일 수 있도록)
@@ -177,17 +177,17 @@ public class LionPossumPrankInteraction : BasePetInteraction
             // 사자 깨어나는 애니메이션
             lion.HideEmotion();  // 졸린 감정 제거
             lion.ShowEmotion(EmotionType.Angry, 3f);  // 놀란 감정
-            yield return StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(7, 1.5f, false, false));
+            yield return StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, 1.5f, false, false));
             
             // 사자가 화내는 애니메이션
             lion.HideEmotion();  // 놀란 감정 제거
             lion.ShowEmotion(EmotionType.Angry, 5f);  // 화난 감정
-            yield return StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 2f, false, false));
+            yield return StartCoroutine(lion.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 2f, false, false));
             
             // 5. 주머니쥐가 죽은척 함
             Possum.HideEmotion();
             Possum.ShowEmotion(EmotionType.Sleepy, 20f);
-          StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(8, 10f, false, false));
+          StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Die, 10f, false, false));
             
             Debug.Log($"[LionPossumPrank] {Possum.petName}이(가) 죽은척을 합니다.");
             
@@ -219,7 +219,7 @@ public class LionPossumPrankInteraction : BasePetInteraction
             // 사자 이동 시작
             lion.agent.isStopped = false;
             lion.agent.SetDestination(lionLeaveTarget);
-            lion.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
+            lion.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             
             Debug.Log($"[LionPossumPrank] {lion.petName}이(가) 떠납니다.");
             
@@ -252,10 +252,10 @@ public class LionPossumPrankInteraction : BasePetInteraction
             Possum.ShowEmotion(EmotionType.Happy, 5f);
             
             // 점프하는 애니메이션으로 신나는 표현
-            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2f, false, false));
+            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2f, false, false));
             
             // 한번 더 신나게 점프
-            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2f, false, false));
+            yield return StartCoroutine(Possum.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2f, false, false));
             
             Debug.Log($"[LionPossumPrank] {Possum.petName}이(가) 신나합니다!");
             

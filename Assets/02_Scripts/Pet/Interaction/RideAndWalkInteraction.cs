@@ -152,30 +152,30 @@ public class RideAndWalkInteraction : BasePetInteraction
             PetAnimationController boarAnimController = boar.GetComponent<PetAnimationController>();
             
             // 미어켓이 먼저 점프하는 애니메이션 (애니메이션 3)
-            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, 3, 0, 1.5f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, PetAnimationController.PetAnimationType.Jump, 0, 1.5f));
             
             // 멧돼지가 반응하여 움직이는 애니메이션 (애니메이션 6 - 공격/놀기)
-            yield return StartCoroutine(PlaySimultaneousAnimations(boar, meerkat, 6, 0, 2.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(boar, meerkat, PetAnimationController.PetAnimationType.Attack, 0, 2.0f));
             
             // 미어켓이 다시 점프
-            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, 3, 0, 1.5f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, PetAnimationController.PetAnimationType.Jump, 0, 1.5f));
             
             // 서로 상호작용하는 애니메이션 반복 (3번)
             for (int i = 0; i < 3; i++)
             {
                 // 미어켓이 즐거워하는 애니메이션 (애니메이션 6 - 공격/놀기)
-                yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(6, 1.0f, false, false));
+                yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.0f, false, false));
                 
                 // 멧돼지도 즐거워하는 애니메이션
                 if (i % 2 == 0)
                 {
                     // 짝수 번째는 애니메이션 3 (점프)
-                    yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(3, 1.0f, false, false));
+                    yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, false, false));
                 }
                 else
                 {
                     // 홀수 번째는 애니메이션 6 (공격/놀기)
-                    yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(6, 1.0f, false, false));
+                    yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.0f, false, false));
                 }
             }
             
@@ -183,10 +183,10 @@ public class RideAndWalkInteraction : BasePetInteraction
             Debug.Log($"[RideAndWalk] {meerkat.petName}이(가) {boar.petName}의 등에 타려고 합니다.");
             
             // 멧돼지가 앉는 애니메이션 (애니메이션 4 - 앉기/먹기)
-            yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(4, 2.0f, false, false));
+            yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
             
             // 미어켓이 점프하는 애니메이션
-            yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+            yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             
             // 6. 미어켓이 멧돼지 위에 올라탈 때는 위치 고정 코루틴 중지
             if (fixPositionCoroutine != null)
@@ -230,10 +230,10 @@ public class RideAndWalkInteraction : BasePetInteraction
             // 7. 함께 걷기 시작
             // 멧돼지 이동 재개
             boar.agent.isStopped = false;
-            boarAnimController.SetContinuousAnimation(1); // 걷기 애니메이션
+            boarAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             
             // 미어켓은 앉은 자세 (애니메이션 4)
-            meerkatAnimController.SetContinuousAnimation(4);
+            meerkatAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
             
             Debug.Log($"[RideAndWalk] {boar.petName}이(가) {meerkat.petName}을(를) 태우고 걷기 시작합니다.");
             
@@ -269,9 +269,9 @@ public class RideAndWalkInteraction : BasePetInteraction
                     // 가끔 미어켓이 즐거워하는 애니메이션 표시
                     if (Random.value < 0.01f) // 약 1% 확률
                     {
-                        StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(3, 1.0f, false, false));
+                        StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, false, false));
                         yield return new WaitForSeconds(1.0f);
-                        meerkatAnimController.SetContinuousAnimation(4); // 다시 앉은 자세로
+                        meerkatAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat); // 다시 앉은 자세로
                     }
                     
                     yield return null;
@@ -285,7 +285,7 @@ public class RideAndWalkInteraction : BasePetInteraction
                 
                 // 다시 움직임 시작
                 boar.agent.isStopped = false;
-                boarAnimController.SetContinuousAnimation(1); // 걷기 애니메이션
+                boarAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             }
             
             // 8. 마지막 목적지 도착 후 미어켓이 내리기
@@ -310,10 +310,10 @@ public class RideAndWalkInteraction : BasePetInteraction
             );
             
             // 멧돼지가 앉는 애니메이션
-            yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(4, 1.5f, false, false));
+            yield return StartCoroutine(boarAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
             
             // 미어켓이 점프하는 애니메이션
-            yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+            yield return StartCoroutine(meerkatAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             
             // 미어켓을 부모에서 분리
             meerkat.transform.SetParent(null);
@@ -332,7 +332,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             Debug.Log($"[RideAndWalk] {meerkat.petName}이(가) {boar.petName}에서 내렸습니다.");
             
             // 작별 인사 - 서로 즐거워하는 애니메이션
-            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, 6, 6, 2.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(meerkat, boar, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Attack, 2.0f));
             
             // 마지막으로 기본 애니메이션으로 전환
             meerkatAnimController.SetContinuousAnimation(0);

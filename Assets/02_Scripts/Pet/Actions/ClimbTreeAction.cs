@@ -81,7 +81,7 @@ public class ClimbTreeAction : IPetAction
 
             // 2. 애니메이션 처리
             // 나무 위에서 선택되었을 때는 '휴식' 애니메이션을 멈추고 '기본(Idle)' 자세를 취하게 합니다.
-            _animController?.SetContinuousAnimation(0); // Idle 애니메이션
+            _animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle); // Idle 애니메이션
         }
     }
 

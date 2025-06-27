@@ -102,8 +102,8 @@ public class RestTogetherInteraction : BasePetInteraction
             
             // 4. 쉬기 애니메이션으로 자연스럽게 전환
             // 애니메이션 컨트롤러를 통해 쉬기 애니메이션 재생
-            StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 3.0f, true, false));
-            StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 3.0f, true, false));
+            StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 3.0f, true, false));
+            StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 3.0f, true, false));
             
             Debug.Log($"[RestTogether] {pet1.petName}와(과) {pet2.petName}가 함께 쉬는 중");
             
@@ -128,8 +128,8 @@ public class RestTogetherInteraction : BasePetInteraction
                     {
                         case 0: // 기지개 펴기 (애니메이션 3 - 점프 사용)
                             Debug.Log($"[RestTogether] {activePet.petName}가 기지개를 폅니다.");
-                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
-                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 0.5f, true, false));
+                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
+                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 0.5f, true, false));
                             break;
                             
                         case 1: // 다른 펫 쳐다보기
@@ -142,8 +142,8 @@ public class RestTogetherInteraction : BasePetInteraction
                             
                         case 2: // 잠시 앉았다 일어서기 (애니메이션 4 - 식사/앉기 사용)
                             Debug.Log($"[RestTogether] {activePet.petName}가 잠시 자세를 바꿉니다.");
-                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 2f, false, false));
-                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 0.5f, true, false));
+                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2f, false, false));
+                            yield return StartCoroutine(activePet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 0.5f, true, false));
                             break;
                     }
                     

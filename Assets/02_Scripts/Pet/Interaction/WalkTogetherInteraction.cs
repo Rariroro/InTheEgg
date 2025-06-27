@@ -112,8 +112,8 @@ public class WalkTogetherInteraction : BasePetInteraction
             pet2.agent.speed = syncedSpeed;
             
             // 걷기 애니메이션 활성화
-            pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
-            pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
+            pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             
             // 3. 각 펫이 나란히 걷도록 목적지 설정
             float walkTime = 15f; // 총 걷는 시간

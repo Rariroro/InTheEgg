@@ -185,7 +185,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             // 관중들이 응원 (점프 애니메이션)
             foreach (var spectator in spectators)
             {
-                StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+                StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             }
             
             // 잠시 대기 (긴장감 조성)
@@ -210,8 +210,8 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             PetAnimationController koalaAnimController = koala.GetComponent<PetAnimationController>();
             
             // 달리기 애니메이션 시작 - 두 동물 모두 걷기 애니메이션 사용 (느리므로)
-            slothAnimController.SetContinuousAnimation(1); // 걷기 애니메이션
-            koalaAnimController.SetContinuousAnimation(1); // 걷기 애니메이션
+            slothAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
+            koalaAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             
             // 결승선으로 이동 시작
             sloth.agent.isStopped = false;
@@ -264,7 +264,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                     foreach (var spectator in spectators)
                     {
                         spectator.ShowEmotion(EmotionType.Sleepy, 60f);
-                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 3.0f, false, false));
+                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 3.0f, false, false));
                     }
                 }
                 
@@ -278,7 +278,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                     foreach (var spectator in spectators)
                     {
                         spectator.ShowEmotion(EmotionType.Sleepy, 60f);
-                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 10.0f, false, false));
+                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 10.0f, false, false));
                     }
                 }
                 
@@ -360,10 +360,10 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             // loser.ShowEmotion(EmotionType.Defeat, 10f);
             
             // 승자 축하 (점프 애니메이션)
-            yield return StartCoroutine(winner.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2.0f, false, false));
+            yield return StartCoroutine(winner.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
             
             // 패자 실망 (앉기 애니메이션)
-            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 2.0f, false, false));
+            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
             
             // 관중 반응 (아직 잠들지 않은 관중만)
             if (spectatorInterestTimer < interestThreshold2)
@@ -374,7 +374,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                     if (Random.value > 0.5f)
                     {
                         spectator.ShowEmotion(EmotionType.Happy, 5f);
-                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+                        StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
                     }
                 }
             }

@@ -56,7 +56,7 @@ public class ExhaustedAction : IPetAction
         // 음식을 찾지 못했다면, 일단 탈진 상태를 표시합니다.
         if (!_isTryingToEat)
         {
-            _animController?.SetContinuousAnimation(REST_ANIMATION_INDEX);
+            _animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             _pet.ShowEmotion(EmotionType.Hungry, 2f);
         }
     }

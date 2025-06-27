@@ -278,7 +278,7 @@ public class PetMovementController : MonoBehaviour
                 break;
 
             case BehaviorState.Resting:
-                anim?.SetContinuousAnimation(5);
+                anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
                 break;
 
             case BehaviorState.Looking:
@@ -336,13 +336,13 @@ public class PetMovementController : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         var anim = petController.GetComponent<PetAnimationController>();
         if (anim != null)
-            yield return StartCoroutine(anim.PlayAnimationWithCustomDuration(3, 1f, true, false));
+            yield return StartCoroutine(anim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1f, true, false));
     }
 
     private IEnumerator LookAround()
     {
         var anim = petController.GetComponent<PetAnimationController>();
-        anim?.SetContinuousAnimation(1);
+        anim?.SetContinuousAnimation((int)PetAnimationController.PetAnimationType.Idle);
 
         for (int i = 0; i < 2; i++)
         {
@@ -382,7 +382,7 @@ public class PetMovementController : MonoBehaviour
         if (type == 0)
         {
             SafeSetAgentMovement(petController.baseSpeed, true);
-            anim?.SetContinuousAnimation(2);
+            anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
             yield return new WaitForSeconds(3f);
             anim?.StopContinuousAnimation();
         }
@@ -390,12 +390,12 @@ public class PetMovementController : MonoBehaviour
         {
             if (anim != null)
                 for (int i = 0; i < 3; i++)
-                    yield return StartCoroutine(anim.PlayAnimationWithCustomDuration(3, 0.8f, true, false));
+                    yield return StartCoroutine(anim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
         }
         else
         {
             SafeSetAgentMovement(petController.baseSpeed * 2f, false);
-            anim?.SetContinuousAnimation(2);
+            anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
             SetRandomDestination();
             yield return new WaitForSeconds(2f);
             SafeSetAgentMovement(petController.baseSpeed, true);
@@ -438,8 +438,8 @@ public class PetMovementController : MonoBehaviour
                 var anim = petController.GetComponent<PetAnimationController>();
                 if (anim != null)
                 {
-                    if (currentBehaviorState == BehaviorState.Walking) anim.SetContinuousAnimation(1);
-                    else if (currentBehaviorState == BehaviorState.Running) anim.SetContinuousAnimation(2);
+                    if (currentBehaviorState == BehaviorState.Walking) anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                    else if (currentBehaviorState == BehaviorState.Running) anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
                 }
             }
             catch (System.Exception e)
@@ -478,8 +478,8 @@ public class PetMovementController : MonoBehaviour
                 var anim = petController.GetComponent<PetAnimationController>();
                 if (anim != null)
                 {
-                    if (currentBehaviorState == BehaviorState.Walking) anim.SetContinuousAnimation(1);
-                    else if (currentBehaviorState == BehaviorState.Running) anim.SetContinuousAnimation(2);
+                    if (currentBehaviorState == BehaviorState.Walking) anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                    else if (currentBehaviorState == BehaviorState.Running) anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
                 }
             }
             catch (System.Exception e)

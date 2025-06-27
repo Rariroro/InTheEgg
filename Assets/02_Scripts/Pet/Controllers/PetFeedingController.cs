@@ -233,7 +233,7 @@ public class PetFeedingController : MonoBehaviour
             yield return StartCoroutine(LookAtTarget(targetFood.transform));
         }
 
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(eatAnimationIndex));
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(PetAnimationController.PetAnimationType.Eat));
         petController.hunger = 0f;
         petController.ShowEmotion(EmotionType.Happy, 3f);
 
@@ -253,7 +253,7 @@ public class PetFeedingController : MonoBehaviour
         isEating = true;
         petController.StopMovement();
         yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(eatAnimationIndex, 5f, true, true));
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5f, true, true));
         petController.hunger = 0f;
         petController.ShowEmotion(EmotionType.Happy, 3f);
         targetFeedingArea = null;

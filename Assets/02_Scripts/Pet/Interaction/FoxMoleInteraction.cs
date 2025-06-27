@@ -130,8 +130,8 @@ public class FoxMoleInteraction : BasePetInteraction
             mole.agent.SetDestination(escapeTarget);
             
             // 달리기 애니메이션 설정
-            fox.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기
-            mole.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기
+            fox.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
+            mole.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
             
             // 2. 추격 단계 - 여우가 두더지를 일정 시간 쫓음 (최대 10초)
             float chaseTime = 0f;
@@ -182,10 +182,10 @@ public class FoxMoleInteraction : BasePetInteraction
             LookAtEachOther(fox, mole);
             
             // 공격 애니메이션 재생
-            yield return StartCoroutine(fox.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 1.5f, false, false));
+            yield return StartCoroutine(fox.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.5f, false, false));
             
             // 두더지는 아파하는 애니메이션 재생
-            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(7, 1.0f, false, false));
+            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, 1.0f, false, false));
                // 두더지 NavMeshAgent 비활성화 (물리적 이동을 직접 제어하기 위해)
             mole.agent.enabled = false;
             
@@ -193,7 +193,7 @@ public class FoxMoleInteraction : BasePetInteraction
             Debug.Log($"[FoxMoleHunt] {mole.petName}가 땅을 파고 들어갑니다!");
             
             // 두더지가 땅을 파는 애니메이션 (앉기/팔 움직임으로 표현)
-            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 2.0f, false, false));
+            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
             
             // 현재 두더지 위치 저장 (나중에 다시 나오기 위해)
             moleBurrowPosition = mole.transform.position;
@@ -221,7 +221,7 @@ public class FoxMoleInteraction : BasePetInteraction
             Debug.Log($"[FoxMoleHunt] {fox.petName}가 땅을 파려고 시도합니다.");
             
             // 여우가 두더지가 사라진 위치를 파는 애니메이션 (앉기/먹기로 표현)
-            yield return StartCoroutine(fox.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 3.0f, false, false));
+            yield return StartCoroutine(fox.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 3.0f, false, false));
             
             // 잠시 쉬는 애니메이션
             // yield return StartCoroutine(fox.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 2.0f, false, false));
@@ -236,7 +236,7 @@ public class FoxMoleInteraction : BasePetInteraction
             
             // 여우 이동 시작
             fox.agent.isStopped = false;
-            fox.GetComponent<PetAnimationController>().SetContinuousAnimation(1); // 걷기 애니메이션
+            fox.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             fox.agent.SetDestination(foxDestination);
             
             // 여우가 충분히 멀어질 때까지 대기
@@ -280,7 +280,7 @@ public class FoxMoleInteraction : BasePetInteraction
             mole.agent.enabled = true;
             
             // 두더지가 나오는 애니메이션 (점프로 표현)
-            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.0f, false, false));
+            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, false, false));
             
             // 주변을 둘러보는 애니메이션 (회전)
             float lookAroundTime = 2.0f;
@@ -296,7 +296,7 @@ public class FoxMoleInteraction : BasePetInteraction
             }
             
             // 안도의 애니메이션 (앉기)
-            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 1.5f, false, false));
+            yield return StartCoroutine(mole.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
             
             // 잠시 대기
             yield return new WaitForSeconds(1.0f);

@@ -142,7 +142,7 @@ public class PetTreeClimbingController : MonoBehaviour
 private IEnumerator RestOnTree()
 {
     var animController = petController.GetComponent<PetAnimationController>();
-    animController?.SetContinuousAnimation(5); // 휴식 애니메이션
+    animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest); // 휴식 애니메이션
 
     float waitTime = UnityEngine.Random.Range(5f, 10f);
     float waited = 0f;
@@ -160,7 +160,7 @@ private IEnumerator RestOnTree()
         else
         {
             // 선택이 해제되면 다시 휴식 애니메이션으로 돌아가도록 보장합니다.
-            animController?.SetContinuousAnimation(5);
+            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
         }
 
         // 다른 긴급한 행동이 필요한지 체크
@@ -238,7 +238,7 @@ private IEnumerator RestOnTree()
             {
                 petController.agent.SetDestination(treeBaseTarget);
                 petController.agent.isStopped = false;
-                petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(1);
+                petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
                 while (!petController.isHolding && petController.agent.enabled &&
                        (petController.agent.pathPending || petController.agent.remainingDistance > 0.5f))
@@ -259,7 +259,7 @@ private IEnumerator RestOnTree()
             // 2단계: NavMeshAgent 비활성화 후 나무 오르기
             if (petController.agent != null) petController.agent.enabled = false;
 
-            petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(3);
+            petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Jump);
 
             // ... (나무 오르는 Lerp 로직) ...
             float treeHeight = CalculateTreeHeight(tree);
@@ -306,7 +306,7 @@ private IEnumerator RestOnTree()
         petController.isActionLocked = true;
         try
         {
-            petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(1);
+            petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
             Vector3 groundPos = petController.currentTree.position;
             if (NavMesh.SamplePosition(groundPos, out NavMeshHit hit, 5f, NavMesh.AllAreas))

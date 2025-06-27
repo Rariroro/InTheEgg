@@ -35,7 +35,7 @@ public class SelectedAction : IPetAction
         }
 
         // 애니메이션을 즉시 Idle(0) 상태로 전환합니다.
-        _animController?.SetContinuousAnimation(0);
+        _animController?.SetContinuousAnimation((int)PetAnimationController.PetAnimationType.Idle);
     }
 
     public void OnUpdate()

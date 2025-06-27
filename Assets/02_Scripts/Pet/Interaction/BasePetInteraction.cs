@@ -224,8 +224,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet2.agent.SetDestination(pos2);
 
         // 걷기 애니메이션 활성화
-        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
-        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
+        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 목적지로 이동 중");
 
@@ -336,15 +336,27 @@ public abstract class BasePetInteraction : MonoBehaviour
         public float originalAcceleration;
         public bool agentUpdateRotation;
 
-        public PetOriginalState(PetController pet)
+       public PetOriginalState(PetController pet)
         {
-            if (pet.agent != null)
+            // ★★★ 수정 시작 ★★★
+            // agent가 활성화되고 NavMesh 위에 있을 때만 상태를 읽어옵니다.
+            if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
             {
                 agentWasStopped = pet.agent.isStopped;
                 originalSpeed = pet.agent.speed;
                 originalAcceleration = pet.agent.acceleration;
                 agentUpdateRotation = pet.agent.updateRotation;
             }
+            else
+            {
+                // 에이전트가 준비되지 않은 경우, 상호작용이 끝난 후 펫이 멈추지 않도록 기본값을 설정합니다.
+                agentWasStopped = true; // 기본적으로 멈춰있었다고 가정하여, Restore 시 isStopped = true가 되는 것을 방지
+                originalSpeed = pet.baseSpeed; // PetController에 저장된 기본 속도 사용
+                originalAcceleration = pet.baseAcceleration; // PetController에 저장된 기본 가속도 사용
+                agentUpdateRotation = true;
+                Debug.LogWarning($"[PetOriginalState] {pet.petName}의 NavMeshAgent가 준비되지 않아 기본값으로 상태를 초기화합니다.");
+            }
+            // ★★★ 수정 끝 ★★★
         }
 
         // 원래 상태 복원
@@ -365,9 +377,9 @@ public abstract class BasePetInteraction : MonoBehaviour
     // try { ... } finally { pet1State.Restore(pet1); }
 
     // 동시에 특별 애니메이션 재생
-    protected IEnumerator PlaySimultaneousAnimations(
+      protected IEnumerator PlaySimultaneousAnimations(
         PetController pet1, PetController pet2,
-        int anim1, int anim2,
+        PetAnimationController.PetAnimationType anim1Type, PetAnimationController.PetAnimationType anim2Type,
         float duration = 2.0f)
     {
         // 두 펫의 애니메이션 컨트롤러
@@ -375,33 +387,38 @@ public abstract class BasePetInteraction : MonoBehaviour
         PetAnimationController anim2Controller = pet2.GetComponent<PetAnimationController>();
 
         // 동시에 애니메이션 시작
-        StartCoroutine(anim1Controller.PlayAnimationWithCustomDuration(anim1, duration, false, false));
-        yield return StartCoroutine(anim2Controller.PlayAnimationWithCustomDuration(anim2, duration, false, false));
+        StartCoroutine(anim1Controller.PlayAnimationWithCustomDuration(anim1Type, duration, false, false));
+        yield return StartCoroutine(anim2Controller.PlayAnimationWithCustomDuration(anim2Type, duration, false, false));
     }
 
     // BasePetInteraction에 추가할 메서드들
     // 승자 결정 메서드
-    protected PetController DetermineWinner(PetController pet1, PetController pet2, float probability = 0.5f)
+       protected PetController DetermineWinner(PetController pet1, PetController pet2, float probability = 0.5f)
     {
         bool pet1IsWinner = Random.value > probability;
         return pet1IsWinner ? pet1 : pet2;
     }
 
     // 승자 패자 애니메이션 재생 메서드
-    protected IEnumerator PlayWinnerLoserAnimations(
+       protected IEnumerator PlayWinnerLoserAnimations(
         PetController winner, PetController loser,
-        int winnerAnim = 3, int loserAnim = 4)
+        PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump, 
+        PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
     {
         Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
 
-        // 승자와 패자 애니메이션 동시 재생
         PetAnimationController winnerAnimController = winner.GetComponent<PetAnimationController>();
         PetAnimationController loserAnimController = loser.GetComponent<PetAnimationController>();
 
-        StartCoroutine(winnerAnimController.PlayAnimationWithCustomDuration(winnerAnim, 2.0f, false, false));
-        yield return StartCoroutine(loserAnimController.PlayAnimationWithCustomDuration(loserAnim, 2.0f, false, false));
+        if (winnerAnimController != null)
+        {
+            StartCoroutine(winnerAnimController.PlayAnimationWithCustomDuration(winnerAnimType, 2.0f, false, false));
+        }
+        if (loserAnimController != null)
+        {
+            yield return StartCoroutine(loserAnimController.PlayAnimationWithCustomDuration(loserAnimType, 2.0f, false, false));
+        }
     }
-
     // 상호작용에 대한 시작 위치 계산 (나란히)
     protected void CalculateStartPositions(
         PetController pet1, PetController pet2,

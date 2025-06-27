@@ -118,7 +118,7 @@ public class RaccoonSkunkDefenseInteraction : BasePetInteraction
             // 너구리만 이동
             raccoon.agent.isStopped = false;
             raccoon.agent.SetDestination(raccoonApproachPos);
-            raccoon.GetComponent<PetAnimationController>().SetContinuousAnimation(1); // 걷기 애니메이션
+            raccoon.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             
             // 스컹크는 제자리에서 경계
             skunk.agent.isStopped = true;
@@ -177,7 +177,7 @@ public class RaccoonSkunkDefenseInteraction : BasePetInteraction
             }
             
             // 공격 애니메이션 실행
-            yield return StartCoroutine(raccoon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 1.5f, false, false));
+            yield return StartCoroutine(raccoon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 1.5f, false, false));
             
           // 스컹크 방어 단계 코드 부분을 수정합니다
 // 3. 스컹크 방어 단계 - 스컹크가 뒤돌아 방구 뀌기
@@ -211,7 +211,7 @@ while (elapsedTime < turnTime)
 }
 
 // 스컹크의 방구 뀌는 애니메이션 (공격 동작으로 표현)
-yield return StartCoroutine(skunk.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(6, 2.0f, false, false));
+yield return StartCoroutine(skunk.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, 2.0f, false, false));
 
 // 방구 분사 효과 (시각적인 효과가 필요한 경우 여기에 추가)
 // 예: 파티클 시스템이 있다면 활성화 등
@@ -245,7 +245,7 @@ while (elapsedTime < turnTime)
             // 너구리 물러나기
             raccoon.agent.isStopped = false;
             raccoon.agent.SetDestination(retreatPosition);
-            raccoon.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기 애니메이션 (빠르게 도망)
+            raccoon.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기 애니메이션 (빠르게 도망)
             
             // 물러나는 동안 대기
             float retreatTimeout = 4f;
@@ -281,7 +281,7 @@ while (elapsedTime < turnTime)
             // 스컹크 이동 시작
             skunk.agent.isStopped = false;
             skunk.agent.SetDestination(escapeTarget);
-            skunk.GetComponent<PetAnimationController>().SetContinuousAnimation(1); // 걷기 애니메이션
+            skunk.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             
             // 도망가는 동안 대기
             float escapeTimeout = 6f;
@@ -314,7 +314,7 @@ while (elapsedTime < turnTime)
             }
             
             // 승리의 기쁨 표현 (점프 애니메이션)
-            yield return StartCoroutine(skunk.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2.0f, false, false));
+            yield return StartCoroutine(skunk.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
             
             // 마지막으로 기본 애니메이션으로 전환
             skunk.GetComponent<PetAnimationController>().SetContinuousAnimation(0);

@@ -141,16 +141,16 @@ public class SleepTogetherInteraction : BasePetInteraction
             // 잠자기 전 하품하거나 기지개 펴는 동작 (펫 종류에 따라 다른 애니메이션)
             if (Random.value > 0.5f)
             {
-                yield return StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+                yield return StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             }
             else
             {
-                yield return StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+                yield return StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             }
             
             // 잠자기 애니메이션 시작
-            StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 5.0f, true, false));
-            StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 5.0f, true, false));
+            StartCoroutine(pet1.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 5.0f, true, false));
+            StartCoroutine(pet2.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 5.0f, true, false));
             
             // 5. 수면 중 작은 움직임 표현
             float sleepTime = 15f;
@@ -179,8 +179,8 @@ public class SleepTogetherInteraction : BasePetInteraction
                             break;
                             
                         case 1: // 잠시 귀 움직임이나 꼬리 흔들기 (다른 애니메이션으로 잠시 전환)
-                            yield return StartCoroutine(movingPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 0.5f, false, false));
-                            StartCoroutine(movingPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, 0.5f, true, false));
+                            yield return StartCoroutine(movingPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
+                            StartCoroutine(movingPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 0.5f, true, false));
                             break;
                             
                         case 2: // 약간 위치 조정
@@ -227,7 +227,7 @@ public class SleepTogetherInteraction : BasePetInteraction
             firstAwake.ShowEmotion(EmotionType.Surprised, 5f);
             
             // 첫 번째 펫이 깨어남
-            yield return StartCoroutine(firstAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+            yield return StartCoroutine(firstAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             
             // 첫 번째 펫이 두 번째 펫을 바라봄
             LookAtOther(firstAwake, secondAwake);
@@ -236,11 +236,11 @@ public class SleepTogetherInteraction : BasePetInteraction
             yield return new WaitForSeconds(0.5f);
             
             // 첫 번째 펫이 두 번째 펫을 건드려 깨움 (애니메이션 4 - 앉는 동작으로 대체)
-            yield return StartCoroutine(firstAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 1.0f, false, false));
+            yield return StartCoroutine(firstAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.0f, false, false));
             
             // 두 번째 펫이 깨어남
             secondAwake.ShowEmotion(EmotionType.Surprised, 5f);
-            yield return StartCoroutine(secondAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 1.5f, false, false));
+            yield return StartCoroutine(secondAwake.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             
             // 두 펫 모두 기본 idle 애니메이션으로 전환
             pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(0);

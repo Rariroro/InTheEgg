@@ -143,7 +143,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
             predator.agent.SetDestination(approachTarget);
             
             // 달리기 애니메이션 설정
-            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기
+            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
             
             Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) {chameleon.petName}에게 접근합니다!");
             
@@ -186,7 +186,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
             StartCoroutine(CamouflageEffect(chameleon, 5f));
             
             // 카멜레온이 위장하는 동안의 애니메이션 (다른 애니메이션으로 대체 가능)
-            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(4, 2.0f, false, false));
+            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
             
             // 3. 포식자가 멈추고 혼란스러워함
             predator.agent.isStopped = true;
@@ -198,7 +198,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
             predator.ShowEmotion(EmotionType.Confused, 15f);
             
             // 혼란스러운 애니메이션 (고개를 두리번거리는 등)
-            yield return StartCoroutine(predator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2.0f, false, false));
+            yield return StartCoroutine(predator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
             
             // 제자리에서 혼란스럽게 회전
             float confusionTime = 3.0f;
@@ -226,7 +226,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
             // 포식자 이동 재개
             predator.agent.isStopped = false;
             predator.agent.SetDestination(newTarget);
-            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(1); // 걷기 애니메이션
+            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
             
             // 포식자가 충분히 멀어질 때까지 대기
             float safeDistance = 15f;
@@ -251,7 +251,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
             chameleon.ShowEmotion(EmotionType.Happy, 5f);
             
             // 안심하는 애니메이션
-            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(3, 2.0f, false, false));
+            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
             
             Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 안전함을 느끼고 안심합니다.");
             

@@ -58,7 +58,7 @@ public class HeadbuttInteraction : BasePetInteraction
         pet.agent.enabled = false;
         
         // 후진 애니메이션 (걷기 애니메이션 사용)
-        pet.GetComponent<PetAnimationController>().SetContinuousAnimation(1);
+        pet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         
         // 원래 방향 유지하며 뒤로 이동
         Quaternion originalRotation = pet.transform.rotation;
@@ -310,8 +310,8 @@ public class HeadbuttInteraction : BasePetInteraction
                 Debug.Log($"[Headbutt] {i+1}번째 박치기 시작!");
                 
                 // 달리기 애니메이션
-                firstPet.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기
-                secondPet.GetComponent<PetAnimationController>().SetContinuousAnimation(2); // 달리기
+                firstPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
+                secondPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
                 
                 // 동물 크기에 따른 속도 조정
                 float speedMultiplier = 2.5f; // 기본 (염소-양)
@@ -374,7 +374,7 @@ public class HeadbuttInteraction : BasePetInteraction
                 
                 // 충돌 애니메이션 (공격/충격 애니메이션)
                 // 공격 애니메이션 사용 (6번)
-                yield return StartCoroutine(PlaySimultaneousAnimations(firstPet, secondPet, 6, 6, 1.0f));
+                yield return StartCoroutine(PlaySimultaneousAnimations(firstPet, secondPet, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Attack, 1.0f));
                 
                 // 뒤로 밀려나는 효과 - 펫 유형에 따라 조정
                 float knockbackDistance = 1.5f; // 기본 (염소-양)
@@ -464,7 +464,7 @@ public class HeadbuttInteraction : BasePetInteraction
             
             // 승리/패배 애니메이션
             yield return StartCoroutine(
-                PlayWinnerLoserAnimations(winner, loser, 3, 7)
+                PlayWinnerLoserAnimations(winner, loser, PetAnimationController.PetAnimationType.Jump, PetAnimationController.PetAnimationType.Damage)
             );
             
             // 7. 마무리 - 기본 애니메이션으로 전환

@@ -309,7 +309,7 @@ public class PetInteractionController : MonoBehaviour
         var animController = petController.GetComponent<PetAnimationController>();
         if (animController != null)
         {
-            animController.SetContinuousAnimation(2);
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         }
 
         if (petController.agent != null && petController.agent.enabled)
@@ -580,7 +580,7 @@ private void Select()
     // 터치 횟수에 따른 특수 애니메이션 재생
     if (touchCount >= maxTouchCount) // 10번 이상 터치
     {
-        StartCoroutine(animController.PlaySpecialAnimation(8, true));
+        StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die, true));
         touchCount = 0;
     }
     else if (touchCount >= 5) // 5번 이상 터치
@@ -614,7 +614,7 @@ private void Select()
             if (petController.isClimbingTree)
             {
                 var animController = petController.GetComponent<PetAnimationController>();
-                animController?.SetContinuousAnimation(5);
+                animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             }
         }
     }
@@ -630,17 +630,18 @@ private void Select()
             var animController = petController.GetComponent<PetAnimationController>();
             if (animController != null)
             {
-                yield return StartCoroutine(animController.PlaySpecialAnimation(6, false));
+                yield return StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack, false));
             }
         }
     }
 
     // 특별한 애니메이션을 재생하는 코루틴
-    private IEnumerator TriggerSpecialAnimation(int animationNumber)
+   private IEnumerator TriggerSpecialAnimation(PetAnimationController.PetAnimationType animationType)
     {
         // 펫의 PetAnimationController를 통해 특별한 애니메이션을 재생하고, 애니메이션이 끝날 때까지 기다립니다.
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(animationNumber));
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(animationType));
     }
+
 
 
 

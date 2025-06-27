@@ -157,7 +157,7 @@ public class PetSleepingController : MonoBehaviour
             Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
 
             // 수면 애니메이션 재생
-            yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, false, false);
+            yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, false, false);
 
             // 피로 완전 회복
             petController.sleepiness = 0f;
@@ -234,7 +234,7 @@ public class PetSleepingController : MonoBehaviour
         petController.StopMovement();
 
         // 수면 애니메이션 재생
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, true, false));
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
 
         if (isProperArea)
         {
@@ -263,7 +263,7 @@ public class PetSleepingController : MonoBehaviour
         petController.StopMovement();
 
         Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(5, sleepDuration, true, false));
+        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
 
         // 불완전 회복
         petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f);

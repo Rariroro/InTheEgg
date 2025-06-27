@@ -147,8 +147,8 @@ public class ChaseAndRunInteraction : BasePetInteraction
             runner.agent.isStopped = false;
             
             // 애니메이션 설정 (뛰기 -> 2)
-            chaserAnimController.SetContinuousAnimation(2); // 쫓는 펫 달리기 애니메이션
-            runnerAnimController.SetContinuousAnimation(2); // 도망가는 펫 달리기 애니메이션
+            chaserAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 쫓는 펫 달리기 애니메이션
+            runnerAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 도망가는 펫 달리기 애니메이션
             
             // 속도 변화 설정
             float runnerBaseSpeed = runnerState.originalSpeed * 1.9f; // 도망가는 펫 기본 속도
@@ -316,7 +316,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // chaser.ShowEmotion(EmotionType.Sleepy, 10f);
         
         // 쫓던 동물은 쉬는 애니메이션(5번) 실행
-        yield return StartCoroutine(chaserAnimController.PlayAnimationWithCustomDuration(5, 3.0f, false, false));
+        yield return StartCoroutine(chaserAnimController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 3.0f, false, false));
         
         // 2. 쫓기던 동물은 계속 도망감
         // 현재 도망치는 방향 계산
@@ -356,7 +356,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaserAnimController.StopContinuousAnimation();
         
         // 5. 쫓기던 동물은 뛰기를 점차 걷기로 전환 (애니메이션 1번 - 걷기)
-        runnerAnimController.SetContinuousAnimation(1);
+        runnerAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         
         yield return new WaitForSeconds(1.5f); // 추가 대기 시간
         

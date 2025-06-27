@@ -87,9 +87,9 @@ public class FightInteraction : BasePetInteraction
             Debug.Log($"[Fight] {pet1.petName}와(과) {pet2.petName}이(가) 공격 시작");
 
             // 공통 PlaySimultaneousAnimations 메소드 사용
-            yield return StartCoroutine(PlaySimultaneousAnimations(pet1, pet2, 6, 7, 2.0f));
-            yield return StartCoroutine(PlaySimultaneousAnimations(pet2, pet1, 6, 7, 2.0f));
-            yield return StartCoroutine(PlaySimultaneousAnimations(pet1, pet2, 6, 7, 2.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(pet1, pet2, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Damage, 2.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(pet2, pet1, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Damage, 2.0f));
+            yield return StartCoroutine(PlaySimultaneousAnimations(pet1, pet2, PetAnimationController.PetAnimationType.Attack, PetAnimationController.PetAnimationType.Damage, 2.0f));
 
             // 4. 랜덤으로 승자 결정
             PetController winner = DetermineWinner(pet1, pet2, 0.5f);
@@ -97,11 +97,11 @@ public class FightInteraction : BasePetInteraction
 
             // 애니메이션 재생
             yield return StartCoroutine(
-                PlayWinnerLoserAnimations(winner, loser, 3, 8)
+                PlayWinnerLoserAnimations(winner, loser, PetAnimationController.PetAnimationType.Jump, PetAnimationController.PetAnimationType.Die)
             );
 
             // 5. 패자는 "죽는" 애니메이션 (애니메이션 8번)
-            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(8, 2.0f, false, false));
+            yield return StartCoroutine(loser.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Die, 2.0f, false, false));
             // 6. 원래 상태로 복귀 (애니메이션 0번)
             pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(0);
             pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(0);
