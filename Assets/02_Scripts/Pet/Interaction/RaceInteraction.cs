@@ -189,13 +189,23 @@ public class RaceInteraction : BasePetInteraction
         }
         finally
         {
-            if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
+             if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
             rabbit.HideEmotion();
             turtle.HideEmotion();
             rabbitState.Restore(rabbit);
             turtleState.Restore(turtle);
             rabbit.GetComponent<PetAnimationController>().StopContinuousAnimation();
             turtle.GetComponent<PetAnimationController>().StopContinuousAnimation();
+
+            // ★★★ 핵심 수정: 상호작용이 완전히 끝났음을 각 펫에게 알립니다. ★★★
+            if (rabbit != null) rabbit.isInteracting = false;
+            if (turtle != null) turtle.isInteracting = false;
+
+            // 상호작용 매니저에게도 상호작용 종료를 알려 상태를 정리합니다.
+            if (PetInteractionManager.Instance != null)
+            {
+                PetInteractionManager.Instance.NotifyInteractionEnded(rabbit, turtle);
+            }
         }
     }
 
