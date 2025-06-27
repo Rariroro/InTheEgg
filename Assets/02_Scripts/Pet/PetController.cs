@@ -131,7 +131,7 @@ public class PetController : MonoBehaviour
     [Tooltip("초당 졸림 증가량")]
     [SerializeField] private float sleepinessIncreaseRate = 0.1f;
 
-        [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
+    [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
     [HideInInspector] public bool isExhausted = false;
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
@@ -368,17 +368,17 @@ public class PetController : MonoBehaviour
     }
 
     /// <summary>
-/// 외부의 강력한 중단(Interrupt)에 의해 현재 진행 중인 행동을 강제로 무효화합니다.
-/// </summary>
-public void InvalidateCurrentAction()
-{
-    if (_currentAction != null)
+    /// 외부의 강력한 중단(Interrupt)에 의해 현재 진행 중인 행동을 강제로 무효화합니다.
+    /// </summary>
+    public void InvalidateCurrentAction()
     {
-        _currentAction.OnExit();
-        _currentAction = null;
+        if (_currentAction != null)
+        {
+            _currentAction.OnExit();
+            _currentAction = null;
+        }
     }
-}
- /// <summary>
+    /// <summary>
     /// 플레이어의 직접적인 개입 등으로 AI의 현재 행동을 강제로 중단하고 초기화합니다.
     /// 다음 AI 업데이트 시 가장 적절한 행동을 처음부터 다시 선택하게 됩니다.
     /// </summary>

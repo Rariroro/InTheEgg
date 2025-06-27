@@ -32,29 +32,7 @@ public enum InteractionType
         ChameleonCamouflage // 카멜레온 위장 - 카멜레온이 위험을 감지하고 위장하는 상호작용
 
 }
-// 펫 간 상호작용 규칙을 정의하는 클래스
-// [System.Serializable] // Unity 인스펙터에서 표시 가능하도록 함
-// public class InteractionRule
-// {
-//     public PetType pet1; // 첫 번째 펫 유형
-//     public PetType pet2; // 두 번째 펫 유형
-//     public InteractionType interactionType; // 두 펫 간 발생할 상호작용 유형
 
-//     // 생성자
-//     public InteractionRule(PetType pet1, PetType pet2, InteractionType interactionType)
-//     {
-//         this.pet1 = pet1;
-//         this.pet2 = pet2;
-//         this.interactionType = interactionType;
-//     }
-
-//     // 두 펫이 규칙에 부합하는지 확인
-//     public bool MatchesPets(PetType typeA, PetType typeB)
-//     {
-//         return (pet1 == typeA && pet2 == typeB) || (pet1 == typeB && pet2 == typeA);
-//     }
-// }
-// 최적화된 PetInteractionManager
 
 
 public class PetInteractionManager : MonoBehaviour
@@ -447,13 +425,18 @@ public void NotifyInteractionEnded(PetController pet1, PetController pet2)
 {
     if (pet1 != null) {
         interactingPets.Remove(pet1);
-        pet1.isInteracting = false;
+        // isInteracting 플래그는 여기서 직접 제어하지 않고,
+        // AI가 WanderAction 같은 다른 상태로 전환될 때 자연스럽게 해제되도록 둡니다.
+        // 또는, 상호작용 종료 시 명확하게 false로 설정하고 싶다면 아래 주석을 해제합니다.
+        // pet1.isInteracting = false; 
         pet1.interactionPartner = null;
+        pet1.currentInteractionLogic = null;
     }
     if (pet2 != null) {
         interactingPets.Remove(pet2);
-        pet2.isInteracting = false;
+        // pet2.isInteracting = false;
         pet2.interactionPartner = null;
+        pet2.currentInteractionLogic = null;
     }
     
     Debug.Log($"[PetInteractionManager] 상호작용 종료: {pet1?.petName} - {pet2?.petName}");
