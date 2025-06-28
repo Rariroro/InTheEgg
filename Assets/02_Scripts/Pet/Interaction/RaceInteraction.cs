@@ -12,7 +12,11 @@ public class RaceInteraction : BasePetInteraction
 {
     // 이 상호작용의 이름을 "Race"로 정의합니다.
     public override string InteractionName => "Race";
-
+ // ★★★ 새로 추가된 부분: 결승선 깃발 프리팹 ★★★
+    [Header("Race Visuals")]
+    [Tooltip("결승선에 배치될 깃발 프리팹입니다.")]
+    public GameObject finishFlagPrefab;
+    // ★★★ 여기까지 추가 ★★★
     // ★★★ 추가: 경주 설정을 인스펙터에서 조절하기 위한 변수들 ★★★
     [Header("Race Settings")] // 유니티 인스펙터에서 섹션을 구분하기 위한 헤더입니다.
     [Tooltip("경주의 기본 거리입니다.")] // 인스펙터에서 변수 위에 마우스를 올렸을 때 표시될 설명입니다.
@@ -106,7 +110,9 @@ public class RaceInteraction : BasePetInteraction
         PetOriginalState turtleState = new PetOriginalState(turtle);
         // 위치 고정 코루틴을 담을 변수를 선언합니다.
         Coroutine fixPositionCoroutine = null;
-
+ // ★★★ 새로 추가된 부분: 깃발 인스턴스 변수 ★★★
+        GameObject finishFlagInstance = null;
+        // ★★★ 여기까지 추가 ★★★
         try // try-finally 블록: 경주 도중 어떤 오류가 발생하더라도 finally 부분은 반드시 실행되도록 보장합니다.
         {
             // 펫 머리 위에 '경주' 감정 표현(이모티콘)을 표시합니다.
@@ -153,7 +159,15 @@ public class RaceInteraction : BasePetInteraction
                 finishLine = initialCenter + dirToFinish * raceDistance;
                 totalRaceDistance = raceDistance;
             }
-
+   // ★★★ 새로 추가된 부분: 깃발 생성 ★★★
+            if (finishFlagPrefab != null)
+            {
+                // 결승선 위치에 깃발 프리팹을 생성하고, 방향을 경주 방향과 반대로 설정합니다.
+                Quaternion flagRotation = Quaternion.LookRotation(-dirToFinish);
+                finishFlagInstance = Instantiate(finishFlagPrefab, finishLine, flagRotation);
+                Debug.Log($"[Race] 결승선 깃발을 {finishLine}에 생성했습니다.");
+            }
+            // ★★★ 여기까지 추가 ★★★
             // --- 2. 결승선 방향을 기준으로 새로운 출발점 계산 ---
             Vector3 startPosition = CalculateOptimalStartPosition(rabbit, turtle, finishLine, dirToFinish);
             Vector3 rabbitStartPos, turtleStartPos;
@@ -319,6 +333,13 @@ public class RaceInteraction : BasePetInteraction
         }
         finally // 이 블록은 try가 성공적으로 끝나든, 중간에 오류로 중단되든 항상 실행됩니다.
         {
+               // ★★★ 새로 추가된 부분: 깃발 제거 ★★★
+            if (finishFlagInstance != null)
+            {
+                Destroy(finishFlagInstance);
+                Debug.Log("[Race] 결승선 깃발을 제거했습니다.");
+            }
+            // ★★★ 여기까지 추가 ★★★
             // --- 상태 복구 ---
             rabbitShouldWakeUp = false; // 플래그 초기화
             if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine); // 위치 고정 코루틴 확실히 종료
