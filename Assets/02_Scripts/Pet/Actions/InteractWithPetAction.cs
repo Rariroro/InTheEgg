@@ -41,23 +41,7 @@ public class InteractWithPetAction : IPetAction
 
     public void OnUpdate()
 {
-    // ★★★ 핵심 수정: 아래의 모든 코드를 제거하거나 주석 처리합니다. ★★★
-    // 이 로직이 펫들이 경주 중에 서로를 강제로 바라보게 만드는 원인입니다.
-    // 이 코드를 제거하면 PetController의 HandleRotation() 메서드가 정상적으로 작동하여
-    // 펫들이 자신의 이동 방향(NavMeshAgent.velocity)을 바라보게 됩니다.
-
-    /*
-    if (_pet.interactionPartner != null)
-    {
-        Vector3 direction = _pet.interactionPartner.transform.position - _pet.transform.position;
-        direction.y = 0;
-        if (direction != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(direction);
-            _pet.transform.rotation = Quaternion.Slerp(_pet.transform.rotation, targetRotation, Time.deltaTime * _pet.rotationSpeed);
-        }
-    }
-    */
+   
 }
 
     public void OnExit()

@@ -32,7 +32,9 @@ public class RaceInteraction : BasePetInteraction
     [Tooltip("거북이가 이 지점에 도달하면 토끼가 깨어납니다 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
     [Range(0f, 1f)]
     public float turtleWakeUpProgress = 0.9f;
-
+[Header("Safety Settings")]
+[Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
+public float agentSafetyTimeout = 3f;
     // 토끼 깨우기 상태 추적을 위한 클래스 멤버 변수
     private bool rabbitShouldWakeUp = false;
 
@@ -60,6 +62,13 @@ public class RaceInteraction : BasePetInteraction
     yield return StartCoroutine(WaitUntilAgentIsReady(rabbit));
     yield return StartCoroutine(WaitUntilAgentIsReady(turtle));
     // ★★★★★ 여기까지 추가 ★★★★★
+
+     // 준비 실패 시 경주 중단
+    if (!IsAgentSafelyReady(rabbit) || !IsAgentSafelyReady(turtle))
+    {
+        Debug.LogError("[Race] NavMeshAgent 준비 실패로 경주를 중단합니다.");
+        yield break;
+    }
         PetOriginalState rabbitState = new PetOriginalState(rabbit);
         PetOriginalState turtleState = new PetOriginalState(turtle);
         Coroutine fixPositionCoroutine = null;
@@ -255,7 +264,45 @@ public class RaceInteraction : BasePetInteraction
             }
         }
     }
+// ★★★ 새로 추가할 메서드들 ★★★
+private IEnumerator SafeWaitForAgentReady(PetController pet, float timeout)
+{
+    float timer = 0f;
+    while (timer < timeout)
+    {
+        if (IsAgentSafelyReady(pet))
+        {
+            yield break; // 준비 완료
+        }
+        
+        // 에이전트 복구 시도
+        if (pet.agent != null && !pet.agent.enabled)
+        {
+            try
+            {
+                pet.agent.enabled = true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[Race] {pet.petName} NavMeshAgent 활성화 실패: {e.Message}");
+            }
+        }
+        
+        timer += Time.deltaTime;
+        yield return null;
+    }
+    
+    Debug.LogWarning($"[Race] {pet.petName}의 NavMeshAgent가 {timeout}초 내에 준비되지 않았습니다.");
+}
 
+private bool IsAgentSafelyReady(PetController pet)
+{
+    return pet != null && 
+           pet.agent != null && 
+           pet.agent.enabled && 
+           pet.agent.isOnNavMesh &&
+           pet.agent.isActiveAndEnabled;
+}
     /// <summary>
     /// 결승선과 방향을 고려해서 최적의 출발 지점을 계산합니다.
     /// </summary>
@@ -285,24 +332,36 @@ public class RaceInteraction : BasePetInteraction
         Debug.Log($"[Race] 정렬된 출발점 계산 완료: Pet1({pet1Pos}), Pet2({pet2Pos})");
     }
 
-    private IEnumerator FixPositionDuringInteraction(PetController pet1, PetController pet2, Vector3 pos1, Vector3 pos2, Quaternion rot1, Quaternion rot2, bool fixPet1 = true, bool fixPet2 = true)
+    // ★★★ 안전한 위치 고정 코루틴으로 수정 ★★★
+private IEnumerator FixPositionDuringInteraction(
+    PetController pet1, PetController pet2, 
+    Vector3 pos1, Vector3 pos2, 
+    Quaternion rot1, Quaternion rot2, 
+    bool fixPet1 = true, bool fixPet2 = true)
+{
+    while (pet1.isInteracting && pet2.isInteracting && !rabbitShouldWakeUp)
     {
-        while (pet1.isInteracting && pet2.isInteracting && !rabbitShouldWakeUp)
+        // ★★★ 핵심 수정: NavMeshAgent 상태 체크 후 위치 고정 ★★★
+        if (fixPet1 && IsAgentSafelyReady(pet1))
         {
-            if (fixPet1)
-            {
-                pet1.transform.position = pos1;
-                pet1.transform.rotation = rot1;
-                if (pet1.petModelTransform) pet1.petModelTransform.rotation = rot1;
-            }
-            if (fixPet2)
-            {
-                pet2.transform.position = pos2;
-                pet2.transform.rotation = rot2;
-                if (pet2.petModelTransform) pet2.petModelTransform.rotation = rot2;
-            }
-            yield return null;
+            // NavMeshAgent를 일시 정지하고 수동으로 위치 설정
+            pet1.agent.isStopped = true;
+            pet1.transform.position = pos1;
+            pet1.transform.rotation = rot1;
+            if (pet1.petModelTransform) pet1.petModelTransform.rotation = rot1;
         }
-        Debug.Log("[Race] FixPositionDuringInteraction 코루틴이 종료되었습니다.");
+        
+        if (fixPet2 && IsAgentSafelyReady(pet2))
+        {
+            pet2.agent.isStopped = true;
+            pet2.transform.position = pos2;
+            pet2.transform.rotation = rot2;
+            if (pet2.petModelTransform) pet2.petModelTransform.rotation = rot2;
+        }
+        
+        yield return null;
     }
+    
+    Debug.Log("[Race] FixPositionDuringInteraction 코루틴이 안전하게 종료되었습니다.");
+}
 }
