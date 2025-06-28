@@ -358,7 +358,8 @@ public class PetInteractionManager : MonoBehaviour
         if (pet1 == null || pet2 == null) return;
         if (IsInteracting(pet1) || IsInteracting(pet2)) return;
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2)) return;
-
+ // ★★★ 추가: 펫이 플레이어에게 들려있는 상태인지 확인 ★★★
+    if (pet1.isHolding || pet2.isHolding) return;
         // 빠른 거리 체크 (Bounding Box 체크)
         Vector3 diff = pet2.transform.position - pet1.transform.position;
         if (Mathf.Abs(diff.x) > interactionDistance || 
