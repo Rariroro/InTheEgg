@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7022003484976832129}
   - component: {fileID: 2680895841598378238}
   - component: {fileID: 8155350587969344980}
-  - component: {fileID: 5527532003974353174}
+  - component: {fileID: 7974994601061666970}
   m_Layer: 6
   m_Name: _PlatypusA
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 2
   diet: 32
   habitat: 0
+  treeClimbChance: 0.1
   waterSinkDepth: 0.29
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &8155350587969344980
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -93,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 484638324672093068}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.7
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 46
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5527532003974353174
-BoxCollider:
+--- !u!136 &7974994601061666970
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.1731429, y: 1, z: 2.123783}
-  m_Center: {x: 0, y: 0.46000004, z: -0.16014636}
+  serializedVersion: 2
+  m_Radius: 0.7
+  m_Height: 0.78
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1001 &4048925385053494131
 PrefabInstance:
   m_ObjectHideFlags: 0

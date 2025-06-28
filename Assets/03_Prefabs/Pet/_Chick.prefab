@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6927743900003474271}
   - component: {fileID: 4475276694607024915}
-  - component: {fileID: 9138684377108434026}
   - component: {fileID: 7910919877609972618}
+  - component: {fileID: -7878793901391329189}
   m_Layer: 6
   m_Name: _Chick
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 0
   diet: 3
   habitat: 3
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,27 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
---- !u!65 &9138684377108434026
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7208640243294893955}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.3916476, y: 1.3242383, z: 1.4303029}
-  m_Center: {x: 0, y: 0.64211917, z: 0}
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &7910919877609972618
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -127,6 +115,29 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!136 &-7878793901391329189
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7208640243294893955}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.58
+  m_Height: 1.34
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!1001 &1111427787563281295
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2988083521295233827}
   - component: {fileID: -464849040682006219}
   - component: {fileID: 1286347552539326075}
-  - component: {fileID: 2500910087868321455}
+  - component: {fileID: 6168280038322404854}
   m_Layer: 6
   m_Name: _ChameleonA
   m_TagString: Pet
@@ -86,6 +86,13 @@ MonoBehaviour:
   isHolding: 0
   isAnimationLocked: 0
   isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &1286347552539326075
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -108,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &2500910087868321455
-BoxCollider:
+--- !u!136 &6168280038322404854
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -126,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.6662065, y: 2.2601774, z: 2.9470873}
-  m_Center: {x: 0, y: 0.63008964, z: -0.1658094}
+  serializedVersion: 2
+  m_Radius: 0.78
+  m_Height: 1.79
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1001 &4748566931028707894
 PrefabInstance:
   m_ObjectHideFlags: 0

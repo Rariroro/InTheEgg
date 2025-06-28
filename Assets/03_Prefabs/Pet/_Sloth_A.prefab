@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7225842458183727202}
   - component: {fileID: 228894083383899253}
   - component: {fileID: 7966223089229003498}
-  - component: {fileID: 7932153861571387576}
+  - component: {fileID: -3904685963661833439}
   m_Layer: 6
   m_Name: _Sloth_A
   m_TagString: Pet
@@ -102,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 3041925332343549604}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.65
+  m_Radius: 0.86
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 55
@@ -115,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &7932153861571387576
-BoxCollider:
+--- !u!136 &-3904685963661833439
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -133,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.4080203, y: 1.8316715, z: 1.5973412}
-  m_Center: {x: 0, y: 0.89583576, z: 0.13392192}
+  serializedVersion: 2
+  m_Radius: 0.86
+  m_Height: 1.8
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1001 &1821225617317366341
 PrefabInstance:
   m_ObjectHideFlags: 0

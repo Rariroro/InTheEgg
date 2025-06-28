@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4289056972569841172}
   - component: {fileID: 660692260827615328}
   - component: {fileID: 5924849519898324930}
-  - component: {fileID: 5075148278974783704}
+  - component: {fileID: -447942689353932389}
   m_Layer: 6
   m_Name: _ElephantA
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 1
   diet: 7
   habitat: 2
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &5924849519898324930
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5075148278974783704
-BoxCollider:
+--- !u!136 &-447942689353932389
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 5.804143, y: 4.4422894, z: 6.05237}
-  m_Center: {x: 0, y: 2.1300035, z: 0.63074875}
+  serializedVersion: 2
+  m_Radius: 2.39
+  m_Height: 4.31
+  m_Direction: 1
+  m_Center: {x: 0, y: 2.2, z: 0}
 --- !u!1001 &7504088462432783491
 PrefabInstance:
   m_ObjectHideFlags: 0

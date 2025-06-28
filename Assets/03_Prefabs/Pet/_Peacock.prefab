@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7470903952425852361}
   - component: {fileID: -1392260224323271077}
   - component: {fileID: 8241191019928929734}
-  - component: {fileID: 5794923292294639102}
+  - component: {fileID: 3366454386802742702}
   m_Layer: 6
   m_Name: _Peacock
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 3
   diet: 27
   habitat: 2
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &8241191019928929734
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -93,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 5340225352647348629}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 1
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 44
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5794923292294639102
-BoxCollider:
+--- !u!136 &3366454386802742702
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.2617679, y: 3.8721633, z: 2.9545841}
-  m_Center: {x: 0, y: 1.8760815, z: -0.23728329}
+  serializedVersion: 2
+  m_Radius: 1
+  m_Height: 3.29
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.6, z: 0}
 --- !u!1001 &3826776421179907950
 PrefabInstance:
   m_ObjectHideFlags: 0

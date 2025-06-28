@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7626735730395126824}
   - component: {fileID: 1076001536344129016}
   - component: {fileID: 1290241742434502735}
-  - component: {fileID: 725750925188234446}
+  - component: {fileID: -6572694592377617716}
   m_Layer: 6
   m_Name: _Fox
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 3
   diet: 19
   habitat: 2
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &1290241742434502735
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &725750925188234446
-BoxCollider:
+--- !u!136 &-6572694592377617716
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.458523, y: 2.1698625, z: 2.437361}
-  m_Center: {x: 0, y: 1.0416428, z: -0.021571517}
+  serializedVersion: 2
+  m_Radius: 0.74
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1001 &3554435667027625753
 PrefabInstance:
   m_ObjectHideFlags: 0

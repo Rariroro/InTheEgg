@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6298216402627993574}
   - component: {fileID: 7455572478598307642}
   - component: {fileID: 2186325178484760105}
-  - component: {fileID: 7808401051751372889}
+  - component: {fileID: 5570040196940557175}
   m_Layer: 6
   m_Name: _Turtle
   m_TagString: Pet
@@ -102,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 8433889213665263289}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.77
+  m_Radius: 1.08
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 58
@@ -115,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &7808401051751372889
-BoxCollider:
+--- !u!136 &5570040196940557175
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -133,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.1724024, y: 1.1483716, z: 2.2790217}
-  m_Center: {x: 0, y: 0.51418585, z: 0.123573005}
+  serializedVersion: 2
+  m_Radius: 1.08
+  m_Height: 1.05
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.6, z: 0}
 --- !u!1001 &4447153910556750207
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5102801867313413580}
   - component: {fileID: -4459163218393148054}
   - component: {fileID: 2467504241524988830}
-  - component: {fileID: 3233719696931436183}
+  - component: {fileID: -2225063842355292881}
   m_Layer: 6
   m_Name: _Giraffe
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 3
   diet: 6
   habitat: 2
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &2467504241524988830
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &3233719696931436183
-BoxCollider:
+--- !u!136 &-2225063842355292881
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.3332448, y: 7.203285, z: 4.781101}
-  m_Center: {x: 0, y: 3.5716429, z: 0.10592699}
+  serializedVersion: 2
+  m_Radius: 1.03
+  m_Height: 7.2
+  m_Direction: 1
+  m_Center: {x: 0, y: 3.6, z: 0}
 --- !u!1001 &5543024057895773507
 PrefabInstance:
   m_ObjectHideFlags: 0

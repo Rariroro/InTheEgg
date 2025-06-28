@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8410229321022179798}
   - component: {fileID: -3327458522670418387}
   - component: {fileID: 6886131277364434292}
-  - component: {fileID: 4233559626338788511}
+  - component: {fileID: 5143525899642238237}
   m_Layer: 6
   m_Name: _Deer
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 0
   diet: 6
   habitat: 1
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &6886131277364434292
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &4233559626338788511
-BoxCollider:
+--- !u!136 &5143525899642238237
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.4733005, y: 3.1298895, z: 2.5416946}
-  m_Center: {x: 0, y: 1.4828937, z: 0.10571772}
+  serializedVersion: 2
+  m_Radius: 0.94
+  m_Height: 3
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.5, z: 0}
 --- !u!1001 &1348984357663346674
 PrefabInstance:
   m_ObjectHideFlags: 0

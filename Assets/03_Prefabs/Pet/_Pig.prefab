@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6505187732732199901}
   - component: {fileID: -6823708466458940917}
   - component: {fileID: 3730008509322538740}
-  - component: {fileID: 2154920929581162339}
+  - component: {fileID: -1465070650507230268}
   m_Layer: 6
   m_Name: _Pig
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 2
   diet: 27
   habitat: 3
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &3730008509322538740
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -93,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 3394454498567037834}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.91
+  m_Radius: 1
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 45
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &2154920929581162339
-BoxCollider:
+--- !u!136 &-1465070650507230268
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.073213, y: 2.0863845, z: 3.3957295}
-  m_Center: {x: 0, y: 1.0231923, z: -0.19461775}
+  serializedVersion: 2
+  m_Radius: 1
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!1001 &2975460321172779965
 PrefabInstance:
   m_ObjectHideFlags: 0

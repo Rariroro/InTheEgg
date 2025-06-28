@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 499755348272426298}
   - component: {fileID: -1810096926202490139}
   - component: {fileID: 1206695519264898302}
-  - component: {fileID: 5510067119457555768}
+  - component: {fileID: 1145631957588104420}
   m_Layer: 6
   m_Name: _DuckB
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 0
   diet: 33
   habitat: 0
+  treeClimbChance: 0.1
   waterSinkDepth: 0.29
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &1206695519264898302
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5510067119457555768
-BoxCollider:
+--- !u!136 &1145631957588104420
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.9403225, y: 1.4045365, z: 1.6387209}
-  m_Center: {x: 0, y: 0.63492167, z: 0.28166908}
+  serializedVersion: 2
+  m_Radius: 0.7
+  m_Height: 1.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!1001 &4621615377036250450
 PrefabInstance:
   m_ObjectHideFlags: 0

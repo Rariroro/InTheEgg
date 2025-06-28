@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2079294480764482053}
   - component: {fileID: 552510457988109077}
   - component: {fileID: 985930957472912593}
-  - component: {fileID: 4184668142694199799}
+  - component: {fileID: 1593285831317222066}
   m_Layer: 6
   m_Name: _MuleA
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 0
   diet: 5
   habitat: 3
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &985930957472912593
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &4184668142694199799
-BoxCollider:
+--- !u!136 &1593285831317222066
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.5633234, y: 3.151515, z: 3.555936}
-  m_Center: {x: 0, y: 1.5257576, z: -0.053629518}
+  serializedVersion: 2
+  m_Radius: 0.74
+  m_Height: 3.11
+  m_Direction: 1
+  m_Center: {x: 0, y: 1.6, z: 0}
 --- !u!1001 &3043625632623828109
 PrefabInstance:
   m_ObjectHideFlags: 0

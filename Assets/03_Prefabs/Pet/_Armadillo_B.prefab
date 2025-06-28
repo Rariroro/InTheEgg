@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5156719337514078166}
   - component: {fileID: 5433846092880137360}
   - component: {fileID: 5351300773134827922}
-  - component: {fileID: 5738766293131600227}
+  - component: {fileID: 483743769224798024}
   m_Layer: 6
   m_Name: _Armadillo_B
   m_TagString: Pet
@@ -56,6 +56,7 @@ MonoBehaviour:
   personality: 2
   diet: 3
   habitat: 2
+  treeClimbChance: 0.1
   waterSinkDepth: 1
   affection: 0
   hunger: 0
@@ -84,6 +85,14 @@ MonoBehaviour:
   isSelected: 0
   isHolding: 0
   isAnimationLocked: 0
+  isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &5351300773134827922
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -93,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 2123778044306239031}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.76
+  m_Radius: 0.86
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 3
@@ -106,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5738766293131600227
-BoxCollider:
+--- !u!136 &483743769224798024
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -124,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.7880538, y: 2.1419497, z: 2.4554296}
-  m_Center: {x: 0, y: 0.57097495, z: -0.05510491}
+  serializedVersion: 2
+  m_Radius: 0.86
+  m_Height: 1.64
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.81, z: 0}
 --- !u!1001 &6089506021014476533
 PrefabInstance:
   m_ObjectHideFlags: 0

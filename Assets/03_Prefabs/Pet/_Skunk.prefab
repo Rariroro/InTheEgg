@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6257005370228706766}
   - component: {fileID: -5984535638201532395}
   - component: {fileID: 6193540028880287578}
-  - component: {fileID: 4757064012546368163}
+  - component: {fileID: 6809611734211915797}
   m_Layer: 6
   m_Name: _Skunk
   m_TagString: Pet
@@ -102,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1906033008206918998}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.7
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 54
@@ -115,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &4757064012546368163
-BoxCollider:
+--- !u!136 &6809611734211915797
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -133,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.2470367, y: 2.5723896, z: 2.9318001}
-  m_Center: {x: 0, y: 1.2661948, z: -0.23497689}
+  serializedVersion: 2
+  m_Radius: 0.7
+  m_Height: 1.87
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1001 &743130139874585901
 PrefabInstance:
   m_ObjectHideFlags: 0

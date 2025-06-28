@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1823082754413363372}
   - component: {fileID: -5109384160330360162}
   - component: {fileID: 7718593403937060961}
-  - component: {fileID: 5570103457142118021}
+  - component: {fileID: -2962440932407747143}
   m_Layer: 6
   m_Name: _RedPanda
   m_TagString: Pet
@@ -86,6 +86,13 @@ MonoBehaviour:
   isHolding: 0
   isAnimationLocked: 0
   isActionLocked: 0
+  gatherTargetPosition: {x: 0, y: 0, z: 0}
+  currentInteractionLogic: {fileID: 0}
+  isAttractedToEnvironment: 0
+  environmentTargetPosition: {x: 0, y: 0, z: 0}
+  hungerIncreaseRate: 0.2
+  sleepinessIncreaseRate: 0.1
+  isExhausted: 0
 --- !u!195 &7718593403937060961
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -95,7 +102,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 6389892748860940257}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.66
+  m_Radius: 0.8
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 51
@@ -108,8 +115,8 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!65 &5570103457142118021
-BoxCollider:
+--- !u!136 &-2962440932407747143
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -126,9 +133,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.3123426, y: 2.2260695, z: 2.538916}
-  m_Center: {x: 0, y: 1.0630348, z: -0.021761417}
+  serializedVersion: 2
+  m_Radius: 0.8
+  m_Height: 1.85
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9, z: 0}
 --- !u!1001 &3239839950250336017
 PrefabInstance:
   m_ObjectHideFlags: 0
