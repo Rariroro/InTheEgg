@@ -444,7 +444,20 @@ public class PetController : MonoBehaviour
         {
             return;
         }
-
+if (isInteracting)
+    {
+        // NavMeshAgent가 실제로 이동 중이라면 회전 허용
+        if (agent != null && agent.enabled && agent.isOnNavMesh && 
+            agent.velocity.magnitude > 0.1f && !agent.isStopped)
+        {
+            // 이동 중이므로 회전 허용 (아래 로직 계속 진행)
+        }
+        else
+        {
+            // 이동하지 않는 상호작용이면 회전하지 않음
+            return;
+        }
+    }
         // ★ NavMeshAgent 상태 체크 추가
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
@@ -471,6 +484,11 @@ public class PetController : MonoBehaviour
                 targetRotation,
                 rotationSpeed * Time.deltaTime
             );
+              // ★★★ 추가: 펫 모델도 같은 방향으로 회전 ★★★
+        if (petModelTransform != null)
+        {
+            petModelTransform.rotation = transform.rotation;
+        }
         }
     }
     // PetController.cs에 추가

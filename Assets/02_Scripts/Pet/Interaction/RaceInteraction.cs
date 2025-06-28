@@ -1,4 +1,5 @@
-// Pet.zip/Interaction/RaceInteraction.cs (최종 수정 버전)
+// 완전한 RaceInteraction.cs 수정 버전
+
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
@@ -6,6 +7,9 @@ using UnityEngine.AI;
 public class RaceInteraction : BasePetInteraction
 {
     public override string InteractionName => "Race";
+
+    // ★★★ 추가: 토끼 깨우기 상태 추적을 위한 클래스 멤버 변수 ★★★
+    private bool rabbitShouldWakeUp = false;
 
     protected override InteractionType DetermineInteractionType()
     {
@@ -21,6 +25,9 @@ public class RaceInteraction : BasePetInteraction
     public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
+
+        // ★★★ 추가: 플래그 초기화 ★★★
+        rabbitShouldWakeUp = false;
 
         PetController rabbit = (pet1.PetType == PetType.Rabbit) ? pet1 : pet2;
         PetController turtle = (pet1.PetType == PetType.Turtle) ? pet1 : pet2;
@@ -77,13 +84,11 @@ public class RaceInteraction : BasePetInteraction
             fixPositionCoroutine = StartCoroutine(FixPositionDuringInteraction(rabbit, turtle, rabbit.transform.position, turtle.transform.position, targetRotation, targetRotation));
             yield return new WaitForSeconds(1.5f);
 
-            // NullReferenceException 방지를 위해 null 체크를 추가합니다.
             if (fixPositionCoroutine != null)
             {
                 StopCoroutine(fixPositionCoroutine);
+                fixPositionCoroutine = null;
             }
-
-            fixPositionCoroutine = null;
 
             // 4. 경주 시작
             rabbit.agent.speed = rabbitState.originalSpeed * 3.5f;
@@ -92,8 +97,8 @@ public class RaceInteraction : BasePetInteraction
             rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
             turtle.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
-            // ★★★ 핵심 수정 1: 토끼의 첫 목적지를 '낮잠 위치'로 설정
-            float napDistance = totalRaceDistance * 0.4f; // 40% 지점에서 낮잠
+            // 토끼의 첫 목적지를 '낮잠 위치'로 설정
+            float napDistance = totalRaceDistance * 0.4f;
             Vector3 napSpot = startPosition + dirToFinish * napDistance;
             if (NavMesh.SamplePosition(napSpot, out NavMeshHit napHit, 5f, NavMesh.AllAreas))
             {
@@ -102,8 +107,8 @@ public class RaceInteraction : BasePetInteraction
 
             rabbit.agent.isStopped = false;
             turtle.agent.isStopped = false;
-            rabbit.agent.SetDestination(napSpot); // 토끼는 낮잠 위치로
-            turtle.agent.SetDestination(finishLine); // 거북이는 결승선으로
+            rabbit.agent.SetDestination(napSpot);
+            turtle.agent.SetDestination(finishLine);
 
             // 5. 경주 진행
             bool turtleFinished = false;
@@ -121,7 +126,6 @@ public class RaceInteraction : BasePetInteraction
                     rabbitIsSleeping = true;
                     rabbit.agent.isStopped = true;
 
-                    // ★★★ 핵심 수정 2: 자는 이모티콘 표시 (긴 시간 동안)
                     rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
 
                     fixPositionCoroutine = StartCoroutine(FixPositionDuringInteraction(rabbit, turtle, rabbit.transform.position, turtle.transform.position, rabbit.transform.rotation, turtle.transform.rotation, true, false));
@@ -134,29 +138,47 @@ public class RaceInteraction : BasePetInteraction
 
                 if (rabbitIsSleeping && !rabbitWokeUp && turtleProgress >= 0.9f)
                 {
+                    // ★★★ 핵심 수정: 플래그 설정으로 FixPositionCoroutine을 중지시킴 ★★★
+                    rabbitShouldWakeUp = true;
                     rabbitWokeUp = true;
-                    if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
-                    fixPositionCoroutine = null;
-                    // 1. 놀라는 감정 표현과 함께 잠에서 깨는 애니메이션을 재생합니다.
-                    rabbit.ShowEmotion(EmotionType.Scared, 10f);
-                    // 애니메이션이 끝나면 Idle 상태로 돌아가도록 returnToIdle을 true로 설정합니다.
-                    yield return StartCoroutine(rabbit.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, true, false));
 
-                    // 2. NavMeshAgent의 상태를 확실하게 초기화합니다.
-                    if (rabbit.agent != null && rabbit.agent.enabled && rabbit.agent.isOnNavMesh)
+                    if (fixPositionCoroutine != null) 
                     {
-                        // 기존 경로를 완전히 초기화하여 제자리걸음 문제를 방지합니다. (가장 중요한 부분)
-                        rabbit.agent.ResetPath();
+                        StopCoroutine(fixPositionCoroutine);
+                        fixPositionCoroutine = null;
                     }
 
-                    // 3. 속도를 높이고, 새로운 목적지(결승선)를 설정한 뒤 다시 달리게 합니다.
-                    rabbit.agent.speed = rabbitState.originalSpeed * 5.0f; // 깬 후에는 더 빠르게
-                    rabbit.agent.SetDestination(finishLine);
-                    rabbit.agent.isStopped = false; // 목적지 설정 후 이동을 시작합니다.
+                    // ★★★ 기존 애니메이션 완전히 중지 ★★★
+                    var rabbitAnimController = rabbit.GetComponent<PetAnimationController>();
+                    rabbitAnimController.StopContinuousAnimation();
 
-                    // 4. 달리기 애니메이션을 다시 설정합니다.
-                    rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+                    rabbit.ShowEmotion(EmotionType.Scared, 10f);
 
+                    // ★★★ NavMeshAgent 상태를 애니메이션 재생 전에 먼저 준비 ★★★
+                    if (rabbit.agent != null && rabbit.agent.enabled && rabbit.agent.isOnNavMesh)
+                    {
+                        rabbit.agent.ResetPath();
+                        rabbit.agent.speed = rabbitState.originalSpeed * 5.0f;
+                        rabbit.agent.isStopped = false;
+                    }
+
+                    // ★★★ 점프 애니메이션 재생 (짧게, Idle로 돌아가지 않음) ★★★
+                    yield return StartCoroutine(rabbitAnimController.PlayAnimationWithCustomDuration(
+                        PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
+
+                    // ★★★ NavMeshAgent 목적지 설정 ★★★
+                    if (rabbit.agent != null && rabbit.agent.enabled && rabbit.agent.isOnNavMesh)
+                    {
+                        rabbit.agent.SetDestination(finishLine);
+                        yield return new WaitForSeconds(0.2f); // 경로 계산 대기
+
+                        // ★★★ 달리기 애니메이션 설정 ★★★
+                        rabbitAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
+                        Debug.Log($"[Race] {rabbit.petName}이(가) 잠에서 깨어나 결승선을 향해 달립니다!");
+                        Debug.Log($"[Race Debug] 토끼 위치: {rabbit.transform.position}, 결승선: {finishLine}");
+                        Debug.Log($"[Race Debug] remainingDistance: {rabbit.agent.remainingDistance:F2}");
+                    }
                 }
 
                 // 거북이가 결승선에 도착하면 경주 종료
@@ -189,6 +211,9 @@ public class RaceInteraction : BasePetInteraction
         }
         finally
         {
+            // ★★★ 정리 작업 ★★★
+            rabbitShouldWakeUp = false; // 플래그 초기화
+            
             if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine);
             rabbit.HideEmotion();
             turtle.HideEmotion();
@@ -197,11 +222,9 @@ public class RaceInteraction : BasePetInteraction
             rabbit.GetComponent<PetAnimationController>().StopContinuousAnimation();
             turtle.GetComponent<PetAnimationController>().StopContinuousAnimation();
 
-            // ★★★ 핵심 수정: 상호작용이 완전히 끝났음을 각 펫에게 알립니다. ★★★
             if (rabbit != null) rabbit.isInteracting = false;
             if (turtle != null) turtle.isInteracting = false;
 
-            // 상호작용 매니저에게도 상호작용 종료를 알려 상태를 정리합니다.
             if (PetInteractionManager.Instance != null)
             {
                 PetInteractionManager.Instance.NotifyInteractionEnded(rabbit, turtle);
@@ -209,9 +232,10 @@ public class RaceInteraction : BasePetInteraction
         }
     }
 
+    // ★★★ 수정된 FixPositionDuringInteraction 메서드 ★★★
     private IEnumerator FixPositionDuringInteraction(PetController pet1, PetController pet2, Vector3 pos1, Vector3 pos2, Quaternion rot1, Quaternion rot2, bool fixPet1 = true, bool fixPet2 = true)
     {
-        while (pet1.isInteracting && pet2.isInteracting)
+        while (pet1.isInteracting && pet2.isInteracting && !rabbitShouldWakeUp)
         {
             if (fixPet1)
             {
@@ -227,5 +251,7 @@ public class RaceInteraction : BasePetInteraction
             }
             yield return null;
         }
+        
+        Debug.Log("[Race] FixPositionDuringInteraction 코루틴이 종료되었습니다.");
     }
 }
