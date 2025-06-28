@@ -76,7 +76,7 @@ public class RaceInteraction : BasePetInteraction
                (pet1.PetType == PetType.Turtle && pet2.PetType == PetType.Rabbit);
     }
 
-    
+
     public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
@@ -163,19 +163,21 @@ public class RaceInteraction : BasePetInteraction
             // --- 3. 펫들을 새로운 출발점으로 이동 ---
             yield return StartCoroutine(MoveToPositions(rabbit, turtle, rabbitStartPos, turtleStartPos, 10f));
 
+            // ★★★ 핵심 수정: 펫들의 실제 도착 위치를 가져와서 사용 ★★★
+            Vector3 actualRabbitPos = rabbit.transform.position;
+            Vector3 actualTurtlePos = turtle.transform.position;
+
             // --- 4. 결승선 방향으로 정렬 ---
-            Quaternion targetRotation = Quaternion.LookRotation(dirToFinish); // 결승선을 바라보는 회전값 계산
-            rabbit.transform.rotation = targetRotation;
-            turtle.transform.rotation = targetRotation;
-            // 펫의 실제 모델도 같은 방향을 보도록 회전시킵니다.
-            if (rabbit.petModelTransform != null) rabbit.petModelTransform.rotation = targetRotation;
-            if (turtle.petModelTransform != null) turtle.petModelTransform.rotation = targetRotation;
+            Quaternion targetRotation = Quaternion.LookRotation(dirToFinish);
 
-            // 경주 시작 전, 펫들이 움직이지 않도록 위치를 고정하는 코루틴을 시작합니다.
+            // ★★★ 수정: 회전을 부드럽게 처리 ★★★
+            yield return StartCoroutine(SmoothRotateToDirection(rabbit, turtle, targetRotation));
+
+            // ★★★ 수정: 실제 위치를 사용하여 위치 고정 시작 ★★★
             fixPositionCoroutine = StartCoroutine(FixPositionDuringInteraction(
-                rabbit, turtle, rabbitStartPos, turtleStartPos, targetRotation, targetRotation));
+                rabbit, turtle, actualRabbitPos, actualTurtlePos, targetRotation, targetRotation));
 
-            yield return new WaitForSeconds(2f); // 2초간 대기
+            yield return new WaitForSeconds(2f);
 
             // 대기 후, 위치 고정 코루틴을 중지하여 펫들이 움직일 수 있게 합니다.
             if (fixPositionCoroutine != null)
@@ -352,6 +354,43 @@ public class RaceInteraction : BasePetInteraction
     }
 
 
+    /// <summary>
+    /// 펫들을 지정된 방향으로 부드럽게 회전시키는 코루틴
+    /// </summary>
+    private IEnumerator SmoothRotateToDirection(PetController pet1, PetController pet2, Quaternion targetRotation)
+    {
+        float rotationDuration = 1f; // 회전에 걸리는 시간
+        float elapsedTime = 0f;
+
+        Quaternion pet1StartRotation = pet1.transform.rotation;
+        Quaternion pet2StartRotation = pet2.transform.rotation;
+
+        while (elapsedTime < rotationDuration)
+        {
+            float t = elapsedTime / rotationDuration;
+
+            // 부드러운 회전 보간
+            pet1.transform.rotation = Quaternion.Slerp(pet1StartRotation, targetRotation, t);
+            pet2.transform.rotation = Quaternion.Slerp(pet2StartRotation, targetRotation, t);
+
+            // 펫 모델도 함께 회전
+            if (pet1.petModelTransform != null)
+                pet1.petModelTransform.rotation = pet1.transform.rotation;
+            if (pet2.petModelTransform != null)
+                pet2.petModelTransform.rotation = pet2.transform.rotation;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 최종 회전값 확실히 설정
+        pet1.transform.rotation = targetRotation;
+        pet2.transform.rotation = targetRotation;
+        if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = targetRotation;
+        if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = targetRotation;
+
+        Debug.Log("[Race] 출발선 방향 정렬 완료");
+    }
 
 
     // ★★★ 새로 추가할 메서드들 ★★★
@@ -442,7 +481,7 @@ public class RaceInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 상호작용 중 펫의 위치와 회전을 강제로 고정하는 안전한 코루틴입니다.
+    /// 개선된 위치 고정 코루틴 - 부드러운 위치 보정 포함
     /// </summary>
     private IEnumerator FixPositionDuringInteraction(
         PetController pet1, PetController pet2,
@@ -450,31 +489,52 @@ public class RaceInteraction : BasePetInteraction
         Quaternion rot1, Quaternion rot2,
         bool fixPet1 = true, bool fixPet2 = true)
     {
-        // 두 펫이 모두 상호작용 중이고, 토끼가 깨어나야 하는 신호가 없을 때까지 반복합니다.
+        // ★★★ 추가: 허용 가능한 위치 오차 범위 ★★★
+        const float positionTolerance = 0.5f;
+
         while (pet1.isInteracting && pet2.isInteracting && !rabbitShouldWakeUp)
         {
-            // ★★★ 핵심 수정: NavMeshAgent 상태 체크 후 위치 고정 ★★★
-            // pet1을 고정해야하고, agent가 안전한 상태일 때
             if (fixPet1 && IsAgentSafelyReady(pet1))
             {
-                // NavMeshAgent의 자동 이동을 멈추고, 수동으로 위치와 회전을 설정합니다.
-                // 이를 통해 agent가 자동으로 위치를 업데이트하여 발생하는 떨림이나 위치 오류를 방지합니다.
                 pet1.agent.isStopped = true;
-                pet1.transform.position = pos1;
+
+                // ★★★ 수정: 위치 오차가 허용 범위를 벗어날 때만 보정 ★★★
+                float distanceFromTarget = Vector3.Distance(pet1.transform.position, pos1);
+                if (distanceFromTarget > positionTolerance)
+                {
+                    // 부드러운 위치 보정 (순간이동 대신 Lerp 사용)
+                    pet1.transform.position = Vector3.Lerp(
+                        pet1.transform.position,
+                        pos1,
+                        Time.deltaTime * 5f // 보정 속도
+                    );
+                }
+
+                // 회전은 그대로 유지
                 pet1.transform.rotation = rot1;
                 if (pet1.petModelTransform) pet1.petModelTransform.rotation = rot1;
             }
 
-            // pet2에 대해서도 동일하게 처리합니다.
             if (fixPet2 && IsAgentSafelyReady(pet2))
             {
                 pet2.agent.isStopped = true;
-                pet2.transform.position = pos2;
+
+                // pet2에 대해서도 동일한 부드러운 위치 보정 적용
+                float distanceFromTarget = Vector3.Distance(pet2.transform.position, pos2);
+                if (distanceFromTarget > positionTolerance)
+                {
+                    pet2.transform.position = Vector3.Lerp(
+                        pet2.transform.position,
+                        pos2,
+                        Time.deltaTime * 5f
+                    );
+                }
+
                 pet2.transform.rotation = rot2;
                 if (pet2.petModelTransform) pet2.petModelTransform.rotation = rot2;
             }
 
-            yield return null; // 다음 프레임까지 대기
+            yield return null;
         }
 
         Debug.Log("[Race] FixPositionDuringInteraction 코루틴이 안전하게 종료되었습니다.");
