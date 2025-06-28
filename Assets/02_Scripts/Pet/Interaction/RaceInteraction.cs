@@ -48,13 +48,13 @@ public class RaceInteraction : BasePetInteraction
     public float agentSafetyTimeout = 3f;
 
 
-[Header("Anti-Bottleneck Settings")]
-[Tooltip("결승선에서 각 펫이 향할 목적지 간격")]
-public float finishLineSpread = 5f;
-[Tooltip("경주 도중 막혔을 때 감지하는 시간")]
-public float stuckDetectionTime = 3f;
-[Tooltip("막혔을 때 우회 시도 반경")]
-public float detourRadius = 8f;
+    [Header("Anti-Bottleneck Settings")]
+    [Tooltip("결승선에서 각 펫이 향할 목적지 간격")]
+    public float finishLineSpread = 5f;
+    [Tooltip("경주 도중 막혔을 때 감지하는 시간")]
+    public float stuckDetectionTime = 3f;
+    [Tooltip("막혔을 때 우회 시도 반경")]
+    public float detourRadius = 8f;
     // 토끼가 깨어나야 하는지를 외부(FixPositionDuringInteraction)에서 알 수 있도록 하는 플래그 변수입니다.
     private bool rabbitShouldWakeUp = false;
 
@@ -76,26 +76,7 @@ public float detourRadius = 8f;
                (pet1.PetType == PetType.Turtle && pet2.PetType == PetType.Rabbit);
     }
 
-private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection, 
-    out Vector3 rabbitFinish, out Vector3 turtleFinish)
-{
-    // 결승선에서 양옆으로 분리된 목적지 생성
-    Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
     
-    Vector3 leftFinish = finishLine - sideDirection * (finishLineSpread / 2);
-    Vector3 rightFinish = finishLine + sideDirection * (finishLineSpread / 2);
-    
-    // NavMesh 유효 위치로 보정
-    rabbitFinish = FindValidPositionOnNavMesh(leftFinish, finishLineSpread);
-    turtleFinish = FindValidPositionOnNavMesh(rightFinish, finishLineSpread);
-    
-    Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({rabbitFinish}), 거북이({turtleFinish})");
-}
-
-    /// <summary>
-    /// 실제 경주 상호작용 로직을 수행하는 코루틴입니다.
-    /// </summary>
-    /// 
     public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
@@ -205,9 +186,9 @@ private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDi
 
             // --- 5. 경주 시작 ---
             // 인스펙터에서 설정한 속도 배율을 적용합니다.
-              Vector3 rabbitFinishDestination, turtleFinishDestination;
-    CreateSeparateFinishDestinations(finishLine, dirToFinish, out rabbitFinishDestination, out turtleFinishDestination);
-    
+            Vector3 rabbitFinishDestination, turtleFinishDestination;
+            CreateSeparateFinishDestinations(finishLine, dirToFinish, out rabbitFinishDestination, out turtleFinishDestination);
+
             rabbit.agent.speed = rabbitState.originalSpeed * rabbitStartSpeedMultiplier;
             turtle.agent.speed = turtleState.originalSpeed * turtleSpeedMultiplier;
 
@@ -219,8 +200,8 @@ private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDi
             // 두 펫 모두 NavMeshAgent의 이동을 시작하고, 최종 목표지점인 결승선을 설정합니다.
             rabbit.agent.isStopped = false;
             turtle.agent.isStopped = false;
-       rabbit.agent.SetDestination(rabbitFinishDestination);  // 분리된 목적지!
-    turtle.agent.SetDestination(turtleFinishDestination);  // 분리된 목적지!
+            rabbit.agent.SetDestination(rabbitFinishDestination);  // 분리된 목적지!
+            turtle.agent.SetDestination(turtleFinishDestination);  // 분리된 목적지!
 
             // 토끼가 낮잠을 잘 위치를 계산합니다. (실제 목적지 설정이 아닌, 거리 체크용)
             float napDistance = totalRaceDistance * rabbitNapProgress;
@@ -354,6 +335,24 @@ private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDi
             }
         }
     }
+    private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection,
+        out Vector3 rabbitFinish, out Vector3 turtleFinish)
+    {
+        // 결승선에서 양옆으로 분리된 목적지 생성
+        Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
+
+        Vector3 leftFinish = finishLine - sideDirection * (finishLineSpread / 2);
+        Vector3 rightFinish = finishLine + sideDirection * (finishLineSpread / 2);
+
+        // NavMesh 유효 위치로 보정
+        rabbitFinish = FindValidPositionOnNavMesh(leftFinish, finishLineSpread);
+        turtleFinish = FindValidPositionOnNavMesh(rightFinish, finishLineSpread);
+
+        Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({rabbitFinish}), 거북이({turtleFinish})");
+    }
+
+
+
 
     // ★★★ 새로 추가할 메서드들 ★★★
 
@@ -391,7 +390,7 @@ private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDi
 
         Debug.LogWarning($"[Race] {pet.petName}의 NavMeshAgent가 {timeout}초 내에 준비되지 않았습니다.");
     }
-    
+
     /// <summary>
     /// 펫의 NavMeshAgent가 유효하고, 활성화되어 있으며, NavMesh 위에 있는지 등 안전 상태를 종합적으로 체크합니다.
     /// </summary>
