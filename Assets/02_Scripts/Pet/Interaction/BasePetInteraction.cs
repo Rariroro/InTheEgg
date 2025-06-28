@@ -419,6 +419,32 @@ public abstract class BasePetInteraction : MonoBehaviour
             yield return StartCoroutine(loserAnimController.PlayAnimationWithCustomDuration(loserAnimType, 2.0f, false, false));
         }
     }
+    // BasePetInteraction.cs 에 아래 메서드를 새로 추가합니다.
+
+    /// <summary>
+    /// 지정된 펫의 NavMeshAgent가 활성화되고 NavMesh 위에 준비될 때까지 대기합니다.
+    /// </summary>
+    /// <param name="pet">체크할 펫</param>
+    /// <param name="timeout">최대 대기 시간</param>
+    /// <returns></returns>
+    protected IEnumerator WaitUntilAgentIsReady(PetController pet, float timeout = 2.0f)
+    {
+        float timer = 0f;
+        while (timer < timeout)
+        {
+            // NavMeshAgent가 유효하고, 활성화되어 있으며, NavMesh 위에 있는지 확인
+            if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+            {
+                // 안정성을 위해 한 프레임 더 대기 후 종료
+                yield return null; 
+                yield break; // 코루틴 정상 종료
+            }
+
+            timer += Time.deltaTime;
+            yield return null; // 다음 프레임까지 대기
+        }
+        Debug.LogWarning($"[{InteractionName}] {pet.petName}의 NavMeshAgent가 {timeout}초 내에 준비되지 않았습니다. 상호작용에 문제가 발생할 수 있습니다.");
+    }
     // 상호작용에 대한 시작 위치 계산 (나란히)
     protected void CalculateStartPositions(
         PetController pet1, PetController pet2,

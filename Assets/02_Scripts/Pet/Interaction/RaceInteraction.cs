@@ -56,7 +56,10 @@ public class RaceInteraction : BasePetInteraction
 
         PetController rabbit = (pet1.PetType == PetType.Rabbit) ? pet1 : pet2;
         PetController turtle = (pet1.PetType == PetType.Turtle) ? pet1 : pet2;
-
+ // ★★★★★ 핵심 수정: 상호작용 시작 전, 두 펫의 NavMeshAgent가 준비될 때까지 대기합니다. ★★★★★
+    yield return StartCoroutine(WaitUntilAgentIsReady(rabbit));
+    yield return StartCoroutine(WaitUntilAgentIsReady(turtle));
+    // ★★★★★ 여기까지 추가 ★★★★★
         PetOriginalState rabbitState = new PetOriginalState(rabbit);
         PetOriginalState turtleState = new PetOriginalState(turtle);
         Coroutine fixPositionCoroutine = null;
