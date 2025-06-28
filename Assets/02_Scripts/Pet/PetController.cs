@@ -440,24 +440,31 @@ public class PetController : MonoBehaviour
     public void HandleRotation()
     {
         // 선택된 상태에서는 자동 회전하지 않음
-        if (isGathered || isInteracting || isSelected)
+        if (isGathered  || isSelected)
         {
             return;
         }
-if (isInteracting)
-    {
-        // NavMeshAgent가 실제로 이동 중이라면 회전 허용
-        if (agent != null && agent.enabled && agent.isOnNavMesh && 
-            agent.velocity.magnitude > 0.1f && !agent.isStopped)
+
+        // ★★★ 수정: 상호작용 중이면서 NavMeshAgent가 자동 회전을 담당하는 경우 ★★★
+        if (isInteracting && agent != null && agent.enabled && agent.updateRotation)
         {
-            // 이동 중이므로 회전 허용 (아래 로직 계속 진행)
-        }
-        else
-        {
-            // 이동하지 않는 상호작용이면 회전하지 않음
+            // NavMeshAgent가 회전을 담당하므로 여기서는 처리하지 않음
             return;
         }
-    }
+        if (isInteracting)
+        {
+            // NavMeshAgent가 실제로 이동 중이라면 회전 허용
+            if (agent != null && agent.enabled && agent.isOnNavMesh &&
+                agent.velocity.magnitude > 0.1f && !agent.isStopped)
+            {
+                // 이동 중이므로 회전 허용 (아래 로직 계속 진행)
+            }
+            else
+            {
+                // 이동하지 않는 상호작용이면 회전하지 않음
+                return;
+            }
+        }
         // ★ NavMeshAgent 상태 체크 추가
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
@@ -469,27 +476,26 @@ if (isInteracting)
             return;
         }
 
-        // 이동 방향 벡터를 가져옵니다.
+       // ★★★ 수정: NavMeshAgent가 자동 회전을 담당하지 않을 때만 수동으로 회전 ★★★
+    if (!agent.updateRotation)
+    {
         Vector3 moveDirection = agent.velocity.normalized;
 
-        // 이동 방향이 있을 경우에만 회전합니다 (제자리에서 회전하는 것 방지).
         if (moveDirection.magnitude > 0.1f)
         {
-            // 이동 방향을 바라보는 회전값(Quaternion)을 계산합니다.
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-
-            // 현재 각도에서 목표 각도로 부드럽게 회전시킵니다.
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
                 rotationSpeed * Time.deltaTime
             );
-              // ★★★ 추가: 펫 모델도 같은 방향으로 회전 ★★★
-        if (petModelTransform != null)
-        {
-            petModelTransform.rotation = transform.rotation;
+
+            if (petModelTransform != null)
+            {
+                petModelTransform.rotation = transform.rotation;
+            }
         }
-        }
+    }
     }
     // PetController.cs에 추가
     public void SetRandomDestination()
