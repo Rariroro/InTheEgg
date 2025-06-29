@@ -253,12 +253,12 @@ public class RaceInteraction : BasePetInteraction
                         // ★★★ 수정: 잠들 때는 회전 고정 ★★★
                         rabbit.agent.updateRotation = false;
                         rabbit.ShowEmotion(EmotionType.Sleepy, 60f); // '졸림' 감정 표현
-            // 잠자는 동안에는 위치만 고정하고 회전은 현재 상태 유지
-            Vector3 sleepPosition = rabbit.transform.position;
-            Quaternion sleepRotation = rabbit.transform.rotation;
+                                                                     // 잠자는 동안에는 위치만 고정하고 회전은 현재 상태 유지
+                        Vector3 sleepPosition = rabbit.transform.position;
+                        Quaternion sleepRotation = rabbit.transform.rotation;
 
-                           fixPositionCoroutine = StartCoroutine(FixPositionDuringSleep(
-                rabbit, sleepPosition, sleepRotation));
+                        fixPositionCoroutine = StartCoroutine(FixPositionDuringSleep(
+             rabbit, sleepPosition, sleepRotation));
 
                         // '휴식' 애니메이션을 오랫동안(999초) 재생시켜 잠자는 것처럼 보이게 합니다.
                         StartCoroutine(rabbit.GetComponent<PetAnimationController>()
@@ -340,39 +340,77 @@ public class RaceInteraction : BasePetInteraction
 
             yield return new WaitForSeconds(3f); // 결과 연출을 위해 3초 대기
         }
-        finally // 이 블록은 try가 성공적으로 끝나든, 중간에 오류로 중단되든 항상 실행됩니다.
-        { // ★★★ 수정: 원래 회전 설정으로 복구 ★★★
-            if (rabbit != null && rabbit.agent != null)
+        finally
+        {
+            // ★★★★★★★★★★ [수정된 부분 시작] ★★★★★★★★★★
+            // 'yield'를 사용하지 않는 동기 방식의 정리 코드입니다.
+
+            // 위치 고정 코루틴이 실행 중이었다면 확실히 중지합니다.
+            if (fixPositionCoroutine != null)
             {
-                rabbit.agent.updateRotation = false; // PetController가 회전 관리하도록 복구
+                StopCoroutine(fixPositionCoroutine);
+                fixPositionCoroutine = null;
             }
-            if (turtle != null && turtle.agent != null)
-            {
-                turtle.agent.updateRotation = false; // PetController가 회전 관리하도록 복구
-            }
-            // ★★★ 새로 추가된 부분: 깃발 제거 ★★★
+
+            // 결승선 깃발이 있다면 제거합니다.
             if (finishFlagInstance != null)
             {
                 Destroy(finishFlagInstance);
-                Debug.Log("[Race] 결승선 깃발을 제거했습니다.");
             }
-            // ★★★ 여기까지 추가 ★★★
-            // --- 상태 복구 ---
-            rabbitShouldWakeUp = false; // 플래그 초기화
-            if (fixPositionCoroutine != null) StopCoroutine(fixPositionCoroutine); // 위치 고정 코루틴 확실히 종료
-            rabbit.HideEmotion(); // 감정 표현 숨기기
-            turtle.HideEmotion();
-            rabbitState.Restore(rabbit); // 토끼의 원래 상태(속도 등)로 복원
-            turtleState.Restore(turtle); // 거북이의 원래 상태로 복원
-            rabbit.GetComponent<PetAnimationController>().StopContinuousAnimation(); // 연속 애니메이션 중지
-            turtle.GetComponent<PetAnimationController>().StopContinuousAnimation();
-            if (rabbit != null) rabbit.isInteracting = false; // 상호작용 상태 해제
-            if (turtle != null) turtle.isInteracting = false;
-            if (PetInteractionManager.Instance != null)
+
+            // --- NavMeshAgent 상태 복구 (가장 중요) ---
+            // 경주에 참여한 두 펫의 상태를 안전하게 복구합니다.
+            foreach (var pet in new[] { rabbit, turtle })
             {
-                // 상호작용 관리자에게 상호작용이 끝났음을 알립니다.
-                PetInteractionManager.Instance.NotifyInteractionEnded(rabbit, turtle);
+                if (pet == null || pet.agent == null) continue;
+
+                // 1. NavMeshAgent가 비활성화되었다면 다시 활성화합니다.
+                if (!pet.agent.enabled)
+                {
+                    pet.agent.enabled = true;
+                }
+
+                // 2. NavMesh 위에 없다면, 가장 가까운 NavMesh 위치로 강제 이동(Warp)시킵니다.
+                if (!pet.agent.isOnNavMesh)
+                {
+                    NavMeshHit navHit;
+                    if (NavMesh.SamplePosition(pet.transform.position, out navHit, 2f, NavMesh.AllAreas))
+                    {
+                        pet.agent.Warp(navHit.position);
+                        Debug.LogWarning($"[Race] {pet.petName}이(가) NavMesh 밖으로 벗어나 있어 위치를 보정했습니다.");
+                    }
+                }
+
+                // 3. 에이전트의 경로를 초기화하고 회전 제어권을 PetController에게 돌려줍니다.
+                if (pet.agent.isOnNavMesh)
+                {
+                    pet.agent.isStopped = true;
+                    pet.agent.ResetPath();
+                    pet.agent.updateRotation = false; // PetController가 회전 제어
+                }
             }
+
+            // --- 기타 상태 복구 ---
+            rabbitShouldWakeUp = false; // 플래그 초기화
+
+            if (rabbit != null)
+            {
+                rabbit.HideEmotion();
+                rabbitState.Restore(rabbit);
+                rabbit.GetComponent<PetAnimationController>().StopContinuousAnimation();
+            }
+
+            if (turtle != null)
+            {
+                turtle.HideEmotion();
+                turtleState.Restore(turtle);
+                turtle.GetComponent<PetAnimationController>().StopContinuousAnimation();
+            }
+
+            // 상호작용 종료를 최종적으로 처리합니다.
+            EndInteraction(rabbit, turtle);
+
+            // ★★★★★★★★★★ [수정된 부분 끝] ★★★★★★★★★★
         }
     }
     private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection,
@@ -601,5 +639,5 @@ public class RaceInteraction : BasePetInteraction
         Debug.Log($"[Race] 정렬된 출발점 계산 완료: Pet1({pet1Pos}), Pet2({pet2Pos})");
     }
 
-   
+
 }

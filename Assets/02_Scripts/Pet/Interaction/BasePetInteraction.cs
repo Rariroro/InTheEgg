@@ -13,7 +13,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     public abstract bool CanInteract(PetController pet1, PetController pet2);
 
     // 상호작용 수행 코루틴
-  public virtual IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    public virtual IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         // 이 코루틴이 끝난 후, 상호작용이 종료됩니다.
         // 예시: yield return new WaitForSeconds(5f);
@@ -25,7 +25,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 상호작용 시작");
         StartCoroutine(InteractionSequence(pet1, pet2));
     }
-    
+
 
     // 상호작용 시퀀스 관리
     private IEnumerator InteractionSequence(PetController pet1, PetController pet2)
@@ -103,30 +103,11 @@ public abstract class BasePetInteraction : MonoBehaviour
     // 상호작용 종료 처리 수정
     protected void EndInteraction(PetController pet1, PetController pet2)
     {
-        // // 감정 말풍선 숨기기
-        // if (pet1 != null) pet1.HideEmotion();
-        // if (pet2 != null) pet2.HideEmotion();
+        // 두 펫의 상태를 안전하게 복구하고 다음 행동을 준비시킵니다.
+        SafeResumePet(pet1);
+        SafeResumePet(pet2);
 
-        // 상호작용 상태 제거
-        pet1.isInteracting = false;
-        pet2.isInteracting = false;
-        pet1.interactionPartner = null;
-        pet2.interactionPartner = null;
-
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 상호작용 종료");
-
-        // 이동 재개 (NavMeshAgent가 활성화되어 있고 NavMesh 위에 있는 경우에만)
-        if (pet1.agent != null && pet1.agent.enabled && pet1.agent.isOnNavMesh)
-        {
-            pet1.ResumeMovement();
-            pet1.GetComponent<PetMovementController>().SetRandomDestination();
-        }
-
-        if (pet2.agent != null && pet2.agent.enabled && pet2.agent.isOnNavMesh)
-        {
-            pet2.ResumeMovement();
-            pet2.GetComponent<PetMovementController>().SetRandomDestination();
-        }
+        Debug.Log($"[{InteractionName}] {pet1?.petName}와(과) {pet2?.petName}의 상호작용 종료");
 
         // 상호작용 매니저에 종료 알림 추가
         if (PetInteractionManager.Instance != null)
@@ -135,13 +116,56 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 펫의 상태를 안전하게 복구하고 다음 행동을 준비시키는 헬퍼 메서드
+    /// </summary>
+    private void SafeResumePet(PetController pet)
+    {
+        if (pet == null) return;
+
+        // 상호작용 상태 플래그를 확실히 해제합니다.
+        pet.isInteracting = false;
+        pet.interactionPartner = null;
+        pet.currentInteractionLogic = null;
+
+        // 감정 말풍선 숨기기
+        pet.HideEmotion();
+
+        if (pet.agent == null) return;
+
+        // 1. NavMeshAgent가 비활성화되었다면 다시 활성화
+        if (!pet.agent.enabled)
+        {
+            pet.agent.enabled = true;
+        }
+
+        // 2. NavMesh 위에 있는지 확인하고, 없다면 위치 보정
+        if (!pet.agent.isOnNavMesh)
+        {
+            NavMeshHit navHit;
+            if (NavMesh.SamplePosition(pet.transform.position, out navHit, 2f, NavMesh.AllAreas))
+            {
+                pet.agent.Warp(navHit.position);
+            }
+            else
+            {
+                Debug.LogError($"[BasePetInteraction] {pet.petName}의 NavMesh 위치를 찾지 못해 이동을 재개할 수 없습니다.");
+                return;
+            }
+        }
+
+        // 3. 모든 준비가 완료되면 이동을 재개하고 새로운 목적지를 찾도록 합니다.
+        pet.ResumeMovement();
+        pet.GetComponent<PetMovementController>()?.DecideNextBehavior(); // 다음 행동 즉시 결정
+    }
+
     // 상호작용 유형 결정 메서드 (하위 클래스에서 구현)
     protected virtual InteractionType DetermineInteractionType()
     {
         // 기본 구현은 InteractionType.WalkTogether 반환
         return InteractionType.WalkTogether;
     }
-    
+
     // 유틸리티 메서드들
     // 두 펫이 서로 마주보게 하는 함수
     protected void LookAtEachOther(PetController pet1, PetController pet2)
@@ -336,7 +360,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         public float originalAcceleration;
         public bool agentUpdateRotation;
 
-       public PetOriginalState(PetController pet)
+        public PetOriginalState(PetController pet)
         {
             // ★★★ 수정 시작 ★★★
             // agent가 활성화되고 NavMesh 위에 있을 때만 상태를 읽어옵니다.
@@ -377,10 +401,10 @@ public abstract class BasePetInteraction : MonoBehaviour
     // try { ... } finally { pet1State.Restore(pet1); }
 
     // 동시에 특별 애니메이션 재생
-      protected IEnumerator PlaySimultaneousAnimations(
-        PetController pet1, PetController pet2,
-        PetAnimationController.PetAnimationType anim1Type, PetAnimationController.PetAnimationType anim2Type,
-        float duration = 2.0f)
+    protected IEnumerator PlaySimultaneousAnimations(
+      PetController pet1, PetController pet2,
+      PetAnimationController.PetAnimationType anim1Type, PetAnimationController.PetAnimationType anim2Type,
+      float duration = 2.0f)
     {
         // 두 펫의 애니메이션 컨트롤러
         PetAnimationController anim1Controller = pet1.GetComponent<PetAnimationController>();
@@ -393,17 +417,17 @@ public abstract class BasePetInteraction : MonoBehaviour
 
     // BasePetInteraction에 추가할 메서드들
     // 승자 결정 메서드
-       protected PetController DetermineWinner(PetController pet1, PetController pet2, float probability = 0.5f)
+    protected PetController DetermineWinner(PetController pet1, PetController pet2, float probability = 0.5f)
     {
         bool pet1IsWinner = Random.value > probability;
         return pet1IsWinner ? pet1 : pet2;
     }
 
     // 승자 패자 애니메이션 재생 메서드
-       protected IEnumerator PlayWinnerLoserAnimations(
-        PetController winner, PetController loser,
-        PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump, 
-        PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
+    protected IEnumerator PlayWinnerLoserAnimations(
+     PetController winner, PetController loser,
+     PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump,
+     PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
     {
         Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
 
@@ -436,7 +460,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
             {
                 // 안정성을 위해 한 프레임 더 대기 후 종료
-                yield return null; 
+                yield return null;
                 yield break; // 코루틴 정상 종료
             }
 
