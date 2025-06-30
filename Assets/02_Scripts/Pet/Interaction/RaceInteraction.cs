@@ -81,7 +81,7 @@ public class RaceInteraction : BasePetInteraction
     }
 
 
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
 

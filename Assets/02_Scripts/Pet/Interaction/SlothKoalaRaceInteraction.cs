@@ -62,7 +62,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[SlothKoalaRace] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
         

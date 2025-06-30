@@ -99,7 +99,7 @@ bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIPro
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[ChameleonCamouflage] {pet1.petName}와(과) {pet2.petName} 사이의 카멜레온 위장 상호작용 시작!");
         

@@ -58,7 +58,7 @@ public class LionPossumPrankInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[LionPossumPrank] {pet1.petName}와(과) {pet2.petName}의 장난 상호작용 시작!");
         

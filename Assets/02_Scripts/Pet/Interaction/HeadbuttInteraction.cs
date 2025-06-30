@@ -119,7 +119,7 @@ public class HeadbuttInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         // 상호작용 유형 확인
         HeadbuttPair pairType = GetPairType(pet1, pet2);

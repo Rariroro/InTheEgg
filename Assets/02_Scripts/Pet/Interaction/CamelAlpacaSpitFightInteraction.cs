@@ -156,7 +156,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[CamelAlpacaSpitFight] {pet1.petName}와(과) {pet2.petName} 사이의 침뱉기 싸움 시작!");
         

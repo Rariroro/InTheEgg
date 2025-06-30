@@ -390,8 +390,8 @@ public class PetInteractionManager : MonoBehaviour
         Debug.Log($"[PetInteractionManager] {pet1.petName}와(과) {pet2.petName} 사이에 {suitableInteraction.InteractionName} 상호작용 시작!");
 
         // 상호작용 시작
-        StartInteraction(pet1, pet2, suitableInteraction);
-
+ // ★★★ 핵심 변경: 상호작용 로직 실행을 BasePetInteraction에 완전히 위임 ★★★
+    suitableInteraction.StartInteraction(pet1, pet2);
         // 상호작용 기록
         float currentTime = Time.time;
         lastInteractionTime[pet1] = currentTime;
@@ -416,21 +416,7 @@ public class PetInteractionManager : MonoBehaviour
 
     // PetInteractionManager.cs
 
-    // 수정 제안 1: PetInteractionManager.cs
-    private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
-    {
-        // PetController의 상태 플래그만 설정해줍니다.
-        // UpdateAI() 호출과 interaction.StartInteraction()을 제거합니다.
-        pet1.BeginInteraction(pet2, interaction);
-        pet2.BeginInteraction(pet1, interaction);
-
-        // 상호작용 기록
-        float currentTime = Time.time;
-        lastInteractionTime[pet1] = currentTime;
-        lastInteractionTime[pet2] = currentTime;
-        interactingPets[pet1] = pet2;
-        interactingPets[pet2] = pet1;
-    }
+   
 
     // 상호작용 종료 시 isInteracting 플래그를 false로 만들어줘야 합니다.
     public void NotifyInteractionEnded(PetController pet1, PetController pet2)

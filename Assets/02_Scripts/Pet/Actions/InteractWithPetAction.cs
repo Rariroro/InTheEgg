@@ -1,6 +1,4 @@
-// Actions/InteractWithPetAction.cs
-
-using UnityEngine;
+// Actions/InteractWithPetAction.cs (수정된 버전)
 
 public class InteractWithPetAction : IPetAction
 {
@@ -13,61 +11,27 @@ public class InteractWithPetAction : IPetAction
 
     public float GetPriority()
     {
-        // PetController의 isInteracting 플래그를 사용하여 우선순위를 결정합니다.
-        return _pet.isInteracting ? 10.0f : 0f;
+        // 펫이 상호작용 중일 때, 다른 저순위 행동(배회 등)을 막기 위해 중간 정도의 우선순위를 유지합니다.
+        // Eat, Sleep(우선순위 ~2.0) 보다는 낮고 Wander(0.1)보다는 높게 설정합니다.
+        return _pet.isInteracting ? 1.5f : 0f;
     }
 
     public void OnEnter()
     {
-        // Debug.Log($"{_pet.petName}: 펫 간 상호작용 상태 진입.");
-        _pet.StopMovement();
-
-        // ★★★ 핵심 변경 ★★★
-        // 이 Action 상태에 진입했을 때, 비로소 실제 상호작용 로직을 시작합니다.
-        if (_pet.currentInteractionLogic != null && _pet.interactionPartner != null)
-        {
-            // 상호작용 로직을 PetController의 코루틴으로 실행합니다.
-            _pet.StartCoroutine(
-                _pet.currentInteractionLogic.PerformInteraction(_pet, _pet.interactionPartner)
-            );
-        }
-        else
-        {
-            // 예외 처리: 상호작용 로직이나 파트너가 없으면 상태를 즉시 종료
-            Debug.LogWarning($"{_pet.petName}의 상호작용 정보가 없어 즉시 종료합니다.");
-            _pet.isInteracting = false; // 플래그를 내려서 다른 행동으로 전환 유도
-        }
+        // Debug.Log($"{_pet.petName}: 상호작용 상태 유지 중. 다른 행동을 하지 않습니다.");
+        // BasePetInteraction이 이미 이동을 제어하므로 여기서는 아무것도 할 필요가 없습니다.
+        _pet.StopMovement(); 
     }
 
     public void OnUpdate()
-{
-   
-}
+    {
+        // 모든 실제 행동은 BasePetInteraction 코루틴에서 일어나므로 여기서는 할 일이 없습니다.
+    }
 
     public void OnExit()
     {
-        // Debug.Log($"{_pet.petName}: 펫 간 상호작용 상태 종료.");
-        
-        // ★★★ 추가: 행동이 종료될 때, 진행 중이던 상호작용 코루틴을 확실히 중지시킵니다.
-        _pet.StopAllCoroutines();
-        
-        // NavMeshAgent가 비활성화 되었을 수 있으므로 복구 로직이 필요할 수 있습니다.
-        if (_pet.agent != null && !_pet.agent.enabled)
-        {
-            _pet.agent.enabled = true;
-        }
-
-        // isInteracting 플래그를 false로 설정합니다.
-        _pet.isInteracting = false; 
-
-        // 파트너 정보도 초기화
-        _pet.interactionPartner = null;
-        _pet.currentInteractionLogic = null;
-
-        // 다른 펫에게도 상호작용 종료를 알릴 수 있습니다.
-        if(PetInteractionManager.Instance != null)
-        {
-             PetInteractionManager.Instance.NotifyInteractionEnded(_pet, _pet.interactionPartner);
-        }
+        // OnExit도 BasePetInteraction의 finally 블록에서 모든 정리를 하므로,
+        // 여기서 특별히 정리할 내용은 없습니다.
+        // isInteracting 플래그는 BasePetInteraction에서 해제됩니다.
     }
 }

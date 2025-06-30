@@ -14,18 +14,15 @@ public class WanderAction : IPetAction
     }
 
     // ★★★ 수정: isInteracting 체크를 추가하여 우선순위를 더 명확하게 합니다. ★★★
-    public float GetPriority()
+   public float GetPriority()
+{
+    // ★ 상호작용 중일 때는 배회하지 않도록 조건 추가
+    if (_pet.isInteracting || _pet.isSelected || _pet.isHolding)
     {
-        // 배회는 다른 모든 행동이 없을 때 수행하는 가장 낮은 우선순위를 가집니다.
-        // isInteracting과 isGathering은 PetController의 AI 루프에서 더 높은 우선순위의 Action으로 처리되므로,
-        // 여기서는 isSelected나 isHolding 같은 직접적인 상태만 체크해도 충분합니다.
-        if (_pet.isSelected || _pet.isHolding)
-        {
-            return 0f;
-        }
-        // 기본 행동이므로 항상 낮은 우선순위를 가짐
-        return 0.1f;
+        return 0f;
     }
+    return 0.1f;
+}
 
     public void OnEnter()
     {

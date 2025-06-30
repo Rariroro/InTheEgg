@@ -62,7 +62,7 @@ public class FoxMoleInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[FoxMoleHunt] {pet1.petName}와(과) {pet2.petName} 사이의 여우-두더지 상호작용 시작!");
         

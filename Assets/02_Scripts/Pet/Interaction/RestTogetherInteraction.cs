@@ -52,7 +52,7 @@ public class RestTogetherInteraction : BasePetInteraction
     }
     
     // 상호작용 수행
-    public override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[RestTogether] {pet1.petName}와(과) {pet2.petName}가 함께 쉬기 시작했습니다!");
         

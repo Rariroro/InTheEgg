@@ -11,21 +11,78 @@ public abstract class BasePetInteraction : MonoBehaviour
 
     // 해당 펫들이 이 상호작용을 할 수 있는지 확인
     public abstract bool CanInteract(PetController pet1, PetController pet2);
-
-    // 상호작용 수행 코루틴
-    public virtual IEnumerator PerformInteraction(PetController pet1, PetController pet2)
-    {
-        // 이 코루틴이 끝난 후, 상호작용이 종료됩니다.
-        // 예시: yield return new WaitForSeconds(5f);
-        yield return null; // 기본 구현은 아무것도 하지 않음
-    }
-    // 두 펫의 상호작용을 시작하는 공통 메서드
+ // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
     public void StartInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 상호작용 시작");
-        StartCoroutine(InteractionSequence(pet1, pet2));
+        // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
+        StartCoroutine(InteractionLifecycle(pet1, pet2));
     }
 
+    /// <summary>
+    /// 상호작용의 전체 생명주기(준비, 실행, 정리)를 관리하는 코루틴입니다.
+    /// </summary>
+    private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
+    {
+        // 1. 사전 준비 단계
+        Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
+
+        // 펫의 현재 AI 행동을 강제로 중단하고 초기화합니다.
+        pet1.InterruptAndResetAI();
+        pet2.InterruptAndResetAI();
+
+        // 상호작용 상태 플래그 설정
+        pet1.isInteracting = true;
+        pet2.isInteracting = true;
+        pet1.interactionPartner = pet2;
+        pet2.interactionPartner = pet1;
+        
+        // 상호작용 로직 할당
+        pet1.currentInteractionLogic = this;
+        pet2.currentInteractionLogic = this;
+        
+        // 이동 중지
+        pet1.StopMovement();
+        pet2.StopMovement();
+
+        // (선택사항) 펫이 NavMesh 위에 있는지 최종 확인
+        yield return StartCoroutine(EnsurePetsOnNavMesh(pet1, pet2));
+
+        // 2. 실제 상호작용 실행 (try-finally로 안정성 확보)
+        try
+        {
+            // 각 상호작용 클래스에 정의된 실제 로직(PerformInteraction)을 실행합니다.
+            yield return StartCoroutine(PerformInteraction(pet1, pet2));
+        }
+        finally
+        {
+            // 3. 사후 정리 단계
+            // 코루틴이 어떤 이유로든 종료될 때(성공, 실패, 중단), 반드시 정리를 수행합니다.
+            Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
+            EndInteraction(pet1, pet2);
+        }
+    }
+
+    // PerformInteraction은 이제 protected virtual로 변경하여 자식 클래스에서 재정의하도록 합니다.
+    protected virtual IEnumerator PerformInteraction(PetController pet1, PetController pet2)
+    {
+        yield return new WaitForSeconds(1.0f); // 기본 구현
+    }
+    
+    // EndInteraction은 private 또는 protected로 변경하여 외부 호출을 막습니다.
+    protected void EndInteraction(PetController pet1, PetController pet2)
+    {
+        if(pet1 != null) SafeResumePet(pet1);
+        if(pet2 != null) SafeResumePet(pet2);
+
+        // 상호작용 매니저에 종료 알림
+        if (PetInteractionManager.Instance != null)
+        {
+            PetInteractionManager.Instance.NotifyInteractionEnded(pet1, pet2);
+        }
+    }
+    // 상호작용 수행 코루틴
+   
+   
 
     // 상호작용 시퀀스 관리
     private IEnumerator InteractionSequence(PetController pet1, PetController pet2)
@@ -100,21 +157,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
     }
 
-    // 상호작용 종료 처리 수정
-    protected void EndInteraction(PetController pet1, PetController pet2)
-    {
-        // 두 펫의 상태를 안전하게 복구하고 다음 행동을 준비시킵니다.
-        SafeResumePet(pet1);
-        SafeResumePet(pet2);
-
-        Debug.Log($"[{InteractionName}] {pet1?.petName}와(과) {pet2?.petName}의 상호작용 종료");
-
-        // 상호작용 매니저에 종료 알림 추가
-        if (PetInteractionManager.Instance != null)
-        {
-            PetInteractionManager.Instance.NotifyInteractionEnded(pet1, pet2);
-        }
-    }
+  
 
     /// <summary>
     /// 펫의 상태를 안전하게 복구하고 다음 행동을 준비시키는 헬퍼 메서드

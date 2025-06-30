@@ -378,6 +378,8 @@ public class PetController : MonoBehaviour
             _currentAction = null;
         }
     }
+   // PetController.cs
+
     /// <summary>
     /// 플레이어의 직접적인 개입 등으로 AI의 현재 행동을 강제로 중단하고 초기화합니다.
     /// 다음 AI 업데이트 시 가장 적절한 행동을 처음부터 다시 선택하게 됩니다.
@@ -389,7 +391,7 @@ public class PetController : MonoBehaviour
             // 1. 현재 진행 중인 행동의 OnExit()를 호출하여 상태를 깨끗하게 정리합니다.
             //    (예: EatAction -> CancelFeeding() 호출, WanderAction -> 코루틴 중지 등)
             _currentAction.OnExit();
-            Debug.Log($"[AI Reset] 현재 행동 '{_currentAction.GetType().Name}'이 외부 요인에 의해 중단되었습니다.");
+            // Debug.Log($"[AI Reset] 현재 행동 '{_currentAction.GetType().Name}'이 외부 요인에 의해 중단되었습니다.");
         }
 
         // 2. 현재 행동을 null로 설정하여 다음 UpdateAI()에서 반드시 새로운 행동을 찾도록 합니다.
@@ -400,6 +402,7 @@ public class PetController : MonoBehaviour
         //    이 부분은 각 Action의 OnExit에서 잘 처리되고 있다면 생략 가능합니다.
         GetComponent<PetAnimationController>()?.ForceStopAllAnimations();
     }
+    
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
     {
         isInteracting = true;
