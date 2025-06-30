@@ -61,7 +61,12 @@ public class RaceInteraction : BasePetInteraction
     public float detourRadius = 8f;
     // 토끼가 깨어나야 하는지를 외부(FixPositionDuringInteraction)에서 알 수 있도록 하는 플래그 변수입니다.
     private bool rabbitShouldWakeUp = false;
+[Header("Rabbit Nap Settings")]
+[Tooltip("토끼가 잠들기 전 속도를 줄이는 시간 (초)")]
+public float rabbitSlowDownDuration = 2.0f;
 
+[Tooltip("토끼가 멈추기 직전의 최소 속도")]
+public float rabbitMinSpeedBeforeSleep = 0.5f;
     /// <summary>
     /// 이 상호작용의 타입을 InteractionType.Race로 결정합니다.
     /// </summary>
@@ -195,35 +200,20 @@ public class RaceInteraction : BasePetInteraction
                 // 토끼 낮잠 로직
                 // 토끼 낮잠 로직
                 if (!rabbitIsSleeping && !rabbitWokeUp)
-                {
-                    float rabbitProjectedDistance = Vector3.Dot(rabbit.transform.position - startPosition, dirToFinish);
-                    if (rabbitProjectedDistance >= napDistance)
-                    {
-                        // ▼▼▼▼▼ [수정된 부분] 토끼 낮잠 로직 ▼▼▼▼▼
-                        rabbitIsSleeping = true;
-
-                        // NavMeshAgent가 유효한지 안전하게 확인합니다.
-                        if (IsAgentSafelyReady(rabbit))
-                        {
-                            // 1. 속도를 즉시 0으로 만들어 미끄러짐을 방지합니다. (핵심)
-                            rabbit.agent.velocity = Vector3.zero;
-                            
-                            // 2. 이동을 멈추고 현재 경로를 초기화합니다.
-                            rabbit.agent.isStopped = true;
-                            // rabbit.agent.ResetPath();
-
-                            // 3. 제자리에서 불필요하게 회전하지 않도록 설정합니다.
-                            rabbit.agent.updateRotation = false;
-                        }
-
-                        // 잠자는 감정 표현과 애니메이션을 재생합니다.
-                        rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
-                        StartCoroutine(rabbit.GetComponent<PetAnimationController>()
-                            .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 999f, true, false));
-                        Debug.Log($"[Race] {rabbit.petName}이(가) 낮잠을 잡니다.");
-                        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-                    }
-                }
+{
+    float rabbitProjectedDistance = Vector3.Dot(rabbit.transform.position - startPosition, dirToFinish);
+    if (rabbitProjectedDistance >= napDistance)
+    {
+        // ▼▼▼▼▼ [수정된 부분] 토끼가 자연스럽게 멈추고 자는 로직 ▼▼▼▼▼
+        rabbitIsSleeping = true;
+        
+        // 자연스럽게 속도를 줄이며 멈추는 코루틴 시작
+        StartCoroutine(SlowDownAndSleep(rabbit));
+        
+        Debug.Log($"[Race] {rabbit.petName}이(가) 속도를 줄이며 잠들 준비를 합니다.");
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    }
+}
 
                 // 토끼 깨우기 로직
                 float turtleProjectedDistance = Vector3.Dot(turtle.transform.position - startPosition, dirToFinish);
@@ -301,7 +291,62 @@ public class RaceInteraction : BasePetInteraction
             Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
+// RaceInteraction.cs에 새로운 메서드 추가
 
+/// <summary>
+/// 토끼가 자연스럽게 속도를 줄이며 멈춘 후 잠드는 코루틴
+/// </summary>
+private IEnumerator SlowDownAndSleep(PetController rabbit)
+{
+    if (!IsAgentSafelyReady(rabbit)) yield break;
+    
+    // 현재 속도 저장
+    float currentSpeed = rabbit.agent.speed;
+float slowDownDuration = rabbitSlowDownDuration; // 2.0f 대신
+    float elapsedTime = 0f;
+    
+    // 1. 속도를 서서히 줄이기
+    while (elapsedTime < slowDownDuration)
+    {
+        if (!IsAgentSafelyReady(rabbit)) break;
+        
+        float t = elapsedTime / slowDownDuration;
+        // EaseOutCubic 커브를 사용하여 자연스러운 감속
+        float easeT = 1f - Mathf.Pow(1f - t, 3f);
+        
+rabbit.agent.speed = Mathf.Lerp(currentSpeed, rabbitMinSpeedBeforeSleep, easeT); // 0.5f 대신
+        
+        elapsedTime += Time.deltaTime;
+        yield return null;
+    }
+    
+    // 2. 완전히 멈추기
+    if (IsAgentSafelyReady(rabbit))
+    {
+        rabbit.agent.isStopped = true;
+        rabbit.agent.velocity = Vector3.zero;
+        rabbit.agent.updateRotation = false;
+    }
+    
+    // 3. 하품 애니메이션 (선택사항)
+    var animController = rabbit.GetComponent<PetAnimationController>();
+    if (animController != null)
+    {
+        // 하품이나 기지개를 펴는 애니메이션이 있다면 먼저 재생
+        yield return StartCoroutine(animController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 1.0f, true, false));
+    }
+    
+    // 4. 잠자는 감정 표현과 애니메이션 시작
+    rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
+    if (animController != null)
+    {
+        StartCoroutine(animController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Rest, 999f, true, false));
+    }
+    
+    Debug.Log($"[Race] {rabbit.petName}이(가) 편안하게 잠들었습니다.");
+}
     // ... (IsAgentSafelyReady, CalculateOptimalStartPosition, CalculateAlignedStartPositions 등 다른 헬퍼 메서드는 그대로 유지) ...
 
     // ★★★ 중요: 아래 메서드는 BasePetInteraction.cs에 이미 존재하므로 RaceInteraction.cs 에서는 제거하거나,
