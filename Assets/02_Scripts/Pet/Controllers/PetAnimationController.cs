@@ -43,11 +43,32 @@ public class PetAnimationController : MonoBehaviour
         {
             return;
         }
+  // ▼▼▼▼▼ [수정된 부분] ▼▼▼▼▼
+    if (petController.animator != null && petController.agent != null)
+    {
+        // 현재 애니메이터에 설정된 파라미터 값을 가져와 애니메이션 타입을 확인합니다.
+        var currentAnimation = (PetAnimationType)petController.animator.GetInteger("animation");
 
-        if (petController.animator != null && petController.agent != null && petController.baseSpeed > 0)
+        // 걷기 또는 달리기 상태일 때만 이동 속도에 애니메이션 속도를 동기화합니다.
+        if (currentAnimation == PetAnimationType.Walk || currentAnimation == PetAnimationType.Run)
         {
-            petController.animator.speed = petController.agent.speed / petController.baseSpeed;
+            if (petController.baseSpeed > 0)
+            {
+                // agent.speed 대신 agent.velocity.magnitude를 사용하면 더 부드러운 시작/정지 표현이 가능합니다.
+                petController.animator.speed = petController.agent.velocity.magnitude / petController.baseSpeed;
+            }
+            else
+            {
+                petController.animator.speed = 1f;
+            }
         }
+        else
+        {
+            // 잠자기(Rest), 공격(Attack) 등 다른 모든 정적 애니메이션은 항상 정상 속도(1.0)로 재생합니다.
+            petController.animator.speed = 1.0f;
+        }
+    }
+    // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
 
         if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
             return;
