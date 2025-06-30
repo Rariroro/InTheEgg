@@ -151,22 +151,39 @@ public float rabbitMinSpeedBeforeSleep = 0.5f;
                 finishFlagInstance = Instantiate(finishFlagPrefab, finishLine, flagRotation);
             }
 
-            // --- 2. 출발점으로 이동 및 정렬 ---
-            // (이 부분 로직은 기존과 동일하게 유지)
-            Vector3 startPosition = CalculateOptimalStartPosition(rabbit, turtle, finishLine, dirToFinish);
-            Vector3 rabbitStartPos, turtleStartPos;
-            CalculateAlignedStartPositions(startPosition, dirToFinish, out rabbitStartPos, out turtleStartPos, 3f);
-            
-            yield return StartCoroutine(MoveToPositions(rabbit, turtle, rabbitStartPos, turtleStartPos, 10f));
-            
-            Quaternion targetRotation = Quaternion.LookRotation(dirToFinish);
-            yield return StartCoroutine(SmoothRotateToDirection(rabbit, turtle, targetRotation));
+           // ★★★ 수정된 부분 시작 ★★★
+        // --- 2. 출발점으로 이동 및 정렬 (부드러운 이동) ---
+        
+        // 자동 회전 비활성화
+        rabbit.agent.updateRotation = false;
+        turtle.agent.updateRotation = false;
+        
+        Vector3 startPosition = CalculateOptimalStartPosition(rabbit, turtle, finishLine, dirToFinish);
+        Vector3 rabbitStartPos, turtleStartPos;
+        CalculateAlignedStartPositions(startPosition, dirToFinish, out rabbitStartPos, out turtleStartPos, 3f);
+        
+        // 1단계: 출발선 근처로 이동
+        yield return StartCoroutine(MoveToPositions(rabbit, turtle, rabbitStartPos, turtleStartPos, 10f));
+        
+        // 2단계: 미세 조정 - 정확한 위치로 부드럽게 이동
+        yield return StartCoroutine(FineTunePositions(rabbit, turtle, rabbitStartPos, turtleStartPos, dirToFinish));
+        
+        // 3단계: 출발 대기
+        rabbit.agent.isStopped = true;
+        turtle.agent.isStopped = true;
+        rabbit.agent.velocity = Vector3.zero;
+        turtle.agent.velocity = Vector3.zero;
+        
+        Debug.Log("[Race] 출발선에서 대기 중...");
+        
+        // 카운트다운
+        for (int i = 0; i < 3; i++)
+        {
+            Debug.Log($"[Race] {3-i}...");
+            yield return new WaitForSeconds(1f);
+        }
+        // ★★★ 수정된 부분 끝 ★★★
 
-            // ★★★ 수정: 복잡한 위치 고정 코루틴 대신, isStopped 플래그로 간단하게 출발 대기 상태를 만듭니다. ★★★
-            rabbit.agent.isStopped = true;
-            turtle.agent.isStopped = true;
-            Debug.Log("[Race] 출발선 대기 중...");
-            yield return new WaitForSeconds(2.0f); // 2초간 출발 대기
 
             // --- 5. 경주 시작 ---
             Debug.Log("[Race] 경주 시작!");
@@ -291,6 +308,80 @@ public float rabbitMinSpeedBeforeSleep = 0.5f;
             Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
+
+    /// <summary>
+/// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
+/// </summary>
+private IEnumerator FineTunePositions(PetController rabbit, PetController turtle, 
+    Vector3 rabbitTarget, Vector3 turtleTarget, Vector3 raceDirection)
+{
+    float adjustmentTime = 2f; // 조정에 걸리는 시간
+    float elapsedTime = 0f;
+    
+    // 현재 위치 저장
+    Vector3 rabbitStartPos = rabbit.transform.position;
+    Vector3 turtleStartPos = turtle.transform.position;
+    
+    // 목표 회전 계산
+    Quaternion targetRotation = Quaternion.LookRotation(raceDirection);
+    Quaternion rabbitStartRot = rabbit.transform.rotation;
+    Quaternion turtleStartRot = turtle.transform.rotation;
+    
+    // 애니메이션을 Idle로 설정
+    rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+    turtle.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+    
+    // NavMeshAgent 일시 정지
+    rabbit.agent.isStopped = true;
+    turtle.agent.isStopped = true;
+    
+    while (elapsedTime < adjustmentTime)
+    {
+        float t = elapsedTime / adjustmentTime;
+        // Smooth step 함수로 더 부드러운 움직임
+        float smoothT = t * t * (3f - 2f * t);
+        
+        // 위치 보간
+        rabbit.transform.position = Vector3.Lerp(rabbitStartPos, rabbitTarget, smoothT);
+        turtle.transform.position = Vector3.Lerp(turtleStartPos, turtleTarget, smoothT);
+        
+        // 회전 보간
+        rabbit.transform.rotation = Quaternion.Slerp(rabbitStartRot, targetRotation, smoothT);
+        turtle.transform.rotation = Quaternion.Slerp(turtleStartRot, targetRotation, smoothT);
+        
+        // 펫 모델도 함께 회전
+        if (rabbit.petModelTransform != null)
+            rabbit.petModelTransform.rotation = rabbit.transform.rotation;
+        if (turtle.petModelTransform != null)
+            turtle.petModelTransform.rotation = turtle.transform.rotation;
+        
+        elapsedTime += Time.deltaTime;
+        yield return null;
+    }
+    
+    // 최종 위치와 회전 확정
+    rabbit.transform.position = rabbitTarget;
+    turtle.transform.position = turtleTarget;
+    rabbit.transform.rotation = targetRotation;
+    turtle.transform.rotation = targetRotation;
+    
+    if (rabbit.petModelTransform != null)
+        rabbit.petModelTransform.rotation = targetRotation;
+    if (turtle.petModelTransform != null)
+        turtle.petModelTransform.rotation = targetRotation;
+    
+    // NavMeshAgent 위치 동기화
+    if (IsAgentSafelyReady(rabbit))
+    {
+        rabbit.agent.nextPosition = rabbitTarget;
+    }
+    if (IsAgentSafelyReady(turtle))
+    {
+        turtle.agent.nextPosition = turtleTarget;
+    }
+    
+    Debug.Log($"[Race] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(rabbit.transform.position, turtle.transform.position):F2}m");
+}
 // RaceInteraction.cs에 새로운 메서드 추가
 
 /// <summary>
@@ -481,21 +572,44 @@ rabbit.agent.speed = Mathf.Lerp(currentSpeed, rabbitMinSpeedBeforeSleep, easeT);
         return currentCenter;
     }
 
-    /// <summary>
-    /// 중앙 출발점을 기준으로 두 펫이 나란히 설 수 있도록 양옆으로 위치를 계산합니다.
-    /// </summary>
-    private void CalculateAlignedStartPositions(Vector3 startCenter, Vector3 raceDirection, out Vector3 pet1Pos, out Vector3 pet2Pos, float spacing = 3f)
+   private void CalculateAlignedStartPositions(Vector3 startCenter, Vector3 raceDirection, 
+    out Vector3 pet1Pos, out Vector3 pet2Pos, float spacing = 3f)
+{
+    // 경주 진행 방향에 수직인 옆 방향을 계산
+    Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
+    
+    // ★★★ 수정: 더 정확한 위치 계산 ★★★
+    // 중앙점에서 정확히 spacing/2 만큼 떨어진 위치
+    Vector3 leftPos = startCenter - sideDirection * (spacing / 2);
+    Vector3 rightPos = startCenter + sideDirection * (spacing / 2);
+    
+    // NavMesh 위의 가장 가까운 유효한 위치 찾기
+    NavMeshHit leftHit, rightHit;
+    if (NavMesh.SamplePosition(leftPos, out leftHit, 2f, NavMesh.AllAreas))
     {
-        // 경주 진행 방향에 수직인 옆 방향을 계산합니다.
-        Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
-        // 중앙점에서 옆 방향으로 각각 반만큼 떨어진 위치를 계산합니다.
-        pet1Pos = startCenter - sideDirection * (spacing / 2);
-        pet2Pos = startCenter + sideDirection * (spacing / 2);
-        // 계산된 각 위치가 NavMesh 위에 있도록 보정합니다.
-        pet1Pos = FindValidPositionOnNavMesh(pet1Pos, spacing * 2);
-        pet2Pos = FindValidPositionOnNavMesh(pet2Pos, spacing * 2);
-        Debug.Log($"[Race] 정렬된 출발점 계산 완료: Pet1({pet1Pos}), Pet2({pet2Pos})");
+        pet1Pos = leftHit.position;
     }
+    else
+    {
+        pet1Pos = leftPos;
+    }
+    
+    if (NavMesh.SamplePosition(rightPos, out rightHit, 2f, NavMesh.AllAreas))
+    {
+        pet2Pos = rightHit.position;
+    }
+    else
+    {
+        pet2Pos = rightPos;
+    }
+    
+    // Y 좌표를 동일하게 맞춤 (지형 높이 차이 보정)
+    float avgY = (pet1Pos.y + pet2Pos.y) / 2f;
+    pet1Pos.y = avgY;
+    pet2Pos.y = avgY;
+    
+    Debug.Log($"[Race] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
+}
 
 
 }

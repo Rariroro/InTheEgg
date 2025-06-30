@@ -272,72 +272,76 @@ public abstract class BasePetInteraction : MonoBehaviour
     // ====== 추가된 공통 행동 메서드들 ======
 
     // 기존 MoveToPositions 메서드 개선
-    protected IEnumerator MoveToPositions(PetController pet1, PetController pet2, Vector3 pos1, Vector3 pos2, float timeout = 10f)
+  protected IEnumerator MoveToPositions(PetController pet1, PetController pet2, 
+    Vector3 pos1, Vector3 pos2, float timeout = 10f)
+{
+    // NavMeshAgent 준비 확인
+    bool pet1Ready = EnsureAgentReady(pet1);
+    bool pet2Ready = EnsureAgentReady(pet2);
+
+    if (!pet1Ready || !pet2Ready)
     {
-        // NavMeshAgent 상태 확인 및 설정 (개선된 부분)
-        bool pet1Ready = EnsureAgentReady(pet1);
-        bool pet2Ready = EnsureAgentReady(pet2);
-
-        if (!pet1Ready || !pet2Ready)
-        {
-            Debug.LogWarning($"[{InteractionName}] 하나 이상의 펫 NavMeshAgent가 준비되지 않았습니다. 상호작용을 진행할 수 없습니다.");
-            yield break;
-        }
-
-        // 펫들의 목적지 설정
-        pet1.agent.isStopped = false;
-        pet2.agent.isStopped = false;
-        pet1.agent.SetDestination(pos1);
-        pet2.agent.SetDestination(pos2);
-
-        // 걷기 애니메이션 활성화
-        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 목적지로 이동 중");
-
-        // 두 펫이 목적지에 도착할 때까지 대기
-        float startTime = Time.time;
-
-        while (Time.time - startTime < timeout)
-        {
-            bool pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < 0.5f;
-            bool pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < 0.5f;
-
-            if (pet1Arrived && pet2Arrived)
-            {
-                Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
-                break;
-            }
-
-            // 한 펫만 도착한 경우 상대를 기다림
-            if (pet1Arrived && !pet2Arrived)
-            {
-                // 1번 펫이 2번 펫 쪽을 바라봄
-                LookAtOther(pet1, pet2);
-                // 도착한 펫은 걸음을 멈춤
-                if (pet1.animator != null) pet1.animator.SetInteger("animation", 0);
-            }
-
-            if (pet2Arrived && !pet1Arrived)
-            {
-                // 2번 펫이 1번 펫 쪽을 바라봄
-                LookAtOther(pet2, pet1);
-                // 도착한 펫은 걸음을 멈춤
-                if (pet2.animator != null) pet2.animator.SetInteger("animation", 0);
-            }
-
-            yield return null;
-        }
-
-        // 이동 완료 후 정지
-        pet1.agent.isStopped = true;
-        pet2.agent.isStopped = true;
-
-        // 애니메이션 정지
-        pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
-        pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        Debug.LogWarning($"[{InteractionName}] NavMeshAgent가 준비되지 않았습니다.");
+        yield break;
     }
+
+    // ★★★ 수정: 더 정밀한 도착 판정을 위해 stoppingDistance 임시 조정 ★★★
+    float originalStop1 = pet1.agent.stoppingDistance;
+    float originalStop2 = pet2.agent.stoppingDistance;
+    pet1.agent.stoppingDistance = 0.3f;
+    pet2.agent.stoppingDistance = 0.3f;
+
+    // 목적지 설정
+    pet1.agent.isStopped = false;
+    pet2.agent.isStopped = false;
+    pet1.agent.SetDestination(pos1);
+    pet2.agent.SetDestination(pos2);
+
+    // 걷기 애니메이션
+    pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+    pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+    float startTime = Time.time;
+    while (Time.time - startTime < timeout)
+    {
+        bool pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < 0.5f;
+        bool pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < 0.5f;
+
+        if (pet1Arrived && pet2Arrived)
+        {
+            Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
+            break;
+        }
+
+        // 먼저 도착한 펫은 상대를 기다림
+        if (pet1Arrived && !pet2Arrived)
+        {
+            pet1.agent.isStopped = true;
+            LookAtOther(pet1, pet2);
+            pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+        if (pet2Arrived && !pet1Arrived)
+        {
+            pet2.agent.isStopped = true;
+            LookAtOther(pet2, pet1);
+            pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+
+        yield return null;
+    }
+
+    // stoppingDistance 복원
+    pet1.agent.stoppingDistance = originalStop1;
+    pet2.agent.stoppingDistance = originalStop2;
+
+    // 이동 정지
+    pet1.agent.isStopped = true;
+    pet2.agent.isStopped = true;
+
+    // 애니메이션 정지
+    pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
+    pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
+}
 
     // 새로 추가된 메서드 - NavMeshAgent가 준비되었는지 확인
     private bool EnsureAgentReady(PetController pet)
