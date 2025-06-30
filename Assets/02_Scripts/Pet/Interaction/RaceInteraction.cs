@@ -193,20 +193,35 @@ public class RaceInteraction : BasePetInteraction
             while (!turtleFinished)
             {
                 // 토끼 낮잠 로직
+                // 토끼 낮잠 로직
                 if (!rabbitIsSleeping && !rabbitWokeUp)
                 {
                     float rabbitProjectedDistance = Vector3.Dot(rabbit.transform.position - startPosition, dirToFinish);
                     if (rabbitProjectedDistance >= napDistance)
                     {
-                        // ★★★ 수정: 토끼 낮잠 로직을 isStopped로 제어 ★★★
+                        // ▼▼▼▼▼ [수정된 부분] 토끼 낮잠 로직 ▼▼▼▼▼
                         rabbitIsSleeping = true;
-                        rabbit.agent.isStopped = true;       // 이동만 멈춤
-                        rabbit.agent.updateRotation = false; // 제자리에서 빙글빙글 돌지 않도록 회전 멈춤
-                        
+
+                        // NavMeshAgent가 유효한지 안전하게 확인합니다.
+                        if (IsAgentSafelyReady(rabbit))
+                        {
+                            // 1. 속도를 즉시 0으로 만들어 미끄러짐을 방지합니다. (핵심)
+                            rabbit.agent.velocity = Vector3.zero;
+                            
+                            // 2. 이동을 멈추고 현재 경로를 초기화합니다.
+                            rabbit.agent.isStopped = true;
+                            // rabbit.agent.ResetPath();
+
+                            // 3. 제자리에서 불필요하게 회전하지 않도록 설정합니다.
+                            rabbit.agent.updateRotation = false;
+                        }
+
+                        // 잠자는 감정 표현과 애니메이션을 재생합니다.
                         rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
                         StartCoroutine(rabbit.GetComponent<PetAnimationController>()
                             .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 999f, true, false));
                         Debug.Log($"[Race] {rabbit.petName}이(가) 낮잠을 잡니다.");
+                        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
                     }
                 }
 
