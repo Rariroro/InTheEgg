@@ -63,7 +63,7 @@ public class RaceInteraction : BasePetInteraction
     private bool rabbitShouldWakeUp = false;
 [Header("Rabbit Nap Settings")]
 [Tooltip("토끼가 잠들기 전 속도를 줄이는 시간 (초)")]
-public float rabbitSlowDownDuration = 2.0f;
+public float rabbitSlowDownDuration = 1.0f;
 
 [Tooltip("토끼가 멈추기 직전의 최소 속도")]
 public float rabbitMinSpeedBeforeSleep = 0.5f;
@@ -330,12 +330,12 @@ rabbit.agent.speed = Mathf.Lerp(currentSpeed, rabbitMinSpeedBeforeSleep, easeT);
     
     // 3. 하품 애니메이션 (선택사항)
     var animController = rabbit.GetComponent<PetAnimationController>();
-    if (animController != null)
-    {
-        // 하품이나 기지개를 펴는 애니메이션이 있다면 먼저 재생
-        yield return StartCoroutine(animController.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 1.0f, true, false));
-    }
+    // if (animController != null)
+    // {
+    //     // 하품이나 기지개를 펴는 애니메이션이 있다면 먼저 재생
+    //     yield return StartCoroutine(animController.PlayAnimationWithCustomDuration(
+    //         PetAnimationController.PetAnimationType.Jump, 1.0f, true, false));
+    // }
     
     // 4. 잠자는 감정 표현과 애니메이션 시작
     rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
