@@ -8,7 +8,11 @@ public abstract class BasePetInteraction : MonoBehaviour
 {
     // 상호작용 이름 프로퍼티
     public abstract string InteractionName { get; }
-
+ // ▼▼▼ [수정] 인스펙터에서 상호작용 시작 거리를 조절할 수 있는 변수 추가 ▼▼▼
+    [Header("Common Interaction Settings")]
+    [Tooltip("상호작용 시작 시 펫들이 유지할 기본 거리입니다.")]
+    public float interactionStartDistance = 5f;
+    // ▲▲▲ [여기까지 수정] ▲▲▲
     // 해당 펫들이 이 상호작용을 할 수 있는지 확인
     public abstract bool CanInteract(PetController pet1, PetController pet2);
  // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
@@ -46,7 +50,26 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         // (선택사항) 펫이 NavMesh 위에 있는지 최종 확인
         yield return StartCoroutine(EnsurePetsOnNavMesh(pet1, pet2));
+ // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
+        Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
+        // 펫들이 서로 마주볼 위치 계산
+        Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
+        if (direction == Vector3.zero) direction = pet1.transform.forward; // 위치가 겹쳤을 경우를 대비
+        Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
+
+        Vector3 pet1TargetPos = midpoint - direction * (interactionStartDistance / 2f);
+        Vector3 pet2TargetPos = midpoint + direction * (interactionStartDistance / 2f);
+        
+        pet1TargetPos = FindValidPositionOnNavMesh(pet1TargetPos);
+        pet2TargetPos = FindValidPositionOnNavMesh(pet2TargetPos);
+
+        // 계산된 위치로 이동
+        yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1TargetPos, pet2TargetPos, 10f));
+
+        // 서로 마주보게 회전
+        LookAtEachOther(pet1, pet2);
+        // ▲▲▲ [여기까지 수정] ▲▲▲
         // 2. 실제 상호작용 실행 (try-finally로 안정성 확보)
         try
         {
