@@ -13,9 +13,22 @@ public class RaceInteraction : BasePetInteraction
     // 이 상호작용의 이름을 "Race"로 정의합니다.
     public override string InteractionName => "Race";
     // ★★★ 새로 추가된 부분: 결승선 깃발 프리팹 ★★★
-    [Header("Race Visuals")]
-    [Tooltip("결승선에 배치될 깃발 프리팹입니다.")]
-    public GameObject finishFlagPrefab;
+    // ★★★ 이 부분을 추가합니다. ★★★
+    // ▼▼▼ [수정] 이 부분을 아래 코드로 교체합니다. ▼▼▼
+[Header("Finish Line Visuals")]
+[Tooltip("결승선에 표시될 3D 화살표 프리팹입니다.")]
+public GameObject finishArrowPrefab;
+
+[Tooltip("화살표가 지면으로부터 떨어질 높이입니다.")]
+public float arrowHeight = 10f;
+
+[Tooltip("화살표가 위아래로 움직이는 속도입니다.")]
+public float arrowBobSpeed = 2f;
+
+[Tooltip("화살표가 위아래로 움직이는 폭입니다.")]
+public float arrowBobAmount = 1f;
+// ▲▲▲ [여기까지 수정] ▲▲▲
+
     // ★★★ 여기까지 추가 ★★★
     // ★★★ 추가: 경주 설정을 인스펙터에서 조절하기 위한 변수들 ★★★
     [Header("Race Settings")] // 유니티 인스펙터에서 섹션을 구분하기 위한 헤더입니다.
@@ -68,7 +81,7 @@ public class RaceInteraction : BasePetInteraction
     [Tooltip("토끼가 멈추기 직전의 최소 속도")]
     public float rabbitMinSpeedBeforeSleep = 0.5f;
 
-     // ★★★ 추가: 토끼의 원래 회피 우선순위를 저장할 변수 ★★★
+    // ★★★ 추가: 토끼의 원래 회피 우선순위를 저장할 변수 ★★★
     private int rabbitOriginalPriority;
     /// <summary>
     /// 이 상호작용의 타입을 InteractionType.Race로 결정합니다.
@@ -111,7 +124,8 @@ public class RaceInteraction : BasePetInteraction
         // 상태 저장 및 변수 초기화
         PetOriginalState rabbitState = new PetOriginalState(rabbit);
         PetOriginalState turtleState = new PetOriginalState(turtle);
-        GameObject finishFlagInstance = null;
+        // ★★★ 인스턴스 참조 변수 추가 ★★★
+           GameObject finishArrowInstance = null;
 
         try
         {
@@ -142,17 +156,22 @@ public class RaceInteraction : BasePetInteraction
                     }
                 }
             }
-            if (dirToFinish == Vector3.zero)
-            {
-                dirToFinish = rabbit.transform.forward;
-                finishLine = initialCenter + dirToFinish * raceDistance;
-                totalRaceDistance = raceDistance;
-            }
-            if (finishFlagPrefab != null)
-            {
-                Quaternion flagRotation = Quaternion.LookRotation(-dirToFinish);
-                finishFlagInstance = Instantiate(finishFlagPrefab, finishLine, flagRotation);
-            }
+            // ▼▼▼ [수정] 깃발/마커 생성 로직을 화살표 생성 로직으로 교체합니다. ▼▼▼
+        if (dirToFinish != Vector3.zero && finishArrowPrefab != null)
+        {
+            // 화살표의 위치는 결승선 위 공중입니다.
+            Vector3 arrowPosition = finishLine + Vector3.up * arrowHeight;
+
+            // 화살표가 아래를 향하도록 Z축으로 180도 회전합니다.
+            Quaternion arrowRotation = Quaternion.Euler(0, 0, 180);
+
+            // 화살표 인스턴스 생성
+            finishArrowInstance = Instantiate(finishArrowPrefab, arrowPosition, arrowRotation);
+
+            // 화살표 애니메이션 코루틴 시작
+            StartCoroutine(AnimateFinishArrow(finishArrowInstance));
+        }
+        // ▲▲▲ [여기까지 수정] ▲▲▲
 
             // ★★★ 수정된 부분 시작 ★★★
             // --- 2. 출발점으로 이동 및 정렬 (부드러운 이동) ---
@@ -248,7 +267,8 @@ public class RaceInteraction : BasePetInteraction
                     rabbit.ShowEmotion(EmotionType.Scared, 10f);
 
                     if (IsAgentSafelyReady(rabbit))
-                    {                        rabbit.agent.avoidancePriority = rabbitOriginalPriority;
+                    {
+                        rabbit.agent.avoidancePriority = rabbitOriginalPriority;
 
                         rabbit.agent.speed = rabbitState.originalSpeed * rabbitFinalSprintSpeedMultiplier;
                         rabbit.agent.updateRotation = true; // 회전 재개
@@ -297,11 +317,12 @@ public class RaceInteraction : BasePetInteraction
             // PetOriginalState 복원과 EndInteraction 호출만으로 충분합니다.
             Debug.Log("[Race] 상호작용 정리 시작.");
 
-            if (finishFlagInstance != null)
-            {
-                Destroy(finishFlagInstance);
-            }
-   if (IsAgentSafelyReady(rabbit))
+  // ▼▼▼ [수정] 생성된 화살표를 파괴하는 로직으로 교체합니다. ▼▼▼
+        if (finishArrowInstance != null)
+        {
+            Destroy(finishArrowInstance);
+        }
+            if (IsAgentSafelyReady(rabbit))
             {
                 rabbit.agent.avoidancePriority = rabbitOriginalPriority;
             }
@@ -315,7 +336,34 @@ public class RaceInteraction : BasePetInteraction
             Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
+// Pet.zip/Interaction/RaceInteraction.cs
 
+// ... PerformInteraction 메서드 아래에 다음 코루틴을 추가 ...
+
+/// <summary>
+/// 결승선 화살표가 위아래로 부드럽게 움직이는 애니메이션을 처리하는 코루틴입니다.
+/// </summary>
+/// <param name="arrow">애니메이션을 적용할 화살표 게임 오브젝트</param>
+private IEnumerator AnimateFinishArrow(GameObject arrow)
+{
+    if (arrow == null) yield break;
+
+    Vector3 startPosition = arrow.transform.position;
+    // 각 화살표 애니메이션 시작 타이밍을 다르게 하여 단조로움을 피합니다.
+    float randomOffset = Random.Range(0f, 2f * Mathf.PI); 
+
+    // 화살표가 파괴(Destroy)되기 전까지 무한 반복
+    while (arrow != null) 
+    {
+        // Sin 함수를 이용해 부드러운 상하 움직임(Bobbing) 생성
+        float yOffset = Mathf.Sin((Time.time + randomOffset) * arrowBobSpeed) * arrowBobAmount;
+        arrow.transform.position = startPosition + new Vector3(0, yOffset, 0);
+        
+        yield return null; // 다음 프레임까지 대기
+    }
+}
+
+// ... (다른 헬퍼 메서드들) ...
     /// <summary>
     /// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
     /// </summary>
@@ -397,10 +445,10 @@ public class RaceInteraction : BasePetInteraction
     private IEnumerator SlowDownAndSleep(PetController rabbit)
     {
         if (!IsAgentSafelyReady(rabbit)) yield break;
-   // ★★★ 수정: 잠들기 직전에 회피 우선순위를 최하위로 변경 ★★★
+        // ★★★ 수정: 잠들기 직전에 회피 우선순위를 최하위로 변경 ★★★
         rabbitOriginalPriority = rabbit.agent.avoidancePriority; // 원래 우선순위 저장
         rabbit.agent.avoidancePriority = 99; // 길을 막지 않도록 우선순위 최하위(99)로 설정
-        
+
         Debug.Log($"[Race] {rabbit.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
 
         // 현재 속도 저장
@@ -467,7 +515,7 @@ public class RaceInteraction : BasePetInteraction
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
     }
 
-    
+
     private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection,
         out Vector3 rabbitFinish, out Vector3 turtleFinish)
     {
