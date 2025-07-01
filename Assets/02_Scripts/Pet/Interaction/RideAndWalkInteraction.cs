@@ -91,7 +91,10 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 원래 상태 저장 (개선된 헬퍼 클래스 사용)
         PetOriginalState meerkatState = new PetOriginalState(meerkat);
         PetOriginalState boarState = new PetOriginalState(boar);
-        Transform originalMeerkatParent = meerkat.transform.parent;
+ // 원래 상태 저장
+    Transform originalMeerkatParent = meerkat.transform.parent;
+    Vector3 originalMeerkatLocalScale = meerkat.transform.localScale;  // ★★★ 원래 로컬 스케일 저장 ★★★
+    Vector3 originalMeerkatWorldScale = meerkat.transform.lossyScale;  // ★★★ 원래 월드 스케일 저장 ★★★
         
         // 위치 고정 코루틴 참조 저장
         Coroutine fixPositionCoroutine = null;
@@ -343,6 +346,21 @@ public class RideAndWalkInteraction : BasePetInteraction
         }
         finally
         {
+              // 원래 스케일로 완전 복원
+        if (meerkat.transform.parent == boar.transform)
+        {
+            meerkat.transform.SetParent(originalMeerkatParent, true);
+        }
+        
+        // ★★★ 원래 부모가 없었다면 월드 스케일로, 있었다면 로컬 스케일로 복원 ★★★
+        if (originalMeerkatParent == null)
+        {
+            meerkat.transform.localScale = originalMeerkatWorldScale;
+        }
+        else
+        {
+            meerkat.transform.localScale = originalMeerkatLocalScale;
+        }
             // 진행 중인 위치 고정 코루틴이 있다면 중지
             if (fixPositionCoroutine != null)
             {
