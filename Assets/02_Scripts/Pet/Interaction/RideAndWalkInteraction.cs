@@ -21,7 +21,7 @@ public class RideAndWalkInteraction : BasePetInteraction
     public float pathUpdateInterval = 7f;
     [Tooltip("함께 걷는 동안의 이동 속도 배율입니다.")]
     public float walkingSpeedMultiplier = 0.9f;
-  // ▼▼▼ [수정] 작별인사 거리를 조절할 수 있는 변수 추가 ▼▼▼
+    // ▼▼▼ [수정] 작별인사 거리를 조절할 수 있는 변수 추가 ▼▼▼
     [Tooltip("미어캣이 내린 후 작별인사를 할 때 유지할 거리입니다.")]
     public float farewellDistance = 4f;
     // ▲▲▲ [여기까지 수정] ▲▲▲
@@ -68,12 +68,12 @@ public class RideAndWalkInteraction : BasePetInteraction
         PetOriginalState meerkatState = new PetOriginalState(meerkat);
         PetOriginalState boarState = new PetOriginalState(boar);
         // ★★★ 수정된 부분 시작 ★★★
-    // 미어캣의 원래 부모와 스케일 정보를 정확히 저장합니다.
-    Transform originalMeerkatParent = meerkat.transform.parent;
-    Vector3 originalMeerkatLocalScale = meerkat.transform.localScale;
-    Vector3 originalMeerkatWorldScale = meerkat.transform.lossyScale;
-    // ★★★ 수정된 부분 끝 ★★★
-    meerkatOriginalPriority = meerkat.agent.avoidancePriority;
+        // 미어캣의 원래 부모와 스케일 정보를 정확히 저장합니다.
+        Transform originalMeerkatParent = meerkat.transform.parent;
+        Vector3 originalMeerkatLocalScale = meerkat.transform.localScale;
+        Vector3 originalMeerkatWorldScale = meerkat.transform.lossyScale;
+        // ★★★ 수정된 부분 끝 ★★★
+        meerkatOriginalPriority = meerkat.agent.avoidancePriority;
 
         try
         {
@@ -99,39 +99,39 @@ public class RideAndWalkInteraction : BasePetInteraction
         finally
         {
             Debug.Log("[RideAndWalk] 상호작용 정리 시작.");
-           // ★★★ 수정된 부분 시작 ★★★
-        // 부모 관계 복원
-        if (meerkat.transform.parent == boar.transform)
-        {
-            meerkat.transform.SetParent(originalMeerkatParent, true);
-        }
-        
-        // 원래 부모가 있었는지 여부에 따라 스케일을 정확하게 복원합니다.
-        if (originalMeerkatParent == null)
-        {
-            // 원래 부모가 없었다면 월드 스케일 기준으로 복원
-            meerkat.transform.localScale = originalMeerkatWorldScale;
-        }
-        else
-        {
-            // 원래 부모가 있었다면 로컬 스케일 기준으로 복원
-            meerkat.transform.localScale = originalMeerkatLocalScale;
-        }
-        // ★★★ 수정된 부분 끝 ★★★
+            // ★★★ 수정된 부분 시작 ★★★
+            // 부모 관계 복원
+            if (meerkat.transform.parent == boar.transform)
+            {
+                meerkat.transform.SetParent(originalMeerkatParent, true);
+            }
 
-        // ★★★ 추가: 미어캣의 회피 우선순위 복원 ★★★
-        if (IsAgentSafelyReady(meerkat))
-        {
-            meerkat.agent.avoidancePriority = meerkatOriginalPriority;
-        }
+            // 원래 부모가 있었는지 여부에 따라 스케일을 정확하게 복원합니다.
+            if (originalMeerkatParent == null)
+            {
+                // 원래 부모가 없었다면 월드 스케일 기준으로 복원
+                meerkat.transform.localScale = originalMeerkatWorldScale;
+            }
+            else
+            {
+                // 원래 부모가 있었다면 로컬 스케일 기준으로 복원
+                meerkat.transform.localScale = originalMeerkatLocalScale;
+            }
+            // ★★★ 수정된 부분 끝 ★★★
 
-        // 상태 복원
-        meerkatState.Restore(meerkat);
-        boarState.Restore(boar);
+            // ★★★ 추가: 미어캣의 회피 우선순위 복원 ★★★
+            if (IsAgentSafelyReady(meerkat))
+            {
+                meerkat.agent.avoidancePriority = meerkatOriginalPriority;
+            }
 
-        // 상호작용 종료
-        EndInteraction(meerkat, boar);
-        Debug.Log("[RideAndWalk] 상호작용 정리 완료.");
+            // 상태 복원
+            meerkatState.Restore(meerkat);
+            boarState.Restore(boar);
+
+            // 상호작용 종료
+            EndInteraction(meerkat, boar);
+            Debug.Log("[RideAndWalk] 상호작용 정리 완료.");
         }
     }
 
@@ -286,7 +286,7 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 미어캣을 부모-자식 관계에서 해제
         meerkat.transform.SetParent(null, true);
 
-           // ▼▼▼ [수정] 미어캣이 내릴 위치를 farewellDistance 만큼 떨어진 곳으로 계산 ▼▼▼
+        // ▼▼▼ [수정] 미어캣이 내릴 위치를 farewellDistance 만큼 떨어진 곳으로 계산 ▼▼▼
         Vector3 sideDirection = boar.transform.right; // 멧돼지의 오른쪽 방향
         Vector3 dismountLandPos = boar.transform.position + sideDirection * farewellDistance;
         dismountLandPos = FindValidPositionOnNavMesh(dismountLandPos, farewellDistance + 1f);
@@ -301,7 +301,7 @@ public class RideAndWalkInteraction : BasePetInteraction
         if (meerkat.agent != null)
         {
             meerkat.agent.enabled = true;
-            yield return null; 
+            yield return null;
 
             if (meerkat.agent.enabled && meerkat.agent.isOnNavMesh)
             {
