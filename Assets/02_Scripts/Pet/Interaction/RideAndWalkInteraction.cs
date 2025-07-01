@@ -28,7 +28,7 @@ public class RideAndWalkInteraction : BasePetInteraction
     public float walkingSpeedMultiplier = 0.9f;
 
     [Tooltip("미어캣이 내린 후 작별인사를 할 때 유지할 거리입니다.")]
-    public float farewellDistance = 5f;
+    public float farewellDistance = 7f;
     // ▲▲▲ [여기까지 수정] ▲▲▲
 
     [Header("Safety Settings")]
@@ -219,66 +219,118 @@ public class RideAndWalkInteraction : BasePetInteraction
         yield return StartCoroutine(SmoothMountTransition(meerkat, ridePositionOffset, mountDuration));
     }
 
-    /// <summary>
-    /// 멧돼지가 미어캣을 태우고 함께 산책하는 단계를 처리합니다.
-    /// </summary>
-    private IEnumerator WalkTogether(PetController meerkat, PetController boar)
+   /// <summary>
+/// 멧돼지가 미어캣을 태우고 함께 산책하는 단계를 처리합니다.
+/// </summary>
+private IEnumerator WalkTogether(PetController meerkat, PetController boar)
+{
+    Debug.Log($"[RideAndWalk] 3단계: 함께 산책하기");
+
+    if (!IsAgentSafelyReady(boar))
     {
-        Debug.Log($"[RideAndWalk] 3단계: 함께 산책하기");
-
-        // ★★★ 추가: 안전한 NavMeshAgent 체크 ★★★
-        if (!IsAgentSafelyReady(boar))
-        {
-            Debug.LogWarning("[RideAndWalk] 멧돼지의 NavMeshAgent가 준비되지 않아 산책을 건너뜁니다.");
-            yield break;
-        }
-
-        // 멧돼지 설정
-        boar.agent.speed = boar.baseSpeed * walkingSpeedMultiplier;
-        boar.agent.updateRotation = true;
-        boar.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-
-        // 미어캣 설정
-        meerkat.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
-
-        float walkStartTime = Time.time;
-        float lastPathUpdateTime = 0f;
-
-        while (Time.time - walkStartTime < walkTogetherDuration)
-        {
-            // ★★★ 추가: 매 프레임마다 안전성 체크 ★★★
-            if (!IsAgentSafelyReady(boar))
-            {
-                Debug.LogWarning("[RideAndWalk] 산책 중 멧돼지의 NavMeshAgent 문제 발생");
-                break;
-            }
-
-            // 일정 주기마다 새로운 목적지로 갱신
-            if (Time.time - lastPathUpdateTime > pathUpdateInterval)
-            {
-                lastPathUpdateTime = Time.time;
-                Vector3 randomDirection = Random.insideUnitSphere * 25f;
-                randomDirection.y = 0;
-                Vector3 newDestination = boar.transform.position + randomDirection;
-                boar.agent.updateRotation = true;
-
-                boar.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, 30f));
-                boar.agent.isStopped = false;
-                Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {boar.agent.destination}");
-            }
-
-            // 미어캣이 가끔씩 즐거워하는 모션
-            if (Random.value < 0.01f)
-            {
-                meerkat.ShowEmotion(EmotionType.Happy, 3f); // ★★★ 추가: 감정 표현 ★★★
-                StartCoroutine(meerkat.GetComponent<PetAnimationController>()
-                    .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.0f, false, false));
-            }
-
-            yield return null;
-        }
+        Debug.LogWarning("[RideAndWalk] 멧돼지의 NavMeshAgent가 준비되지 않아 산책을 건너뜁니다.");
+        yield break;
     }
 
+    // 멧돼지 설정
+    boar.agent.speed = boar.baseSpeed * walkingSpeedMultiplier;
+    boar.agent.updateRotation = true;
+    boar.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+    // 미어캣의 기본 자세를 Eat(앉기)으로 설정
+    meerkat.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
+
+    float walkStartTime = Time.time;
+    float lastPathUpdateTime = 0f;
+
+    while (Time.time - walkStartTime < walkTogetherDuration)
+    {
+        if (!IsAgentSafelyReady(boar))
+        {
+            Debug.LogWarning("[RideAndWalk] 산책 중 멧돼지의 NavMeshAgent 문제 발생");
+            break;
+        }
+
+        // 일정 주기마다 새로운 목적지로 갱신 (기존 코드와 동일)
+        if (Time.time - lastPathUpdateTime > pathUpdateInterval)
+        {
+            lastPathUpdateTime = Time.time;
+            Vector3 randomDirection = Random.insideUnitSphere * 25f;
+            randomDirection.y = 0;
+            Vector3 newDestination = boar.transform.position + randomDirection;
+            boar.agent.updateRotation = true;
+
+            boar.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, 30f));
+            boar.agent.isStopped = false;
+            Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {boar.agent.destination}");
+        }
+
+        // ▼▼▼ [수정] 미어캣이 등 위에서 더 다양한 행동을 하도록 로직 개선 ▼▼▼
+        // 1. 행동 빈도를 조금 높이고 (1% -> 2%), 현재 다른 특별 행동 중이 아닐 때만 실행
+        if (Random.value < 0.02f && !IsPetPlayingRidingAnimation(meerkat))
+        {
+            // 2. 여러 행동 중 하나를 무작위로 선택
+            int randomAction = Random.Range(0, 4);
+
+            switch (randomAction)
+            {
+                case 0: // 점프하며 즐거워하기 (기존 행동)
+                    meerkat.ShowEmotion(EmotionType.Happy, 2f);
+                    StartCoroutine(PlayRidingAnimation(meerkat, PetAnimationController.PetAnimationType.Jump, 1.0f));
+                    break;
+                
+                case 1: // 주변을 두리번거리며 경계하기 (Idle 애니메이션 활용)
+                    meerkat.ShowEmotion(EmotionType.Surprised, 2f); // 놀람/호기심 표현
+                    StartCoroutine(PlayRidingAnimation(meerkat, PetAnimationController.PetAnimationType.Idle, 1.5f));
+                    break;
+                    
+                case 2: // 신나게 소리치기 (Attack 애니메이션 활용)
+                    meerkat.ShowEmotion(EmotionType.Love, 2f);
+                    StartCoroutine(PlayRidingAnimation(meerkat, PetAnimationController.PetAnimationType.Attack, 1.2f));
+                    break;
+
+                case 3: // 잠시 편하게 눕기 (Rest 애니메이션 활용)
+                    meerkat.ShowEmotion(EmotionType.Sleepy, 3f);
+                    StartCoroutine(PlayRidingAnimation(meerkat, PetAnimationController.PetAnimationType.Rest, 2.0f));
+                    break;
+            }
+        }
+        // ▲▲▲ [여기까지 수정] ▲▲▲
+
+        yield return null;
+    }
+}
+// ▼▼▼ [추가] 멧돼지 등 위에서 미어캣의 짧은 행동을 재생하고 기본 자세로 돌리는 헬퍼 메서드 ▼▼▼
+private IEnumerator PlayRidingAnimation(PetController meerkat, PetAnimationController.PetAnimationType animType, float duration)
+{
+    var animController = meerkat.GetComponent<PetAnimationController>();
+    
+    // 1. 일시적인 애니메이션 재생
+    animController.SetContinuousAnimation(animType);
+    yield return new WaitForSeconds(duration);
+
+    // 2. 다시 기본 탑승 애니메이션(Eat)으로 복귀
+    // 단, 코루틴 실행 중에 다른 애니메이션으로 바뀌지 않았을 경우에만 복귀
+    if (animController != null && IsPetPlayingAnimation(meerkat, animType))
+    {
+        animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
+    }
+}
+
+private bool IsPetPlayingAnimation(PetController pet, PetAnimationController.PetAnimationType animType)
+{
+    if (pet.animator == null) return false;
+    return pet.animator.GetInteger("animation") == (int)animType;
+}
+
+private bool IsPetPlayingRidingAnimation(PetController meerkat)
+{
+    if (meerkat.animator == null) return true; // 애니메이터 없으면 실행 방지
+    
+    // 기본 자세(Eat)가 아닐 경우, 다른 행동 중인 것으로 간주
+    return meerkat.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Eat;
+}
+// ▲▲▲ [여기까지 추가] ▲▲▲
     /// <summary>
     /// 미어캣이 멧돼지 등에서 내리는 단계를 처리합니다.
     /// </summary>
