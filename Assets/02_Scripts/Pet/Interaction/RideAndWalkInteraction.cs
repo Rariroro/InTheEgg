@@ -7,23 +7,28 @@ using UnityEngine.AI;
 public class RideAndWalkInteraction : BasePetInteraction
 {
     public override string InteractionName => "RideAndWalk";
+    // ▼▼▼ [수정] 헤더를 추가하여 인스펙터에서 관련 설정을 쉽게 찾도록 정리합니다. ▼▼▼
+    [Header("Ride & Walk Settings")]
+    [Tooltip("상호작용 시작 시 펫들이 만나는 거리입니다.")]
+    public float meetingDistance = 5f; // <-- 만남 거리를 인스펙터에서 조절 가능하도록 추가!
 
-    [Header("Ride Settings")]
     [Tooltip("멧돼지 등 위에 미어캣이 위치할 로컬 좌표 오프셋입니다.")]
     public Vector3 ridePositionOffset = new Vector3(0, 1.7f, 0.2f);
+
     [Tooltip("미어캣이 멧돼지에 올라타거나 내릴 때 걸리는 시간입니다.")]
     public float mountDuration = 1.0f;
 
-    [Header("Walk Together Settings")]
     [Tooltip("함께 걷는 총 시간입니다.")]
     public float walkTogetherDuration = 20f;
+
     [Tooltip("함께 걷는 동안 새로운 목적지를 설정하는 주기입니다.")]
     public float pathUpdateInterval = 7f;
+
     [Tooltip("함께 걷는 동안의 이동 속도 배율입니다.")]
     public float walkingSpeedMultiplier = 0.9f;
-    // ▼▼▼ [수정] 작별인사 거리를 조절할 수 있는 변수 추가 ▼▼▼
+
     [Tooltip("미어캣이 내린 후 작별인사를 할 때 유지할 거리입니다.")]
-    public float farewellDistance = 4f;
+    public float farewellDistance = 5f;
     // ▲▲▲ [여기까지 수정] ▲▲▲
 
     [Header("Safety Settings")]
@@ -141,18 +146,26 @@ public class RideAndWalkInteraction : BasePetInteraction
     private IEnumerator MeetAndPlay(PetController meerkat, PetController boar)
     {
         Debug.Log("[RideAndWalk] 1단계: 만나서 놀기");
-
-        // 서로 마주볼 위치로 이동
+        // ▼▼▼ [수정] 하드코딩된 지역 변수 대신 인스펙터에서 설정한 meetingDistance 값을 사용합니다. ▼▼▼
         Vector3 meerkatPos, boarPos;
-        CalculateStartPositions(meerkat, boar, out meerkatPos, out boarPos, 5f);
 
-        // ★★★ 수정: 안전한 이동 확인 ★★★
+        Vector3 midpoint = (meerkat.transform.position + boar.transform.position) / 2f;
+        Vector3 direction = (boar.transform.position - meerkat.transform.position).normalized;
+        if (direction == Vector3.zero) direction = meerkat.transform.forward;
+
+        // 인스펙터에서 설정한 meetingDistance 변수를 사용
+        meerkatPos = midpoint - direction * (meetingDistance / 2f);
+        boarPos = midpoint + direction * (meetingDistance / 2f);
+
+        meerkatPos = FindValidPositionOnNavMesh(meerkatPos, 5f);
+        boarPos = FindValidPositionOnNavMesh(boarPos, 5f);
+
         if (IsAgentSafelyReady(meerkat) && IsAgentSafelyReady(boar))
         {
             yield return StartCoroutine(MoveToPositions(meerkat, boar, meerkatPos, boarPos, 10f));
-            LookAtEachOther(meerkat, boar);
+            yield return StartCoroutine(SmoothlyLookAtEachOther(meerkat, boar, 0.5f));
         }
-
+        // ▲▲▲ [여기까지 수정] ▲▲▲
         // 서로 즐겁게 노는 애니메이션
         yield return StartCoroutine(PlaySimultaneousAnimations(
             meerkat, boar,
@@ -282,14 +295,14 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         yield return StartCoroutine(boar.GetComponent<PetAnimationController>()
             .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
-
-        // 미어캣을 부모-자식 관계에서 해제
+        // ▼▼▼ [수정] 미어캣이 내릴 위치를 멧돼지의 약간 '앞쪽 대각선'으로 변경하여 더 자연스럽게 만듭니다. ▼▼▼
         meerkat.transform.SetParent(null, true);
 
-        // ▼▼▼ [수정] 미어캣이 내릴 위치를 farewellDistance 만큼 떨어진 곳으로 계산 ▼▼▼
-        Vector3 sideDirection = boar.transform.right; // 멧돼지의 오른쪽 방향
-        Vector3 dismountLandPos = boar.transform.position + sideDirection * farewellDistance;
+        // 멧돼지의 오른쪽 앞 대각선 방향을 계산합니다.
+        Vector3 dismountDirection = (boar.transform.forward + boar.transform.right).normalized;
+        Vector3 dismountLandPos = boar.transform.position + dismountDirection * farewellDistance; // farewellDistance는 4f
         dismountLandPos = FindValidPositionOnNavMesh(dismountLandPos, farewellDistance + 1f);
+        // ▲▲▲ [여기까지 수정] ▲▲▲
 
         // 점프 애니메이션과 함께 내리기
         StartCoroutine(meerkat.GetComponent<PetAnimationController>()
@@ -318,10 +331,11 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         Debug.Log("[RideAndWalk] 5단계: 작별 인사하기");
 
-        // ▼▼▼ [수정] 이제 Dismount 단계에서 거리를 확보했으므로, 여기서는 서로 마주보기만 하면 됩니다. ▼▼▼
+        // ▼▼▼ [수정] Dismount 단계에서 거리를 확보했으므로, 여기서는 서로 부드럽게 마주보기만 하면 됩니다. ▼▼▼
         if (IsAgentSafelyReady(meerkat) && IsAgentSafelyReady(boar))
         {
-            LookAtEachOther(meerkat, boar);
+            // 기존의 즉시 회전(LookAtEachOther) 대신 부드러운 회전을 사용합니다.
+            yield return StartCoroutine(SmoothlyLookAtEachOther(meerkat, boar, 0.7f));
         }
         else
         {
