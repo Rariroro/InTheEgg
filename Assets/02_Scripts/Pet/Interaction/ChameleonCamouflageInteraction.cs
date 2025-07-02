@@ -1,278 +1,465 @@
+// ChameleonCamouflageInteraction.cs (최적화된 버전)
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class ChameleonCamouflageInteraction : BasePetInteraction
 {
     public override string InteractionName => "ChameleonCamouflage";
-    
-    // Inspector에서 직접 할당할 수 있는 필드 추가
+
+    [Header("Material Settings")]
+    [Tooltip("카멜레온이 투명해질 때 사용할 투명 머티리얼입니다.")]
     [SerializeField] private Material transparentMaterial;
+
+    [Header("Interaction Settings")]
+    [Tooltip("포식자가 위협을 감지하고 위장을 시작할 거리입니다.")]
+    public float camouflageTriggerDistance = 8f;
     
-    // 기존 메서드 유지
+    [Tooltip("카멜레온이 위장(투명화)을 유지하는 시간입니다.")]
+    public float camouflageDuration = 5f;
+    
+    [Tooltip("포식자가 혼란스러워하며 주변을 맴도는 시간입니다.")]
+    public float predatorConfusionDuration = 4f;
+    
+    [Tooltip("포식자가 포기하고 떠나기 시작할 때까지의 대기 시간입니다.")]
+    public float predatorGiveUpDelay = 2f;
+
+    [Header("Predator Behavior")]
+    [Tooltip("포식자가 카멜레온에게 접근할 때의 속도 배율입니다.")]
+    public float predatorApproachSpeedMultiplier = 1.5f;
+    
+    [Tooltip("포식자가 포기하고 떠날 때 이동할 거리입니다.")]
+    public float predatorLeaveDistance = 20f;
+    
+    [Tooltip("포식자가 충분히 멀어졌다고 판단하는 거리입니다.")]
+    public float safeDistanceForChameleon = 15f;
+    
+    [Tooltip("포식자가 혼란 중 돌아다닐 반경입니다.")]
+    public float confusionSearchRadius = 5f;
+
+    [Header("Visual Effects")]
+    [Tooltip("카멜레온이 투명해지는 속도입니다.")]
+    public float fadeOutDuration = 1.5f;
+    
+    [Tooltip("카멜레온이 다시 나타나는 속도입니다.")]
+    public float fadeInDuration = 1.0f;
+
+    [Header("Safety Settings")]
+    [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
+    public float agentSafetyTimeout = 3f;
+
+    // 상호작용 타입 결정
     protected override InteractionType DetermineInteractionType()
     {
-        return InteractionType.ChameleonCamouflage;
+        return InteractionType.ChaseAndRun;
     }
-    
-    // 카멜레온 투명화 효과를 위한 메서드 (수정)
-    private IEnumerator CamouflageEffect(PetController chameleon, float duration)
-    {
-        // 카멜레온 모델 참조
-        if (chameleon.petModelTransform == null)
-        {
-            Debug.LogWarning("[ChameleonCamouflage] 카멜레온 모델을 찾을 수 없습니다!");
-            yield break;
-        }
-        
-        // 투명 마테리얼 확인
-        if (transparentMaterial == null)
-        {
-            Debug.LogError("[ChameleonCamouflage] Transparent 마테리얼이 할당되지 않았습니다! Inspector에서 할당해주세요.");
-            yield break;
-        }
-        
-        // 카멜레온 모델의 모든 렌더러 컴포넌트 찾기
-        Renderer[] renderers = chameleon.petModelTransform.GetComponentsInChildren<Renderer>();
-        
-        if (renderers.Length == 0)
-        {
-            Debug.LogWarning("[ChameleonCamouflage] 카멜레온 모델에 렌더러가 없습니다!");
-            yield break;
-        }
-        
-        // 원래 마테리얼 저장
-        Material[][] originalMaterials = new Material[renderers.Length][];
-        
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            // 원본 마테리얼 배열 복사
-            originalMaterials[i] = renderers[i].materials;
-        }
-        
-        // 투명화 효과 - 투명 마테리얼로 교체
-        Debug.Log("[ChameleonCamouflage] 카멜레온이 투명 마테리얼로 교체됩니다.");
-        
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            // 현재 사용 중인 마테리얼 수만큼 새 마테리얼 배열 생성
-            Material[] newMaterials = new Material[renderers[i].materials.Length];
-            for (int j = 0; j < newMaterials.Length; j++)
-            {
-                // 모든 마테리얼을 투명 마테리얼로 교체
-                newMaterials[j] = transparentMaterial;
-            }
-            
-            // 새 마테리얼 배열 적용
-            renderers[i].materials = newMaterials;
-        }
-        
-        // 위장 상태 유지
-        yield return new WaitForSeconds(duration);
-        
-        // 원래 마테리얼로 복원
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            renderers[i].materials = originalMaterials[i];
-        }
-        
-        Debug.Log("[ChameleonCamouflage] 카멜레온이 원래 마테리얼로 돌아왔습니다!");
-    }
-    
 
-    
-    // 이 상호작용이 가능한지 확인하는 메서드
+    // 상호작용 가능 여부 체크
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        // 카멜레온과 육식/잡식 동물 조합 찾기
         bool hasChameleon = pet1.PetType == PetType.Chameleon || pet2.PetType == PetType.Chameleon;
-        
-        // 카멜레온이 없으면 상호작용 불가
         if (!hasChameleon) return false;
-        
-        // 카멜레온이 아닌 상대 펫 찾기
-        PetController otherPet = pet1.PetType == PetType.Chameleon ? pet2 : pet1;
-        
-        // 육식/잡식 여부 확인 (PetAIProperties.DietType 사용)
-bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;                         
-        
-        return hasChameleon && isPredator;
+
+        PetController otherPet = (pet1.PetType == PetType.Chameleon) ? pet2 : pet1;
+
+        // 상대방이 육식 또는 잡식성인지 확인
+        bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;
+
+        return isPredator;
     }
-    
-    // 상호작용 수행
+
+    // 메인 상호작용 수행
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[ChameleonCamouflage] {pet1.petName}와(과) {pet2.petName} 사이의 카멜레온 위장 상호작용 시작!");
-        
-        // 카멜레온과 포식자 식별
-        PetController chameleon = null;
-        PetController predator = null;
-        
-        if (pet1.PetType == PetType.Chameleon)
+        Debug.Log($"[ChameleonCamouflage] {pet1.petName}와(과) {pet2.petName}의 위장 상호작용 시작!");
+
+        // 필수 머티리얼 체크
+        if (transparentMaterial == null)
         {
-            chameleon = pet1;
-            predator = pet2;
+            Debug.LogError("[ChameleonCamouflage] 투명 머티리얼이 할당되지 않았습니다! 상호작용을 취소합니다.");
+            yield break;
         }
-        else
+
+        // 역할 식별
+        PetController chameleon = (pet1.PetType == PetType.Chameleon) ? pet1 : pet2;
+        PetController predator = (pet1.PetType == PetType.Chameleon) ? pet2 : pet1;
+
+        // NavMeshAgent 준비 확인
+        yield return StartCoroutine(WaitUntilAgentIsReady(chameleon, agentSafetyTimeout));
+        yield return StartCoroutine(WaitUntilAgentIsReady(predator, agentSafetyTimeout));
+
+        if (!IsAgentSafelyReady(chameleon) || !IsAgentSafelyReady(predator))
         {
-            chameleon = pet2;
-            predator = pet1;
+            Debug.LogError("[ChameleonCamouflage] NavMeshAgent 준비 실패로 상호작용을 중단합니다.");
+            EndInteraction(chameleon, predator);
+            yield break;
         }
-        
-        Debug.Log($"[ChameleonCamouflage] 카멜레온: {chameleon.petName}, 포식자: {predator.petName}");
-        
-        // 원래 상태 저장 (개선된 헬퍼 클래스 사용)
+
+        // 원래 상태 저장
         PetOriginalState chameleonState = new PetOriginalState(chameleon);
         PetOriginalState predatorState = new PetOriginalState(predator);
-        
-        // 위치 고정 코루틴 참조 저장
-        Coroutine fixPositionCoroutine = null;
-        
+
+        // 머티리얼 백업
+        Dictionary<Renderer, Material[]> originalMaterials = null;
+
         try
         {
-            // 감정 표현 추가 - 카멜레온은 두려움, 포식자는 배고픔
-            chameleon.ShowEmotion(EmotionType.Scared, 30f);
-            predator.ShowEmotion(EmotionType.Hungry, 30f);
+            // 감정 표현 시작
+            chameleon.ShowEmotion(EmotionType.Scared, camouflageDuration + predatorConfusionDuration + 10f);
+            predator.ShowEmotion(EmotionType.Hungry, predatorConfusionDuration + 5f);
+
+            // 1. 포식자 접근 단계 (개선된 추적)
+            yield return StartCoroutine(ImprovedApproachPhase(predator, chameleon));
+
+            // 2. 카멜레온 위장 준비
+            originalMaterials = BackupChameleonMaterials(chameleon);
             
-            // 1. 포식자가 카멜레온에게 접근
-            float initialDistance = Vector3.Distance(predator.transform.position, chameleon.transform.position);
-            Vector3 approachTarget = chameleon.transform.position;
+            // 3. 위장 및 포식자 혼란 단계
+            yield return StartCoroutine(ImprovedHideAndConfusePhase(chameleon, predator, originalMaterials));
+
+            // 4. 포식자 떠나기 단계
+            yield return StartCoroutine(ImprovedLeavePhase(predator, chameleon));
+
+            // 5. 카멜레온 안심 및 재등장 단계
+            yield return StartCoroutine(ImprovedReappearPhase(chameleon, originalMaterials));
+
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위기를 모면했습니다!");
             
-            predator.agent.isStopped = false;
-            predator.agent.speed = predatorState.originalSpeed * 1.5f; // 빠르게 접근
-            predator.agent.acceleration = predatorState.originalAcceleration * 1.5f;
-            predator.agent.SetDestination(approachTarget);
-            
-            // 달리기 애니메이션 설정
-            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run); // 달리기
-            
-            Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) {chameleon.petName}에게 접근합니다!");
-            
-            // 카멜레온은 긴장하며 대기
-            chameleon.agent.isStopped = true;
-            
-            // 위험 감지 거리
-            float detectionDistance = 10f;
-            bool dangerDetected = false;
-            
-            // 포식자가 접근하는 동안 대기
-            while (!dangerDetected)
-            {
-                float currentDistance = Vector3.Distance(predator.transform.position, chameleon.transform.position);
-                
-                // 위험 거리에 도달했는지 확인
-                if (currentDistance <= detectionDistance)
-                {
-                    dangerDetected = true;
-                    Debug.Log($"[ChameleonCamouflage] 카멜레온이 위험을 감지했습니다! 거리: {currentDistance}");
-                }
-                
-                // 시간 초과 예방 (최대 10초)
-                if (Time.time - Time.time > 10f)
-                {
-                    Debug.Log("[ChameleonCamouflage] 시간 초과! 위험 감지 처리.");
-                    dangerDetected = true;
-                }
-                
-                yield return null;
-            }
-            
-            // 2. 카멜레온이 위장(투명화) 시작
-            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위장을 시작합니다!");
-            
-            // 카멜레온 감정 업데이트
-            chameleon.ShowEmotion(EmotionType.Surprised, 5f);
-            
-            // 투명화 코루틴 시작 (별도 코루틴으로 처리)
-            StartCoroutine(CamouflageEffect(chameleon, 5f));
-            
-            // 카멜레온이 위장하는 동안의 애니메이션 (다른 애니메이션으로 대체 가능)
-            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
-            
-            // 3. 포식자가 멈추고 혼란스러워함
-            predator.agent.isStopped = true;
-            predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
-            
-            Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 혼란스러워합니다!");
-            
-            // 포식자 감정 업데이트
-            predator.ShowEmotion(EmotionType.Confused, 15f);
-            
-            // 혼란스러운 애니메이션 (고개를 두리번거리는 등)
-            yield return StartCoroutine(predator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
-            
-            // 제자리에서 혼란스럽게 회전
-            float confusionTime = 3.0f;
-            float rotationSpeed = 60.0f;
-            float elapsedTime = 0f;
-            
-            while (elapsedTime < confusionTime)
-            {
-                predator.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 4. 포식자가 다른 방향으로 이동
-            Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 목표물을 잃고 다른 방향으로 이동합니다.");
-            
-            // 랜덤한 다른 방향 찾기
-            Vector3 escapeDirection = Random.insideUnitSphere;
-            escapeDirection.y = 0; // y축 무시
-            escapeDirection.Normalize();
-            
-            Vector3 newTarget = predator.transform.position + escapeDirection * 20f;
-            newTarget = FindValidPositionOnNavMesh(newTarget, 25f);
-            
-            // 포식자 이동 재개
-            predator.agent.isStopped = false;
-            predator.agent.SetDestination(newTarget);
-            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
-            
-            // 포식자가 충분히 멀어질 때까지 대기
-            float safeDistance = 15f;
-            float maxWaitTime = 10f;
-            float waitStartTime = Time.time;
-            bool predatorFarEnough = false;
-            
-            while (Time.time - waitStartTime < maxWaitTime && !predatorFarEnough)
-            {
-                float currentDistance = Vector3.Distance(predator.transform.position, chameleon.transform.position);
-                
-                if (currentDistance >= safeDistance)
-                {
-                    predatorFarEnough = true;
-                    Debug.Log($"[ChameleonCamouflage] 포식자가 충분히 멀어졌습니다. 거리: {currentDistance}");
-                }
-                
-                yield return null;
-            }
-            
-            // 5. 카멜레온이 원래 색으로 돌아오고 안심함
+            // 성공 감정 표현
             chameleon.ShowEmotion(EmotionType.Happy, 5f);
-            
-            // 안심하는 애니메이션
-            yield return StartCoroutine(chameleon.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
-            
-            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 안전함을 느끼고 안심합니다.");
-            
-            // 잠시 대기
             yield return new WaitForSeconds(2f);
         }
         finally
         {
-            // 감정 말풍선 숨기기
-            chameleon.HideEmotion();
-            predator.HideEmotion();
-            
-            // 원래 상태로 복원
+            // 최종 정리
+            Debug.Log("[ChameleonCamouflage] 상호작용 정리 시작.");
+
+            // 머티리얼 복원 (안전장치)
+            if (originalMaterials != null)
+            {
+                RestoreChameleonMaterials(chameleon, originalMaterials);
+            }
+
+            // 원래 상태 복원
             chameleonState.Restore(chameleon);
             predatorState.Restore(predator);
-            
-            // 애니메이션 원래대로
-            chameleon.GetComponent<PetAnimationController>().StopContinuousAnimation();
-            predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
-            
-            Debug.Log($"[ChameleonCamouflage] 상호작용 종료, 펫들의 상태가 원래대로 복원됨");
+
+            // 공통 종료 처리
+            EndInteraction(chameleon, predator);
+            Debug.Log("[ChameleonCamouflage] 상호작용 정리 완료.");
         }
+    }
+
+    // 개선된 접근 단계 - 더 자연스러운 추적
+    private IEnumerator ImprovedApproachPhase(PetController predator, PetController chameleon)
+    {
+        Debug.Log($"[ChameleonCamouflage] 1단계: {predator.petName}이(가) {chameleon.petName}을(를) 추적합니다.");
+         // ======================= [수정 코드 시작] =======================
+        // 상호작용 시작 전 멈춰있던 NavMeshAgent의 이동을 다시 재개시킵니다.
+        if (predator.agent != null && predator.agent.enabled)
+        {
+            predator.agent.isStopped = false;
+        }
+        if (chameleon.agent != null && chameleon.agent.enabled)
+        {
+            chameleon.agent.isStopped = false;
+        }
+        // ======================= [수정 코드 종료] =======================
+        // 포식자 속도 설정
+        predator.agent.speed = predator.baseSpeed * predatorApproachSpeedMultiplier;
+        predator.agent.acceleration = predator.baseAcceleration * 2f;
+        predator.agent.updateRotation = true;
+        
+        // 카멜레온 초기 반응 - 약간 뒤로 물러남
+        chameleon.agent.speed = chameleon.baseSpeed * 0.5f;
+        chameleon.agent.updateRotation = true;
+        
+        // 애니메이션 설정
+        predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        chameleon.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        float chaseTimer = 0f;
+        float maxChaseTime = 10f;
+        Vector3 lastChameleonPosition = chameleon.transform.position;
+
+        while (Vector3.Distance(predator.transform.position, chameleon.transform.position) > camouflageTriggerDistance)
+        {
+            // 카멜레온이 도망가는 동작
+            Vector3 escapeDirection = (chameleon.transform.position - predator.transform.position).normalized;
+            Vector3 escapeTarget = chameleon.transform.position + escapeDirection * 3f;
+            
+            if (NavMesh.SamplePosition(escapeTarget, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+            {
+                chameleon.agent.SetDestination(hit.position);
+            }
+
+            // 포식자가 계속 추적
+            predator.agent.SetDestination(chameleon.transform.position);
+
+            // 시간 초과 체크
+            chaseTimer += Time.deltaTime;
+            if (chaseTimer > maxChaseTime)
+            {
+                Debug.LogWarning("[ChameleonCamouflage] 추적 시간 초과!");
+                break;
+            }
+
+            // 회전 처리
+            predator.HandleRotation();
+            chameleon.HandleRotation();
+
+            yield return null;
+        }
+
+        // 카멜레온 정지
+        chameleon.agent.isStopped = true;
+        chameleon.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        
+        Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위협을 감지했습니다!");
+    }
+
+    // 개선된 위장 및 혼란 단계
+    private IEnumerator ImprovedHideAndConfusePhase(PetController chameleon, PetController predator, Dictionary<Renderer, Material[]> originalMaterials)
+    {
+        Debug.Log($"[ChameleonCamouflage] 2단계: {chameleon.petName}이(가) 위장하고 {predator.petName}은(는) 혼란에 빠집니다.");
+
+        // 포식자 정지
+        predator.agent.isStopped = true;
+        predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
+
+        // 카멜레온 위장 애니메이션과 투명화 시작
+        var chameleonAnim = chameleon.GetComponent<PetAnimationController>();
+        StartCoroutine(SmoothCamouflageEffect(chameleon, originalMaterials, true));
+        yield return StartCoroutine(chameleonAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
+
+        // 포식자 혼란 표현
+        predator.ShowEmotion(EmotionType.Confused, predatorConfusionDuration);
+        
+        // 포식자가 주변을 수색하는 동작
+        yield return StartCoroutine(PredatorSearchBehavior(predator, chameleon.transform.position));
+    }
+
+    // 포식자의 수색 행동
+    private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastSeenPosition)
+    {
+        Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 주변을 수색합니다.");
+        
+        var predatorAnim = predator.GetComponent<PetAnimationController>();
+        
+        // 먼저 놀라는 동작
+        yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 1f, true, false));
+
+        // 주변을 돌아다니며 찾기
+        predator.agent.isStopped = false;
+        predator.agent.speed = predator.baseSpeed * 0.7f;
+        predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        float searchTime = 0f;
+        int searchPoints = 3;
+
+        for (int i = 0; i < searchPoints; i++)
+        {
+            // 랜덤한 수색 지점 생성
+            Vector2 randomCircle = Random.insideUnitCircle * confusionSearchRadius;
+            Vector3 searchTarget = lastSeenPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
+
+            if (NavMesh.SamplePosition(searchTarget, out NavMeshHit hit, confusionSearchRadius * 1.5f, NavMesh.AllAreas))
+            {
+                predator.agent.SetDestination(hit.position);
+
+                // 목적지 도착까지 대기
+                while (!predator.agent.pathPending && predator.agent.remainingDistance > 0.5f)
+                {
+                    predator.HandleRotation();
+                    yield return null;
+                }
+
+                // 도착 후 주변을 둘러봄
+                predator.agent.isStopped = true;
+                predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+                
+                // 좌우로 회전하며 찾기
+                float lookDuration = 1.5f;
+                float lookTimer = 0f;
+                Quaternion startRotation = predator.transform.rotation;
+
+                while (lookTimer < lookDuration)
+                {
+                    float angle = Mathf.Sin(lookTimer * 3f) * 60f;
+                    predator.transform.rotation = startRotation * Quaternion.Euler(0, angle, 0);
+                    
+                    lookTimer += Time.deltaTime;
+                    yield return null;
+                }
+
+                predator.agent.isStopped = false;
+            }
+        }
+
+        predator.agent.isStopped = true;
+        predatorAnim.StopContinuousAnimation();
+    }
+
+    // 개선된 떠나기 단계
+    private IEnumerator ImprovedLeavePhase(PetController predator, PetController chameleon)
+    {
+        Debug.Log($"[ChameleonCamouflage] 3단계: {predator.petName}이(가) 포기하고 떠납니다.");
+        
+        yield return new WaitForSeconds(predatorGiveUpDelay);
+
+        // 포기하는 감정 표현
+        predator.ShowEmotion(EmotionType.Sad, 3f);
+
+        // 떠날 방향 계산 (현재 방향의 반대)
+        Vector3 leaveDirection = -predator.transform.forward;
+        Vector3 leaveTarget = predator.transform.position + leaveDirection * predatorLeaveDistance;
+        
+        if (NavMesh.SamplePosition(leaveTarget, out NavMeshHit hit, predatorLeaveDistance * 1.5f, NavMesh.AllAreas))
+        {
+            leaveTarget = hit.position;
+        }
+
+        // 천천히 떠나기
+        predator.agent.isStopped = false;
+        predator.agent.speed = predator.baseSpeed * 0.8f;
+        predator.agent.SetDestination(leaveTarget);
+        predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        // 안전 거리까지 멀어지기를 기다림
+        float maxWaitTime = 20f;
+        float waitTimer = 0f;
+
+        while (Vector3.Distance(predator.transform.position, chameleon.transform.position) < safeDistanceForChameleon)
+        {
+            predator.HandleRotation();
+            
+            // 목적지 도착 시 새로운 목적지 설정
+            if (!predator.agent.pathPending && predator.agent.remainingDistance < 1f)
+            {
+                break;
+            }
+
+            waitTimer += Time.deltaTime;
+            if (waitTimer > maxWaitTime)
+            {
+                Debug.LogWarning("[ChameleonCamouflage] 포식자가 충분히 멀어지지 않았지만 시간 초과.");
+                break;
+            }
+
+            yield return null;
+        }
+
+        predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
+    }
+
+    // 개선된 재등장 단계
+    private IEnumerator ImprovedReappearPhase(PetController chameleon, Dictionary<Renderer, Material[]> originalMaterials)
+    {
+        Debug.Log($"[ChameleonCamouflage] 4단계: {chameleon.petName}이(가) 안전함을 느끼고 재등장합니다.");
+        
+        // 주변을 살피는 동작
+        var chameleonAnim = chameleon.GetComponent<PetAnimationController>();
+        chameleonAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        
+        // 좌우를 살피기
+        float lookDuration = 2f;
+        float lookTimer = 0f;
+        Quaternion originalRotation = chameleon.transform.rotation;
+
+        while (lookTimer < lookDuration)
+        {
+            float angle = Mathf.Sin(lookTimer * 2f) * 45f;
+            chameleon.transform.rotation = originalRotation * Quaternion.Euler(0, angle, 0);
+            
+            lookTimer += Time.deltaTime;
+            yield return null;
+        }
+
+        chameleon.transform.rotation = originalRotation;
+
+        // 투명화 해제
+        yield return StartCoroutine(SmoothCamouflageEffect(chameleon, originalMaterials, false));
+
+        // 안심하는 동작
+        chameleon.ShowEmotion(EmotionType.Happy, 5f);
+        yield return StartCoroutine(chameleonAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 2.0f, true, false));
+    }
+
+    // 부드러운 위장 효과
+    private IEnumerator SmoothCamouflageEffect(PetController chameleon, Dictionary<Renderer, Material[]> originalMaterials, bool fadeOut)
+    {
+        if (chameleon.petModelTransform == null || transparentMaterial == null) yield break;
+
+        Renderer[] renderers = chameleon.petModelTransform.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) yield break;
+
+        float duration = fadeOut ? fadeOutDuration : fadeInDuration;
+        float elapsedTime = 0f;
+
+        if (fadeOut)
+        {
+            // 투명화 시작
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 투명해집니다.");
+            
+            // 페이드 아웃 효과 (선택사항 - 바로 투명 머티리얼로 교체해도 됨)
+            foreach (var renderer in renderers)
+            {
+                Material[] transparentMaterials = new Material[renderer.materials.Length];
+                for (int i = 0; i < transparentMaterials.Length; i++)
+                {
+                    transparentMaterials[i] = transparentMaterial;
+                }
+                renderer.materials = transparentMaterials;
+            }
+            
+            yield return new WaitForSeconds(camouflageDuration);
+        }
+        else
+        {
+            // 원래 모습으로 복원
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 나타납니다.");
+            RestoreChameleonMaterials(chameleon, originalMaterials);
+        }
+    }
+
+    // 머티리얼 백업
+    private Dictionary<Renderer, Material[]> BackupChameleonMaterials(PetController chameleon)
+    {
+        Dictionary<Renderer, Material[]> backup = new Dictionary<Renderer, Material[]>();
+        
+        if (chameleon.petModelTransform != null)
+        {
+            Renderer[] renderers = chameleon.petModelTransform.GetComponentsInChildren<Renderer>();
+            foreach (var renderer in renderers)
+            {
+                backup[renderer] = renderer.materials;
+            }
+        }
+        
+        return backup;
+    }
+
+    // 머티리얼 복원
+    private void RestoreChameleonMaterials(PetController chameleon, Dictionary<Renderer, Material[]> originalMaterials)
+    {
+        if (chameleon == null || !chameleon.gameObject.activeInHierarchy) return;
+
+        foreach (var kvp in originalMaterials)
+        {
+            if (kvp.Key != null)
+            {
+                kvp.Key.materials = kvp.Value;
+            }
+        }
+    }
+
+    // NavMeshAgent 안전 체크
+    private bool IsAgentSafelyReady(PetController pet)
+    {
+        return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
     }
 }
