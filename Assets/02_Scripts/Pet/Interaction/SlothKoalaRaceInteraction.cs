@@ -44,6 +44,11 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
     [Tooltip("관중이 2차로 완전히 지루해져 잠드는 시간(초)입니다.")]
     public float boredomTimePhase2 = 20f;
 
+// ▼▼▼ [추가] 이 변수를 클래스 상단에 추가합니다. ▼▼▼
+    [Header("Marker Disappearance")]
+    [Tooltip("선두 주자가 이 거리 안으로 들어오면 결승선 마커가 사라지기 시작합니다.")]
+    public float markerDisappearDistance = 10f;
+    // ▲▲▲ [여기까지 추가] ▲▲▲
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.SlothKoalaRace;
@@ -79,6 +84,10 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
         PetOriginalState slothState = new PetOriginalState(sloth);
         PetOriginalState koalaState = new PetOriginalState(koala);
         GameObject finishMarkerInstance = null;
+   // ▼▼▼ [추가] 마커 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
+        Coroutine markerBobbingCoroutine = null;
+        bool isMarkerDisappearing = false;
+        // ▲▲▲ [여기까지 추가] ▲▲▲
 
         List<PetController> spectators = new List<PetController>();
         List<PetOriginalState> spectatorStates = new List<PetOriginalState>();
@@ -120,7 +129,9 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 // 결승선이 달려오는 선수들을 바라보도록 회전 값을 설정합니다.
             Quaternion arrowRotation = Quaternion.Euler(0, 0, 180);
                 finishMarkerInstance = Instantiate(finishLinePrefab, markerPos, arrowRotation);
-                StartCoroutine(AnimateFinishMarker(finishMarkerInstance));
+                // ▼▼▼ [수정] 코루틴을 변수에 저장하여 나중에 중지할 수 있도록 합니다. ▼▼▼
+                markerBobbingCoroutine = StartCoroutine(AnimateFinishMarker(finishMarkerInstance));
+                // ▲▲▲ [여기까지 수정] ▲▲▲
             }
             
             // 관중 찾기
@@ -173,6 +184,31 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
 
             while (!raceFinished)
             {
+
+                 // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
+                if (!isMarkerDisappearing && finishMarkerInstance != null)
+                {
+                    // 각 주자와 결승선 사이의 거리를 계산
+                    float slothDistToFinish = Vector3.Distance(sloth.transform.position, finishLine);
+                    float koalaDistToFinish = Vector3.Distance(koala.transform.position, finishLine);
+
+                    // 두 주자 중 더 가까운 거리가 설정한 값보다 작아지면
+                    if (Mathf.Min(slothDistToFinish, koalaDistToFinish) < markerDisappearDistance)
+                    {
+                        isMarkerDisappearing = true; // 중복 실행 방지
+                        
+                        // 기존의 상하 움직임 애니메이션은 중지
+                        if (markerBobbingCoroutine != null)
+                        {
+                            StopCoroutine(markerBobbingCoroutine);
+                        }
+                        
+                        // 사라지는 애니메이션 시작
+                        StartCoroutine(DisappearFinishMarker(finishMarkerInstance));
+                        Debug.Log("[SlothKoalaRace] 주자가 결승선에 근접하여 마커가 사라지기 시작합니다.");
+                    }
+                }
+                // ▲▲▲ [여기까지 추가] ▲▲▲
                 spectatorBoredomTimer += Time.deltaTime;
 
                 if (!boredomPhase1Triggered && spectatorBoredomTimer > boredomTimePhase1)
@@ -264,6 +300,11 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
     /// <summary>
     /// 관중들을 결승선 뒤편의 응원 위치로 자연스럽게 이동시키는 코루틴입니다.
     /// </summary>
+   // Pet.zip/Interaction/SlothKoalaRaceInteraction.cs
+
+    /// <summary>
+    /// 관중들을 결승선 뒤편의 응원 위치로 자연스럽게 이동시키는 코루틴입니다. (수정된 버전)
+    /// </summary>
     private IEnumerator MoveAndPositionSpectatorsCoroutine(List<PetController> spectators, Vector3 startPos, Vector3 finishLine)
     {
         if (spectators.Count == 0)
@@ -276,26 +317,42 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
         Vector3 raceDirection = (finishLine - startPos).normalized;
         Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
         
-        // 응원 장소를 결승선 '뒤'로 설정합니다.
-        Vector3 cheeringAreaCenter = finishLine + raceDirection * 8f; // 결승선보다 8미터 뒤
+        Vector3 cheeringAreaCenter = finishLine + raceDirection * 8f;
 
         List<bool> arrivedSpectators = new List<bool>(new bool[spectators.Count]);
+
+        // ▼▼▼ [수정됨] 이동 명령 전, 모든 관중의 NavMeshAgent 준비 상태를 먼저 확인합니다. ▼▼▼
+        for (int i = 0; i < spectators.Count; i++)
+        {
+            var spec = spectators[i];
+            yield return StartCoroutine(WaitUntilAgentIsReady(spec, 3f)); // BasePetInteraction의 헬퍼 코루틴 재사용
+
+            if (!IsAgentSafelyReady(spec))
+            {
+                Debug.LogError($"[SlothKoalaRace] 관중 {spec.petName}의 NavMeshAgent가 준비되지 않아 이동시킬 수 없습니다. 이 관중은 이동을 건너뜁니다.");
+                arrivedSpectators[i] = true; // 이동 불가하므로 도착 처리
+            }
+        }
+        // ▲▲▲ [여기까지 수정] ▲▲▲
 
         // 각 관중의 목표 위치를 계산하고 이동을 시작시킵니다.
         for (int i = 0; i < spectators.Count; i++)
         {
+            // ▼▼▼ [수정됨] 이미 도착 처리된 관중은 건너뜁니다. ▼▼▼
+            if (arrivedSpectators[i])
+            {
+                continue;
+            }
+            // ▲▲▲ [여기까지 수정] ▲▲▲
+
             var spec = spectators[i];
             
-            // 응원 위치를 결승선 주변에 좌/우로 배치합니다.
             float sideOffset = Random.Range(4f, 8f);
             Vector3 spectatorPos = cheeringAreaCenter + (sideDirection * sideOffset * ((i % 2 == 0) ? 1 : -1));
 
             if (NavMesh.SamplePosition(spectatorPos, out NavMeshHit hit, 10f, NavMesh.AllAreas))
             {
-                // ★★★ 수정 1: NavMeshAgent가 회전을 제어하도록 설정 ★★★
-                spec.agent.updateRotation = true; // 달려가는 동안에는 에이전트가 방향을 자동으로 맞춥니다.
-                
-                // 매우 빠른 속도로 달려가도록 설정
+                spec.agent.updateRotation = true;
                 spec.agent.speed = spec.baseSpeed * 3.5f;
                 spec.agent.acceleration = spec.baseAcceleration * 3.5f;
                 spec.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
@@ -304,13 +361,15 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             }
             else
             {
-                // 만약 위치를 못찾으면 도착한 것으로 간주
-                arrivedSpectators[i] = true; 
+                // ▼▼▼ [수정됨] 위치 찾기 실패 시, 상세 로그를 남기고 도착 처리합니다. ▼▼▼
+                Debug.LogWarning($"[SlothKoalaRace] 관중 '{spec.petName}'를 위한 유효한 응원 위치({spectatorPos})를 NavMesh에서 찾지 못했습니다. 이 관중은 이동하지 않습니다.");
+                arrivedSpectators[i] = true;
+                // ▲▲▲ [여기까지 수정] ▲▲▲
             }
         }
 
         // 모든 관중이 도착할 때까지 대기합니다.
-        float timeout = 20f; // 최대 대기 시간
+        float timeout = 20f;
         float timer = 0f;
         while (arrivedSpectators.Contains(false) && timer < timeout)
         {
@@ -319,17 +378,20 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 if (arrivedSpectators[i]) continue;
 
                 var spec = spectators[i];
+                // ▼▼▼ [수정됨] 에이전트가 비활성화 되었을 경우를 대비한 안전장치 추가 ▼▼▼
+                if (!IsAgentSafelyReady(spec))
+                {
+                    arrivedSpectators[i] = true;
+                    continue;
+                }
+                // ▲▲▲ [여기까지 수정] ▲▲▲
+
                 if (!spec.agent.pathPending && spec.agent.remainingDistance < 1.0f)
                 {
                     arrivedSpectators[i] = true;
                     spec.agent.isStopped = true;
-                    
-                    // ★★★ 수정 2: 도착 후에는 다시 수동 회전 모드로 변경 ★★★
-                    spec.agent.updateRotation = false; // 직접 회전을 제어하기 위해 false로 설정합니다.
-
-                    // ★★★ 수정 3: 부드럽게 선수들을 바라보는 코루틴 호출 ★★★
+                    spec.agent.updateRotation = false;
                     StartCoroutine(SmoothlyLookAt(spec, startPos, 0.7f));
-                    
                     spec.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
                 }
             }
@@ -497,4 +559,27 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             }
         }
     }
+    /// <summary>
+/// 결승선 마커를 자연스럽게 작아지며 사라지게 하는 코루틴입니다.
+/// </summary>
+/// <param name="marker">사라지게 할 마커 게임 오브젝트</param>
+private IEnumerator DisappearFinishMarker(GameObject marker)
+{
+    if (marker == null) yield break;
+
+    Vector3 initialScale = marker.transform.localScale;
+    float duration = 1.5f; // 사라지는 데 걸리는 시간
+    float elapsedTime = 0f;
+
+    while (elapsedTime < duration)
+    {
+        // 시간이 지남에 따라 스케일을 0으로 만듭니다.
+        marker.transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, elapsedTime / duration);
+        elapsedTime += Time.deltaTime;
+        yield return null;
+    }
+
+    // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
+    Destroy(marker);
+}
 }

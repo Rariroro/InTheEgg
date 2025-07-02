@@ -15,19 +15,19 @@ public class RaceInteraction : BasePetInteraction
     // ★★★ 새로 추가된 부분: 결승선 깃발 프리팹 ★★★
     // ★★★ 이 부분을 추가합니다. ★★★
     // ▼▼▼ [수정] 이 부분을 아래 코드로 교체합니다. ▼▼▼
-[Header("Finish Line Visuals")]
-[Tooltip("결승선에 표시될 3D 화살표 프리팹입니다.")]
-public GameObject finishArrowPrefab;
+    [Header("Finish Line Visuals")]
+    [Tooltip("결승선에 표시될 3D 화살표 프리팹입니다.")]
+    public GameObject finishArrowPrefab;
 
-[Tooltip("화살표가 지면으로부터 떨어질 높이입니다.")]
-public float arrowHeight = 10f;
+    [Tooltip("화살표가 지면으로부터 떨어질 높이입니다.")]
+    public float arrowHeight = 10f;
 
-[Tooltip("화살표가 위아래로 움직이는 속도입니다.")]
-public float arrowBobSpeed = 2f;
+    [Tooltip("화살표가 위아래로 움직이는 속도입니다.")]
+    public float arrowBobSpeed = 2f;
 
-[Tooltip("화살표가 위아래로 움직이는 폭입니다.")]
-public float arrowBobAmount = 1f;
-// ▲▲▲ [여기까지 수정] ▲▲▲
+    [Tooltip("화살표가 위아래로 움직이는 폭입니다.")]
+    public float arrowBobAmount = 1f;
+    // ▲▲▲ [여기까지 수정] ▲▲▲
 
     // ★★★ 여기까지 추가 ★★★
     // ★★★ 추가: 경주 설정을 인스펙터에서 조절하기 위한 변수들 ★★★
@@ -72,6 +72,14 @@ public float arrowBobAmount = 1f;
     public float stuckDetectionTime = 3f;
     [Tooltip("막혔을 때 우회 시도 반경")]
     public float detourRadius = 8f;
+
+ // ▼▼▼ [추가] 이 변수를 클래스 상단에 추가합니다. ▼▼▼
+    [Header("Arrow Disappearance")]
+    [Tooltip("선두 주자가 이 거리 안으로 들어오면 결승선 화살표가 사라지기 시작합니다.")]
+    public float arrowDisappearDistance = 15f;
+    // ▲▲▲ [여기까지 추가] ▲▲▲
+
+
     // 토끼가 깨어나야 하는지를 외부(FixPositionDuringInteraction)에서 알 수 있도록 하는 플래그 변수입니다.
     private bool rabbitShouldWakeUp = false;
     [Header("Rabbit Nap Settings")]
@@ -125,7 +133,12 @@ public float arrowBobAmount = 1f;
         PetOriginalState rabbitState = new PetOriginalState(rabbit);
         PetOriginalState turtleState = new PetOriginalState(turtle);
         // ★★★ 인스턴스 참조 변수 추가 ★★★
-           GameObject finishArrowInstance = null;
+        GameObject finishArrowInstance = null;
+           // ▼▼▼ [추가] 화살표 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
+        Coroutine arrowBobbingCoroutine = null;
+        bool isArrowDisappearing = false;
+        // ▲▲▲ [여기까지 추가] ▲▲▲
+
 
         try
         {
@@ -157,21 +170,23 @@ public float arrowBobAmount = 1f;
                 }
             }
             // ▼▼▼ [수정] 깃발/마커 생성 로직을 화살표 생성 로직으로 교체합니다. ▼▼▼
-        if (dirToFinish != Vector3.zero && finishArrowPrefab != null)
-        {
-            // 화살표의 위치는 결승선 위 공중입니다.
-            Vector3 arrowPosition = finishLine + Vector3.up * arrowHeight;
+            if (dirToFinish != Vector3.zero && finishArrowPrefab != null)
+            {
+                // 화살표의 위치는 결승선 위 공중입니다.
+                Vector3 arrowPosition = finishLine + Vector3.up * arrowHeight;
 
-            // 화살표가 아래를 향하도록 Z축으로 180도 회전합니다.
-            Quaternion arrowRotation = Quaternion.Euler(0, 0, 180);
+                // 화살표가 아래를 향하도록 Z축으로 180도 회전합니다.
+                Quaternion arrowRotation = Quaternion.Euler(0, 0, 180);
 
-            // 화살표 인스턴스 생성
-            finishArrowInstance = Instantiate(finishArrowPrefab, arrowPosition, arrowRotation);
+                // 화살표 인스턴스 생성
+                finishArrowInstance = Instantiate(finishArrowPrefab, arrowPosition, arrowRotation);
 
-            // 화살표 애니메이션 코루틴 시작
-            StartCoroutine(AnimateFinishArrow(finishArrowInstance));
-        }
-        // ▲▲▲ [여기까지 수정] ▲▲▲
+
+                // ▼▼▼ [수정] 코루틴을 변수에 저장하여 나중에 중지할 수 있도록 합니다. ▼▼▼
+                arrowBobbingCoroutine = StartCoroutine(AnimateFinishArrow(finishArrowInstance));
+                // ▲▲▲ [여기까지 수정] ▲▲▲
+            }
+            // ▲▲▲ [여기까지 수정] ▲▲▲
 
             // ★★★ 수정된 부분 시작 ★★★
             // --- 2. 출발점으로 이동 및 정렬 (부드러운 이동) ---
@@ -236,6 +251,30 @@ public float arrowBobAmount = 1f;
 
             while (!turtleFinished)
             {
+                   // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
+                if (!isArrowDisappearing && finishArrowInstance != null)
+                {
+                    // 각 주자와 결승선 사이의 거리를 계산
+                    float rabbitDistToFinish = Vector3.Distance(rabbit.transform.position, finishLine);
+                    float turtleDistToFinish = Vector3.Distance(turtle.transform.position, finishLine);
+
+                    // 두 주자 중 더 가까운 거리가 설정한 값보다 작아지면
+                    if (Mathf.Min(rabbitDistToFinish, turtleDistToFinish) < arrowDisappearDistance)
+                    {
+                        isArrowDisappearing = true; // 중복 실행 방지
+                        
+                        // 기존의 상하 움직임 애니메이션은 중지
+                        if (arrowBobbingCoroutine != null)
+                        {
+                            StopCoroutine(arrowBobbingCoroutine);
+                        }
+                        
+                        // 사라지는 애니메이션 시작
+                        StartCoroutine(DisappearFinishArrow(finishArrowInstance));
+                        Debug.Log("[Race] 주자가 결승선에 근접하여 화살표가 사라지기 시작합니다.");
+                    }
+                }
+                // ▲▲▲ [여기까지 추가] ▲▲▲
                 // 토끼 낮잠 로직
                 // 토끼 낮잠 로직
                 if (!rabbitIsSleeping && !rabbitWokeUp)
@@ -317,11 +356,11 @@ public float arrowBobAmount = 1f;
             // PetOriginalState 복원과 EndInteraction 호출만으로 충분합니다.
             Debug.Log("[Race] 상호작용 정리 시작.");
 
-  // ▼▼▼ [수정] 생성된 화살표를 파괴하는 로직으로 교체합니다. ▼▼▼
-        if (finishArrowInstance != null)
-        {
-            Destroy(finishArrowInstance);
-        }
+            // ▼▼▼ [수정] 생성된 화살표를 파괴하는 로직으로 교체합니다. ▼▼▼
+            if (finishArrowInstance != null)
+            {
+                Destroy(finishArrowInstance);
+            }
             if (IsAgentSafelyReady(rabbit))
             {
                 rabbit.agent.avoidancePriority = rabbitOriginalPriority;
@@ -336,34 +375,56 @@ public float arrowBobAmount = 1f;
             Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
-// Pet.zip/Interaction/RaceInteraction.cs
+    // Pet.zip/Interaction/RaceInteraction.cs
 
-// ... PerformInteraction 메서드 아래에 다음 코루틴을 추가 ...
+    // ... PerformInteraction 메서드 아래에 다음 코루틴을 추가 ...
 
+    /// <summary>
+    /// 결승선 화살표가 위아래로 부드럽게 움직이는 애니메이션을 처리하는 코루틴입니다.
+    /// </summary>
+    /// <param name="arrow">애니메이션을 적용할 화살표 게임 오브젝트</param>
+    private IEnumerator AnimateFinishArrow(GameObject arrow)
+    {
+        if (arrow == null) yield break;
+
+        Vector3 startPosition = arrow.transform.position;
+        // 각 화살표 애니메이션 시작 타이밍을 다르게 하여 단조로움을 피합니다.
+        float randomOffset = Random.Range(0f, 2f * Mathf.PI);
+
+        // 화살표가 파괴(Destroy)되기 전까지 무한 반복
+        while (arrow != null)
+        {
+            // Sin 함수를 이용해 부드러운 상하 움직임(Bobbing) 생성
+            float yOffset = Mathf.Sin((Time.time + randomOffset) * arrowBobSpeed) * arrowBobAmount;
+            arrow.transform.position = startPosition + new Vector3(0, yOffset, 0);
+
+            yield return null; // 다음 프레임까지 대기
+        }
+    }
 /// <summary>
-/// 결승선 화살표가 위아래로 부드럽게 움직이는 애니메이션을 처리하는 코루틴입니다.
+/// 결승선 화살표를 자연스럽게 작아지며 사라지게 하는 코루틴입니다.
 /// </summary>
-/// <param name="arrow">애니메이션을 적용할 화살표 게임 오브젝트</param>
-private IEnumerator AnimateFinishArrow(GameObject arrow)
+/// <param name="arrow">사라지게 할 화살표 게임 오브젝트</param>
+private IEnumerator DisappearFinishArrow(GameObject arrow)
 {
     if (arrow == null) yield break;
 
-    Vector3 startPosition = arrow.transform.position;
-    // 각 화살표 애니메이션 시작 타이밍을 다르게 하여 단조로움을 피합니다.
-    float randomOffset = Random.Range(0f, 2f * Mathf.PI); 
+    Vector3 initialScale = arrow.transform.localScale;
+    float duration = 1.5f; // 사라지는 데 걸리는 시간
+    float elapsedTime = 0f;
 
-    // 화살표가 파괴(Destroy)되기 전까지 무한 반복
-    while (arrow != null) 
+    while (elapsedTime < duration)
     {
-        // Sin 함수를 이용해 부드러운 상하 움직임(Bobbing) 생성
-        float yOffset = Mathf.Sin((Time.time + randomOffset) * arrowBobSpeed) * arrowBobAmount;
-        arrow.transform.position = startPosition + new Vector3(0, yOffset, 0);
-        
-        yield return null; // 다음 프레임까지 대기
+        // 시간이 지남에 따라 스케일을 0으로 만듭니다.
+        arrow.transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, elapsedTime / duration);
+        elapsedTime += Time.deltaTime;
+        yield return null;
     }
-}
 
-// ... (다른 헬퍼 메서드들) ...
+    // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
+    Destroy(arrow);
+}
+    // ... (다른 헬퍼 메서드들) ...
     /// <summary>
     /// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
     /// </summary>
