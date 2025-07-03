@@ -242,66 +242,92 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     }
 
     // 포식자의 수색 행동
-    private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastSeenPosition)
+    // 포식자의 수색 행동
+private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastSeenPosition)
+{
+    Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 주변을 수색합니다.");
+    
+    var predatorAnim = predator.GetComponent<PetAnimationController>();
+    
+    // 먼저 놀라는 동작
+    yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
+        PetAnimationController.PetAnimationType.Jump, 1f, true, false));
+
+    // 주변을 돌아다니며 찾기
+    predator.agent.isStopped = false;
+    predator.agent.speed = predator.baseSpeed * 0.7f;
+    predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+    float searchTime = 0f;
+    int searchPoints = 3;
+
+    for (int i = 0; i < searchPoints; i++)
     {
-        Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 주변을 수색합니다.");
-        
-        var predatorAnim = predator.GetComponent<PetAnimationController>();
-        
-        // 먼저 놀라는 동작
-        yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 1f, true, false));
+        // 랜덤한 수색 지점 생성
+        Vector2 randomCircle = Random.insideUnitCircle * confusionSearchRadius;
+        Vector3 searchTarget = lastSeenPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
 
-        // 주변을 돌아다니며 찾기
-        predator.agent.isStopped = false;
-        predator.agent.speed = predator.baseSpeed * 0.7f;
-        predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-
-        float searchTime = 0f;
-        int searchPoints = 3;
-
-        for (int i = 0; i < searchPoints; i++)
+        if (NavMesh.SamplePosition(searchTarget, out NavMeshHit hit, confusionSearchRadius * 1.5f, NavMesh.AllAreas))
         {
-            // 랜덤한 수색 지점 생성
-            Vector2 randomCircle = Random.insideUnitCircle * confusionSearchRadius;
-            Vector3 searchTarget = lastSeenPosition + new Vector3(randomCircle.x, 0, randomCircle.y);
+            predator.agent.SetDestination(hit.position);
 
-            if (NavMesh.SamplePosition(searchTarget, out NavMeshHit hit, confusionSearchRadius * 1.5f, NavMesh.AllAreas))
+            // 목적지 도착까지 대기
+            while (!predator.agent.pathPending && predator.agent.remainingDistance > 0.5f)
             {
-                predator.agent.SetDestination(hit.position);
-
-                // 목적지 도착까지 대기
-                while (!predator.agent.pathPending && predator.agent.remainingDistance > 0.5f)
-                {
-                    predator.HandleRotation();
-                    yield return null;
-                }
-
-                // 도착 후 주변을 둘러봄
-                predator.agent.isStopped = true;
-                predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-                
-                // 좌우로 회전하며 찾기
-                float lookDuration = 1.5f;
-                float lookTimer = 0f;
-                Quaternion startRotation = predator.transform.rotation;
-
-                while (lookTimer < lookDuration)
-                {
-                    float angle = Mathf.Sin(lookTimer * 3f) * 60f;
-                    predator.transform.rotation = startRotation * Quaternion.Euler(0, angle, 0);
-                    
-                    lookTimer += Time.deltaTime;
-                    yield return null;
-                }
-
-                predator.agent.isStopped = false;
+                predator.HandleRotation();
+                yield return null;
             }
-        }
 
-        predator.agent.isStopped = true;
-        predatorAnim.StopContinuousAnimation();
+            // ▼▼▼ [수정된 부분] 도착 후에도 계속 걸으면서 주변을 둘러봄 ▼▼▼
+            // 도착 지점에서 작은 원을 그리며 수색
+            float circleSearchDuration = 1.5f;
+            float circleTimer = 0f;
+            float circleRadius = 2f;
+            Vector3 centerPoint = predator.transform.position;
+
+            while (circleTimer < circleSearchDuration)
+            {
+                // 원형 경로 계산
+                float angle = (circleTimer / circleSearchDuration) * 360f * Mathf.Deg2Rad;
+                Vector3 circlePoint = centerPoint + new Vector3(
+                    Mathf.Sin(angle) * circleRadius,
+                    0,
+                    Mathf.Cos(angle) * circleRadius
+                );
+
+                // NavMesh 상의 유효한 위치 찾기
+                if (NavMesh.SamplePosition(circlePoint, out NavMeshHit circleHit, circleRadius, NavMesh.AllAreas))
+                {
+                    predator.agent.SetDestination(circleHit.position);
+                }
+
+                circleTimer += Time.deltaTime;
+                yield return null;
+            }
+            // ▲▲▲ [여기까지 수정] ▲▲▲
+        }
     }
+
+    // 마지막에 제자리에서 한 번 더 둘러보기
+    predator.agent.isStopped = true;
+    predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+    
+    // 360도 회전하며 마지막 확인
+    float finalLookDuration = 2f;
+    float finalLookTimer = 0f;
+    Quaternion startRotation = predator.transform.rotation;
+
+    while (finalLookTimer < finalLookDuration)
+    {
+        float rotationProgress = finalLookTimer / finalLookDuration;
+        predator.transform.rotation = startRotation * Quaternion.Euler(0, rotationProgress * 360f, 0);
+        
+        finalLookTimer += Time.deltaTime;
+        yield return null;
+    }
+
+    predatorAnim.StopContinuousAnimation();
+}
 
     // 개선된 떠나기 단계
     private IEnumerator ImprovedLeavePhase(PetController predator, PetController chameleon)
