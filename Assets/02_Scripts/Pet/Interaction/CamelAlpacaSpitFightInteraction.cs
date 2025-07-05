@@ -11,15 +11,19 @@ using UnityEngine.AI;
 public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 {
     public override string InteractionName => "CamelAlpacaSpitFight";
+ // ▼▼▼ 이 부분을 클래스 상단에 추가해주세요 ▼▼▼
+    [Header("Fine-Tuning Settings")]
+    [Tooltip("침 발사 위치를 펫의 앞쪽으로 미세 조정합니다. (단위: 미터)")]
+    public float spitForwardOffset = 0.5f;
 
-    // =================================================================
-    // ▼▼▼ [수정됨] 인스펙터에서 조절 가능한 설정 변수들 ▼▼▼
-    // =================================================================
+    [Tooltip("침 발사 위치를 위아래로 미세 조정합니다. (단위: 미터)")]
+    public float spitUpwardOffset = 0.0f;
     [Header("Visual Effects")]
-    [Tooltip("침 뱉기 효과로 사용될 프리팹입니다. (파티클 시스템 등)")]
-    public GameObject spitPrefab;
-    [Tooltip("침에 맞았을 때 표시될 효과 프리팹입니다.")]
-    public GameObject hitEffectPrefab;
+    [Tooltip("침을 뱉을 때 입에서 발사되는 효과 프리팹입니다.")]
+    public GameObject spitEmissionPrefab; // spitPrefab -> spitEmissionPrefab 으로 이름 변경
+    [Tooltip("침에 맞았을 때 몸에서 나타나는 피격 효과 프리팹입니다.")]
+    public GameObject spitHitPrefab;      // hitEffectPrefab -> spitHitPrefab 으로 이름 변경
+
 
     [Header("Fight Settings")]
     [Tooltip("싸움을 시작할 때 두 펫 사이의 거리입니다.")]
@@ -130,35 +134,29 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         yield return new WaitForSeconds(1.0f);
     }
 
-    /// <summary>
-    /// 2. 침 뱉기 공방을 주고받는 단계
-    /// </summary>
+   
+    // SpitExchangePhase 코루틴에서 코루틴 호출 부분만 수정합니다.
     private IEnumerator SpitExchangePhase(PetController camel, PetController alpaca)
     {
         Debug.Log($"[{InteractionName}] 2단계: 침 뱉기 공방");
 
         for (int i = 0; i < spitRounds; i++)
         {
-            // 번갈아 가며 공격
             PetController attacker = (i % 2 == 0) ? camel : alpaca;
             PetController target = (attacker == camel) ? alpaca : camel;
 
             Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 공격!");
 
-            // 공격 애니메이션
             yield return StartCoroutine(attacker.GetComponent<PetAnimationController>()
                 .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, attackAnimationDuration, true, false));
 
-            // 침 발사
-            StartCoroutine(SpitProjectileCoroutine(attacker, target));
+            // ▼▼▼ [수정] 호출하는 코루틴 이름 변경 ▼▼▼
+            StartCoroutine(SpitEffectCoroutine(attacker, target));
 
-            // 잠시 후 타겟 반응
             yield return new WaitForSeconds(spitTravelDuration);
 
-            // 확률적으로 회피 또는 피격
             if (Random.value < dodgeChance)
             {
-                // 회피 성공
                 Debug.Log($"[{InteractionName}] {target.petName}이(가) 공격을 회피했습니다!");
                 target.ShowEmotion(EmotionType.Happy, 2f);
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
@@ -166,17 +164,13 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             }
             else
             {
-                // 피격
                 Debug.Log($"[{InteractionName}] {target.petName}이(가) 침에 맞았습니다!");
-                if (hitEffectPrefab != null)
-                {
-                    Instantiate(hitEffectPrefab, GetPetHeadPosition(target), Quaternion.identity);
-                }
+                // 피격 효과 생성은 이제 SpitEffectCoroutine이 담당하므로 여기서 생성 코드를 제거합니다.
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, damageAnimationDuration, true, false));
             }
 
-            yield return new WaitForSeconds(1.0f); // 다음 턴을 위한 딜레이
+            yield return new WaitForSeconds(1.0f);
         }
     }
 
@@ -205,43 +199,131 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 
     #region Helper Coroutines & Methods
 
-    /// <summary>
-    /// 침 발사체를 생성하고 목표를 향해 포물선으로 날려 보내는 코루틴
+      /// <summary>
+    /// 침 뱉기 효과 (발사 및 피격)를 순차적으로 재생하는 코루틴입니다.
     /// </summary>
-    private IEnumerator SpitProjectileCoroutine(PetController attacker, PetController target)
+    private IEnumerator SpitEffectCoroutine(PetController attacker, PetController target)
     {
-        if (spitPrefab == null)
+        // 1. 발사 효과 재생
+        if (spitEmissionPrefab != null)
         {
-            Debug.LogWarning("[CamelAlpacaSpitFight] 침 프리팹이 할당되지 않았습니다.");
-            yield break;
+             // ▼▼▼ 이 부분을 수정합니다 ▼▼▼
+        // 1순위: 'SpitOrigin' 오브젝트를 먼저 찾습니다.
+        Transform spitOrigin = FindDeepChild(attacker.petModelTransform, "SpitOrigin");
+
+        // 2순위: 'SpitOrigin'이 없으면 기존 방식대로 'Head'를 찾습니다. (하위 호환성)
+        if (spitOrigin == null)
+        {
+            spitOrigin = FindDeepChild(attacker.petModelTransform, "Head", "Head_M");
+        }
+        // ▲▲▲ 여기까지 수정 ▲▲▲
+   // ▼▼▼ 이 부분을 아래와 같이 수정합니다 ▼▼▼
+
+            // 1. 기본 위치를 먼저 계산합니다.
+            Vector3 basePosition = (spitOrigin != null) ? spitOrigin.position : GetApproximateHeadPosition(attacker);
+
+            // 2. 펫의 앞쪽(forward)과 위쪽(up) 방향을 기준으로 오프셋을 적용한 최종 위치를 계산합니다.
+            Vector3 finalEmissionPosition = basePosition
+                                          + (attacker.transform.forward * spitForwardOffset)
+                                          + (attacker.transform.up * spitUpwardOffset);
+
+            // 3. 타겟 위치는 오프셋 없이 그대로 계산합니다. (타격 효과는 정확한 위치에 맞아야 하므로)
+            Transform targetHead = FindDeepChild(target.petModelTransform, "SpitOrigin", "Head", "Head_M");
+            Vector3 targetPosition = (targetHead != null) ? targetHead.position : GetApproximateHeadPosition(target);
+
+            // 4. 최종 계산된 위치에서 프리팹을 생성합니다.
+            Quaternion rotationTowardsTarget = Quaternion.LookRotation(targetPosition - finalEmissionPosition);
+            Instantiate(spitEmissionPrefab, finalEmissionPosition, rotationTowardsTarget);
+
+            // ▲▲▲ 여기까지 수정 ▲▲▲
         }
 
-        Vector3 startPos = GetPetHeadPosition(attacker);
-        GameObject spitInstance = Instantiate(spitPrefab, startPos, Quaternion.identity);
+        // 2. 침이 날아가는 시간 동안 대기
+        yield return new WaitForSeconds(spitTravelDuration);
 
-        float elapsedTime = 0f;
-        while (elapsedTime < spitTravelDuration)
+        // 3. 피격 효과 재생
+        if (spitHitPrefab != null)
         {
-            if (target == null || spitInstance == null) break;
+            // "Head" 또는 "Head_M" 이름의 오브젝트를 찾아 그 위치를 피격 지점으로 사용
+            Transform targetHead = FindDeepChild(target.petModelTransform, "Head", "Head_M");
+            Vector3 hitPosition = (targetHead != null) ? targetHead.position : GetApproximateHeadPosition(target);
 
-            Vector3 targetPos = GetPetHeadPosition(target);
-            float t = elapsedTime / spitTravelDuration;
-
-            // 포물선 궤적 계산
-            Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
-            currentPos.y += Mathf.Sin(t * Mathf.PI) * 1.5f; // 위로 볼록한 포물선
-
-            spitInstance.transform.position = currentPos;
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        if (spitInstance != null)
-        {
-            Destroy(spitInstance);
+            Instantiate(spitHitPrefab, hitPosition, Quaternion.identity);
         }
     }
 
+    // ▼▼▼ 디버깅을 위해 이 헬퍼 함수를 클래스 내부에 추가해주세요 ▼▼▼
+    /// <summary>
+    /// 디버깅을 위해 오브젝트의 전체 경로를 반환하는 헬퍼 함수입니다.
+    /// </summary>
+    private string GetFullPath(Transform obj)
+    {
+        if (obj == null) return "null";
+        string path = obj.name;
+        while (obj.parent != null)
+        {
+            obj = obj.parent;
+            path = obj.name + "/" + path;
+        }
+        return path;
+    }
+
+    // ▼▼▼ [수정] FindDeepChild 헬퍼 메서드를 아래 코드로 교체합니다. ▼▼▼
+    /// <summary>
+    /// 부모 Transform 아래에서 여러 후보 이름 중 하나와 일치하는 자식을 재귀적으로 탐색합니다.
+    /// (수정: 여러 개의 이름을 대소문자 구분 없이 검색)
+    /// </summary>
+    /// <param name="parent">검색을 시작할 부모 Transform</param>
+    /// <param name="childNames">찾고자 하는 자식의 이름들 (가변 인자)</param>
+    /// <returns>가장 먼저 찾은 자식의 Transform. 없으면 null을 반환합니다.</returns>
+    private Transform FindDeepChild(Transform parent, params string[] childNames)
+    {
+        if (parent == null || childNames == null || childNames.Length == 0) return null;
+
+        foreach (Transform child in parent)
+        {
+            // 여러 후보 이름들과 대소문자 구분 없이 비교
+            foreach (string name in childNames)
+            {
+                if (string.Equals(child.name, name, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return child;
+                }
+            }
+            
+            // 자식의 자식들을 계속해서 재귀적으로 탐색
+            Transform result = FindDeepChild(child, childNames);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return null;
+    }
+
+
+   // 'Head' 오브젝트를 찾지 못했을 경우, 콜라이더 기반으로 머리 위치를 추정하는 폴백(Fallback) 메서드입니다.
+    // 기존 GetApproximateHeadPosition 메서드를 아래 코드로 교체하세요.
+    private Vector3 GetApproximateHeadPosition(PetController pet)
+    {
+        Debug.LogWarning($"[{InteractionName}] {pet.petName}에게서 'Head' 오브젝트를 찾지 못해 위치를 추정합니다. 콜라이더 기준으로 위치를 계산합니다.");
+
+        Collider petCollider = pet.GetComponent<Collider>();
+        if (petCollider == null)
+        {
+            // 콜라이더도 없으면 기존 방식 사용
+            float headHeight = 2.0f; // 기본 높이값
+            return pet.transform.position + new Vector3(0, headHeight, 0);
+        }
+
+        // 콜라이더의 최상단 지점을 머리 위치로 추정합니다.
+        // bounds.center는 월드 좌표 기준 중심점, bounds.extents는 중심점에서 각 축 방향으로의 거리입니다.
+        Vector3 colliderTop = petCollider.bounds.center + new Vector3(0, petCollider.bounds.extents.y, 0);
+        
+        return colliderTop;
+    }
+
+    
     /// <summary>
     /// 펫의 머리 위치를 근사치로 계산하여 반환합니다.
     /// </summary>

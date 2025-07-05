@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &782391302954439461
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3338631931119207020}
+  m_Layer: 0
+  m_Name: SpitOrigin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3338631931119207020
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782391302954439461}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.00000008022428, y: 0.00000003949205, z: 0.2870032, w: 0.9579296}
+  m_LocalPosition: {x: -0.012, y: -0.008, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4326924793833804008}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 33.357}
 --- !u!1 &2282616163528303381
 GameObject:
   m_ObjectHideFlags: 0
@@ -456,6 +487,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4326840107307421930}
+  - {fileID: 3338631931119207020}
   m_Father: {fileID: 4328880635483711572}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4324969165502967374
