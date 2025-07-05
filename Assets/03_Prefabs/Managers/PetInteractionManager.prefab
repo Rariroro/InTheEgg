@@ -1,0 +1,312 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2467958684987732154
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 827167919512837388}
+  - component: {fileID: 4742783998805812491}
+  - component: {fileID: 8725958695995782689}
+  - component: {fileID: 6959870823518834375}
+  - component: {fileID: 3025539853523940695}
+  - component: {fileID: 3187550607678264085}
+  - component: {fileID: 7246258253471485686}
+  - component: {fileID: 8302942696172399085}
+  - component: {fileID: 3519600362333018034}
+  - component: {fileID: 8675128646022363562}
+  - component: {fileID: 2259833658653770083}
+  - component: {fileID: 1316880638540538685}
+  - component: {fileID: 6070321350143443558}
+  - component: {fileID: 170415677176557274}
+  - component: {fileID: 7653345076997508574}
+  m_Layer: 0
+  m_Name: PetInteractionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &827167919512837388
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.91214347, y: 0.06196672, z: -0.17119673, w: 0.36721414}
+  m_LocalPosition: {x: -129.74571, y: 19.39822, z: -37.71538}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4742783998805812491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 535efcbe4da6549039d1fadad4e8be6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionDistance: 30
+  interactionCooldown: 30
+  interactionCheckInterval: 0.5
+  maxChecksPerFrame: 10
+  gridCellSize: 20
+  startDelay: 3
+--- !u!114 &8725958695995782689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7acddc318c3684e13ab9c75aac534a04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  transparentMaterial: {fileID: 2100000, guid: 5004f3067f3dd44b888b888e23f734f2, type: 2}
+  camouflageTriggerDistance: 8
+  camouflageDuration: 5
+  predatorConfusionDuration: 4
+  predatorGiveUpDelay: 2
+  predatorApproachSpeedMultiplier: 1.5
+  predatorLeaveDistance: 30
+  safeDistanceForChameleon: 15
+  confusionSearchRadius: 10
+  fadeOutDuration: 1.5
+  fadeInDuration: 1
+  agentSafetyTimeout: 3
+--- !u!114 &6959870823518834375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a20d8eb55422a4998b9f6bccc69030e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &3025539853523940695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdc075d206e6f4b50a519f421936d6c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &3187550607678264085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e6ab4feaec40404a9f1719cc4bd08a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &7246258253471485686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e18ea835d86434bd0ae5ad635efb5887, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &8302942696172399085
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4a889d0242db4b71b11541c8a1ea0ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &3519600362333018034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12ab85782d3fd4a2daef438df1098719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  finishArrowPrefab: {fileID: 1168235394157182659, guid: 627040b6b0e8b4f408e054e5bf31bb3b, type: 3}
+  arrowHeight: 5
+  arrowBobSpeed: 2
+  arrowBobAmount: 1
+  raceDistance: 100
+  minRaceDistance: 80
+  raceTimeoutSeconds: 180
+  rabbitStartSpeedMultiplier: 3.5
+  rabbitNapProgress: 0.446
+  rabbitFinalSprintSpeedMultiplier: 3
+  turtleSpeedMultiplier: 1
+  turtleWakeUpProgress: 0.9
+  agentSafetyTimeout: 3
+  finishLineSpread: 5
+  stuckDetectionTime: 3
+  detourRadius: 8
+  arrowDisappearDistance: 15
+  rabbitSlowDownDuration: 0.75
+  rabbitMinSpeedBeforeSleep: 0.5
+--- !u!114 &8675128646022363562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb6176dd45af94e558d6ea145c5222b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &2259833658653770083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fb4a3194556946088c033db073277a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+--- !u!114 &1316880638540538685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1636d050a7bc4c7b8ad400f46413928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  meetingDistance: 5
+  ridePositionOffset: {x: 0, y: 1.7, z: 0.2}
+  mountDuration: 1
+  walkTogetherDuration: 40
+  pathUpdateInterval: 15
+  walkingSpeedMultiplier: 0.9
+  farewellDistance: 6
+  agentSafetyTimeout: 3
+--- !u!114 &6070321350143443558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07e5f97a3080549c7ba891eb112e88b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  finishLinePrefab: {fileID: 1168235394157182659, guid: 627040b6b0e8b4f408e054e5bf31bb3b, type: 3}
+  markerHeightOffset: 5
+  markerBobSpeed: 2
+  markerBobAmount: 0.5
+  raceDistance: 60
+  minRaceDistance: 50
+  raceTimeoutSeconds: 120
+  finishLineSpread: 2
+  slothSpeedMultiplier: 0.45
+  koalaSpeedMultiplier: 0.45
+  maxSpectators: 2
+  spectatorSearchRadius: 50
+  boredomTimePhase1: 8
+  boredomTimePhase2: 20
+  markerDisappearDistance: 10
+--- !u!114 &170415677176557274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c08b30c682bb4b15b2410478675af70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  catchDistance: 5
+  maxChaseTime: 10
+  predatorChaseSpeedMultiplier: 2.5
+  moleEscapeSpeedMultiplier: 1
+  burrowDepth: 2
+  burrowAnimationTime: 1
+  emergeAnimationTime: 1.5
+  predatorDigTime: 3
+  safeDistanceForMole: 15
+  predatorLeaveDistance: 15
+  agentSafetyTimeout: 3
+  lookAroundDuration: 2
+  moleRotationSpeed: 100
+--- !u!114 &7653345076997508574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2467958684987732154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3f9abfcacf74f7994f2e489d775388, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 15
+  sleepSpotRadius: 4
+  prankApproachDistance: 4
+  predatorSleepDuration: 5
+  playDeadDuration: 10
+  predatorInspectDuration: 3
+  predatorLeaveDistance: 15
+  prankAnimationDuration: 2.5
+  wakeUpAnimationDuration: 1.5
+  angryAnimationDuration: 2
+  celebrationDuration: 2
+  agentSafetyTimeout: 3
