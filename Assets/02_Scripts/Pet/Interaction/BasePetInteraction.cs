@@ -370,6 +370,14 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
     }
     // ▼▼▼ [추가] 두 펫이 서로를 부드럽게 바라보게 하는 새로운 헬퍼 메서드 추가 ▼▼▼
+   // BasePetInteraction.cs 클래스 내부에 아래 코루틴을 새로 추가합니다.
+
+    /// <summary>
+    /// 지정된 시간 동안 두 펫이 서로를 부드럽게 바라보도록 회전시킵니다.
+    /// </summary>
+    /// <param name="pet1">첫 번째 펫</param>
+    /// <param name="pet2">두 번째 펫</param>
+    /// <param name="duration">회전에 걸리는 시간 (초)</param>
     protected IEnumerator SmoothlyLookAtEachOther(PetController pet1, PetController pet2, float duration = 0.5f)
     {
         if (pet1 == null || pet2 == null) yield break;
@@ -389,14 +397,21 @@ public abstract class BasePetInteraction : MonoBehaviour
             // Slerp를 사용하여 부드럽게 회전
             pet1.transform.rotation = Quaternion.Slerp(pet1StartRotation, pet1TargetRotation, t);
             pet2.transform.rotation = Quaternion.Slerp(pet2StartRotation, pet2TargetRotation, t);
+            
+            // 모델도 함께 회전
+            if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = pet1.transform.rotation;
+            if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = pet2.transform.rotation;
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        // 최종 회전값으로 설정
+        // 최종 회전값으로 정확하게 설정
         pet1.transform.rotation = pet1TargetRotation;
         pet2.transform.rotation = pet2TargetRotation;
+        
+        if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = pet1.transform.rotation;
+        if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = pet2.transform.rotation;
     }
     // ▲▲▲ [여기까지 추가] ▲▲▲
     // 새로 추가된 메서드 - NavMeshAgent가 준비되었는지 확인
