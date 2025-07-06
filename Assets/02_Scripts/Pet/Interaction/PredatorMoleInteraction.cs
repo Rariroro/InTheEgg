@@ -12,7 +12,7 @@ public class PredatorMoleInteraction : BasePetInteraction
 
     [Header("Chase Settings")]
     [Tooltip("포식자가 두더지에게 접근했다고 판단하는 거리")]
-    public float catchDistance = 3.0f;
+    public float catchDistance = 5.0f;
     
     [Tooltip("추격 최대 시간 (초)")]
     public float maxChaseTime = 10f;
@@ -52,6 +52,10 @@ public class PredatorMoleInteraction : BasePetInteraction
     
     [Tooltip("두더지가 회전하는 속도")]
     public float moleRotationSpeed = 100f;
+      // ▼▼▼ [추가] 이 부분을 클래스 상단 변수 선언 영역에 추가합니다. ▼▼▼
+    [Tooltip("두더지가 땅을 팔 때 생성될 먼지 파티클 프리팹입니다.")]
+    public GameObject burrowParticlePrefab;
+    // ▲▲▲ [여기까지 추가] ▲▲▲
 
     // 상호작용 타입 결정
     protected override InteractionType DetermineInteractionType()
@@ -256,14 +260,39 @@ public class PredatorMoleInteraction : BasePetInteraction
         yield return StartCoroutine(moleAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Damage, 0.5f, false, false));
     }
+ // ▼▼▼ [추가] 이 코루틴을 PredatorMoleInteraction 클래스 내부에 추가합니다. ▼▼▼
+    /// <summary>
+    /// 지정된 시간 동안 여러 개의 흙먼지 파티클을 연속으로 생성합니다.
+    /// </summary>
+    /// <param name="position">파티클이 생성될 위치</param>
+    private IEnumerator SpawnBurrowParticles(Vector3 position)
+    {
+        if (burrowParticlePrefab == null)
+        {
+            yield break; // 프리팹이 없으면 실행하지 않음
+        }
 
+        int particleCount = 7; // 생성할 파티클 개수 (이 값을 조절하세요)
+        float totalDuration = 2.3f; // 총 몇 초에 걸쳐 생성할지 (이 값을 조절하세요)
+        float delay = totalDuration / particleCount;
+
+        for (int i = 0; i < particleCount; i++)
+        {
+            // 약간의 무작위 위치를 추가하여 더 자연스럽게 만듭니다.
+            Vector3 randomOffset = new Vector3(Random.Range(-0.2f, 0.2f), 0, Random.Range(-0.2f, 0.2f));
+            Instantiate(burrowParticlePrefab, position + randomOffset, Quaternion.identity);
+            yield return new WaitForSeconds(delay);
+        }
+    }
+    // ▲▲▲ [여기까지 추가] ▲▲▲
     // 3. 두더지 숨기 단계
     private IEnumerator BurrowPhase(PetController mole)
     {
         Debug.Log($"[PredatorMoleHunt] 3단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
 
         Vector3 burrowPosition = mole.transform.position;
-        
+              StartCoroutine(SpawnBurrowParticles(burrowPosition));
+
         // NavMeshAgent 비활성화
         mole.agent.enabled = false;
 
@@ -580,6 +609,7 @@ private IEnumerator FinalDigAttempt(PetController predator, Vector3 burrowPositi
         if (!_moleIsHidden) yield break;
 
         Debug.Log($"[PredatorMoleHunt] 6단계: {mole.petName}이(가) 땅에서 나옵니다.");
+    StartCoroutine(SpawnBurrowParticles(burrowPosition));
 
         // 원래 위치로 이동
         Vector3 hiddenPosition = mole.transform.position;
