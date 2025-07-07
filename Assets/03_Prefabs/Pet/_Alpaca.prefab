@@ -125,6 +125,7 @@ MonoBehaviour:
   hunger: 0
   sleepiness: 0
   petName: "\uC54C\uD30C\uCE74"
+  emotionOrigin: {fileID: 0}
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
@@ -154,7 +155,7 @@ MonoBehaviour:
   isAttractedToEnvironment: 0
   environmentTargetPosition: {x: 0, y: 0, z: 0}
   hungerIncreaseRate: 0.2
-  sleepinessIncreaseRate: 0.1
+  sleepinessIncreaseRate: 0.5
   isExhausted: 0
 --- !u!195 &1791055125857311120
 NavMeshAgent:
