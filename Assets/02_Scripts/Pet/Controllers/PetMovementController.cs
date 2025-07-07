@@ -60,11 +60,12 @@ public class PetMovementController : MonoBehaviour
         petController = controller;
 
         // 서브 컨트롤러 초기화
-        treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
-        treeClimbingController.Init(controller);
+        // treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
+        // treeClimbingController.Init(controller);
 
         // waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
         // waterBehaviorController.Init(controller);
+    treeClimbingController = GetComponent<PetTreeClimbingController>();
 
         InitializePersonalityBehavior();
         StartCoroutine(DelayedStart());
@@ -186,9 +187,14 @@ public class PetMovementController : MonoBehaviour
     // 나무 타기 강제 취소 (외부 호출용)
     public void ForceCancelClimbing()
     {
+            // treeClimbingController가 null일 수 있으므로 안전 확인 절차를 추가합니다.
+    if (treeClimbingController != null)
+    {
         treeClimbingController.ForceCancelClimbing();
-        currentBehaviorState = BehaviorState.Idle;
-        behaviorTimer = 0f;
+    }
+    currentBehaviorState = BehaviorState.Idle;
+    behaviorTimer = 0f;
+
     }
 
     // 행동 전환 시 호출

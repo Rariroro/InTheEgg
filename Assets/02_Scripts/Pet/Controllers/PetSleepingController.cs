@@ -155,6 +155,8 @@ public class PetSleepingController : MonoBehaviour
         try
         {
             Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
+  // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
+            petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
 
             // 수면 애니메이션 재생
             yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, false, false);
@@ -232,21 +234,21 @@ public class PetSleepingController : MonoBehaviour
     {
         isSleeping = true;
         petController.StopMovement();
-
+ // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
+        petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
         // 수면 애니메이션 재생
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
 
         if (isProperArea)
         {
             petController.sleepiness = 0f; // 완전 회복
+            petController.ShowEmotion(EmotionType.Happy, 3f);
         }
         else
         {
             petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 불완전 회복
+            petController.ShowEmotion(EmotionType.Happy, 3f); // 불편하게 잤어도 일단은 감정 표시
         }
-
-        petController.ShowEmotion(EmotionType.Happy, 3f);
-
         // 상태 초기화 및 이동 재개
         targetSleepingArea = null;
         isSleeping = false;
@@ -257,17 +259,23 @@ public class PetSleepingController : MonoBehaviour
     /// <summary>
     /// 너무 졸려서 현재 위치에서 강제로 잠듭니다. (피로 불완전 회복)
     /// </summary>
-    private IEnumerator ForceSleepAtCurrentLocation()
+      private IEnumerator ForceSleepAtCurrentLocation()
     {
         isSleeping = true;
         petController.StopMovement();
 
         Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
+
+        // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
+        petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
+
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
 
         // 불완전 회복
         petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f);
-        petController.ShowEmotion(EmotionType.Sleepy, 3f);
+        // ▼▼▼ [수정] 잠에서 깬 후에는 'Happy' 감정 표시 ▼▼▼
+        petController.ShowEmotion(EmotionType.Happy, 3f);
+
 
         // 상태 초기화
         isSleeping = false;

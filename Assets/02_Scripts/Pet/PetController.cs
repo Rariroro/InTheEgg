@@ -74,7 +74,10 @@ public class PetController : MonoBehaviour
     [Header("Pet Information")]
     public string petName = "Buddy";
     public DateTime birthday = default;
-
+  // ▼▼▼ [수정] 이 부분을 추가합니다 ▼▼▼
+    [Tooltip("감정 표현(이모티콘, 파티클)이 생성될 기준 위치입니다. 비워두면 자식 중 'EmotionOrigin'을 자동으로 찾습니다.")]
+    public Transform emotionOrigin;
+    // ▲▲▲ 여기까지 추가 ▲▲▲
     // 공용 컴포넌트
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator animator;
@@ -100,6 +103,12 @@ public class PetController : MonoBehaviour
     private PetTreeClimbingController treeClimbingController;
     // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
+
+ // ▼▼▼ [추가] 졸음 이모티콘 간헐적 표시를 위한 변수 ▼▼▼
+    private float _sleepyEmotionTimer = 0f;
+    private const float SLEEPY_EMOTION_INTERVAL = 10f; // 10초마다 졸음 표현을 시도합니다.
+    private const float SLEEPY_EMOTION_CHANCE = 0.3f;  // 30% 확률로 졸음 이모티콘을 표시합니다.
+    // ▲▲▲ [여기까지 추가] ▲▲▲
 
     [Header("Pet Type")]
     [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
@@ -153,7 +162,22 @@ public class PetController : MonoBehaviour
     private void Awake()
     {
         birthday = DateTime.Now;
+  // ▼▼▼ [수정] 이 부분을 Awake() 메서드 상단에 추가합니다. ▼▼▼
 
+        // 1. EmotionOrigin 자동 탐색
+        // 인스펙터에서 수동으로 emotionOrigin을 할당하지 않은 경우에만 자동 탐색을 시도합니다.
+        if (emotionOrigin == null)
+        {
+            // petModelTransform이 있으면 그 자식들 안에서 먼저 찾고, 없으면 전체 자식에서 찾습니다.
+            Transform rootToSearch = petModelTransform != null ? petModelTransform : transform;
+            emotionOrigin = FindDeepChild(rootToSearch, "EmotionOrigin");
+
+            if (emotionOrigin != null)
+            {
+                // Debug.Log($"{petName}: 자식 오브젝트에서 'EmotionOrigin'을 자동으로 찾아 할당했습니다.");
+            }
+        }
+        // ▲▲▲ 여기까지 추가 ▲▲▲
         // NavMeshAgent 초기화
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
@@ -175,32 +199,51 @@ public class PetController : MonoBehaviour
             baseStoppingDistance = stoppingDistance;
         }
 
-        // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
-        if (transform.childCount > 0)
-        {
-            petModelTransform = transform.GetChild(0);
-        }
-        if (petModelTransform == null)
-        {
-            Renderer renderer = GetComponentInChildren<Renderer>();
-            if (renderer != null)
-                petModelTransform = renderer.transform;
-        }
-        if (petModelTransform == null)
-        {
-            // Debug.LogWarning("Pet model not found. The pet may not display correctly.");
-        }
+        // // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
+        // if (transform.childCount > 0)
+        // {
+        //     petModelTransform = transform.GetChild(0);
+        // }
+        // if (petModelTransform == null)
+        // {
+        //     Renderer renderer = GetComponentInChildren<Renderer>();
+        //     if (renderer != null)
+        //         petModelTransform = renderer.transform;
+        // }
+        // if (petModelTransform == null)
+        // {
+        //     // Debug.LogWarning("Pet model not found. The pet may not display correctly.");
+        // }
 
-        // Animator 컴포넌트 획득
-        if (petModelTransform != null)
+        // // Animator 컴포넌트 획득
+        // if (petModelTransform != null)
+        // {
+        //     animator = petModelTransform.GetComponent<Animator>();
+        //     if (animator == null)
+        //     {
+        //         // Debug.LogWarning("Animator component not found on the pet model.");
+        //     }
+        // }
+   // [새로운 안정적인 코드]
+        // 1. 자식 오브젝트 중에서 Animator 컴포넌트를 직접 찾습니다.
+        animator = GetComponentInChildren<Animator>();
+
+        // 2. Animator를 성공적으로 찾았다면,
+        if (animator != null)
         {
-            animator = petModelTransform.GetComponent<Animator>();
-            if (animator == null)
+            // Animator가 붙어있는 트랜스폼을 petModelTransform으로 확정합니다.
+            petModelTransform = animator.transform;
+        }
+        // 3. Animator를 찾지 못했을 경우에 대한 예외 처리
+        else
+        {
+            Debug.LogWarning($"[PetController] {this.gameObject.name}에서 Animator 컴포넌트를 찾을 수 없습니다! 애니메이션이 작동하지 않습니다.");
+            // Animator가 없다면, 모델이라도 찾으려는 시도를 할 수 있습니다. (선택사항)
+            if (transform.childCount > 0)
             {
-                // Debug.LogWarning("Animator component not found on the pet model.");
+                petModelTransform = transform.GetChild(0);
             }
         }
-
         // 인스펙터에서 수동으로 설정하지 않았을 경우에만 자동 감지 실행
         if (!manuallySetPetType)
         {
@@ -364,9 +407,49 @@ public class PetController : MonoBehaviour
         if (sleepingController != null && !sleepingController.IsSleepingOrSeeking())
         {
             sleepiness = Mathf.Clamp(sleepiness + sleepinessIncreaseRate * Time.deltaTime, 0f, 100f);
+
+            // ▼▼▼ [추가] 졸릴 때 간헐적으로 감정 표현 ▼▼▼
+            if (sleepiness >= 70f)
+            {
+                _sleepyEmotionTimer += Time.deltaTime;
+                if (_sleepyEmotionTimer >= SLEEPY_EMOTION_INTERVAL)
+                {
+                    if (UnityEngine.Random.value < SLEEPY_EMOTION_CHANCE)
+                    {
+                        ShowEmotion(EmotionType.Sleepy, 2f); // 2초간 '졸림' 표시
+                    }
+                    _sleepyEmotionTimer = 0f; // 타이머 초기화
+                }
+            }
+            // ▲▲▲ [여기까지 추가] ▲▲▲
         }
     }
 
+    // ▼▼▼ [수정] 이 헬퍼 메서드를 PetController 클래스 내부에 추가합니다. ▼▼▼
+    /// <summary>
+    /// 지정된 부모 Transform 아래에서 특정 이름을 가진 자식을 재귀적으로 탐색하여 반환합니다.
+    /// </summary>
+    /// <param name="parent">검색을 시작할 부모 Transform</param>
+    /// <param name="childName">찾고자 하는 자식의 이름</param>
+    /// <returns>찾은 자식의 Transform. 없으면 null을 반환합니다.</returns>
+    private Transform FindDeepChild(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName)
+            {
+                return child;
+            }
+            
+            Transform result = FindDeepChild(child, childName);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return null;
+    }
+    // ▲▲▲ 여기까지 추가 ▲▲▲
     /// <summary>
     /// 외부의 강력한 중단(Interrupt)에 의해 현재 진행 중인 행동을 강제로 무효화합니다.
     /// </summary>
@@ -656,27 +739,35 @@ public class PetController : MonoBehaviour
         }
     }
 
-    // 감정 표현 메서드
+     // ▼▼▼ [수정] ShowEmotion 메서드 수정 ▼▼▼
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
-        // 기존 말풍선 처리
+        // 기존 말풍선이 있으면 풀에 반환
         if (activeBubble != null && activeBubble.gameObject.activeSelf)
         {
-            // 이미 활성화된 말풍선이 있으면 비활성화
             EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
             activeBubble = null;
         }
 
-        // 새 말풍선 표시
         if (EmotionManager.Instance != null)
         {
-            activeBubble = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
+            // EmotionManager로부터 생성된 오브젝트를 받음
+            GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
+
+            // 반환된 오브젝트가 EmotionBubble 타입인지 확인하고, 그렇다면 activeBubble에 할당
+            if (emotionObject != null && emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
+            {
+                activeBubble = bubble;
+            }
+            // 파티클인 경우에는 activeBubble에 할당하지 않음 (자동으로 파괴되므로 추적 불필요)
         }
     }
 
-    // 감정 말풍선 숨기기
+
+    // ▼▼▼ [수정] HideEmotion 메서드 수정 ▼▼▼
     public void HideEmotion()
     {
+        // activeBubble이 존재할 때만 풀에 반환 시도
         if (activeBubble != null)
         {
             EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
