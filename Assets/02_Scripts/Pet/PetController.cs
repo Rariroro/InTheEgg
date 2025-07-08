@@ -103,6 +103,7 @@ public class PetController : MonoBehaviour
     private PetTreeClimbingController treeClimbingController;
     // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
+private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기 위한 변수 추가
 
  // ▼▼▼ [추가] 졸음 이모티콘 간헐적 표시를 위한 변수 ▼▼▼
     private float _sleepyEmotionTimer = 0f;
@@ -739,40 +740,48 @@ public class PetController : MonoBehaviour
         }
     }
 
-     // ▼▼▼ [수정] ShowEmotion 메서드 수정 ▼▼▼
-    public void ShowEmotion(EmotionType emotion, float duration = 10f)
+   // ▼▼▼ ShowEmotion 메서드를 아래와 같이 수정합니다. ▼▼▼
+public void ShowEmotion(EmotionType emotion, float duration = 10f)
+{
+    // 기존에 표시되던 감정 표현(말풍선 또는 파티클)을 먼저 제거합니다.
+    HideEmotion();
+
+    if (EmotionManager.Instance != null)
     {
-        // 기존 말풍선이 있으면 풀에 반환
-        if (activeBubble != null && activeBubble.gameObject.activeSelf)
-        {
-            EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
-            activeBubble = null;
-        }
+        // EmotionManager로부터 생성된 오브젝트(말풍선 또는 파티클)를 받습니다.
+        GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
 
-        if (EmotionManager.Instance != null)
+        if (emotionObject != null)
         {
-            // EmotionManager로부터 생성된 오브젝트를 받음
-            GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
-
-            // 반환된 오브젝트가 EmotionBubble 타입인지 확인하고, 그렇다면 activeBubble에 할당
-            if (emotionObject != null && emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
+            // 반환된 오브젝트가 EmotionBubble 타입인지 확인하고, activeBubble에 할당합니다.
+            if (emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
             {
                 activeBubble = bubble;
             }
-            // 파티클인 경우에는 activeBubble에 할당하지 않음 (자동으로 파괴되므로 추적 불필요)
+            // 파티클인 경우 activeParticle에 할당합니다.
+            else
+            {
+                activeParticle = emotionObject;
+            }
         }
     }
+}
 
-
-    // ▼▼▼ [수정] HideEmotion 메서드 수정 ▼▼▼
-    public void HideEmotion()
+// ▼▼▼ HideEmotion 메서드를 아래와 같이 수정합니다. ▼▼▼
+public void HideEmotion()
+{
+    // 활성화된 말풍선이 있다면 풀에 반환합니다.
+    if (activeBubble != null)
     {
-        // activeBubble이 존재할 때만 풀에 반환 시도
-        if (activeBubble != null)
-        {
-            EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
-            activeBubble = null;
-        }
+        EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
+        activeBubble = null;
     }
+    // 활성화된 파티클이 있다면 파괴합니다.
+    if (activeParticle != null)
+    {
+        Destroy(activeParticle);
+        activeParticle = null;
+    }
+}
 
 }

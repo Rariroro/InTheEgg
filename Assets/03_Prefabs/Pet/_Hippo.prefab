@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 1248337486304035781}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.846154, z: 0}
+  m_LocalPosition: {x: 0, y: 6.72, z: 0}
   m_LocalScale: {x: 0.7692308, y: 0.7692308, z: 0.7692308}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -94,6 +94,7 @@ MonoBehaviour:
   hunger: 0
   sleepiness: 0
   petName: Hippo
+  emotionOrigin: {fileID: 0}
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}

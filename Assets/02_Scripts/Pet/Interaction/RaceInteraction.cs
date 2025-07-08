@@ -73,7 +73,7 @@ public class RaceInteraction : BasePetInteraction
     [Tooltip("막혔을 때 우회 시도 반경")]
     public float detourRadius = 8f;
 
- // ▼▼▼ [추가] 이 변수를 클래스 상단에 추가합니다. ▼▼▼
+    // ▼▼▼ [추가] 이 변수를 클래스 상단에 추가합니다. ▼▼▼
     [Header("Arrow Disappearance")]
     [Tooltip("선두 주자가 이 거리 안으로 들어오면 결승선 화살표가 사라지기 시작합니다.")]
     public float arrowDisappearDistance = 15f;
@@ -134,7 +134,7 @@ public class RaceInteraction : BasePetInteraction
         PetOriginalState turtleState = new PetOriginalState(turtle);
         // ★★★ 인스턴스 참조 변수 추가 ★★★
         GameObject finishArrowInstance = null;
-           // ▼▼▼ [추가] 화살표 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
+        // ▼▼▼ [추가] 화살표 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
         Coroutine arrowBobbingCoroutine = null;
         bool isArrowDisappearing = false;
         // ▲▲▲ [여기까지 추가] ▲▲▲
@@ -251,7 +251,7 @@ public class RaceInteraction : BasePetInteraction
 
             while (!turtleFinished)
             {
-                   // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
+                // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
                 if (!isArrowDisappearing && finishArrowInstance != null)
                 {
                     // 각 주자와 결승선 사이의 거리를 계산
@@ -262,13 +262,13 @@ public class RaceInteraction : BasePetInteraction
                     if (Mathf.Min(rabbitDistToFinish, turtleDistToFinish) < arrowDisappearDistance)
                     {
                         isArrowDisappearing = true; // 중복 실행 방지
-                        
+
                         // 기존의 상하 움직임 애니메이션은 중지
                         if (arrowBobbingCoroutine != null)
                         {
                             StopCoroutine(arrowBobbingCoroutine);
                         }
-                        
+
                         // 사라지는 애니메이션 시작
                         StartCoroutine(DisappearFinishArrow(finishArrowInstance));
                         Debug.Log("[Race] 주자가 결승선에 근접하여 화살표가 사라지기 시작합니다.");
@@ -303,6 +303,11 @@ public class RaceInteraction : BasePetInteraction
                     rabbitWokeUp = true;
                     var rabbitAnimController = rabbit.GetComponent<PetAnimationController>();
                     rabbitAnimController.StopContinuousAnimation(); // 잠자는 애니메이션 중지
+                                                                    // ▼▼▼▼▼ [핵심 수정] 이 부분을 추가합니다. ▼▼▼▼▼
+                                                                    // 기존의 '잠자기' 파티클을 즉시 제거합니다.
+                    rabbit.HideEmotion();
+                    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
                     rabbit.ShowEmotion(EmotionType.Scared, 10f);
 
                     if (IsAgentSafelyReady(rabbit))
@@ -401,29 +406,29 @@ public class RaceInteraction : BasePetInteraction
             yield return null; // 다음 프레임까지 대기
         }
     }
-/// <summary>
-/// 결승선 화살표를 자연스럽게 작아지며 사라지게 하는 코루틴입니다.
-/// </summary>
-/// <param name="arrow">사라지게 할 화살표 게임 오브젝트</param>
-private IEnumerator DisappearFinishArrow(GameObject arrow)
-{
-    if (arrow == null) yield break;
-
-    Vector3 initialScale = arrow.transform.localScale;
-    float duration = 1.5f; // 사라지는 데 걸리는 시간
-    float elapsedTime = 0f;
-
-    while (elapsedTime < duration)
+    /// <summary>
+    /// 결승선 화살표를 자연스럽게 작아지며 사라지게 하는 코루틴입니다.
+    /// </summary>
+    /// <param name="arrow">사라지게 할 화살표 게임 오브젝트</param>
+    private IEnumerator DisappearFinishArrow(GameObject arrow)
     {
-        // 시간이 지남에 따라 스케일을 0으로 만듭니다.
-        arrow.transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, elapsedTime / duration);
-        elapsedTime += Time.deltaTime;
-        yield return null;
-    }
+        if (arrow == null) yield break;
 
-    // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
-    Destroy(arrow);
-}
+        Vector3 initialScale = arrow.transform.localScale;
+        float duration = 1.5f; // 사라지는 데 걸리는 시간
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            // 시간이 지남에 따라 스케일을 0으로 만듭니다.
+            arrow.transform.localScale = Vector3.Lerp(initialScale, Vector3.zero, elapsedTime / duration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
+        Destroy(arrow);
+    }
     // ... (다른 헬퍼 메서드들) ...
     /// <summary>
     /// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
@@ -550,7 +555,7 @@ private IEnumerator DisappearFinishArrow(GameObject arrow)
         // }
 
         // 4. 잠자는 감정 표현과 애니메이션 시작
-        rabbit.ShowEmotion(EmotionType.Sleepy, 60f);
+        rabbit.ShowEmotion(EmotionType.Sleep, 60f);
         if (animController != null)
         {
             StartCoroutine(animController.PlayAnimationWithCustomDuration(
