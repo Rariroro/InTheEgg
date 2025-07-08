@@ -126,7 +126,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         predator.agent.isStopped = false;
         yield return StartCoroutine(WaitForMovement(predator, 5f));
 
-        predator.ShowEmotion(EmotionType.Sleepy, 30f); // 오랫동안 졸린 감정 표시
+        predator.ShowEmotion(EmotionType.Sleep, 30f); // 오랫동안 졸린 감정 표시
         predator.agent.isStopped = true;
 
         // ★★★ 수정: 잠자는 애니메이션을 다음 행동 전까지 '계속' 재생하도록 변경 ★★★
