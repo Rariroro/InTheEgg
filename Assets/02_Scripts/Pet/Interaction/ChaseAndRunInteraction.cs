@@ -1,5 +1,6 @@
-// ChaseAndRunInteraction.cs (최적화된 버전)
+// ChaseAndRunInteraction.cs (개선된 버전)
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -46,6 +47,41 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Tooltip("순간 가속 지속 시간")]
     public float sprintDuration = 0.8f;
 
+    [Header("새로운 재미 요소")]
+    [Tooltip("180도 회전 페이크 확률")]
+    [Range(0f, 1f)]
+    public float uturnChance = 0.1f;
+
+    [Tooltip("정지 페이크 확률")]
+    [Range(0f, 1f)]
+    public float stopFakeChance = 0.15f;
+
+    [Tooltip("예측 샷 시도 확률")]
+    [Range(0f, 1f)]
+    public float predictShotChance = 0.2f;
+
+    [Tooltip("잡기 성공 거리")]
+    public float catchDistance = 1.5f;
+
+    [Tooltip("지구력 감소 속도")]
+    public float staminaDecreaseRate = 0.05f;
+
+    [Tooltip("지구력 회복 속도")]
+    public float staminaRecoveryRate = 0.1f;
+
+    [Tooltip("최소 속도 배율 (지쳤을 때)")]
+    public float minSpeedMultiplier = 0.5f;
+
+    [Header("Visual Effects")]
+    [Tooltip("먼지 파티클 프리팹")]
+    public GameObject dustParticlePrefab;
+
+    [Tooltip("잡기 성공 파티클 프리팹")]
+    public GameObject catchParticlePrefab;
+
+    [Tooltip("주변 펫 놀람 반경")]
+    public float scareRadius = 5f;
+
     [Header("End Chase Settings")]
     [Tooltip("추격 종료 후 쫓는 펫이 쉬는 시간")]
     public float chaserRestDuration = 3f;
@@ -59,6 +95,17 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
+
+    // 지구력 추적
+    private float chaserStamina = 1f;
+    private float runnerStamina = 1f;
+
+    // 먼지 파티클 인스턴스
+    private GameObject chaserDustParticles;
+    private GameObject runnerDustParticles;
+
+    // 추격 성공 여부
+    private bool chaseCaught = false;
 
     protected override InteractionType DetermineInteractionType()
     {
@@ -122,6 +169,11 @@ public class ChaseAndRunInteraction : BasePetInteraction
         PetOriginalState chaserState = new PetOriginalState(chaser);
         PetOriginalState runnerState = new PetOriginalState(runner);
 
+        // 초기화
+        chaserStamina = 1f;
+        runnerStamina = 1f;
+        chaseCaught = false;
+
         try
         {
             // 감정 표현
@@ -135,11 +187,22 @@ public class ChaseAndRunInteraction : BasePetInteraction
             yield return StartCoroutine(ChasePhase(chaser, runner));
 
             // 3. 종료 단계
-            yield return StartCoroutine(EndPhase(chaser, runner));
+            if (chaseCaught)
+            {
+                yield return StartCoroutine(CaughtPhase(chaser, runner));
+            }
+            else
+            {
+                yield return StartCoroutine(EscapeSuccessPhase(chaser, runner));
+            }
         }
         finally
         {
             Debug.Log("[ChaseAndRun] 상호작용 정리 시작.");
+
+            // 파티클 정리
+            if (chaserDustParticles != null) Destroy(chaserDustParticles);
+            if (runnerDustParticles != null) Destroy(runnerDustParticles);
 
             // 원래 상태 복원
             chaserState.Restore(chaser);
@@ -194,19 +257,57 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
 
+        // 먼지 파티클 생성
+        CreateDustParticles(chaser, runner);
+
         float chaseTimer = 0f;
         float lastDirectionChangeTime = 0f;
-        int chasePhase = 0; // 0: 시작, 1: 추격 중, 2: 근접, 3: 멀어짐
+        float lastSpecialMoveTime = 0f;
+        int chasePhase = 0;
 
-        while (chaseTimer < chaseDuration)
+        while (chaseTimer < chaseDuration && !chaseCaught)
         {
             float distance = Vector3.Distance(chaser.transform.position, runner.transform.position);
             float updateInterval = distance < panicDistance ? closeUpdateInterval : normalUpdateInterval;
 
-            // 거리에 따른 속도 조정 및 단계 변경
+            // 지구력 업데이트
+            UpdateStamina(chaser, runner, Time.deltaTime);
+
+            // 속도 조정 (지구력 반영)
             UpdateChasePhase(chaser, runner, distance, ref chasePhase);
 
-            // 도망 방향 변경
+            // 잡기 체크
+            if (distance <= catchDistance)
+            {
+                chaseCaught = true;
+                Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) {runner.petName}을(를) 잡았습니다!");
+                break;
+            }
+
+            // 특별 동작들
+            if (chaseTimer - lastSpecialMoveTime > 2f) // 2초마다 특별 동작 가능
+            {
+                // 도망자의 특별 동작
+                if (Random.value < uturnChance && distance > catchDistance * 2)
+                {
+                    yield return StartCoroutine(PerformUTurn(runner, chaser));
+                    lastSpecialMoveTime = chaseTimer;
+                }
+                else if (Random.value < stopFakeChance && distance > catchDistance * 3)
+                {
+                    yield return StartCoroutine(PerformStopFake(runner, chaser));
+                    lastSpecialMoveTime = chaseTimer;
+                }
+
+                // 추격자의 예측 샷
+                if (Random.value < predictShotChance && distance < farDistance)
+                {
+                    yield return StartCoroutine(PerformPredictShot(chaser, runner));
+                    lastSpecialMoveTime = chaseTimer;
+                }
+            }
+
+            // 일반 도망 방향 변경
             if (ShouldChangeDirection(distance, chaseTimer, lastDirectionChangeTime))
             {
                 UpdateRunnerDestination(runner, chaser);
@@ -214,13 +315,13 @@ public class ChaseAndRunInteraction : BasePetInteraction
             }
 
             // 쫓는 펫 목적지 업데이트
-            chaser.agent.SetDestination(runner.transform.position);
-
-            // 순간 가속 체크
-            if (ShouldSprint(distance))
+            if (!chaser.agent.pathPending)
             {
-                yield return StartCoroutine(PerformSprint(chaser));
+                chaser.agent.SetDestination(runner.transform.position);
             }
+
+            // 주변 펫들 놀라게 하기
+            ScareNearbyPets(runner, scareRadius);
 
             // 회전 처리
             chaser.HandleRotation();
@@ -230,113 +331,308 @@ public class ChaseAndRunInteraction : BasePetInteraction
             yield return new WaitForSeconds(updateInterval);
         }
 
-        Debug.Log($"[ChaseAndRun] 추격 종료 (시간: {chaseDuration}초)");
+        Debug.Log($"[ChaseAndRun] 추격 종료 (시간: {chaseTimer}초, 잡기 성공: {chaseCaught})");
     }
 
     /// <summary>
-    /// 추격 종료 단계
+    /// 180도 회전 페이크
     /// </summary>
-    private IEnumerator EndPhase(PetController chaser, PetController runner)
+    private IEnumerator PerformUTurn(PetController runner, PetController chaser)
     {
-        Debug.Log("[ChaseAndRun] 3단계: 추격 종료");
-
-        // 쫓던 펫 멈춤
-        chaser.agent.isStopped = true;
-        chaser.ShowEmotion(EmotionType.Sleepy, 10f);
-
-        var chaserAnim = chaser.GetComponent<PetAnimationController>();
-        yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Rest, chaserRestDuration, false, false));
-
-        // 도망가는 펫 계속 도망
-        runner.ShowEmotion(EmotionType.Scared, 10f);
+        Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 180도 회전 페이크!");
         
-        Vector3 escapeDirection = (runner.transform.position - chaser.transform.position).normalized;
-        Vector3 escapeTarget = runner.transform.position + escapeDirection * 20f;
-        escapeTarget = FindValidPositionOnNavMesh(escapeTarget, 20f);
+        // 감정 표현
+        runner.ShowEmotion(EmotionType.Joke, 2f);
         
-        runner.agent.SetDestination(escapeTarget);
+        // 현재 방향의 반대로 급회전
+        Vector3 currentDirection = (runner.transform.position - chaser.transform.position).normalized;
+        Vector3 oppositeDirection = -currentDirection;
+        Vector3 uTurnTarget = runner.transform.position + oppositeDirection * 10f;
+        
+        uTurnTarget = FindValidPositionOnNavMesh(uTurnTarget, 15f);
+        runner.agent.SetDestination(uTurnTarget);
+        
+        // 급회전 애니메이션
+        runner.agent.angularSpeed = runner.baseAngularSpeed * 3f;
+        yield return new WaitForSeconds(0.5f);
+        runner.agent.angularSpeed = runner.baseAngularSpeed;
+    }
 
-        // 안전 거리까지 도망
-        float escapeTimer = 0f;
-        float initialDistance = Vector3.Distance(chaser.transform.position, runner.transform.position);
-        float targetDistance = initialDistance + safeDistance;
+    /// <summary>
+    /// 정지 페이크
+    /// </summary>
+    private IEnumerator PerformStopFake(PetController runner, PetController chaser)
+    {
+        Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 정지 페이크!");
+        
+        // 갑자기 멈춤
+        runner.agent.isStopped = true;
+        runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        
+        // 추격자 혼란
+        chaser.ShowEmotion(EmotionType.Confused, 2f);
+        
+        yield return new WaitForSeconds(0.8f);
+        
+        // 다시 도망
+        runner.agent.isStopped = false;
+        runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        runner.ShowEmotion(EmotionType.Joke, 2f);
+        
+        // 새로운 방향으로 도망
+        UpdateRunnerDestination(runner, chaser);
+    }
 
-        while (escapeTimer < maxEscapeTime)
-        {
-            float currentDistance = Vector3.Distance(chaser.transform.position, runner.transform.position);
-            
-            if (currentDistance >= targetDistance || 
-                (!runner.agent.pathPending && runner.agent.remainingDistance <= runner.agent.stoppingDistance))
-            {
-                Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 안전 거리 확보 (거리: {currentDistance})");
-                break;
-            }
-
-            runner.HandleRotation();
-            escapeTimer += Time.deltaTime;
-            yield return null;
-        }
-
-        // 도망 펫 진정
-        var runnerAnim = runner.GetComponent<PetAnimationController>();
-        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+    /// <summary>
+    /// 예측 샷 시도
+    /// </summary>
+    private IEnumerator PerformPredictShot(PetController chaser, PetController runner)
+    {
+        Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) 예측 샷 시도!");
+        
+        // 도망자의 예상 위치 계산
+        Vector3 runnerVelocity = runner.agent.velocity;
+        float predictTime = 1.5f;
+        Vector3 predictedPosition = runner.transform.position + runnerVelocity * predictTime;
+        
+        predictedPosition = FindValidPositionOnNavMesh(predictedPosition, 20f);
+        
+        // 예측 위치로 이동
+        chaser.agent.SetDestination(predictedPosition);
+        chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * 1.5f; // 더 빠르게
         
         yield return new WaitForSeconds(1.5f);
         
-        runnerAnim.StopContinuousAnimation();
-        chaserAnim.StopContinuousAnimation();
+        // 대부분 실패
+        if (Random.value > 0.2f) // 80% 실패
+        {
+            Debug.Log($"[ChaseAndRun] 예측 샷 실패!");
+            chaser.ShowEmotion(EmotionType.Sad, 2f);
+        }
+        
+        // 속도 원래대로
+        chaser.agent.speed = chaser.baseSpeed * GetStaminaSpeedMultiplier(chaserStamina) * chaserBaseSpeedMultiplier;
     }
 
     /// <summary>
-    /// 추격 단계 업데이트
+    /// 지구력 업데이트
+    /// </summary>
+    private void UpdateStamina(PetController chaser, PetController runner, float deltaTime)
+    {
+        // 달리면 지구력 감소
+        chaserStamina = Mathf.Max(0f, chaserStamina - staminaDecreaseRate * deltaTime);
+        runnerStamina = Mathf.Max(0f, runnerStamina - staminaDecreaseRate * deltaTime);
+        
+        // 지쳐서 헐떡거리는 감정
+        if (chaserStamina < 0.3f && Random.value < 0.01f)
+        {
+            chaser.ShowEmotion(EmotionType.Sleepy, 2f);
+        }
+        if (runnerStamina < 0.3f && Random.value < 0.01f)
+        {
+            runner.ShowEmotion(EmotionType.Sleepy, 2f);
+        }
+    }
+
+    /// <summary>
+    /// 지구력에 따른 속도 배율 계산
+    /// </summary>
+    private float GetStaminaSpeedMultiplier(float stamina)
+    {
+        return Mathf.Lerp(minSpeedMultiplier, 1f, stamina);
+    }
+
+    /// <summary>
+    /// 추격 단계 업데이트 (지구력 반영)
     /// </summary>
     private void UpdateChasePhase(PetController chaser, PetController runner, float distance, ref int phase)
     {
+        float chaserStaminaMult = GetStaminaSpeedMultiplier(chaserStamina);
+        float runnerStaminaMult = GetStaminaSpeedMultiplier(runnerStamina);
+        
         if (distance < panicDistance && phase != 2)
         {
             // 매우 가까움
-            runner.agent.speed = runner.baseSpeed * runnerPanicSpeedMultiplier;
-            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier;
+            runner.agent.speed = runner.baseSpeed * runnerPanicSpeedMultiplier * runnerStaminaMult;
+            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
             phase = 2;
             Debug.Log("[ChaseAndRun] 매우 가까워짐! 긴급 도망!");
         }
         else if (distance > farDistance && phase != 3)
         {
             // 멀어짐
-            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier;
-            chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier;
+            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
+            chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * chaserStaminaMult;
             phase = 3;
             Debug.Log("[ChaseAndRun] 거리가 멀어짐! 추격 가속!");
         }
         else if (distance >= panicDistance && distance <= farDistance && phase != 1)
         {
             // 적정 거리
-            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier;
-            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier;
+            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
+            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
             phase = 1;
         }
     }
 
     /// <summary>
-    /// 방향 변경 여부 결정
+    /// 먼지 파티클 생성
     /// </summary>
+    private void CreateDustParticles(PetController chaser, PetController runner)
+    {
+        if (dustParticlePrefab != null)
+        {
+            // 추격자 먼지
+            chaserDustParticles = Instantiate(dustParticlePrefab, chaser.transform);
+            chaserDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
+            
+            // 도망자 먼지
+            runnerDustParticles = Instantiate(dustParticlePrefab, runner.transform);
+            runnerDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
+        }
+    }
+
+    /// <summary>
+    /// 주변 펫들을 놀라게 함
+    /// </summary>
+    private void ScareNearbyPets(PetController runner, float radius)
+    {
+        Collider[] nearbyColliders = Physics.OverlapSphere(runner.transform.position, radius);
+        
+        foreach (Collider col in nearbyColliders)
+        {
+            PetController nearbyPet = col.GetComponent<PetController>();
+            if (nearbyPet != null && nearbyPet != runner && 
+                !nearbyPet.isInteracting && Random.value < 0.1f) // 10% 확률
+            {
+                nearbyPet.ShowEmotion(EmotionType.Surprised, 2f);
+                
+                // 살짝 피하는 애니메이션
+                var nearbyAnim = nearbyPet.GetComponent<PetAnimationController>();
+                if (nearbyAnim != null)
+                {
+                    StartCoroutine(nearbyAnim.PlayAnimationWithCustomDuration(
+                        PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 잡기 성공 단계
+    /// </summary>
+    private IEnumerator CaughtPhase(PetController chaser, PetController runner)
+    {
+        Debug.Log("[ChaseAndRun] 3단계: 잡기 성공!");
+        
+        // 두 펫 정지
+        chaser.agent.isStopped = true;
+        runner.agent.isStopped = true;
+        
+        // 파티클 효과
+        if (catchParticlePrefab != null)
+        {
+            Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
+            GameObject catchEffect = Instantiate(catchParticlePrefab, midPoint, Quaternion.identity);
+            Destroy(catchEffect, 3f);
+        }
+        
+        // 감정 표현
+        chaser.ShowEmotion(EmotionType.Victory, 5f);
+        runner.ShowEmotion(EmotionType.Defeat, 5f);
+        
+        // 함께 구르며 장난치기
+        var chaserAnim = chaser.GetComponent<PetAnimationController>();
+        var runnerAnim = runner.GetComponent<PetAnimationController>();
+        
+        // 서로를 향해 이동
+        yield return StartCoroutine(MoveToPositions(chaser, runner, 
+            (chaser.transform.position + runner.transform.position) / 2f,
+            (chaser.transform.position + runner.transform.position) / 2f, 2f));
+        
+        // 구르기 애니메이션 (Attack 애니메이션 활용)
+        for (int i = 0; i < 3; i++)
+        {
+            yield return StartCoroutine(PlaySimultaneousAnimations(
+                chaser, runner,
+                PetAnimationController.PetAnimationType.Attack,
+                PetAnimationController.PetAnimationType.Damage,
+                1.5f));
+            
+            yield return new WaitForSeconds(0.5f);
+        }
+        
+        // 마지막 즐거운 감정
+        chaser.ShowEmotion(EmotionType.Happy, 5f);
+        runner.ShowEmotion(EmotionType.Happy, 5f);
+        
+        yield return new WaitForSeconds(2f);
+    }
+
+    /// <summary>
+    /// 도망 성공 단계
+    /// </summary>
+    private IEnumerator EscapeSuccessPhase(PetController chaser, PetController runner)
+    {
+        Debug.Log("[ChaseAndRun] 3단계: 도망 성공!");
+        
+        // 쫓던 펫 멈춤
+        chaser.agent.isStopped = true;
+        chaser.ShowEmotion(EmotionType.Defeat, 10f);
+        
+        var chaserAnim = chaser.GetComponent<PetAnimationController>();
+        yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Rest, chaserRestDuration, false, false));
+        
+        // 도망자 승리 포즈
+        runner.ShowEmotion(EmotionType.Victory, 10f);
+        runner.agent.isStopped = true;
+        
+        var runnerAnim = runner.GetComponent<PetAnimationController>();
+        
+        // 뒤돌아서 추격자를 보며 승리 포즈
+        LookAtOther(runner, chaser);
+        yield return new WaitForSeconds(0.5f);
+        
+        // 승리 점프
+        yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
+        
+        // 도발하는 듯한 동작
+        runner.ShowEmotion(EmotionType.Joke, 5f);
+        yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Attack, 1f, true, false));
+        
+        yield return new WaitForSeconds(1f);
+        
+        // 유유히 걸어가기
+        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        runner.agent.isStopped = false;
+        runner.agent.speed = runner.baseSpeed * 0.5f;
+        
+        Vector3 escapeDirection = (runner.transform.position - chaser.transform.position).normalized;
+        Vector3 escapeTarget = runner.transform.position + escapeDirection * 10f;
+        escapeTarget = FindValidPositionOnNavMesh(escapeTarget, 20f);
+        runner.agent.SetDestination(escapeTarget);
+        
+        yield return new WaitForSeconds(3f);
+        
+        runnerAnim.StopContinuousAnimation();
+        chaserAnim.StopContinuousAnimation();
+    }
+
+    // 기존 헬퍼 메서드들은 그대로 유지...
     private bool ShouldChangeDirection(float distance, float currentTime, float lastChangeTime)
     {
-        // 정기적인 방향 변경
         if (currentTime - lastChangeTime > directionChangeInterval)
             return true;
 
-        // 긴급 방향 변경 (50% 확률)
         if (distance < panicDistance * 0.8f && Random.value > 0.5f)
             return true;
 
         return false;
     }
 
-    /// <summary>
-    /// 도망 방향 업데이트
-    /// </summary>
     private void UpdateRunnerDestination(PetController runner, PetController chaser)
     {
         Vector3 baseRunDirection = (runner.transform.position - chaser.transform.position).normalized;
@@ -352,32 +648,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
         Debug.Log($"[ChaseAndRun] {runner.petName} 방향 변경");
     }
 
-    /// <summary>
-    /// 순간 가속 여부 결정
-    /// </summary>
-    private bool ShouldSprint(float distance)
-    {
-        return distance > panicDistance && distance < farDistance && Random.value < sprintChance;
-    }
-
-    /// <summary>
-    /// 순간 가속 수행
-    /// </summary>
-    private IEnumerator PerformSprint(PetController chaser)
-    {
-        float originalSpeed = chaser.agent.speed;
-        chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * 1.3f;
-        
-        Debug.Log($"[ChaseAndRun] {chaser.petName} 순간 가속!");
-        
-        yield return new WaitForSeconds(sprintDuration);
-        
-        chaser.agent.speed = originalSpeed;
-    }
-
-    /// <summary>
-    /// NavMeshAgent 안전 체크
-    /// </summary>
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
