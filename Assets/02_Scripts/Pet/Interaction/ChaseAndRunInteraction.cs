@@ -178,7 +178,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         {
             // 감정 표현
             chaser.ShowEmotion(EmotionType.Love, chaseDuration + 5f);
-            runner.ShowEmotion(EmotionType.Angry, chaseDuration + 5f);
+            runner.ShowEmotion(EmotionType.Surprised, chaseDuration + 5f);
 
             // 1. 준비 단계
             yield return StartCoroutine(PreparePhase(chaser, runner));
@@ -342,7 +342,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 180도 회전 페이크!");
         
         // 감정 표현
-        runner.ShowEmotion(EmotionType.Joke, 2f);
+        runner.ShowEmotion(EmotionType.Confused, 2f);
         
         // 현재 방향의 반대로 급회전
         Vector3 currentDirection = (runner.transform.position - chaser.transform.position).normalized;
@@ -356,6 +356,8 @@ public class ChaseAndRunInteraction : BasePetInteraction
         runner.agent.angularSpeed = runner.baseAngularSpeed * 3f;
         yield return new WaitForSeconds(0.5f);
         runner.agent.angularSpeed = runner.baseAngularSpeed;
+          // 먼지 파티클 생성
+        CreateDustParticles(chaser, runner);
     }
 
     /// <summary>
@@ -368,16 +370,17 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // 갑자기 멈춤
         runner.agent.isStopped = true;
         runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-        
+                CreateDustParticles(chaser, runner);
+
         // 추격자 혼란
-        chaser.ShowEmotion(EmotionType.Confused, 2f);
+        chaser.ShowEmotion(EmotionType.Love, 2f);
         
         yield return new WaitForSeconds(0.8f);
         
         // 다시 도망
         runner.agent.isStopped = false;
         runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        runner.ShowEmotion(EmotionType.Joke, 2f);
+        runner.ShowEmotion(EmotionType.Confused, 2f);
         
         // 새로운 방향으로 도망
         UpdateRunnerDestination(runner, chaser);
@@ -400,14 +403,15 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // 예측 위치로 이동
         chaser.agent.SetDestination(predictedPosition);
         chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * 1.5f; // 더 빠르게
-        
+                // CreateDustParticles(chaser, runner);
+
         yield return new WaitForSeconds(1.5f);
         
         // 대부분 실패
         if (Random.value > 0.2f) // 80% 실패
         {
             Debug.Log($"[ChaseAndRun] 예측 샷 실패!");
-            chaser.ShowEmotion(EmotionType.Sad, 2f);
+            chaser.ShowEmotion(EmotionType.Love, 2f);
         }
         
         // 속도 원래대로
@@ -590,9 +594,12 @@ public class ChaseAndRunInteraction : BasePetInteraction
         
         var runnerAnim = runner.GetComponent<PetAnimationController>();
         
-        // 뒤돌아서 추격자를 보며 승리 포즈
-        LookAtOther(runner, chaser);
-        yield return new WaitForSeconds(0.5f);
+         // ▼▼▼▼▼ [수정된 부분] ▼▼▼▼▼
+    // 뒤돌아서 추격자를 보며 승리 포즈 (부드러운 회전으로 변경)
+    // 기존의 LookAtOther 대신 SmoothlyLookAtEachOther 코루틴을 호출합니다.
+    yield return StartCoroutine(SmoothlyLookAtEachOther(runner, chaser, 0.7f));
+    // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
+    
         
         // 승리 점프
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
