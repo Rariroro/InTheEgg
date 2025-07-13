@@ -275,6 +275,9 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
             // 속도 조정 (지구력 반영)
             UpdateChasePhase(chaser, runner, distance, ref chasePhase);
+            
+            // 속도에 따른 애니메이션 업데이트
+            UpdateChaseAnimations(chaser, runner, chaserAnim, runnerAnim);
 
             // 잡기 체크
             if (distance <= catchDistance)
@@ -367,20 +370,48 @@ public class ChaseAndRunInteraction : BasePetInteraction
     {
         Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 정지 페이크!");
         
-        // 갑자기 멈춤
+        // 속도를 서서히 줄이면서 멈춤
+        float originalSpeed = runner.agent.speed;
+        float slowDownTime = 0.3f;
+        float elapsedTime = 0f;
+        
+        // 감속 과정
+        while (elapsedTime < slowDownTime)
+        {
+            runner.agent.speed = Mathf.Lerp(originalSpeed, 0f, elapsedTime / slowDownTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 완전히 멈춤
         runner.agent.isStopped = true;
-        runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-                CreateDustParticles(chaser, runner);
+        runner.agent.velocity = Vector3.zero;
+        
+        // 애니메이션은 UpdateChaseAnimations가 자동으로 처리
+        CreateDustParticles(chaser, runner);
 
         // 추격자 혼란
         chaser.ShowEmotion(EmotionType.Love, 2f);
         
         yield return new WaitForSeconds(0.8f);
         
-        // 다시 도망
+        // 다시 도망 - 가속
         runner.agent.isStopped = false;
-        runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         runner.ShowEmotion(EmotionType.Confused, 2f);
+        
+        // 속도를 서서히 증가
+        float accelerateTime = 0.5f;
+        elapsedTime = 0f;
+        float targetSpeed = runner.baseSpeed * runnerBaseSpeedMultiplier * GetStaminaSpeedMultiplier(runnerStamina);
+        
+        while (elapsedTime < accelerateTime)
+        {
+            runner.agent.speed = Mathf.Lerp(0f, targetSpeed, elapsedTime / accelerateTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        runner.agent.speed = targetSpeed;
         
         // 새로운 방향으로 도망
         UpdateRunnerDestination(runner, chaser);
@@ -585,14 +616,16 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaser.ShowEmotion(EmotionType.Defeat, 10f);
         
         var chaserAnim = chaser.GetComponent<PetAnimationController>();
+                var runnerAnim = runner.GetComponent<PetAnimationController>();
+ yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Idle, chaserRestDuration, true, false));
         yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, chaserRestDuration, false, false));
-        
+         
         // 도망자 승리 포즈
         runner.ShowEmotion(EmotionType.Victory, 10f);
         runner.agent.isStopped = true;
         
-        var runnerAnim = runner.GetComponent<PetAnimationController>();
         
          // ▼▼▼▼▼ [수정된 부분] ▼▼▼▼▼
     // 뒤돌아서 추격자를 보며 승리 포즈 (부드러운 회전으로 변경)
@@ -658,5 +691,77 @@ public class ChaseAndRunInteraction : BasePetInteraction
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+    }
+    
+    /// <summary>
+    /// 속도에 따라 애니메이션을 동적으로 업데이트
+    /// </summary>
+    private void UpdateChaseAnimations(PetController chaser, PetController runner, 
+        PetAnimationController chaserAnim, PetAnimationController runnerAnim)
+    {
+        // 속도 임계값 설정 (기본 속도의 10%)
+        float idleThreshold = 0.1f;
+        float walkThreshold = 0.5f;
+        
+        // Chaser 애니메이션 업데이트
+        if (chaser.agent.velocity.magnitude < chaser.baseSpeed * idleThreshold)
+        {
+            // 거의 멈춰있음
+            if (chaserAnim != null && !IsPlayingAnimation(chaser, PetAnimationController.PetAnimationType.Idle))
+            {
+                chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            }
+        }
+        else if (chaser.agent.velocity.magnitude < chaser.baseSpeed * walkThreshold)
+        {
+            // 천천히 움직임
+            if (chaserAnim != null && !IsPlayingAnimation(chaser, PetAnimationController.PetAnimationType.Walk))
+            {
+                chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            }
+        }
+        else
+        {
+            // 빠르게 움직임
+            if (chaserAnim != null && !IsPlayingAnimation(chaser, PetAnimationController.PetAnimationType.Run))
+            {
+                chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            }
+        }
+        
+        // Runner 애니메이션 업데이트
+        if (runner.agent.velocity.magnitude < runner.baseSpeed * idleThreshold)
+        {
+            // 거의 멈춰있음
+            if (runnerAnim != null && !IsPlayingAnimation(runner, PetAnimationController.PetAnimationType.Idle))
+            {
+                runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            }
+        }
+        else if (runner.agent.velocity.magnitude < runner.baseSpeed * walkThreshold)
+        {
+            // 천천히 움직임
+            if (runnerAnim != null && !IsPlayingAnimation(runner, PetAnimationController.PetAnimationType.Walk))
+            {
+                runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            }
+        }
+        else
+        {
+            // 빠르게 움직임
+            if (runnerAnim != null && !IsPlayingAnimation(runner, PetAnimationController.PetAnimationType.Run))
+            {
+                runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 현재 재생 중인 애니메이션 확인
+    /// </summary>
+    private bool IsPlayingAnimation(PetController pet, PetAnimationController.PetAnimationType animType)
+    {
+        if (pet.animator == null) return false;
+        return pet.animator.GetInteger("animation") == (int)animType;
     }
 }

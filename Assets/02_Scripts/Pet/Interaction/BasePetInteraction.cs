@@ -389,6 +389,23 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 현재 회전값 저장
         Quaternion pet1StartRotation = pet1.transform.rotation;
         Quaternion pet2StartRotation = pet2.transform.rotation;
+        
+        // 회전 각도가 충분히 큰 경우에만 걷기 애니메이션 재생
+        float pet1Angle = Quaternion.Angle(pet1StartRotation, pet1TargetRotation);
+        float pet2Angle = Quaternion.Angle(pet2StartRotation, pet2TargetRotation);
+        
+        // 회전 각도가 30도 이상인 경우 걷기 애니메이션 시작
+        bool pet1NeedsWalkAnim = pet1Angle > 30f;
+        bool pet2NeedsWalkAnim = pet2Angle > 30f;
+        
+        if (pet1NeedsWalkAnim)
+        {
+            pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        }
+        if (pet2NeedsWalkAnim)
+        {
+            pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        }
 
         float elapsedTime = 0f;
         while (elapsedTime < duration)
@@ -412,6 +429,16 @@ public abstract class BasePetInteraction : MonoBehaviour
         
         if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = pet1.transform.rotation;
         if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = pet2.transform.rotation;
+        
+        // 회전이 끝난 후 걷기 애니메이션 중지 (필요한 경우만)
+        if (pet1NeedsWalkAnim)
+        {
+            pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        }
+        if (pet2NeedsWalkAnim)
+        {
+            pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        }
     }
     // ▲▲▲ [여기까지 추가] ▲▲▲
     // 새로 추가된 메서드 - NavMeshAgent가 준비되었는지 확인
