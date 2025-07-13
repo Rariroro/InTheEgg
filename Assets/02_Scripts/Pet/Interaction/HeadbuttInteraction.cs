@@ -527,15 +527,36 @@ public class HeadbuttInteraction : BasePetInteraction
         Vector3 startPos = pet.transform.position;
         float elapsedTime = 0f;
         
-        // NavMeshAgent 임시 비활성화
-        bool wasAgentEnabled = pet.agent.enabled;
-        pet.agent.enabled = false;
+        // 애니메이션 컨트롤러 가져오기
+        var animController = pet.GetComponent<PetAnimationController>();
         
-        // 걷기 애니메이션
-        pet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        // NavMeshAgent 임시 비활성화 전에 상태 저장
+        bool wasAgentEnabled = pet.agent.enabled;
+        bool wasAgentStopped = pet.agent.isStopped;
+        
+        // agent를 정지시키고 회전 업데이트 비활성화
+        if (pet.agent.enabled)
+        {
+            pet.agent.isStopped = true;
+            pet.agent.updateRotation = false;
+        }
         
         // 원래 방향 유지
         Quaternion originalRotation = pet.transform.rotation;
+        
+        // Walk 애니메이션을 루프로 재생
+        if (animController != null)
+        {
+            // PlayAnimationWithCustomDuration을 사용하여 애니메이션 재생
+            // loop=true로 설정하여 계속 재생되도록 함
+            StartCoroutine(animController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Walk, 
+                duration + 0.5f,  // 이동 시간보다 약간 길게 설정
+                true,  // loop
+                false  // stopPrevious
+            ));
+            Debug.Log($"[{InteractionName}] {pet.petName} 뒤로 걷기 애니메이션 시작");
+        }
         
         while (elapsedTime < duration)
         {
@@ -553,14 +574,19 @@ public class HeadbuttInteraction : BasePetInteraction
         
         pet.transform.position = targetPos;
         
-        // NavMeshAgent 복원
-        pet.agent.enabled = wasAgentEnabled;
-        if (pet.agent.enabled && !pet.agent.isOnNavMesh)
+        // NavMeshAgent가 활성화되어 있었다면 위치 동기화
+        if (wasAgentEnabled)
         {
-            if (NavMesh.SamplePosition(pet.transform.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+            if (!pet.agent.isOnNavMesh)
             {
-                pet.transform.position = hit.position;
+                if (NavMesh.SamplePosition(pet.transform.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+                {
+                    pet.transform.position = hit.position;
+                }
             }
+            
+            // agent 상태는 아직 복원하지 않음 (다음 동작까지 대기)
+            // 이렇게 하면 애니메이션이 idle로 바뀌지 않음
         }
     }
     

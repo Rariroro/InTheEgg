@@ -39,7 +39,7 @@ public class PetAnimationController : MonoBehaviour
             );
         }
 
-        if (petController.isSelected || petController.isHolding)
+        if (petController.isSelected || petController.isHolding || petController.isInteracting)
         {
             return;
         }
