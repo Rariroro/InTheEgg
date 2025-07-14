@@ -21,7 +21,9 @@ public enum EmotionType
     Victory,    // 승리
     Joke,
     Defeat,      // 패배
-    Sleep       // 잠자기
+    Sleep,       // 잠자기
+    Dizzy,      // 어지러움/스컹크 방구 맞음
+    Disgusted   // 역겨움
 
 }
 

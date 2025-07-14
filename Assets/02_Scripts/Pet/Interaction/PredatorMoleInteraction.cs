@@ -70,11 +70,11 @@ public class PredatorMoleInteraction : BasePetInteraction
         bool hasMole = pet1.PetType == PetType.Mole || pet2.PetType == PetType.Mole;
         if (!hasMole) return false;
 
-        // 다른 쪽이 육식동물인지 확인
+        // 다른 쪽이 고기를 먹는 육식동물인지 확인 (Fish만 먹는 동물은 제외)
         PetController otherPet = (pet1.PetType == PetType.Mole) ? pet2 : pet1;
-        bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;
+        bool isMeatEater = (otherPet.diet & PetAIProperties.DietaryFlags.Meat) != 0;
 
-        return isPredator;
+        return isMeatEater;
     }
 
     // 메인 상호작용 수행

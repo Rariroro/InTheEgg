@@ -52,13 +52,13 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         // 다른 한 쪽이 포식자인지 확인
         PetController otherPet = (pet1.PetType == PetType.Possum) ? pet2 : pet1;
-        // 육식 또는 어식 식성을 가졌는지 확인
-        bool isPredator = (otherPet.diet & (PetAIProperties.DietaryFlags.Meat | PetAIProperties.DietaryFlags.Fish)) != 0;
+        // 고기(Meat)를 먹는 육식동물인지 확인 (Fish만 먹는 동물은 제외)
+        bool isMeatEater = (otherPet.diet & PetAIProperties.DietaryFlags.Meat) != 0;
 
         // 포식자가 주머니쥐 자신인 경우는 제외
         if (otherPet.PetType == PetType.Possum) return false;
 
-        return isPredator;
+        return isMeatEater;
     }
 
     /// <summary>

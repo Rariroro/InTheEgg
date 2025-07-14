@@ -96,4 +96,7 @@ MonoBehaviour:
   - emotionType: 16
     iconSprite: {fileID: 0}
     particlePrefab: {fileID: 1534639363344604, guid: ae34dec330b5b4b1391eb0bf82afc069, type: 3}
+  - emotionType: 17
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 1238154324082714, guid: 889d8e4bbe65848bda194c7e0078ddb6, type: 3}
   emotionBubblePrefab: {fileID: 468145788195757376, guid: 48005c7e051e64415ab263fd39b63ed5, type: 3}
