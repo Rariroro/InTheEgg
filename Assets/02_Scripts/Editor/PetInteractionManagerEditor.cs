@@ -17,10 +17,10 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<FightInteraction>("Fight");
     }
     
-    [MenuItem("Tools/Pet System/Add RestTogether Interaction")]
-    private static void AddRestTogetherInteraction()
+    [MenuItem("Tools/Pet System/Add RestAndSleepTogether Interaction")]
+    private static void AddRestAndSleepTogetherInteraction()
     {
-        AddInteractionComponent<RestTogetherInteraction>("RestTogether");
+        AddInteractionComponent<RestAndSleepTogetherInteraction>("RestAndSleepTogether");
     }
     
     [MenuItem("Tools/Pet System/Add Race Interaction")]
@@ -35,12 +35,6 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<ChaseAndRunInteraction>("ChaseAndRun");
     }
     
-    [MenuItem("Tools/Pet System/Add SleepTogether Interaction")]
-    private static void AddSleepTogetherInteraction()
-    {
-        AddInteractionComponent<SleepTogetherInteraction>("SleepTogether");
-    }
-    
     [MenuItem("Tools/Pet System/Add RideAndWalk Interaction")]
     private static void AddRideAndWalkInteraction()
     {
@@ -53,17 +47,58 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<SlothKoalaRaceInteraction>("SlothKoalaRace");
     }
     
+    [MenuItem("Tools/Pet System/Add CamelAlpacaSpitFight Interaction")]
+    private static void AddCamelAlpacaSpitFightInteraction()
+    {
+        AddInteractionComponent<CamelAlpacaSpitFightInteraction>("CamelAlpacaSpitFight");
+    }
+    
+    [MenuItem("Tools/Pet System/Add Headbutt Interaction")]
+    private static void AddHeadbuttInteraction()
+    {
+        AddInteractionComponent<HeadbuttInteraction>("Headbutt");
+    }
+    
+    [MenuItem("Tools/Pet System/Add PredatorPossumPrank Interaction")]
+    private static void AddPredatorPossumPrankInteraction()
+    {
+        AddInteractionComponent<PredatorPossumPrankInteraction>("PredatorPossumPrank");
+    }
+    
+    [MenuItem("Tools/Pet System/Add PredatorMole Interaction")]
+    private static void AddPredatorMoleInteraction()
+    {
+        AddInteractionComponent<PredatorMoleInteraction>("PredatorMole");
+    }
+    
+    [MenuItem("Tools/Pet System/Add ChameleonCamouflage Interaction")]
+    private static void AddChameleonCamouflageInteraction()
+    {
+        AddInteractionComponent<ChameleonCamouflageInteraction>("ChameleonCamouflage");
+    }
+    
+    [MenuItem("Tools/Pet System/Add SkunkDefense Interaction")]
+    private static void AddSkunkDefenseInteraction()
+    {
+        AddInteractionComponent<SkunkDefenseInteraction>("SkunkDefense");
+    }
+    
     [MenuItem("Tools/Pet System/Add All Interactions")]
     private static void AddAllInteractions()
     {
         AddWalkTogetherInteraction();
         AddFightInteraction();
-        AddRestTogetherInteraction();
+        AddRestAndSleepTogetherInteraction();
         AddRaceInteraction();
         AddChaseAndRunInteraction();
-        AddSleepTogetherInteraction();
         AddRideAndWalkInteraction();
         AddSlothKoalaRaceInteraction();
+        AddCamelAlpacaSpitFightInteraction();
+        AddHeadbuttInteraction();
+        AddPredatorPossumPrankInteraction();
+        AddPredatorMoleInteraction();
+        AddChameleonCamouflageInteraction();
+        AddSkunkDefenseInteraction();
         
         Debug.Log("모든 상호작용이 추가되었습니다.");
     }
@@ -72,7 +107,7 @@ public class PetInteractionManagerEditor : Editor
     private static void AddInteractionComponent<T>(string interactionName) where T : BasePetInteraction
     {
         // PetInteractionManager를 찾아 필요한 상호작용 컴포넌트 추가
-        PetInteractionManager manager = Object.FindObjectOfType<PetInteractionManager>();
+        PetInteractionManager manager = FindFirstObjectByType<PetInteractionManager>();
         if (manager != null)
         {
             // 이미 존재하는지 확인
