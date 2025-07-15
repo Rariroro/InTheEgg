@@ -55,6 +55,20 @@ public class WalkTogetherInteraction : BasePetInteraction
     [Tooltip("NavMesh 검색 반경")]
     public float navMeshSearchRadius = 55f;
 
+    [Tooltip("경로 찾기 재시도 횟수")]
+    public int pathfindingRetries = 3;
+
+    // 애니메이션 컨트롤러 캐싱
+    private PetAnimationController pet1Anim;
+    private PetAnimationController pet2Anim;
+
+    // 원래 속도 저장
+    private float originalSpeed1;
+    private float originalSpeed2;
+
+    // 이벤트 진행 중 플래그
+    private bool isEventInProgress = false;
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.WalkTogether;
@@ -84,15 +98,28 @@ public class WalkTogetherInteraction : BasePetInteraction
             yield break;
         }
 
+        // 애니메이션 컨트롤러 캐싱
+        pet1Anim = pet1.GetComponent<PetAnimationController>();
+        pet2Anim = pet2.GetComponent<PetAnimationController>();
+
+        if (pet1Anim == null || pet2Anim == null)
+        {
+            Debug.LogError($"[{InteractionName}] PetAnimationController를 찾을 수 없습니다.");
+            EndInteraction(pet1, pet2);
+            yield break;
+        }
+
         // 원래 상태 저장
         PetOriginalState pet1State = new PetOriginalState(pet1);
         PetOriginalState pet2State = new PetOriginalState(pet2);
+        originalSpeed1 = pet1.agent.speed;
+        originalSpeed2 = pet2.agent.speed;
 
         try
         {
-            // 감정 표현
-            pet1.ShowEmotion(EmotionType.Friend, 30f);
-            pet2.ShowEmotion(EmotionType.Friend, 30f);
+            // 감정 표현 (짧은 시간으로 변경)
+            pet1.ShowEmotion(EmotionType.Friend, 5f);
+            pet2.ShowEmotion(EmotionType.Friend, 5f);
 
             // 1. 준비 단계
             yield return StartCoroutine(PrepareWalkPhase(pet1, pet2));
@@ -112,8 +139,11 @@ public class WalkTogetherInteraction : BasePetInteraction
             pet2State.Restore(pet2);
 
             // 애니메이션 정리
-            pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
-            pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+            if (pet1Anim != null) pet1Anim.StopContinuousAnimation();
+            if (pet2Anim != null) pet2Anim.StopContinuousAnimation();
+
+            // 이벤트 플래그 초기화
+            isEventInProgress = false;
 
             // 공통 종료 처리
             EndInteraction(pet1, pet2);
@@ -138,9 +168,6 @@ public class WalkTogetherInteraction : BasePetInteraction
         // 서로 마주보고 인사
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-        var pet1Anim = pet1.GetComponent<PetAnimationController>();
-        var pet2Anim = pet2.GetComponent<PetAnimationController>();
-
         // 인사 애니메이션 (점프)
         StartCoroutine(pet1Anim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 1f, false, false));
@@ -157,9 +184,6 @@ public class WalkTogetherInteraction : BasePetInteraction
     private IEnumerator MainWalkPhase(PetController pet1, PetController pet2)
     {
         Debug.Log($"[{InteractionName}] 2단계: 메인 걷기");
-
-        var pet1Anim = pet1.GetComponent<PetAnimationController>();
-        var pet2Anim = pet2.GetComponent<PetAnimationController>();
 
         // 속도 동기화
         float syncedSpeed = Mathf.Min(pet1.baseSpeed, pet2.baseSpeed) * walkSpeedMultiplier;
@@ -181,71 +205,47 @@ public class WalkTogetherInteraction : BasePetInteraction
 
         while (elapsedTime < walkDuration)
         {
-            bool shouldUpdatePath = false;
-
-            if (pathUpdateCount == 0) // 처음에는 무조건 경로 설정
+            // 이벤트 진행 중이 아닐 때만 경로 업데이트
+            if (!isEventInProgress)
             {
-                shouldUpdatePath = true;
-            }
-            else
-            {
-                // 두 펫 모두 목적지에 가까워지면 새 경로 설정
-                bool pet1NearDestination = !pet1.agent.pathPending && pet1.agent.remainingDistance < arrivalDistance;
-                bool pet2NearDestination = !pet2.agent.pathPending && pet2.agent.remainingDistance < arrivalDistance;
+                bool shouldUpdatePath = false;
 
-                if (pet1NearDestination && pet2NearDestination)
+                if (pathUpdateCount == 0) // 처음에는 무조건 경로 설정
                 {
                     shouldUpdatePath = true;
                 }
-
-                // 또는 일정 시간이 지나면 경로 갱신
-                if (elapsedTime - lastPathUpdateTime > pathUpdateInterval)
+                else
                 {
-                    shouldUpdatePath = true;
+                    // 두 펫 모두 목적지에 가까워지면 새 경로 설정
+                    bool pet1NearDestination = !pet1.agent.pathPending && pet1.agent.remainingDistance < arrivalDistance;
+                    bool pet2NearDestination = !pet2.agent.pathPending && pet2.agent.remainingDistance < arrivalDistance;
+
+                    if (pet1NearDestination && pet2NearDestination)
+                    {
+                        shouldUpdatePath = true;
+                    }
+
+                    // 또는 일정 시간이 지나면 경로 갱신
+                    if (elapsedTime - lastPathUpdateTime > pathUpdateInterval)
+                    {
+                        shouldUpdatePath = true;
+                    }
                 }
-            }
 
-            if (shouldUpdatePath)
-            {
-                pathUpdateCount++;
-                lastPathUpdateTime = elapsedTime;
-
-                // 새로운 걷기 방향 설정
-                Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
-                float randomAngle = Random.Range(-maxDirectionChangeAngle, maxDirectionChangeAngle);
-                Vector3 walkDirection = Quaternion.Euler(0, randomAngle, 0) * 
-                                      (pet1.transform.forward + pet2.transform.forward).normalized;
-
-                // 측면 벡터 계산
-                Vector3 sideDirection = Vector3.Cross(Vector3.up, walkDirection).normalized;
-
-                // 목적지 거리
-                float targetDistance = Random.Range(minWalkDistance, maxWalkDistance);
-
-                // 중앙 목적지 계산
-                Vector3 centerTarget = midPoint + walkDirection * targetDistance;
-
-                // 각 펫의 목적지 계산 (나란히 걷도록)
-                Vector3 pet1Target = centerTarget - sideDirection * (petSpacing / 2f);
-                Vector3 pet2Target = centerTarget + sideDirection * (petSpacing / 2f);
-
-                // NavMesh 보정
-                pet1Target = FindValidPositionOnNavMesh(pet1Target, navMeshSearchRadius);
-                pet2Target = FindValidPositionOnNavMesh(pet2Target, navMeshSearchRadius);
-
-                // 두 펫을 움직이게 설정
-                pet1.agent.isStopped = false;
-                pet2.agent.isStopped = false;
-                pet1.agent.SetDestination(pet1Target);
-                pet2.agent.SetDestination(pet2Target);
-
-                Debug.Log($"[{InteractionName}] 새 목적지 설정: 펫1({pet1Target}), 펫2({pet2Target})");
+                if (shouldUpdatePath)
+                {
+                    yield return StartCoroutine(UpdateWalkPath(pet1, pet2));
+                    pathUpdateCount++;
+                    lastPathUpdateTime = elapsedTime;
+                }
             }
 
             // 특별 이벤트 체크
-            if (elapsedTime >= nextEventTime && Random.value < specialEventChance)
+            if (!isEventInProgress && elapsedTime >= nextEventTime && Random.value < specialEventChance)
             {
+                isEventInProgress = true;
                 yield return StartCoroutine(PerformWalkEvent(pet1, pet2));
+                isEventInProgress = false;
                 nextEventTime = elapsedTime + Random.Range(eventMinInterval, eventMaxInterval);
             }
 
@@ -253,7 +253,71 @@ public class WalkTogetherInteraction : BasePetInteraction
             yield return null;
         }
 
-        // 걷기 종료 - 에이전트 정지
+        // 걷기 종료
+        yield return StartCoroutine(EndWalkPhase(pet1, pet2));
+    }
+
+    /// <summary>
+    /// 경로 업데이트
+    /// </summary>
+    private IEnumerator UpdateWalkPath(PetController pet1, PetController pet2)
+    {
+        // 새로운 걷기 방향 설정
+        Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
+        float randomAngle = Random.Range(-maxDirectionChangeAngle, maxDirectionChangeAngle);
+        Vector3 walkDirection = Quaternion.Euler(0, randomAngle, 0) * 
+                              (pet1.transform.forward + pet2.transform.forward).normalized;
+
+        // 측면 벡터 계산
+        Vector3 sideDirection = Vector3.Cross(Vector3.up, walkDirection).normalized;
+
+        // 목적지 거리
+        float targetDistance = Random.Range(minWalkDistance, maxWalkDistance);
+
+        // 경로 찾기 재시도
+        for (int retry = 0; retry < pathfindingRetries; retry++)
+        {
+            // 중앙 목적지 계산
+            Vector3 centerTarget = midPoint + walkDirection * targetDistance;
+
+            // 각 펫의 목적지 계산 (나란히 걷도록)
+            Vector3 pet1Target = centerTarget - sideDirection * (petSpacing / 2f);
+            Vector3 pet2Target = centerTarget + sideDirection * (petSpacing / 2f);
+
+            // NavMesh 보정
+            pet1Target = FindValidPositionOnNavMesh(pet1Target, navMeshSearchRadius);
+            pet2Target = FindValidPositionOnNavMesh(pet2Target, navMeshSearchRadius);
+
+            // 경로 유효성 검사
+            NavMeshPath path1 = new NavMeshPath();
+            NavMeshPath path2 = new NavMeshPath();
+
+            if (pet1.agent.CalculatePath(pet1Target, path1) && path1.status == NavMeshPathStatus.PathComplete &&
+                pet2.agent.CalculatePath(pet2Target, path2) && path2.status == NavMeshPathStatus.PathComplete)
+            {
+                // 두 펫을 움직이게 설정
+                pet1.agent.isStopped = false;
+                pet2.agent.isStopped = false;
+                pet1.agent.SetDestination(pet1Target);
+                pet2.agent.SetDestination(pet2Target);
+
+                Debug.Log($"[{InteractionName}] 새 목적지 설정 성공");
+                yield break;
+            }
+
+            // 실패 시 거리를 줄여서 재시도
+            targetDistance *= 0.7f;
+        }
+
+        Debug.LogWarning($"[{InteractionName}] 유효한 경로를 찾을 수 없어 현재 위치 유지");
+    }
+
+    /// <summary>
+    /// 걷기 종료 단계
+    /// </summary>
+    private IEnumerator EndWalkPhase(PetController pet1, PetController pet2)
+    {
+        // 에이전트 정지
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
 
@@ -281,9 +345,11 @@ public class WalkTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PerformWalkEvent(PetController pet1, PetController pet2)
     {
+        // 이벤트 중 원래 속도 저장
+        float eventSpeed1 = pet1.agent.speed;
+        float eventSpeed2 = pet2.agent.speed;
+
         int eventType = Random.Range(0, 6);
-        var pet1Anim = pet1.GetComponent<PetAnimationController>();
-        var pet2Anim = pet2.GetComponent<PetAnimationController>();
 
         switch (eventType)
         {
@@ -312,11 +378,8 @@ public class WalkTogetherInteraction : BasePetInteraction
                 Debug.Log($"[{InteractionName}] 잠시 뛰어갑니다!");
                 
                 // 속도 증가
-                float originalSpeed1 = pet1.agent.speed;
-                float originalSpeed2 = pet2.agent.speed;
-                
-                pet1.agent.speed *= 1.8f;
-                pet2.agent.speed *= 1.8f;
+                pet1.agent.speed = eventSpeed1 * 1.8f;
+                pet2.agent.speed = eventSpeed2 * 1.8f;
                 
                 // 뛰기 애니메이션
                 pet1Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
@@ -325,8 +388,8 @@ public class WalkTogetherInteraction : BasePetInteraction
                 yield return new WaitForSeconds(3f);
                 
                 // 다시 걷기 속도로
-                pet1.agent.speed = originalSpeed1;
-                pet2.agent.speed = originalSpeed2;
+                pet1.agent.speed = eventSpeed1;
+                pet2.agent.speed = eventSpeed2;
                 pet1Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
                 pet2Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
                 break;
@@ -351,21 +414,22 @@ public class WalkTogetherInteraction : BasePetInteraction
                 Debug.Log($"[{InteractionName}] 한 펫이 앞서갑니다.");
                 PetController leadPet = Random.value > 0.5f ? pet1 : pet2;
                 PetController followPet = leadPet == pet1 ? pet2 : pet1;
+                float leadSpeed = leadPet == pet1 ? eventSpeed1 : eventSpeed2;
+                float followSpeed = followPet == pet1 ? eventSpeed1 : eventSpeed2;
                 
-                leadPet.agent.speed *= 1.3f;
-                // leadPet.ShowEmotion(EmotionType.Cheer, 3f);
-                // followPet.ShowEmotion(EmotionType.Surprised, 3f);
+                leadPet.agent.speed = leadSpeed * 1.3f;
+                leadPet.ShowEmotion(EmotionType.Happy, 3f);
+                followPet.ShowEmotion(EmotionType.Surprised, 3f);
                 
                 yield return new WaitForSeconds(2f);
                 
                 // 뒤처진 펫이 따라잡기
-                followPet.agent.speed *= 1.5f;
+                followPet.agent.speed = followSpeed * 1.5f;
                 yield return new WaitForSeconds(1f);
                 
-                // 다시 속도 맞추기
-                float syncedSpeed = Mathf.Min(pet1.baseSpeed, pet2.baseSpeed) * walkSpeedMultiplier;
-                pet1.agent.speed = syncedSpeed;
-                pet2.agent.speed = syncedSpeed;
+                // 다시 원래 속도로
+                pet1.agent.speed = eventSpeed1;
+                pet2.agent.speed = eventSpeed2;
                 break;
 
             case 4: // 동시에 점프
@@ -391,34 +455,38 @@ public class WalkTogetherInteraction : BasePetInteraction
                 pet2Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
                 break;
 
-            case 5: // 놀이하듯 서로 돌기
-                Debug.Log($"[{InteractionName}] 서로 주위를 빙글빙글 돕니다.");
-                pet1.agent.isStopped = true;
-                pet2.agent.isStopped = true;
+            case 5: // 간단한 교차 걷기
+                Debug.Log($"[{InteractionName}] 위치를 교차하며 걷습니다.");
                 
-                // 서로의 주위를 도는 위치 설정
-                Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
-                float radius = petSpacing;
+                // 현재 목적지 저장
+                Vector3 pet1Dest = pet1.agent.destination;
+                Vector3 pet2Dest = pet2.agent.destination;
                 
-                // 원형으로 이동
-                for (int i = 0; i < 4; i++)
-                {
-                    float angle = i * 90f * Mathf.Deg2Rad;
-                    Vector3 pet1NewPos = midPoint + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
-                    Vector3 pet2NewPos = midPoint - new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * radius;
-                    
-                    pet1.agent.SetDestination(pet1NewPos);
-                    pet2.agent.SetDestination(pet2NewPos);
-                    pet1.agent.isStopped = false;
-                    pet2.agent.isStopped = false;
-                    
-                    yield return new WaitForSeconds(0.7f);
-                }
+                // 서로의 위치 근처로 이동
+                Vector3 crossPoint1 = pet2.transform.position + pet2.transform.right * petSpacing;
+                Vector3 crossPoint2 = pet1.transform.position - pet1.transform.right * petSpacing;
+                
+                // NavMesh 검증
+                crossPoint1 = FindValidPositionOnNavMesh(crossPoint1, 5f);
+                crossPoint2 = FindValidPositionOnNavMesh(crossPoint2, 5f);
+                
+                pet1.agent.SetDestination(crossPoint1);
+                pet2.agent.SetDestination(crossPoint2);
+                
+                yield return new WaitForSeconds(2f);
+                
+                // 원래 목적지로 복귀
+                pet1.agent.SetDestination(pet1Dest);
+                pet2.agent.SetDestination(pet2Dest);
                 
                 pet1.ShowEmotion(EmotionType.Happy, 2f);
                 pet2.ShowEmotion(EmotionType.Happy, 2f);
                 break;
         }
+
+        // 속도가 변경되었을 수 있으므로 원래 속도로 복원
+        pet1.agent.speed = eventSpeed1;
+        pet2.agent.speed = eventSpeed2;
     }
 
     /// <summary>

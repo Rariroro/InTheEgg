@@ -55,7 +55,7 @@ MonoBehaviour:
   rotationSpeed: 5
   smoothTime: 0.3
   personality: 0
-  diet: 4
+  diet: 6
   habitat: 2
   treeClimbChance: 0.1
   waterSinkDepth: 1
