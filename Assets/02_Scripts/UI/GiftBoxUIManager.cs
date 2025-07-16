@@ -118,6 +118,8 @@ public class GiftBoxUIManager : MonoBehaviour
             var petGifts = GetPetGiftBoxes();
             activeGifts["pet"].Clear();
             activeGifts["pet"].AddRange(petGifts);
+            
+            
             UpdateGiftButton("pet");
         }
         
@@ -127,6 +129,8 @@ public class GiftBoxUIManager : MonoBehaviour
             var envGifts = GetEnvironmentGiftBoxes();
             activeGifts["environment"].Clear();
             activeGifts["environment"].AddRange(envGifts);
+            
+            
             UpdateGiftButton("environment");
         }
     }
@@ -134,39 +138,23 @@ public class GiftBoxUIManager : MonoBehaviour
     // PetManager에서 선물 상자 가져오기
     private List<GameObject> GetPetGiftBoxes()
     {
-        List<GameObject> gifts = new List<GameObject>();
-        
-        if (petManager != null && petManager.PendingGifts != null)
+        if (petManager != null)
         {
-            foreach (var gift in petManager.PendingGifts.Keys)
-            {
-                if (gift != null)
-                {
-                    gifts.Add(gift);
-                }
-            }
+            return petManager.GetPendingGiftList();
         }
         
-        return gifts;
+        return new List<GameObject>();
     }
     
     // EnvironmentManager에서 선물 상자 가져오기
     private List<GameObject> GetEnvironmentGiftBoxes()
     {
-        List<GameObject> gifts = new List<GameObject>();
-        
-        if (environmentManager != null && environmentManager.PendingGifts != null)
+        if (environmentManager != null)
         {
-            foreach (var gift in environmentManager.PendingGifts.Keys)
-            {
-                if (gift != null)
-                {
-                    gifts.Add(gift);
-                }
-            }
+            return environmentManager.GetPendingGiftList();
         }
         
-        return gifts;
+        return new List<GameObject>();
     }
     
     // 선물 버튼 업데이트
@@ -234,11 +222,19 @@ public class GiftBoxUIManager : MonoBehaviour
         if (!giftButtons.ContainsKey(giftType)) return;
         
         GameObject buttonObj = giftButtons[giftType];
-        TMP_Text countText = buttonObj.transform.Find("CountText")?.GetComponent<TMP_Text>();
+        // CountBackground의 자식인 CountText 찾기
+        TMP_Text countText = buttonObj.transform.Find("CountBackground/CountText")?.GetComponent<TMP_Text>();
         
         if (countText != null)
         {
             countText.text = count.ToString();
+        }
+        
+        // 개수가 0이면 CountBackground 숨기기
+        Transform countBg = buttonObj.transform.Find("CountBackground");
+        if (countBg != null)
+        {
+            countBg.gameObject.SetActive(count > 0);
         }
     }
     

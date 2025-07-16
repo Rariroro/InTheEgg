@@ -28,6 +28,21 @@ public class PetManager : MonoBehaviour
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
     
+    // 선물 개수 반환
+    public int GetPendingGiftCount() => pendingGifts.Count;
+    
+    // 선물 리스트 반환
+    public List<GameObject> GetPendingGiftList()
+    {
+        List<GameObject> gifts = new List<GameObject>();
+        foreach (var gift in pendingGifts.Keys)
+        {
+            if (gift != null)
+                gifts.Add(gift);
+        }
+        return gifts;
+    }
+    
     // 터치 처리 최적화를 위한 변수
     private float lastTouchTime;
     private const float TOUCH_COOLDOWN = 0.1f;
@@ -48,7 +63,6 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     {
         // EnvironmentManager가 초기화를 완료할 때까지 대기
         yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
-        // Debug.Log("EnvironmentManager 초기화 완료, 펫 스폰 시작");
     }
     else
     {
@@ -74,7 +88,6 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     // 선택된 펫을 효과와 함께 스폰하는 코루틴 (새로 추가)
     private IEnumerator SpawnSelectedPetsWithEffects()
     {
-        // Debug.Log($"선택된 펫 수: {PetSelectionManager.Instance.selectedPetIds.Count}");
         
         // 일반 펫과 최초 등장 펫을 분리
         List<string> normalPets = new List<string>();
@@ -155,11 +168,9 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                     {
                         // 최초 등장 효과 적용
                         ApplyFirstAppearanceEffect(pet);
-                        // Debug.Log($"최초 등장 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                     else
                     {
-                        // Debug.Log($"일반 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                 }
                 else
@@ -205,11 +216,9 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                     {
                         // 최초 등장 효과 적용
                         ApplyFirstAppearanceEffect(pet);
-                        // Debug.Log($"최초 등장 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                     else
                     {
-                        // Debug.Log($"일반 펫 생성: {petId}, 인덱스: {petIndex}, 이름: {pet.name}");
                     }
                 }
                 else
@@ -289,7 +298,6 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         // 대기 중인 선물 목록에 추가
         pendingGifts.Add(gift, petId);
         
-        Debug.Log($"펫용 선물 생성 완료: {petId} at {giftPosition}");
     }
     
     private IEnumerator RotateGift(GameObject gift)
@@ -348,7 +356,6 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         // 펫 스폰 - 선물이 있던 위치에 스폰
         SpawnPetAtPosition(petId, giftPosition, true);
         
-        Debug.Log($"선물을 열어 펫이 나타났습니다: {petId}");
     }
     
     private IEnumerator LaunchFireworks(Vector3 spawnCenter)

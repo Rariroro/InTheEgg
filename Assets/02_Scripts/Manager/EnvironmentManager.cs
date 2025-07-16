@@ -44,6 +44,21 @@ public class EnvironmentManager : MonoBehaviour
     
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
+    
+    // 선물 개수 반환
+    public int GetPendingGiftCount() => pendingGifts.Count;
+    
+    // 선물 리스트 반환
+    public List<GameObject> GetPendingGiftList()
+    {
+        List<GameObject> gifts = new List<GameObject>();
+        foreach (var gift in pendingGifts.Keys)
+        {
+            if (gift != null)
+                gifts.Add(gift);
+        }
+        return gifts;
+    }
 
     // TerrainTextureSwitchManager 캐싱
     private TerrainTextureSwitchManager terrainManager;
@@ -134,7 +149,6 @@ public class EnvironmentManager : MonoBehaviour
         "env_flowers"
     };
 
-        // Debug.Log("기본 환경 스폰 시작...");
 
         foreach (string envId in defaultEnvironments)
         {
@@ -150,7 +164,6 @@ public class EnvironmentManager : MonoBehaviour
         Physics.SyncTransforms();
 
         // NavMesh 베이크
-        // Debug.Log("기본 환경 NavMesh 베이크 시작...");
         yield return StartCoroutine(BakeNavMeshAfterDelay());
 
         // ★★★★★ [수정] TreeManager 그리드 재생성 호출 ★★★★★
@@ -161,7 +174,6 @@ public class EnvironmentManager : MonoBehaviour
 
         // 초기화 완료 플래그 설정
         IsInitializationComplete = true;
-        Debug.Log("기본 환경 초기화 완료!");
     }
 
     private IEnumerator WaitForTerrainManagerAndSpawn()
@@ -195,7 +207,6 @@ public class EnvironmentManager : MonoBehaviour
 
         // 초기화 완료 플래그 설정
         IsInitializationComplete = true;
-        // Debug.Log("선택된 환경 초기화 완료!");
     }
 
     private void Update()
@@ -240,7 +251,6 @@ public class EnvironmentManager : MonoBehaviour
         if (terrainManager != null)
         {
             terrainManager.DisableGroupByEnvironmentId(environmentId);
-            // Debug.Log($"환경 {environmentId} 스폰과 동시에 지형 토글을 껐습니다.");
         }
         else
         {
@@ -254,11 +264,6 @@ public class EnvironmentManager : MonoBehaviour
         if (withFirstAppearanceEffect)
         {
             ApplyFirstAppearanceEffect(environment);
-            // Debug.Log($"최초 등장 환경 생성 완료: {environmentId}");
-        }
-        else
-        {
-            // Debug.Log($"일반 환경 생성 완료: {environmentId}");
         }
 
         // 물리 엔진 동기화
@@ -353,7 +358,6 @@ public class EnvironmentManager : MonoBehaviour
             TreeManager.Instance.RebuildTreeGrid();
         }
 
-        // Debug.Log($"선물을 열어 환경이 나타났습니다: {environmentId}");
     }
     /// <summary>
 /// 지정된 위치에서 여러 개의 불꽃놀이를 '순서대로' 발사하는 코루틴입니다.
@@ -422,7 +426,6 @@ private IEnumerator LaunchFireworks(Vector3 spawnCenter)
     {
         List<string> selectedIds = EnvironmentSelectionManager.Instance.selectedEnvironmentIds;
 
-        // Debug.Log($"선택된 환경 수: {selectedIds.Count}");
 
         // 일반 환경과 최초 등장 환경을 분리
         List<string> normalEnvironments = new List<string>();
@@ -467,7 +470,6 @@ private IEnumerator LaunchFireworks(Vector3 spawnCenter)
         Physics.SyncTransforms();
 
         // 초기 NavMesh 베이크 (일반 환경이 있든 없든 항상 실행)
-        // Debug.Log("초기 NavMesh 베이크 시작...");
         yield return StartCoroutine(BakeNavMeshAfterDelay());
         // ★★★★★ [수정] TreeManager 그리드 재생성 호출 ★★★★★
         if (TreeManager.Instance != null)
@@ -525,7 +527,6 @@ private IEnumerator LaunchFireworks(Vector3 spawnCenter)
         // 대기 중인 선물 목록에 추가
         pendingGifts.Add(gift, environmentId);
 
-        // Debug.Log($"환경용 선물 생성 완료: {environmentId} at {giftPosition}");
     }
 
     private IEnumerator SpawnEnvironmentAndBake(string environmentId)
@@ -575,7 +576,6 @@ private IEnumerator LaunchFireworks(Vector3 spawnCenter)
         // NavMesh 베이크
         if (navMeshSurface != null)
         {
-            // Debug.Log("NavMesh 베이크 시작...");
 
             // 기존 NavMesh 데이터 제거
             navMeshSurface.RemoveData();
@@ -583,7 +583,6 @@ private IEnumerator LaunchFireworks(Vector3 spawnCenter)
             // 새로운 NavMesh 베이크
             navMeshSurface.BuildNavMesh();
 
-            // Debug.Log("NavMesh 베이크 완료!");
         }
         else
         {
