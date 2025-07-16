@@ -7771,11 +7771,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8777984820069514649, guid: cd591236c9acf4fa4a16b9baae6f5ee1, type: 3}
   m_PrefabInstance: {fileID: 9031712288330469147}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &151048173 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8737005756107811976, guid: d35852a5e87dd49eb938ff855550b260, type: 3}
-  m_PrefabInstance: {fileID: 8219718720146885881}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &162885841 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3404598000801519254, guid: fa500c30f094a43909aca3032b6256f6, type: 3}
@@ -127320,9 +127315,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: giftPrefab
+      value: 
+      objectReference: {fileID: 1558863309331682, guid: a4c8a64405f70497a8960c8840f1ae5f, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: celebrationEffectPrefab
+      value: 
+      objectReference: {fileID: 129898, guid: ea572dabc20554d768b0a80802ad90d4, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
       propertyPath: firstAppearanceEffectPrefab
       value: 
-      objectReference: {fileID: 151048173}
+      objectReference: {fileID: 1858798456717250, guid: 965b4f734e2334e8cb825e022a1d771e, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

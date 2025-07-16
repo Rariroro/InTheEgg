@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 
@@ -62,8 +63,32 @@ public class PetSelectionUI : MonoBehaviour
                 petToggles[i].isOn = true; // 이렇게 하면 OnPetToggleValueChanged가 자동 호출됨
             }
         }
+        
+        // 잠시 대기 후 모든 최초등장 토글 켜기
+        StartCoroutine(EnableAllFirstAppearanceToggles());
 
         // Debug.Log($"총 {petToggles.Count}개 펫이 선택되었습니다.");
+    }
+    
+    // ★ 모든 최초등장 토글을 켜는 코루틴
+    private IEnumerator EnableAllFirstAppearanceToggles()
+    {
+        // 펫 토글들이 처리될 시간을 주기 위해 약간 대기
+        yield return new WaitForSeconds(0.1f);
+        
+        // 모든 최초등장 토글 켜기
+        for (int i = 0; i < firstAppearanceToggles.Count; i++)
+        {
+            if (firstAppearanceToggles[i] != null && firstAppearanceToggles[i].interactable && !firstAppearanceToggles[i].isOn)
+            {
+                firstAppearanceToggles[i].isOn = true;
+            }
+        }
+        
+        // Debug.Log($"총 {petToggles.Count}개 펫이 최초등장 상태로 선택되었습니다.");
+        
+        // 선택된 펫 수 텍스트 업데이트
+        UpdateSelectedCountText();
     }
 
 
