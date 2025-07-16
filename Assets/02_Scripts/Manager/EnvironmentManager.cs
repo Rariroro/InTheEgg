@@ -41,6 +41,9 @@ public class EnvironmentManager : MonoBehaviour
 
     // 대기 중인 선물들과 해당 환경 정보를 저장하는 딕셔너리
     private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
+    
+    // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
+    public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
 
     // TerrainTextureSwitchManager 캐싱
     private TerrainTextureSwitchManager terrainManager;
@@ -279,7 +282,10 @@ public class EnvironmentManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit))
+            // NavMeshIgnore 레이어도 포함하여 Raycast
+            int layerMask = ~0; // 모든 레이어
+            
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {
                 GameObject hitObject = hit.collider.gameObject;
 
