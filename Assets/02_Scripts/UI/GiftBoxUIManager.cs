@@ -14,8 +14,12 @@ public class GiftBoxUIManager : MonoBehaviour
     [Header("카메라 설정")]
     public Camera mainCamera; // 메인 카메라
     public float cameraMoveDuration = 1f; // 카메라 이동 시간
-    public float cameraZoomDistance = 10f; // 선물 상자로부터의 카메라 거리
-    public float cameraHeight = 8f; // 카메라 높이
+    public float cameraZoomDistance = 10f; // 펫 선물 상자로부터의 카메라 거리
+    public float cameraHeight = 8f; // 펫 카메라 높이
+    
+    [Header("환경 카메라 설정")]
+    public float environmentCameraZoomDistance = 20f; // 환경 선물 상자로부터의 카메라 거리
+    public float environmentCameraHeight = 15f; // 환경 카메라 높이
     
     // 선물 타입별 아이콘
     [System.Serializable]
@@ -259,21 +263,23 @@ public class GiftBoxUIManager : MonoBehaviour
         
         if (targetGift != null)
         {
-            StartCoroutine(MoveCameraToGift(targetGift));
+            StartCoroutine(MoveCameraToGift(targetGift, giftType));
         }
     }
     
     // 카메라를 선물 상자로 이동
-    private IEnumerator MoveCameraToGift(GameObject gift)
+    private IEnumerator MoveCameraToGift(GameObject gift, string giftType)
     {
         isCameraMoving = true;
         
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
         
-        // 목표 위치 계산
+        // 목표 위치 계산 (선물 타입에 따라 다른 거리 사용)
         Vector3 giftPos = gift.transform.position;
-        Vector3 offset = new Vector3(0, cameraHeight, -cameraZoomDistance);
+        float zoomDistance = (giftType == "environment") ? environmentCameraZoomDistance : cameraZoomDistance;
+        float height = (giftType == "environment") ? environmentCameraHeight : cameraHeight;
+        Vector3 offset = new Vector3(0, height, -zoomDistance);
         Vector3 targetPos = giftPos + offset;
         
         // 선물을 바라보는 회전 계산
