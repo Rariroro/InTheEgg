@@ -43,6 +43,7 @@ public class GiftBoxUIManager : MonoBehaviour
     // 카메라 원래 위치 저장
     private Vector3 originalCameraPosition;
     private Quaternion originalCameraRotation;
+    private float originalCameraFOV; // 원래 FOV 값 저장
     private bool isCameraMoving = false;
     
     // 싱글톤
@@ -81,6 +82,7 @@ public class GiftBoxUIManager : MonoBehaviour
         {
             originalCameraPosition = mainCamera.transform.position;
             originalCameraRotation = mainCamera.transform.rotation;
+            originalCameraFOV = mainCamera.fieldOfView; // FOV 값 저장
         }
         
         // 선물 타입별 리스트 초기화
@@ -274,6 +276,7 @@ public class GiftBoxUIManager : MonoBehaviour
         
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
+        float startFOV = mainCamera.fieldOfView; // 현재 FOV 값 저장
         
         // 목표 위치 계산 (선물 타입에 따라 다른 거리 사용)
         Vector3 giftPos = gift.transform.position;
@@ -296,27 +299,30 @@ public class GiftBoxUIManager : MonoBehaviour
             
             mainCamera.transform.position = Vector3.Lerp(startPos, targetPos, t);
             mainCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, t);
+            mainCamera.fieldOfView = Mathf.Lerp(startFOV, 60f, t); // FOV를 60으로 부드럽게 변경
             
             yield return null;
         }
         
         mainCamera.transform.position = targetPos;
         mainCamera.transform.rotation = targetRot;
+        mainCamera.fieldOfView = 60f; // 최종 FOV 값 설정
         
         // 3초 후 원래 위치로 복귀
         yield return new WaitForSeconds(3f);
         
-        // 원래 위치로 복귀
-        yield return MoveCameraToPosition(originalCameraPosition, originalCameraRotation);
+        // 원래 위치로 복귀 (FOV 포함)
+        yield return MoveCameraToPosition(originalCameraPosition, originalCameraRotation, originalCameraFOV);
         
         isCameraMoving = false;
     }
     
     // 카메라를 특정 위치로 이동
-    private IEnumerator MoveCameraToPosition(Vector3 targetPos, Quaternion targetRot)
+    private IEnumerator MoveCameraToPosition(Vector3 targetPos, Quaternion targetRot, float targetFOV)
     {
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
+        float startFOV = mainCamera.fieldOfView;
         
         float elapsed = 0f;
         while (elapsed < cameraMoveDuration)
@@ -329,12 +335,14 @@ public class GiftBoxUIManager : MonoBehaviour
             
             mainCamera.transform.position = Vector3.Lerp(startPos, targetPos, t);
             mainCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, t);
+            mainCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, t); // FOV도 부드럽게 변경
             
             yield return null;
         }
         
         mainCamera.transform.position = targetPos;
         mainCamera.transform.rotation = targetRot;
+        mainCamera.fieldOfView = targetFOV; // 최종 FOV 값 설정
     }
     
     private void OnDestroy()
