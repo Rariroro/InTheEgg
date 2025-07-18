@@ -1,18 +1,18 @@
 # Scene Hierarchy Export
 Scene Name: PetVillge
-Export Date: 7/16/2025 6:19:56 PM
+Export Date: 7/18/2025 5:11:28 PM
 --------------------------------------------
 
 GameObject: Canvas (Active: True)
   Component: RectTransform
       m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-      m_LocalPosition: (585.00, 1266.00, 0.00)
-      m_LocalScale: (2.53, 2.53, 2.53)
+      m_LocalPosition: (540.00, 1170.00, 0.00)
+      m_LocalScale: (2.34, 2.34, 2.34)
       m_ConstrainProportionsScale: False
       m_AnchorMin: (0.00, 0.00)
       m_AnchorMax: (0.00, 0.00)
-      m_AnchoredPosition: (585.00, 1266.00)
-      m_SizeDelta: (461.57, 998.88)
+      m_AnchoredPosition: (540.00, 1170.00)
+      m_SizeDelta: (461.29, 999.45)
       m_Pivot: (0.50, 0.50)
   Component: Canvas
       m_RenderMode: Screen Space - Overlay
@@ -46,7 +46,7 @@ GameObject: Canvas (Active: True)
   GameObject: PetCamera Button (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (138.80, -426.84, 0.00)
+        m_LocalPosition: (138.65, -427.13, 0.00)
         m_LocalScale: (0.64, 0.64, 0.64)
         m_ConstrainProportionsScale: True
         m_AnchorMin: (1.00, 0.00)
@@ -208,7 +208,7 @@ GameObject: Canvas (Active: True)
   GameObject: Gathering Button (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (138.18, -357.34, 0.00)
+        m_LocalPosition: (138.04, -357.63, 0.00)
         m_LocalScale: (0.60, 0.60, 0.60)
         m_ConstrainProportionsScale: True
         m_AnchorMin: (1.00, 0.00)
@@ -578,7 +578,7 @@ GameObject: Canvas (Active: True)
   GameObject: ItemButtonContainer (Active: True)
     Component: RectTransform
         m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (-180.79, -199.44, 0.00)
+        m_LocalPosition: (-180.64, -199.73, 0.00)
         m_LocalScale: (1.00, 1.00, 1.00)
         m_ConstrainProportionsScale: False
         m_AnchorMin: (0.00, 0.00)
@@ -597,209 +597,6 @@ GameObject: Canvas (Active: True)
         m_ChildScaleWidth: False
         m_ChildScaleHeight: False
         m_ReverseArrangement: False
-
-  GameObject: GiftButtonPrefab (Active: True)
-    Component: RectTransform
-        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-        m_LocalPosition: (61.30, 295.00, 0.00)
-        m_LocalScale: (1.00, 1.00, 1.00)
-        m_ConstrainProportionsScale: False
-        m_AnchorMin: (0.50, 0.50)
-        m_AnchorMax: (0.50, 0.50)
-        m_AnchoredPosition: (61.30, 295.00)
-        m_SizeDelta: (80.00, 80.00)
-        m_Pivot: (0.50, 0.50)
-    Component: CanvasRenderer
-        m_CullTransparentMesh: True
-    Component: Button
-        m_Navigation: (Not representable as string)
-        m_Transition: ColorTint
-        m_Colors: (Not representable as string)
-        m_SpriteState: (Not representable as string)
-        m_AnimationTriggers: (Not representable as string)
-        m_Interactable: True
-        m_TargetGraphic: Background(Image)
-        m_OnClick: (Not representable as string)
-
-    GameObject: Background(Image) (Active: True)
-      Component: RectTransform
-          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-          m_LocalPosition: (0.00, 0.00, 0.00)
-          m_LocalScale: (1.00, 1.00, 1.00)
-          m_ConstrainProportionsScale: False
-          m_AnchorMin: (0.00, 0.00)
-          m_AnchorMax: (1.00, 1.00)
-          m_AnchoredPosition: (0.00, 0.00)
-          m_SizeDelta: (0.00, 0.00)
-          m_Pivot: (0.50, 0.50)
-      Component: CanvasRenderer
-          m_CullTransparentMesh: True
-      Component: Image
-          m_Material: null
-          m_Color: RGBA(0.453, 0.442, 0.442, 1.000)
-          m_RaycastTarget: True
-          m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
-          m_Maskable: True
-          m_OnCullStateChanged: (Not representable as string)
-          m_Sprite: Knob
-          m_Type: Simple
-          m_PreserveAspect: False
-          m_FillCenter: True
-          m_FillMethod: Radial360
-          m_FillAmount: 1.00
-          m_FillClockwise: True
-          m_FillOrigin: 0
-          m_UseSpriteMesh: False
-          m_PixelsPerUnitMultiplier: 1.00
-
-    GameObject: Icon(Image)  (Active: True)
-      Component: RectTransform
-          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-          m_LocalPosition: (0.00, 0.00, 0.00)
-          m_LocalScale: (1.00, 1.00, 1.00)
-          m_ConstrainProportionsScale: False
-          m_AnchorMin: (0.00, 0.00)
-          m_AnchorMax: (1.00, 1.00)
-          m_AnchoredPosition: (0.00, 0.00)
-          m_SizeDelta: (0.00, 0.00)
-          m_Pivot: (0.50, 0.50)
-      Component: CanvasRenderer
-          m_CullTransparentMesh: True
-      Component: Image
-          m_Material: null
-          m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
-          m_RaycastTarget: True
-          m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
-          m_Maskable: True
-          m_OnCullStateChanged: (Not representable as string)
-          m_Sprite: sleepy
-          m_Type: Simple
-          m_PreserveAspect: False
-          m_FillCenter: True
-          m_FillMethod: Radial360
-          m_FillAmount: 1.00
-          m_FillClockwise: True
-          m_FillOrigin: 0
-          m_UseSpriteMesh: False
-          m_PixelsPerUnitMultiplier: 1.00
-      Component: AspectRatioFitter
-          m_AspectMode: FitInParent
-          m_AspectRatio: 1.00
-
-    GameObject: CountBackground(Image)  (Active: True)
-      Component: RectTransform
-          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-          m_LocalPosition: (45.00, 45.00, 0.00)
-          m_LocalScale: (1.00, 1.00, 1.00)
-          m_ConstrainProportionsScale: False
-          m_AnchorMin: (1.00, 1.00)
-          m_AnchorMax: (1.00, 1.00)
-          m_AnchoredPosition: (5.00, 5.00)
-          m_SizeDelta: (25.00, 25.00)
-          m_Pivot: (1.00, 1.00)
-      Component: CanvasRenderer
-          m_CullTransparentMesh: True
-      Component: Image
-          m_Material: null
-          m_Color: RGBA(0.991, 0.005, 0.005, 1.000)
-          m_RaycastTarget: True
-          m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
-          m_Maskable: True
-          m_OnCullStateChanged: (Not representable as string)
-          m_Sprite: Knob
-          m_Type: Simple
-          m_PreserveAspect: False
-          m_FillCenter: True
-          m_FillMethod: Radial360
-          m_FillAmount: 1.00
-          m_FillClockwise: True
-          m_FillOrigin: 0
-          m_UseSpriteMesh: False
-          m_PixelsPerUnitMultiplier: 1.00
-
-      GameObject: CountText (TMP) (Active: True)
-        Component: RectTransform
-            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
-            m_LocalPosition: (-12.50, -12.50, 0.00)
-            m_LocalScale: (1.00, 1.00, 1.00)
-            m_ConstrainProportionsScale: False
-            m_AnchorMin: (0.00, 0.00)
-            m_AnchorMax: (1.00, 1.00)
-            m_AnchoredPosition: (0.00, 0.00)
-            m_SizeDelta: (0.00, 0.00)
-            m_Pivot: (0.50, 0.50)
-        Component: CanvasRenderer
-            m_CullTransparentMesh: True
-        Component: TextMeshProUGUI
-            m_Material: null
-            m_Color: RGBA(1.000, 1.000, 1.000, 1.000)
-            m_RaycastTarget: True
-            m_RaycastPadding: (0.00, 0.00, 0.00, 0.00)
-            m_Maskable: True
-            m_OnCullStateChanged: (Not representable as string)
-            m_text: 0
-            m_isRightToLeft: False
-            m_fontAsset: LiberationSans SDF
-            m_sharedMaterial: LiberationSans SDF Material
-            m_fontSharedMaterials: (Not representable as string)
-            m_fontMaterial: null
-            m_fontMaterials: (Not representable as string)
-            m_fontColor32: RGBA(1.000, 0.996, 0.996, 1.000)
-            m_fontColor: RGBA(1.000, 0.995, 0.995, 1.000)
-            m_enableVertexGradient: False
-            m_colorMode: FourCornersGradient
-            m_fontColorGradient: (Not representable as string)
-            m_fontColorGradientPreset: null
-            m_spriteAsset: null
-            m_tintAllSprites: False
-            m_StyleSheet: null
-            m_TextStyleHashCode: -1183493901
-            m_overrideHtmlColors: False
-            m_faceColor: RGBA(1.000, 1.000, 1.000, 1.000)
-            m_fontSize: 16.00
-            m_fontSizeBase: 16.00
-            m_fontWeight: Regular
-            m_enableAutoSizing: False
-            m_fontSizeMin: 18.00
-            m_fontSizeMax: 72.00
-            m_fontStyle: Bold
-            m_HorizontalAlignment: Center
-            m_VerticalAlignment: Middle
-            m_textAlignment: Converted
-            m_characterSpacing: 0.00
-            m_wordSpacing: 0.00
-            m_lineSpacing: 0.00
-            m_lineSpacingMax: 0.00
-            m_paragraphSpacing: 0.00
-            m_charWidthMaxAdj: 0.00
-            m_TextWrappingMode: Normal
-            m_wordWrappingRatios: 0.40
-            m_overflowMode: Overflow
-            m_linkedTextComponent: null
-            parentLinkedComponent: null
-            m_enableKerning: False
-            m_ActiveFontFeatures: (Not representable as string)
-            m_enableExtraPadding: False
-            checkPaddingRequired: False
-            m_isRichText: True
-            m_EmojiFallbackSupport: True
-            m_parseCtrlCharacters: True
-            m_isOrthographic: True
-            m_isCullingEnabled: False
-            m_horizontalMapping: Character
-            m_verticalMapping: Character
-            m_uvLineOffset: 0.00
-            m_geometrySortingOrder: Normal
-            m_IsTextObjectScaleStatic: False
-            m_VertexBufferAutoSizeReduction: False
-            m_useMaxVisibleDescender: True
-            m_pageToDisplay: 1
-            m_margin: (0.00, 0.00, 0.00, 0.00)
-            m_isUsingLegacyAnimationComponent: False
-            m_isVolumetricText: False
-            m_hasFontAssetChanged: False
-            m_baseMaterial: null
-            m_maskOffset: (0.00, 0.00, 0.00, 0.00)
 
   GameObject: GiftboxUIManager (Active: True)
     Component: RectTransform
@@ -820,6 +617,8 @@ GameObject: Canvas (Active: True)
         cameraMoveDuration: 1.00
         cameraZoomDistance: 10.00
         cameraHeight: 8.00
+        environmentCameraZoomDistance: 20.00
+        environmentCameraHeight: 15.00
         giftTypeIcons: (Not representable as string)
 
     GameObject: GiftButtonContainer (Active: True)
@@ -1681,6 +1480,4076 @@ GameObject: EmotionBubbleCanvas (Active: True)
       m_IgnoreReversedGraphics: True
       m_BlockingObjects: None
       m_BlockingMask: (Not representable as string)
+
+GameObject: #Environments (Active: True)
+  Component: Transform
+      m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+      m_LocalPosition: (-301.00, 0.00, -150.00)
+      m_LocalScale: (1.00, 1.00, 1.00)
+      m_ConstrainProportionsScale: False
+
+  GameObject: HoneypotEnvironment (Active: True)
+    Component: Transform
+        m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+        m_LocalPosition: (78.20, 24.50, 83.70)
+        m_LocalScale: (1.00, 1.00, 1.00)
+        m_ConstrainProportionsScale: False
+
+    GameObject: FeedingArea (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: FeedPoint_1 (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-3.11, 2.55, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Honey
+        Component: SphereCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Radius: 0.50
+            m_Center: (0.00, 0.00, 0.00)
+
+      GameObject: FeedPoint_1 (1) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (8.50, -0.52, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Honey
+        Component: SphereCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Radius: 0.50
+            m_Center: (0.00, 0.00, 0.00)
+
+      GameObject: FeedPoint_1 (2) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-12.18, 0.57, 0.85)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Honey
+        Component: SphereCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Radius: 0.50
+            m_Center: (0.00, 0.00, 0.00)
+
+      GameObject: FeedPoint_1 (3) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-3.18, -2.83, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Honey
+        Component: SphereCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Radius: 0.50
+            m_Center: (0.00, 0.00, 0.00)
+
+      GameObject: FeedPoint_1 (4) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-5.34, -0.53, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: FeedingArea
+            foodType: Honey
+        Component: SphereCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Radius: 0.50
+            m_Center: (0.00, 0.00, 0.00)
+
+    GameObject: Object (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: TFP_Bee_Smoker_01A (2) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00002, 0.52094, 0.00059, 0.85359)
+            m_LocalPosition: (-17.62, 5.28, -24.09)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: SkinnedMeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 3
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+            m_Quality: Auto
+            m_UpdateWhenOffscreen: True
+            m_SkinnedMotionVectors: True
+            m_Mesh: TFP_Bee_Smoker_01A
+            m_BlendShapeWeights: (Not representable as string)
+            m_RootBone: null
+            m_AABB: (Not representable as string)
+        Component: Animator
+            m_Avatar: TFP_Bee_Smoker_01AAvatar
+            m_Controller: null
+            m_CullingMode: Cull Update Transforms
+            m_UpdateMode: Normal
+            m_ApplyRootMotion: False
+            m_LinearVelocityBlending: False
+            m_StabilizeFeet: False
+            m_AnimatePhysics: False
+            m_WarningMessage: 
+            m_HasTransformHierarchy: True
+            m_AllowConstantClipSamplingOptimization: True
+            m_KeepAnimatorStateOnDisable: False
+            m_WriteDefaultValuesOnDisable: False
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.50, 0.51, 0.20)
+            m_Center: (-0.13, 0.25, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01A (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.12933, 0.00000, 0.99160)
+            m_LocalPosition: (-3.18, -2.83, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01A (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.80712, 0.00000, -0.59039)
+            m_LocalPosition: (2.29, 2.89, -9.10)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01B (13) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (0.87, 2.40, -11.19)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01B (14) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.83927, 0.00000, 0.54371)
+            m_LocalPosition: (-14.09, -0.80, 3.76)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01B (15) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (8.50, -0.52, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01B (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.74240, 0.00000, 0.66996)
+            m_LocalPosition: (-1.08, 3.05, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01B (8) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.94442, 0.00000, 0.32873)
+            m_LocalPosition: (10.61, -0.41, 1.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01C (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00439, 0.87714, -0.00010, 0.48021)
+            m_LocalPosition: (-12.19, -0.03, 0.85)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01C (11) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.10284, 0.00000, 0.99470)
+            m_LocalPosition: (-5.34, -1.43, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01C (7) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.25779, 0.00000, 0.96620)
+            m_LocalPosition: (-17.72, 3.67, -24.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01D (6) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.09039, 0.00000, 0.99591)
+            m_LocalPosition: (0.54, 2.71, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01E (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00159, 0.73769, -0.00083, -0.67514)
+            m_LocalPosition: (-11.77, -0.72, 3.44)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01E (11) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00115, 0.64326, -0.00137, -0.76565)
+            m_LocalPosition: (-4.94, -2.35, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01E (8) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00177, 0.98470, 0.00031, 0.17425)
+            m_LocalPosition: (-3.11, 2.55, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Bottom_01E (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00171, 0.99902, 0.00054, 0.04423)
+            m_LocalPosition: (6.48, 0.11, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Bottom_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.60, 0.75)
+            m_Center: (0.00, 0.30, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (8.50, 1.58, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (3) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.74240, 0.00000, 0.66996)
+            m_LocalPosition: (-1.08, 4.85, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (4) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.83927, 0.00000, 0.54371)
+            m_LocalPosition: (-14.09, 0.70, 3.76)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.12933, 0.00000, 0.99160)
+            m_LocalPosition: (-3.18, -1.03, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (6) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00171, -0.04423, -0.00054, 0.99902)
+            m_LocalPosition: (-11.77, 0.78, 3.44)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01A (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (0.87, 3.90, -11.19)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01B (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00115, 0.64326, -0.00137, -0.76565)
+            m_LocalPosition: (-4.93, -0.55, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01B (2) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.87248, 0.00000, 0.48864)
+            m_LocalPosition: (10.66, 0.49, 1.63)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01B (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00177, 0.98470, 0.00031, 0.17425)
+            m_LocalPosition: (-3.11, 4.05, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01C (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00439, 0.87714, -0.00010, 0.48021)
+            m_LocalPosition: (-12.17, 1.47, 0.86)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01C (11) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.26222, 0.00000, 0.96501)
+            m_LocalPosition: (-5.34, 0.67, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01C (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.25779, 0.00000, 0.96620)
+            m_LocalPosition: (-17.72, 5.17, -24.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01D (12) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.09039, 0.00000, 0.99591)
+            m_LocalPosition: (0.54, 4.81, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Lid_01E (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00083, -0.73769, -0.00159, 0.67514)
+            m_LocalPosition: (6.49, 1.91, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Lid_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.83, 0.11, 0.81)
+            m_Center: (0.00, 0.06, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (23) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.09039, 0.00000, 0.99591)
+            m_LocalPosition: (0.54, 3.91, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (24) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.74240, 0.00000, 0.66996)
+            m_LocalPosition: (-1.08, 3.95, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (25) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.76812, 0.00000, 0.64030)
+            m_LocalPosition: (0.54, 3.31, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (26) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00177, 0.98470, 0.00031, 0.17425)
+            m_LocalPosition: (-3.11, 3.75, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (27) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.83927, 0.00000, 0.54371)
+            m_LocalPosition: (-14.09, 0.10, 3.76)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (28) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00115, 0.64326, -0.00137, -0.76565)
+            m_LocalPosition: (-4.93, -0.85, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (29) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.79262, 0.00000, 0.60971)
+            m_LocalPosition: (-3.18, -1.93, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (30) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.79262, 0.00000, 0.60971)
+            m_LocalPosition: (-3.18, -1.63, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (31) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.99160, 0.00000, -0.12933)
+            m_LocalPosition: (-3.18, -1.33, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01A (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.94442, 0.00000, 0.32873)
+            m_LocalPosition: (10.61, 0.19, 1.40)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.79262, 0.00000, 0.60971)
+            m_LocalPosition: (-3.18, -2.23, 9.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (11) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00115, 0.64326, -0.00137, -0.76565)
+            m_LocalPosition: (-4.93, -1.15, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00177, 0.98470, 0.00031, 0.17425)
+            m_LocalPosition: (-3.11, 3.15, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (6) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.74240, 0.00000, 0.66996)
+            m_LocalPosition: (-1.08, 3.65, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (7) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.99869, 0.00000, -0.05122)
+            m_LocalPosition: (-1.08, 4.25, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (8) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.66996, 0.00000, -0.74240)
+            m_LocalPosition: (-1.08, 4.55, -14.35)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01B (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (8.50, 1.28, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (20) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.25779, 0.00000, 0.96620)
+            m_LocalPosition: (-17.72, 4.27, -24.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (22) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.86549, 0.00000, 0.50093)
+            m_LocalPosition: (-17.72, 4.87, -24.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (27) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.09039, 0.00000, 0.99591)
+            m_LocalPosition: (0.54, 3.61, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (28) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (0.87, 3.00, -11.19)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (29) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00147, 0.57308, -0.00103, 0.81950)
+            m_LocalPosition: (-3.11, 3.45, -11.72)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (30) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00439, 0.87714, -0.00010, 0.48021)
+            m_LocalPosition: (-12.18, 0.57, 0.85)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (31) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00303, 0.28067, -0.00317, 0.95979)
+            m_LocalPosition: (-12.18, 0.87, 0.85)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (32) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00317, 0.95979, 0.00303, -0.28067)
+            m_LocalPosition: (-12.18, 1.17, 0.85)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (33) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.83927, 0.00000, 0.54371)
+            m_LocalPosition: (-14.09, 0.40, 3.76)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (34) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.09039, 0.00000, 0.99591)
+            m_LocalPosition: (0.54, 4.21, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (35) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.64030, 0.00000, 0.76812)
+            m_LocalPosition: (0.54, 4.51, -13.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (36) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (8.50, 0.98, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (37) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.10284, 0.00000, 0.99470)
+            m_LocalPosition: (-5.34, 0.07, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (38) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00016, 0.99625, -0.00179, -0.08655)
+            m_LocalPosition: (-4.93, -1.75, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (39) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00179, -0.08654, 0.00016, -0.99625)
+            m_LocalPosition: (-4.93, -1.45, 8.17)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01C (8) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.80712, 0.00000, -0.59039)
+            m_LocalPosition: (2.30, 3.49, -9.11)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (13) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (0.87, 3.60, -11.19)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (14) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.83927, 0.00000, 0.54371)
+            m_LocalPosition: (-14.09, -0.20, 3.76)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (15) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.26705, 0.00000, 0.96368)
+            m_LocalPosition: (8.50, 0.68, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (16) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.87026, 0.00000, 0.49259)
+            m_LocalPosition: (8.50, 0.08, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (17) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.63064, 0.00000, 0.77607)
+            m_LocalPosition: (-5.34, -0.83, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (18) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.10284, 0.00000, 0.99470)
+            m_LocalPosition: (-5.34, -0.53, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (19) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.77607, 0.00000, 0.63064)
+            m_LocalPosition: (-5.34, -0.23, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (20) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, -0.50092, 0.00000, 0.86550)
+            m_LocalPosition: (-17.71, 4.57, -24.01)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (21) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.26222, 0.00000, 0.96501)
+            m_LocalPosition: (-5.34, 0.37, 5.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01D (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.55332, 0.00000, -0.83297)
+            m_LocalPosition: (2.27, 3.80, -9.16)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01D
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (10) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00159, 0.67514, -0.00083, 0.73769)
+            m_LocalPosition: (6.48, 1.01, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (11) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00171, 0.99902, 0.00054, 0.04423)
+            m_LocalPosition: (6.48, 1.31, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (12) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00083, -0.73769, -0.00159, 0.67514)
+            m_LocalPosition: (6.48, 1.61, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (13) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.87026, 0.00000, -0.49259)
+            m_LocalPosition: (8.50, 0.38, 0.38)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (14) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00159, 0.73769, -0.00083, -0.67514)
+            m_LocalPosition: (-11.77, -0.12, 3.44)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (15) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00054, 0.99902, -0.00171, 0.04423)
+            m_LocalPosition: (-11.77, 0.18, 3.44)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (17) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00171, -0.04423, -0.00054, 0.99902)
+            m_LocalPosition: (-11.77, 0.48, 3.44)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (8) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.96368, 0.00000, 0.26705)
+            m_LocalPosition: (0.87, 3.30, -11.19)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_BeeHive_Middle_01E (9) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00171, 0.99902, 0.00054, 0.04423)
+            m_LocalPosition: (6.48, 0.71, -1.56)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_BeeHive_Middle_01E
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.75, 0.30, 0.75)
+            m_Center: (0.00, 0.15, 0.00)
+
+      GameObject: TFP_Bucket_Metal_01B (5) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.17718, 0.00000, 0.98418)
+            m_LocalPosition: (-22.82, 3.37, -20.48)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Bucket_Metal_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: MeshCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Convex: True
+            m_CookingOptions: 30
+            m_Mesh: TFP_Bucket_Metal_01A
+
+        GameObject: TFP_Bucket_Metal_01B_Handle (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.90738, 0.00000, 0.00000, 0.42031)
+              m_LocalPosition: (0.00, 0.40, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+          Component: MeshFilter
+              m_Mesh: TFP_Bucket_Metal_01B_Handle
+          Component: MeshRenderer
+              m_CastShadows: On
+              m_ReceiveShadows: True
+              m_DynamicOccludee: True
+              m_StaticShadowCaster: False
+              m_MotionVectors: Per Object Motion
+              m_LightProbeUsage: 1
+              m_ReflectionProbeUsage: 1
+              m_RayTracingMode: 2
+              m_RayTraceProcedural: False
+              m_RayTracingAccelStructBuildFlagsOverride: False
+              m_RayTracingAccelStructBuildFlags: 1
+              m_SmallMeshCulling: True
+              m_RenderingLayerMask: 1
+              m_RendererPriority: 0
+              m_Materials: (Not representable as string)
+              m_ProbeAnchor: null
+              m_LightProbeVolumeOverride: null
+              m_LightmapParameters: null
+
+      GameObject: TFP_Honey_Jar_01A (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.46402, 0.00000, 0.88583)
+            m_LocalPosition: (2.47, 4.10, -9.06)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Honey_Jar_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.18, 0.25, 0.18)
+            m_Center: (0.00, 0.13, 0.00)
+
+      GameObject: TFP_Jar_01A (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00051, 0.00000, -0.00031, 1.00000)
+            m_LocalPosition: (10.57, 0.60, 1.46)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Jar_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.18, 0.25, 0.18)
+            m_Center: (0.00, 0.13, 0.00)
+
+      GameObject: TFP_Jar_01A (1) (Active: True)
+        Component: Transform
+            m_LocalRotation: (-0.00174, 0.64552, 0.00484, 0.76373)
+            m_LocalPosition: (-23.04, 3.35, -20.23)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Jar_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.18, 0.25, 0.18)
+            m_Center: (0.00, 0.13, 0.00)
+
+      GameObject: TFP_Jar_01B (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.96592, 0.00000, 0.25883)
+            m_LocalPosition: (1.95, 2.59, -8.43)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Jar_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.18, 0.25, 0.18)
+            m_Center: (0.00, 0.13, 0.00)
+
+      GameObject: TFP_Shed_02B (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.60876, 0.00000, 0.79335)
+            m_LocalPosition: (-17.42, 3.75, -28.93)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: LODGroup
+            m_LocalReferencePoint: (0.00, 3.18, 0.00)
+            m_Size: 6.70
+            m_FadeMode: None
+            m_AnimateCrossFading: False
+            m_LastLODIsBillboard: False
+            m_LODs: (Not representable as string)
+        Component: MeshCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Convex: False
+            m_CookingOptions: 30
+            m_Mesh: TFP_Shed_02A_MeshCollider
+
+        GameObject: TFP_Shed_02B_LOD0 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+              m_LocalPosition: (0.00, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+          Component: MeshFilter
+              m_Mesh: TFP_Shed_02B_LOD0
+          Component: MeshRenderer
+              m_CastShadows: On
+              m_ReceiveShadows: True
+              m_DynamicOccludee: True
+              m_StaticShadowCaster: False
+              m_MotionVectors: Per Object Motion
+              m_LightProbeUsage: 1
+              m_ReflectionProbeUsage: 1
+              m_RayTracingMode: 2
+              m_RayTraceProcedural: False
+              m_RayTracingAccelStructBuildFlagsOverride: False
+              m_RayTracingAccelStructBuildFlags: 1
+              m_SmallMeshCulling: True
+              m_RenderingLayerMask: 1
+              m_RendererPriority: 0
+              m_Materials: (Not representable as string)
+              m_ProbeAnchor: null
+              m_LightProbeVolumeOverride: null
+              m_LightmapParameters: null
+
+        GameObject: TFP_Shed_02B_LOD1 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+              m_LocalPosition: (0.00, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+          Component: MeshFilter
+              m_Mesh: TFP_Shed_02B_LOD1
+          Component: MeshRenderer
+              m_CastShadows: On
+              m_ReceiveShadows: True
+              m_DynamicOccludee: True
+              m_StaticShadowCaster: False
+              m_MotionVectors: Per Object Motion
+              m_LightProbeUsage: 1
+              m_ReflectionProbeUsage: 1
+              m_RayTracingMode: 2
+              m_RayTraceProcedural: False
+              m_RayTracingAccelStructBuildFlagsOverride: False
+              m_RayTracingAccelStructBuildFlags: 1
+              m_SmallMeshCulling: True
+              m_RenderingLayerMask: 1
+              m_RendererPriority: 0
+              m_Materials: (Not representable as string)
+              m_ProbeAnchor: null
+              m_LightProbeVolumeOverride: null
+              m_LightmapParameters: null
+
+      GameObject: TFP_Wooden_Bench_01A (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.70710, 0.00000, 0.70711)
+            m_LocalPosition: (2.39, 2.00, -8.53)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Bench_01A
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.42, 0.69, 1.50)
+            m_Center: (-0.03, 0.25, 0.00)
+
+      GameObject: TFP_Wooden_Pallet_01B (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.17718, 0.00000, 0.98418)
+            m_LocalPosition: (-22.93, 3.17, -20.43)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Pallet_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.81, 0.20, 0.86)
+            m_Center: (0.03, 0.10, 0.00)
+
+      GameObject: TFP_Wooden_Pallet_01B (1) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.94938, 0.00000, -0.31413)
+            m_LocalPosition: (10.61, -0.60, 1.39)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Pallet_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.81, 0.20, 0.86)
+            m_Center: (0.03, 0.10, 0.00)
+
+      GameObject: TFP_Wooden_Pallet_01B (2) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.94442, 0.00000, 0.32873)
+            m_LocalPosition: (10.62, -0.80, 1.42)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Pallet_01B
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.81, 0.20, 0.86)
+            m_Center: (0.03, 0.10, 0.00)
+
+      GameObject: TFP_Wooden_Pallet_01C (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.17718, 0.00000, 0.98418)
+            m_LocalPosition: (-22.79, 2.97, -20.51)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Pallet_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.81, 0.20, 0.86)
+            m_Center: (0.03, 0.10, 0.00)
+
+      GameObject: TFP_Wooden_Pallet_01C (1) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.25779, 0.00000, 0.96620)
+            m_LocalPosition: (-17.73, 3.47, -23.96)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: MeshFilter
+            m_Mesh: TFP_Wooden_Pallet_01C
+        Component: MeshRenderer
+            m_CastShadows: On
+            m_ReceiveShadows: True
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 1
+            m_ReflectionProbeUsage: 1
+            m_RayTracingMode: 2
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.81, 0.20, 0.86)
+            m_Center: (0.03, 0.10, 0.00)
+
+      GameObject: TFP_Wooden_Table_03A (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.70710, 0.00000, 0.70711)
+            m_LocalPosition: (2.39, 2.00, -9.14)
+            m_LocalScale: (1.00, 1.00, 1.00)
+            m_ConstrainProportionsScale: False
+        Component: LODGroup
+            m_LocalReferencePoint: (-0.02, 0.40, -0.01)
+            m_Size: 1.69
+            m_FadeMode: None
+            m_AnimateCrossFading: False
+            m_LastLODIsBillboard: False
+            m_LODs: (Not representable as string)
+        Component: BoxCollider
+            m_Material: null
+            m_IncludeLayers: (Not representable as string)
+            m_ExcludeLayers: (Not representable as string)
+            m_LayerOverridePriority: 0
+            m_IsTrigger: False
+            m_ProvidesContacts: False
+            m_Size: (0.72, 1.00, 1.70)
+            m_Center: (-0.03, 0.40, 0.00)
+
+        GameObject: TFP_Wooden_Table_03A_LOD0 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+              m_LocalPosition: (0.00, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+          Component: MeshFilter
+              m_Mesh: TFP_Wooden_Table_03A_LOD0
+          Component: MeshRenderer
+              m_CastShadows: On
+              m_ReceiveShadows: True
+              m_DynamicOccludee: True
+              m_StaticShadowCaster: False
+              m_MotionVectors: Per Object Motion
+              m_LightProbeUsage: 1
+              m_ReflectionProbeUsage: 1
+              m_RayTracingMode: 2
+              m_RayTraceProcedural: False
+              m_RayTracingAccelStructBuildFlagsOverride: False
+              m_RayTracingAccelStructBuildFlags: 1
+              m_SmallMeshCulling: True
+              m_RenderingLayerMask: 1
+              m_RendererPriority: 0
+              m_Materials: (Not representable as string)
+              m_ProbeAnchor: null
+              m_LightProbeVolumeOverride: null
+              m_LightmapParameters: null
+
+        GameObject: TFP_Wooden_Table_03A_LOD1 (Active: True)
+          Component: Transform
+              m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+              m_LocalPosition: (0.00, 0.00, 0.00)
+              m_LocalScale: (1.00, 1.00, 1.00)
+              m_ConstrainProportionsScale: False
+          Component: MeshFilter
+              m_Mesh: TFP_Wooden_Table_03A_LOD1
+          Component: MeshRenderer
+              m_CastShadows: On
+              m_ReceiveShadows: True
+              m_DynamicOccludee: True
+              m_StaticShadowCaster: False
+              m_MotionVectors: Per Object Motion
+              m_LightProbeUsage: 1
+              m_ReflectionProbeUsage: 1
+              m_RayTracingMode: 2
+              m_RayTraceProcedural: False
+              m_RayTracingAccelStructBuildFlagsOverride: False
+              m_RayTracingAccelStructBuildFlags: 1
+              m_SmallMeshCulling: True
+              m_RenderingLayerMask: 1
+              m_RendererPriority: 0
+              m_Materials: (Not representable as string)
+              m_ProbeAnchor: null
+              m_LightProbeVolumeOverride: null
+              m_LightmapParameters: null
+
+    GameObject: Particle (Active: True)
+      Component: Transform
+          m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+          m_LocalPosition: (0.00, 0.00, 0.00)
+          m_LocalScale: (1.00, 1.00, 1.00)
+          m_ConstrainProportionsScale: False
+
+      GameObject: TFP_Bees_01A (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-8.97, -1.10, 4.83)
+            m_LocalScale: (1.50, 1.50, 1.50)
+            m_ConstrainProportionsScale: True
+        Component: ParticleSystem
+            lengthInSec: 1.00
+            simulationSpeed: 1.20
+            stopAction: 0
+            cullingMode: 3
+            ringBufferMode: 0
+            ringBufferLoopRange: (0.00, 1.00)
+            emitterVelocityMode: 0
+            looping: True
+            prewarm: True
+            playOnAwake: True
+            useUnscaledTime: False
+            autoRandomSeed: True
+            startDelay: (Not representable as string)
+            moveWithTransform: 0
+            moveWithCustomTransform: null
+            scalingMode: 1
+            randomSeed: 0
+            InitialModule: (Not representable as string)
+            ShapeModule: (Not representable as string)
+            EmissionModule: (Not representable as string)
+            SizeModule: (Not representable as string)
+            RotationModule: (Not representable as string)
+            ColorModule: (Not representable as string)
+            UVModule: (Not representable as string)
+            VelocityModule: (Not representable as string)
+            InheritVelocityModule: (Not representable as string)
+            LifetimeByEmitterSpeedModule: (Not representable as string)
+            ForceModule: (Not representable as string)
+            ExternalForcesModule: (Not representable as string)
+            ClampVelocityModule: (Not representable as string)
+            NoiseModule: (Not representable as string)
+            SizeBySpeedModule: (Not representable as string)
+            RotationBySpeedModule: (Not representable as string)
+            ColorBySpeedModule: (Not representable as string)
+            CollisionModule: (Not representable as string)
+            TriggerModule: (Not representable as string)
+            SubModule: (Not representable as string)
+            LightsModule: (Not representable as string)
+            TrailModule: (Not representable as string)
+            CustomDataModule: (Not representable as string)
+        Component: ParticleSystemRenderer
+            m_CastShadows: Off
+            m_ReceiveShadows: False
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 0
+            m_ReflectionProbeUsage: 0
+            m_RayTracingMode: 0
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+            m_RenderMode: 0
+            m_MeshDistribution: 0
+            m_SortMode: 0
+            m_MinParticleSize: 0.00
+            m_MaxParticleSize: 0.40
+            m_CameraVelocityScale: 0.00
+            m_VelocityScale: 0.00
+            m_LengthScale: 1.00
+            m_SortingFudge: 0.00
+            m_NormalDirection: 1.00
+            m_ShadowBias: 0.00
+            m_RenderAlignment: 3
+            m_Pivot: (0.00, 0.00, 0.00)
+            m_Flip: (0.00, 0.00, 0.00)
+            m_EnableGPUInstancing: False
+            m_ApplyActiveColorSpace: False
+            m_AllowRoll: True
+            m_FreeformStretching: False
+            m_RotateWithStretchDirection: True
+            m_UseCustomVertexStreams: True
+            m_VertexStreams: (Not representable as string)
+            m_UseCustomTrailVertexStreams: False
+            m_TrailVertexStreams: (Not representable as string)
+            m_Mesh: Cube
+            m_Mesh1: null
+            m_Mesh2: null
+            m_Mesh3: null
+            m_MeshWeighting: 1.00
+            m_MeshWeighting1: 1.00
+            m_MeshWeighting2: 1.00
+            m_MeshWeighting3: 1.00
+            m_MaskInteraction: 0
+
+      GameObject: TFP_Bees_01A (1) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (-0.76, 2.79, -12.77)
+            m_LocalScale: (1.50, 1.50, 1.50)
+            m_ConstrainProportionsScale: True
+        Component: ParticleSystem
+            lengthInSec: 1.00
+            simulationSpeed: 1.20
+            stopAction: 0
+            cullingMode: 3
+            ringBufferMode: 0
+            ringBufferLoopRange: (0.00, 1.00)
+            emitterVelocityMode: 0
+            looping: True
+            prewarm: True
+            playOnAwake: True
+            useUnscaledTime: False
+            autoRandomSeed: True
+            startDelay: (Not representable as string)
+            moveWithTransform: 0
+            moveWithCustomTransform: null
+            scalingMode: 1
+            randomSeed: 0
+            InitialModule: (Not representable as string)
+            ShapeModule: (Not representable as string)
+            EmissionModule: (Not representable as string)
+            SizeModule: (Not representable as string)
+            RotationModule: (Not representable as string)
+            ColorModule: (Not representable as string)
+            UVModule: (Not representable as string)
+            VelocityModule: (Not representable as string)
+            InheritVelocityModule: (Not representable as string)
+            LifetimeByEmitterSpeedModule: (Not representable as string)
+            ForceModule: (Not representable as string)
+            ExternalForcesModule: (Not representable as string)
+            ClampVelocityModule: (Not representable as string)
+            NoiseModule: (Not representable as string)
+            SizeBySpeedModule: (Not representable as string)
+            RotationBySpeedModule: (Not representable as string)
+            ColorBySpeedModule: (Not representable as string)
+            CollisionModule: (Not representable as string)
+            TriggerModule: (Not representable as string)
+            SubModule: (Not representable as string)
+            LightsModule: (Not representable as string)
+            TrailModule: (Not representable as string)
+            CustomDataModule: (Not representable as string)
+        Component: ParticleSystemRenderer
+            m_CastShadows: Off
+            m_ReceiveShadows: False
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 0
+            m_ReflectionProbeUsage: 0
+            m_RayTracingMode: 0
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+            m_RenderMode: 0
+            m_MeshDistribution: 0
+            m_SortMode: 0
+            m_MinParticleSize: 0.00
+            m_MaxParticleSize: 0.40
+            m_CameraVelocityScale: 0.00
+            m_VelocityScale: 0.00
+            m_LengthScale: 1.00
+            m_SortingFudge: 0.00
+            m_NormalDirection: 1.00
+            m_ShadowBias: 0.00
+            m_RenderAlignment: 3
+            m_Pivot: (0.00, 0.00, 0.00)
+            m_Flip: (0.00, 0.00, 0.00)
+            m_EnableGPUInstancing: False
+            m_ApplyActiveColorSpace: False
+            m_AllowRoll: True
+            m_FreeformStretching: False
+            m_RotateWithStretchDirection: True
+            m_UseCustomVertexStreams: True
+            m_VertexStreams: (Not representable as string)
+            m_UseCustomTrailVertexStreams: False
+            m_TrailVertexStreams: (Not representable as string)
+            m_Mesh: Cube
+            m_Mesh1: null
+            m_Mesh2: null
+            m_Mesh3: null
+            m_MeshWeighting: 1.00
+            m_MeshWeighting1: 1.00
+            m_MeshWeighting2: 1.00
+            m_MeshWeighting3: 1.00
+            m_MaskInteraction: 0
+
+      GameObject: TFP_Bees_01A (2) (Active: True)
+        Component: Transform
+            m_LocalRotation: (0.00000, 0.00000, 0.00000, 1.00000)
+            m_LocalPosition: (9.35, -0.36, 0.20)
+            m_LocalScale: (1.50, 1.50, 1.50)
+            m_ConstrainProportionsScale: True
+        Component: ParticleSystem
+            lengthInSec: 1.00
+            simulationSpeed: 1.20
+            stopAction: 0
+            cullingMode: 3
+            ringBufferMode: 0
+            ringBufferLoopRange: (0.00, 1.00)
+            emitterVelocityMode: 0
+            looping: True
+            prewarm: True
+            playOnAwake: True
+            useUnscaledTime: False
+            autoRandomSeed: True
+            startDelay: (Not representable as string)
+            moveWithTransform: 0
+            moveWithCustomTransform: null
+            scalingMode: 1
+            randomSeed: 0
+            InitialModule: (Not representable as string)
+            ShapeModule: (Not representable as string)
+            EmissionModule: (Not representable as string)
+            SizeModule: (Not representable as string)
+            RotationModule: (Not representable as string)
+            ColorModule: (Not representable as string)
+            UVModule: (Not representable as string)
+            VelocityModule: (Not representable as string)
+            InheritVelocityModule: (Not representable as string)
+            LifetimeByEmitterSpeedModule: (Not representable as string)
+            ForceModule: (Not representable as string)
+            ExternalForcesModule: (Not representable as string)
+            ClampVelocityModule: (Not representable as string)
+            NoiseModule: (Not representable as string)
+            SizeBySpeedModule: (Not representable as string)
+            RotationBySpeedModule: (Not representable as string)
+            ColorBySpeedModule: (Not representable as string)
+            CollisionModule: (Not representable as string)
+            TriggerModule: (Not representable as string)
+            SubModule: (Not representable as string)
+            LightsModule: (Not representable as string)
+            TrailModule: (Not representable as string)
+            CustomDataModule: (Not representable as string)
+        Component: ParticleSystemRenderer
+            m_CastShadows: Off
+            m_ReceiveShadows: False
+            m_DynamicOccludee: True
+            m_StaticShadowCaster: False
+            m_MotionVectors: Per Object Motion
+            m_LightProbeUsage: 0
+            m_ReflectionProbeUsage: 0
+            m_RayTracingMode: 0
+            m_RayTraceProcedural: False
+            m_RayTracingAccelStructBuildFlagsOverride: False
+            m_RayTracingAccelStructBuildFlags: 1
+            m_SmallMeshCulling: True
+            m_RenderingLayerMask: 1
+            m_RendererPriority: 0
+            m_Materials: (Not representable as string)
+            m_ProbeAnchor: null
+            m_LightProbeVolumeOverride: null
+            m_LightmapParameters: null
+            m_RenderMode: 0
+            m_MeshDistribution: 0
+            m_SortMode: 0
+            m_MinParticleSize: 0.00
+            m_MaxParticleSize: 0.40
+            m_CameraVelocityScale: 0.00
+            m_VelocityScale: 0.00
+            m_LengthScale: 1.00
+            m_SortingFudge: 0.00
+            m_NormalDirection: 1.00
+            m_ShadowBias: 0.00
+            m_RenderAlignment: 3
+            m_Pivot: (0.00, 0.00, 0.00)
+            m_Flip: (0.00, 0.00, 0.00)
+            m_EnableGPUInstancing: False
+            m_ApplyActiveColorSpace: False
+            m_AllowRoll: True
+            m_FreeformStretching: False
+            m_RotateWithStretchDirection: True
+            m_UseCustomVertexStreams: True
+            m_VertexStreams: (Not representable as string)
+            m_UseCustomTrailVertexStreams: False
+            m_TrailVertexStreams: (Not representable as string)
+            m_Mesh: Cube
+            m_Mesh1: null
+            m_Mesh2: null
+            m_Mesh3: null
+            m_MeshWeighting: 1.00
+            m_MeshWeighting1: 1.00
+            m_MeshWeighting2: 1.00
+            m_MeshWeighting3: 1.00
+            m_MaskInteraction: 0
 
 GameObject: Item (Active: True)
   Component: Transform
