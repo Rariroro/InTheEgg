@@ -252,6 +252,22 @@ public class PetFeedingController : MonoBehaviour
     {
         isEating = true;
         petController.StopMovement();
+        
+        // 꿀 지역인지 확인하고 벌 공격 트리거
+        if (targetFeedingArea != null)
+        {
+            FeedingArea feedingArea = targetFeedingArea.GetComponent<FeedingArea>();
+            if (feedingArea != null && (feedingArea.foodType & PetAIProperties.DietaryFlags.Honey) != 0)
+            {
+                // 꿀을 먹기 시작했음을 BeeHazardZone에 직접 알림
+                BeeHazardZone beeZone = targetFeedingArea.GetComponent<BeeHazardZone>();
+                if (beeZone != null)
+                {
+                    beeZone.OnPetStartedEating(petController);
+                }
+            }
+        }
+        
         yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5f, true, true));
         petController.hunger = 0f;

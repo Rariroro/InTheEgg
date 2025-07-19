@@ -135,6 +135,11 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [HideInInspector] public bool isAttractedToEnvironment = false;
     [HideInInspector] public Vector3 environmentTargetPosition;
 
+    // 벌 공격 관련 상태
+    [HideInInspector] public bool isBeingAttackedByBees = false;
+    [HideInInspector] public Vector3 beeAttackSource = Vector3.zero;
+    [HideInInspector] public float beeAttackStartTime = 0f;
+
     [Header("Pet Needs Settings")] // 인스펙터에서 편하게 관리하기 위해 헤더 추가
     [Tooltip("초당 배고픔 증가량")]
     [SerializeField] private float hungerIncreaseRate = 0.2f;
@@ -198,6 +203,17 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             baseAngularSpeed = angularSpeed;
             baseAcceleration = acceleration;
             baseStoppingDistance = stoppingDistance;
+        }
+        
+        // Rigidbody 확인 및 추가 (Trigger 충돌 감지를 위해 필요)
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.isKinematic = true;
+            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            Debug.Log($"[PetController] {petName}에 Rigidbody 자동 추가됨 (Trigger 충돌 감지용)");
         }
 
         // // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
@@ -288,8 +304,9 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     {
         _allActions = new List<IPetAction>
     {
-
-                new ExhaustedAction(this),               // 탈진 [우선순위: 50.0]
+        // === 최우선순위: 긴급 상황 ===
+        new BeeEscapeAction(this),               // 벌 공격 도망 [우선순위: 100.0]
+        new ExhaustedAction(this),               // 탈진 [우선순위: 50.0]
 
         // === 최상위 우선순위: 외부 명령 ===
         new GatherAction(this),                  // 모이기 [우선순위: 20.0]
