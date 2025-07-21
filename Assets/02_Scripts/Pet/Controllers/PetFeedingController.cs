@@ -235,7 +235,21 @@ public class PetFeedingController : MonoBehaviour
 
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(PetAnimationController.PetAnimationType.Eat));
         petController.hunger = 0f;
-        petController.ShowEmotion(EmotionType.Happy, 3f);
+        
+        // 음식 섭취시 친밀도 증가
+        float affectionIncrease = UnityEngine.Random.Range(petController.GetDroppedFoodAffectionMin(), petController.GetDroppedFoodAffectionMax());
+        petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f);
+        Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        
+        // 친밀도에 따른 감정 표현
+        if (petController.affection >= petController.GetHighAffectionThreshold())
+        {
+            petController.ShowEmotion(EmotionType.Love, 3f);
+        }
+        else
+        {
+            petController.ShowEmotion(EmotionType.Happy, 3f);
+        }
 
         if (targetFood != null)
         {
@@ -271,7 +285,21 @@ public class PetFeedingController : MonoBehaviour
         yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5f, true, true));
         petController.hunger = 0f;
-        petController.ShowEmotion(EmotionType.Happy, 3f);
+        
+        // 환경 음식 섭취시 친밀도 증가
+        float affectionIncrease = UnityEngine.Random.Range(petController.GetEnvironmentFoodAffectionMin(), petController.GetEnvironmentFoodAffectionMax());
+        petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f);
+        Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        
+        // 친밀도에 따른 감정 표현
+        if (petController.affection >= petController.GetHighAffectionThreshold())
+        {
+            petController.ShowEmotion(EmotionType.Love, 3f);
+        }
+        else
+        {
+            petController.ShowEmotion(EmotionType.Happy, 3f);
+        }
         targetFeedingArea = null;
         isEating = false;
     }

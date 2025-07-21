@@ -145,6 +145,26 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private float hungerIncreaseRate = 0.2f;
     [Tooltip("초당 졸림 증가량")]
     [SerializeField] private float sleepinessIncreaseRate = 0.1f;
+    
+    [Header("Affection Settings")] // 친밀도 관련 설정
+    [Tooltip("배고픔이 이 수치 이상일 때 친밀도가 감소하기 시작합니다")]
+    [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;
+    [Tooltip("배고플 때 초당 친밀도 감소량 (최대 배고픔 상태에서)")]
+    [SerializeField] private float affectionDecreaseRateWhenHungry = 0.5f;
+    [Tooltip("친밀도가 이 수치 이하로 떨어지면 Sad 감정을 표현합니다")]
+    [SerializeField] private float lowAffectionThreshold = 20f;
+    [Tooltip("친밀도가 이 수치 이상이면 Love 감정을 표현합니다")]
+    [SerializeField] private float highAffectionThreshold = 80f;
+    
+    [Header("Food Affection Settings")] // 음식 관련 친밀도 설정
+    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최소값")]
+    [SerializeField] private float droppedFoodAffectionMin = 5f;
+    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최대값")]
+    [SerializeField] private float droppedFoodAffectionMax = 10f;
+    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최소값")]
+    [SerializeField] private float environmentFoodAffectionMin = 3f;
+    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
+    [SerializeField] private float environmentFoodAffectionMax = 7f;
 
     [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
     [HideInInspector] public bool isExhausted = false;
@@ -419,6 +439,22 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         if (feedingController != null && !feedingController.IsEatingOrSeeking())
         {
             hunger = Mathf.Clamp(hunger + hungerIncreaseRate * Time.deltaTime, 0f, 100f);
+            
+            // 배고픔에 따른 친밀도 감소
+            if (hunger >= hungerThresholdForAffectionDecrease) // 설정된 배고픔 임계값 이상일 때
+            {
+                // 초당 친밀도 감소 (배고픔이 심할수록 더 빠르게 감소)
+                float affectionDecreaseRate = affectionDecreaseRateWhenHungry * (hunger / 100f);
+                float previousAffection = affection;
+                affection = Mathf.Clamp(affection - affectionDecreaseRate * Time.deltaTime, 0f, 100f);
+                
+                // 친밀도가 설정된 임계값 이하로 떨어지고, 이전에는 그보다 높았다면 Sad 감정 표현
+                if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
+                {
+                    ShowEmotion(EmotionType.Sad, 3f);
+                    Debug.Log($"[Affection] {petName}의 친밀도가 낮아졌습니다: {affection:F1}");
+                }
+            }
         }
 
         // 펫이 자고 있거나, 잠잘 곳을 찾아가는 중이 아닐 때만 졸림 증가
@@ -800,5 +836,17 @@ public void HideEmotion()
         activeParticle = null;
     }
 }
+
+    // 친밀도 임계값 getter
+    public float GetHighAffectionThreshold()
+    {
+        return highAffectionThreshold;
+    }
+    
+    // 음식 관련 친밀도 설정 getter
+    public float GetDroppedFoodAffectionMin() { return droppedFoodAffectionMin; }
+    public float GetDroppedFoodAffectionMax() { return droppedFoodAffectionMax; }
+    public float GetEnvironmentFoodAffectionMin() { return environmentFoodAffectionMin; }
+    public float GetEnvironmentFoodAffectionMax() { return environmentFoodAffectionMax; }
 
 }
