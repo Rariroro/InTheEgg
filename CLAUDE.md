@@ -56,7 +56,32 @@ Assets/
 
 ## 핵심 아키텍처
 
-### 1. 컴포넌트 기반 펫 시스템
+### 1. 펫 GameObject 구조
+펫 오브젝트는 다음과 같은 계층 구조를 가집니다:
+
+```
+PetGameObject (루트)
+├── Components (자동 부착):
+│   ├── PetController (메인 컨트롤러)
+│   ├── NavMeshAgent (AI 네비게이션)
+│   ├── Rigidbody (Kinematic, Trigger용)
+│   ├── Collider (충돌 감지)
+│   └── [런타임에 AddComponent로 추가되는 컨트롤러들]
+│       ├── PetWaterBehaviorController
+│       ├── PetMovementController
+│       ├── PetAnimationController
+│       ├── PetInteractionController
+│       ├── PetFeedingController
+│       ├── PetSleepingController
+│       └── PetTreeClimbingController
+└── 자식 오브젝트:
+    ├── PetModel (3D 모델, Animator 보유)
+    │   ├── EmotionOrigin (감정 표현 생성 위치)
+    │   └── CameraPoint (펫 카메라 전환용)
+    └── [런타임 생성] NameText (TextMesh + Billboard)
+```
+
+### 2. 컴포넌트 기반 펫 시스템
 `PetController`가 중앙 제어 역할을 하며, 각 기능은 별도 컨트롤러로 분리:
 - `PetMovementController`: 이동 제어
 - `PetAnimationController`: 애니메이션 제어
@@ -66,7 +91,15 @@ Assets/
 - `PetTreeClimbingController`: 나무 오르기
 - `PetWaterBehaviorController`: 물 속 행동
 
-### 2. Action 기반 AI 시스템
+### 초기화 순서
+1. Unity 기본 컴포넌트 설정 (NavMeshAgent, Rigidbody)
+2. 펫 모델과 Animator 탐색 (`GetComponentInChildren<Animator>()`)
+3. 모든 서브 컨트롤러 AddComponent 및 Init()
+4. AI 액션 리스트 초기화 (`InitializeActions()`)
+5. NavMesh 위치 확인 (`EnsureNavMeshPlacement()`)
+6. PetInteractionManager에 등록
+
+### 3. Action 기반 AI 시스템
 - **인터페이스**: `IPetAction`
 - **우선순위 시스템**: `GetPriority()` 메서드로 동적 우선순위 결정
 - **주요 Action들**:
@@ -74,7 +107,7 @@ Assets/
   - 상호작용: `InteractWithPetAction`, `PlayWithItemAction`
   - 특수 행동: `ClimbTreeAction`, `BeeEscapeAction`, `GatherAction`
 
-### 3. 상호작용 시스템
+### 4. 상호작용 시스템
 - **기본 클래스**: `BasePetInteraction`
 - **일반 상호작용**: `HeadbuttInteraction`, `RaceInteraction`, `FightInteraction`
 - **특수 상호작용**: `CamelAlpacaSpitFightInteraction`, `SlothKoalaRaceInteraction`
