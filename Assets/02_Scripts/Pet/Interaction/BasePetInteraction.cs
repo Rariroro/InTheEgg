@@ -73,8 +73,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 2. 실제 상호작용 실행 (try-finally로 안정성 확보)
         try
         {
-            // 각 상호작용 클래스에 정의된 실제 로직(PerformInteraction)을 실행합니다.
-            yield return StartCoroutine(PerformInteraction(pet1, pet2));
+            // 터치/홀드 체크를 포함한 상호작용 실행
+            yield return StartCoroutine(PerformInteractionWithTouchCheck(pet1, pet2));
         }
         finally
         {
@@ -89,6 +89,28 @@ public abstract class BasePetInteraction : MonoBehaviour
     protected virtual IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         yield return new WaitForSeconds(1.0f); // 기본 구현
+    }
+
+    /// <summary>
+    /// 터치/홀드 체크를 포함한 상호작용 실행 래퍼
+    /// </summary>
+    private IEnumerator PerformInteractionWithTouchCheck(PetController pet1, PetController pet2)
+    {
+        // 기존 PerformInteraction을 호출하면서 매 프레임 터치 체크
+        IEnumerator interaction = PerformInteraction(pet1, pet2);
+        
+        while (interaction.MoveNext())
+        {
+            // 둘 중 하나라도 터치/홀드되면 즉시 중단
+            if ((pet1 != null && (pet1.isHolding || pet1.isSelected)) || 
+                (pet2 != null && (pet2.isHolding || pet2.isSelected)))
+            {
+                Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
+                yield break;
+            }
+            
+            yield return interaction.Current;
+        }
     }
 
     // EndInteraction은 private 또는 protected로 변경하여 외부 호출을 막습니다.
@@ -183,6 +205,15 @@ public abstract class BasePetInteraction : MonoBehaviour
 
 
     /// <summary>
+    /// 지연된 행동 결정을 위한 코루틴
+    /// </summary>
+    private IEnumerator DelayedBehaviorDecision(PetController pet)
+    {
+        yield return new WaitForSeconds(0.2f); // 애니메이션과 NavMeshAgent 동기화를 위한 짧은 대기
+        pet.GetComponent<PetMovementController>()?.DecideNextBehavior();
+    }
+    
+    /// <summary>
     /// 펫의 상태를 안전하게 복구하고 다음 행동을 준비시키는 헬퍼 메서드
     /// </summary>
     private void SafeResumePet(PetController pet)
@@ -222,7 +253,16 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         // 3. 모든 준비가 완료되면 이동을 재개하고 새로운 목적지를 찾도록 합니다.
         pet.ResumeMovement();
-        pet.GetComponent<PetMovementController>()?.DecideNextBehavior(); // 다음 행동 즉시 결정
+        
+        // 애니메이션 상태 초기화
+        var animController = pet.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
+        
+        // 약간의 지연 후 다음 행동 결정 (애니메이션과 NavMeshAgent 동기화를 위해)
+        pet.StartCoroutine(DelayedBehaviorDecision(pet));
     }
 
     // 상호작용 유형 결정 메서드 (하위 클래스에서 구현)
@@ -327,6 +367,17 @@ public abstract class BasePetInteraction : MonoBehaviour
         float startTime = Time.time;
         while (Time.time - startTime < timeout)
         {
+            // 터치/홀드 체크 - 이동 중에도 즉시 중단
+            if ((pet1 != null && (pet1.isHolding || pet1.isSelected)) || 
+                (pet2 != null && (pet2.isHolding || pet2.isSelected)))
+            {
+                Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
+                // 애니메이션 정지
+                pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                yield break;
+            }
+            
             bool pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < 0.5f;
             bool pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < 0.5f;
 

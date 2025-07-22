@@ -26,6 +26,10 @@ public float GetPriority()
 {
     // ★★★ 수정: 탈진 관련 특별 우선순위 로직을 제거합니다. (ExhaustedAction이 전담) ★★★
     
+    // 터치/홀드 상태에서는 먹이 찾기도 중단
+    if (_pet.isHolding || _pet.isSelected)
+        return 0f;
+    
     // 이미 음식을 먹고 있거나 찾으러 가는 중이라면, 행동을 계속 유지합니다.
     if (_feedingController.IsEatingOrSeeking())
     {

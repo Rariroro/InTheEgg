@@ -217,6 +217,11 @@ public class PetInteractionController : MonoBehaviour
             // 일반 터치(펫 선택) 처리
             if (hit.collider.gameObject == petController.gameObject)
             {
+                // 상호작용 중이라면 강제로 중단
+                if (petController.isInteracting && petController.currentInteractionLogic != null)
+                {
+                    ForceStopInteraction();
+                }
                 Select();
             }
             else if (isSelected)
@@ -286,6 +291,12 @@ public class PetInteractionController : MonoBehaviour
     {
         // ★★★ 최상단에 이 코드를 추가하여 AI 상태를 즉시 리셋합니다. ★★★
         petController.InterruptAndResetAI();
+        
+        // 상호작용 중이라면 강제로 중단
+        if (petController.isInteracting && petController.currentInteractionLogic != null)
+        {
+            ForceStopInteraction();
+        }
         // ★★★ 여기까지 추가 ★★★
 
         var movementController = petController.GetComponent<PetMovementController>();
@@ -580,6 +591,7 @@ private void Select()
     // 터치 횟수에 따른 특수 애니메이션 재생
     if (touchCount >= maxTouchCount) // 10번 이상 터치
     {
+        // 나무 위에 있어도 Die 애니메이션은 재생
         StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die, true));
         touchCount = 0;
     }
@@ -591,6 +603,12 @@ private void Select()
     {
         if (nameTextObject != null)
             nameTextObject.SetActive(true);
+            
+        // 나무 위에 있으면 추가적인 이동 중지나 행동 중단을 하지 않음
+        if (petController.isClimbingTree)
+        {
+            Debug.Log($"{petController.petName}이(가) 나무 위에서 선택되었습니다.");
+        }
     }
 }
 
@@ -616,6 +634,37 @@ private void Select()
                 var animController = petController.GetComponent<PetAnimationController>();
                 animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             }
+        }
+    }
+    
+    // 진행 중인 상호작용을 강제로 중단
+    private void ForceStopInteraction()
+    {
+        if (petController.currentInteractionLogic != null)
+        {
+            // BasePetInteraction의 코루틴을 중단
+            var interactionLogic = petController.currentInteractionLogic;
+            interactionLogic.StopAllCoroutines();
+            
+            // 상호작용 파트너가 있다면 그 쪽도 중단
+            if (petController.interactionPartner != null)
+            {
+                var partner = petController.interactionPartner;
+                
+                // 파트너의 상호작용 로직도 중단
+                if (partner.currentInteractionLogic != null)
+                {
+                    partner.currentInteractionLogic.StopAllCoroutines();
+                }
+                
+                // 매니저에 종료 알림
+                if (PetInteractionManager.Instance != null)
+                {
+                    PetInteractionManager.Instance.NotifyInteractionEnded(petController, partner);
+                }
+            }
+            
+            Debug.Log($"{petController.petName}의 상호작용이 터치로 인해 강제 중단되었습니다.");
         }
     }
     // 5번 터치 시 공격 애니메이션을 위한 새로운 코루틴

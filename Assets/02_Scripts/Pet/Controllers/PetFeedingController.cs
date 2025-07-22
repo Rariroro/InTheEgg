@@ -47,6 +47,7 @@ public class PetFeedingController : MonoBehaviour
     public bool TryStartFeedingSequence()
     {
         if (petController.isInteracting || petController.isGathering || isEating || petController.isHolding ||
+            petController.isSelected || // 터치된 상태에서는 먹이 찾기 중단
             (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()) ||
             petController.isClimbingTree)
         {
@@ -228,9 +229,24 @@ public class PetFeedingController : MonoBehaviour
     {
         isEating = true;
         petController.StopMovement();
+        
+        // 터치/홀드 상태가 되면 즉시 중단
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelFeeding();
+            yield break;
+        }
+        
         if (targetFood != null)
         {
             yield return StartCoroutine(LookAtTarget(targetFood.transform));
+        }
+
+        // 애니메이션 재생 중에도 터치/홀드 체크
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelFeeding();
+            yield break;
         }
 
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(PetAnimationController.PetAnimationType.Eat));
@@ -267,6 +283,13 @@ public class PetFeedingController : MonoBehaviour
         isEating = true;
         petController.StopMovement();
         
+        // 터치/홀드 상태가 되면 즉시 중단
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelFeeding();
+            yield break;
+        }
+        
         // 꿀 지역인지 확인하고 벌 공격 트리거
         if (targetFeedingArea != null)
         {
@@ -283,6 +306,14 @@ public class PetFeedingController : MonoBehaviour
         }
         
         yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
+        
+        // 애니메이션 재생 중에도 터치/홀드 체크
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelFeeding();
+            yield break;
+        }
+        
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5f, true, true));
         petController.hunger = 0f;
         

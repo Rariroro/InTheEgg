@@ -19,6 +19,12 @@ public class PetTreeClimbingController : MonoBehaviour
     {
         petController = controller;
     }
+    
+    // 외부에서 나무 찾기 상태를 확인할 수 있는 메서드
+    public bool IsSearchingForTree()
+    {
+        return isSearchingForTree;
+    }
 
     /// <summary>
     /// 일반적인 상황에서 확률적으로 나무에 오를지 검사합니다.
@@ -200,11 +206,6 @@ private IEnumerator RestOnTree()
         petController.isActionLocked = false;
         // NavMeshAgent 재활성화는 ClimbDownTree에서 이미 처리됨
     }
-    // ★★★ 추가: 다른 스크립트에서 이 상태를 확인할 수 있도록 public 메서드 추가
-    public bool IsSearchingForTree()
-    {
-        return isSearchingForTree;
-    }
 
     // ★★★ 추가: 탐색 시작 시 펫의 상태를 초기화하는 헬퍼 메서드
     private void ResetPetStateForSeeking()
@@ -243,6 +244,15 @@ private IEnumerator RestOnTree()
                 while (!petController.isHolding && petController.agent.enabled &&
                        (petController.agent.pathPending || petController.agent.remainingDistance > 0.5f))
                 {
+                    // 이동 중 애니메이션 동기화를 위해 HandleRotation 호출
+                    petController.HandleRotation();
+                    
+                    // 애니메이션이 Idle로 바뀌면 다시 Walk로 설정
+                    if (petController.animator != null && petController.animator.GetInteger("animation") == 0)
+                    {
+                        petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                    }
+                    
                     yield return null;
                 }
 

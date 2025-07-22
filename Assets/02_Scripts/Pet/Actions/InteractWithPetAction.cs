@@ -11,6 +11,10 @@ public class InteractWithPetAction : IPetAction
 
     public float GetPriority()
     {
+        // 터치/홀드 상태에서는 펫 간 상호작용도 중단
+        if (_pet.isHolding || _pet.isSelected)
+            return 0f;
+            
         // 펫이 상호작용 중일 때, 다른 저순위 행동(배회 등)을 막기 위해 중간 정도의 우선순위를 유지합니다.
         // Eat, Sleep(우선순위 ~2.0) 보다는 낮고 Wander(0.1)보다는 높게 설정합니다.
         return _pet.isInteracting ? 1.5f : 0f;

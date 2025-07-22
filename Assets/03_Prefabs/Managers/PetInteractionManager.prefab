@@ -110,9 +110,9 @@ MonoBehaviour:
   knockbackDuration: 0.5
   collisionDetectionDistance: 1.5
   largeAnimalCollisionDistance: 2.5
-  smallAnimalOffsetRatio: 0.5
-  mediumAnimalOffsetRatio: 1.2
-  largeAnimalOffsetRatio: 1.5
+  smallAnimalOffsetRatio: 1.05
+  mediumAnimalOffsetRatio: 1.55
+  largeAnimalOffsetRatio: 2.12
   minHeadbuttCount: 3
   maxHeadbuttCount: 6
   largeAnimalMinCount: 2
@@ -124,12 +124,12 @@ MonoBehaviour:
   agentSafetyTimeout: 3
   chargeTimeout: 2
   collisionAvoidanceRadius: 0
-  collisionEffectPrefab: {fileID: 0}
+  collisionEffectPrefab: {fileID: 1001714703486846, guid: 605ed462399eb4b949cbcecfcef50f5a, type: 3}
   effectScale: 1
   largeAnimalEffectScale: 1.5
   effectDuration: 3
   effectRepeatCount: 4
-  effectRepeatInterval: 0.7
+  effectRepeatInterval: 0.65
   bullWinProbability: 0.55
   rhinoWinProbability: 0.6
 --- !u!114 &3788312102459008711
@@ -170,6 +170,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
+  walkDuration: 50
+  petSpacing: 2.5
+  walkSpeedMultiplier: 0.8
+  minWalkDistance: 8
+  maxWalkDistance: 50
+  arrivalDistance: 2
+  pathUpdateInterval: 5
+  maxDirectionChangeAngle: 45
+  specialEventChance: 0.3
+  eventMinInterval: 3
+  eventMaxInterval: 6
+  moveToStartTimeout: 5
+  agentSafetyTimeout: 3
+  navMeshSearchRadius: 55
+  pathfindingRetries: 3
 --- !u!114 &6139375440592564944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,13 +210,13 @@ MonoBehaviour:
   defeatAnimationDuration: 2
   emotionDuration: 30
   postFightEmotionDuration: 5
-  hitParticlePrefab: {fileID: 0}
-  hitParticleOffset: {x: 0, y: 1, z: 0}
+  hitParticlePrefab: {fileID: 1269060166065924, guid: 198e2a67507bd4f27a91a43fe8971ba5, type: 3}
+  hitParticleOffset: {x: 0, y: 2, z: -1}
   particleDuration: 1
   fightStartDustPrefab: {fileID: 0}
   attackSwingPrefab: {fileID: 0}
   victoryParticlePrefab: {fileID: 0}
-  defeatStarsPrefab: {fileID: 0}
+  defeatStarsPrefab: {fileID: 1846532664448058, guid: 5466a5909dadd44ccabacb11fef6358f, type: 3}
   dustParticleCount: 3
   agentSafetyTimeout: 3
 --- !u!114 &7743638605199200644
@@ -272,7 +287,7 @@ MonoBehaviour:
   catchParticlePrefab: {fileID: 0}
   scareRadius: 5
   chaserRestDuration: 3
-  safeDistance: 10
+  safeDistance: 15
   maxEscapeTime: 5
   agentSafetyTimeout: 3
 --- !u!114 &1106663833353148349
@@ -387,13 +402,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe88e1f0bf5f449adaa702dd71f8d138, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionStartDistance: 5
+  interactionStartDistance: 10
   isSleepMode: 0
   interactionDuration: 15
   moveTimeout: 10
-  defaultDistance: 3
-  largeAnimalDistance: 5
-  smallAnimalDistance: 2
+  defaultDistance: 7
+  largeAnimalDistance: 10
+  smallAnimalDistance: 5
   restAnimationDuration: 3
   prepAnimationDuration: 1.5
   wakeUpAnimationDuration: 1.5

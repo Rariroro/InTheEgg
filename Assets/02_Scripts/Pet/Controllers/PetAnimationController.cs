@@ -39,7 +39,7 @@ public class PetAnimationController : MonoBehaviour
             );
         }
 
-        if (petController.isSelected || petController.isHolding || petController.isInteracting)
+        if (petController.isSelected || petController.isHolding || petController.isInteracting || petController.isActionLocked)
         {
             return;
         }
@@ -70,7 +70,11 @@ public class PetAnimationController : MonoBehaviour
     }
     // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
 
-        if (isSpecialAnimationPlaying || isContinuousAnimationPlaying)
+        // 특수 애니메이션이나 연속 애니메이션이 재생 중이면 자동 애니메이션 업데이트 건너뛰기
+        // 나무를 찾아 이동 중일 때도 자동 업데이트 건너뛰기
+        var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
+        if (isSpecialAnimationPlaying || isContinuousAnimationPlaying || 
+            (treeClimbingController != null && treeClimbingController.IsSearchingForTree()))
             return;
 
         if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh && petController.animator != null)
@@ -177,7 +181,21 @@ public class PetAnimationController : MonoBehaviour
                 petController.animator.SetInteger("animation", (int)animationType);
                 yield return null;
                 float animationLength = petController.animator.GetCurrentAnimatorStateInfo(0).length;
-                yield return new WaitForSeconds(animationLength);
+                
+                // Die 애니메이션은 더 길게 유지
+                if (animationType == PetAnimationType.Die)
+                {
+                    // 애니메이션 재생 후 추가로 대기
+                    yield return new WaitForSeconds(animationLength);
+                    
+                    // Die 애니메이션 상태를 유지하면서 추가 대기 (총 4초)
+                    petController.animator.SetInteger("animation", (int)PetAnimationType.Die);
+                    yield return new WaitForSeconds(4f - animationLength);
+                }
+                else
+                {
+                    yield return new WaitForSeconds(animationLength);
+                }
             }
             else
             {
@@ -194,7 +212,8 @@ public class PetAnimationController : MonoBehaviour
                 petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
             }
 
-            if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
+            // 나무 위에 있지 않을 때만 이동 재개
+            if (!petController.isClimbingTree && petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
             {
                 petController.ResumeMovement();
             }

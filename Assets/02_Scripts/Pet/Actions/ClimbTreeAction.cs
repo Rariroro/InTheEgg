@@ -17,6 +17,10 @@ public class ClimbTreeAction : IPetAction
 
     public float GetPriority()
     {
+        // 터치/홀드 상태에서는 나무 오르기도 중단
+        if (_pet.isHolding || (_pet.isSelected && !_pet.isClimbingTree))
+            return 0f;
+            
         // 1. 이미 나무에 오르기 시작했거나, 나무 위에 있다면 최상위 우선순위를 가짐
         if (_pet.isClimbingTree || _climbingController.IsSearchingForTree())
         {
@@ -54,6 +58,8 @@ public class ClimbTreeAction : IPetAction
         }
     }
 
+    private bool _wasSelectedLastFrame = false;
+    
     public void OnUpdate()
     {
         // ★★★ 핵심 수정: OnUpdate 로직 추가 ★★★
@@ -80,8 +86,17 @@ public class ClimbTreeAction : IPetAction
             }
 
             // 2. 애니메이션 처리
-            // 나무 위에서 선택되었을 때는 '휴식' 애니메이션을 멈추고 '기본(Idle)' 자세를 취하게 합니다.
-            _animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle); // Idle 애니메이션
+            // 선택 상태가 바뀔 때만 애니메이션 설정 (매 프레임 호출 방지)
+            if (!_wasSelectedLastFrame && !_pet.isAnimationLocked)
+            {
+                // 나무 위에서 선택되었을 때는 '휴식' 애니메이션을 멈추고 '기본(Idle)' 자세를 취하게 합니다.
+                _animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle); // Idle 애니메이션
+                _wasSelectedLastFrame = true;
+            }
+        }
+        else
+        {
+            _wasSelectedLastFrame = false;
         }
     }
 

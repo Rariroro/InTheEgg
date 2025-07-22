@@ -39,7 +39,8 @@ public class PetSleepingController : MonoBehaviour
     public bool TryStartSleepingSequence()
     {
         // 다른 중요 행동 중이면 시작하지 않음
-        if (petController.isActionLocked || petController.isGathering || petController.isInteracting || petController.isHolding || isSleeping)
+        if (petController.isActionLocked || petController.isGathering || petController.isInteracting || 
+            petController.isHolding || petController.isSelected || isSleeping) // 터치된 상태에서는 잠자기 중단
         {
             return false;
         }
@@ -234,10 +235,35 @@ public class PetSleepingController : MonoBehaviour
     {
         isSleeping = true;
         petController.StopMovement();
+        
+        // 터치/홀드 상태가 되면 즉시 중단
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelSleeping();
+            yield break;
+        }
+        
  // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
         petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
-        // 수면 애니메이션 재생
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
+        
+        // 애니메이션 재생 중에도 터치/홀드 체크
+        float elapsed = 0f;
+        PetAnimationController animController = petController.GetComponent<PetAnimationController>();
+        animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+        
+        while (elapsed < sleepDuration)
+        {
+            if (petController.isHolding || petController.isSelected)
+            {
+                animController.StopContinuousAnimation();
+                CancelSleeping();
+                yield break;
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        animController.StopContinuousAnimation();
 
         if (isProperArea)
         {
@@ -263,13 +289,37 @@ public class PetSleepingController : MonoBehaviour
     {
         isSleeping = true;
         petController.StopMovement();
+        
+        // 터치/홀드 상태가 되면 즉시 중단
+        if (petController.isHolding || petController.isSelected)
+        {
+            CancelSleeping();
+            yield break;
+        }
 
         Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
 
         // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
         petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
-
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, true, false));
+        
+        // 애니메이션 재생 중에도 터치/홀드 체크
+        float elapsed = 0f;
+        PetAnimationController animController = petController.GetComponent<PetAnimationController>();
+        animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+        
+        while (elapsed < sleepDuration)
+        {
+            if (petController.isHolding || petController.isSelected)
+            {
+                animController.StopContinuousAnimation();
+                CancelSleeping();
+                yield break;
+            }
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        animController.StopContinuousAnimation();
 
         // 불완전 회복
         petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f);
@@ -290,6 +340,15 @@ public class PetSleepingController : MonoBehaviour
         return isSleeping || (targetSleepingArea != null) || isSeekingTreeToSleep;
     }
 
+    public void CancelSleeping()
+    {
+        targetSleepingArea = null;
+        isSleeping = false;
+        isSeekingTreeToSleep = false;
+        petController.ResumeMovement();
+        petController.SetRandomDestination();
+    }
+    
     public void InterruptSleep()
     {
         if (isSleeping)

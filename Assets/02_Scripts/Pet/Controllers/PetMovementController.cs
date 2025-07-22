@@ -266,6 +266,12 @@ public class PetMovementController : MonoBehaviour
         switch (state)
         {
             case BehaviorState.Idle:
+                // Idle 상태에서는 이동을 완전히 정지
+                if (petController.agent != null && petController.agent.enabled)
+                {
+                    petController.agent.ResetPath();
+                    petController.agent.velocity = Vector3.zero;
+                }
                 anim?.SetContinuousAnimation(0);
                 break;
 

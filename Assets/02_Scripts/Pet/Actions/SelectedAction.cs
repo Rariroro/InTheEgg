@@ -17,9 +17,19 @@ public class SelectedAction : IPetAction
 
     public float GetPriority()
     {
-        // 펫이 '선택'되었고, '들려있지' 않을 때 높은 우선순위를 가집니다. (5.0f)
-        // 이 우선순위는 일반 배회(0.1)보다는 높고, 상호작용(10.0)이나 모이기(20.0)보다는 낮습니다.
-        return (_pet.isSelected && !_pet.isHolding) ? 5.0f : 0f;
+        // 펫이 '선택'되었고, '들려있지' 않을 때 높은 우선순위를 가집니다. (30.0f)
+        // 이 우선순위는 모든 다른 행동보다 높아야 합니다 (모이기 20.0, 환경 모이기 15.0보다 높음)
+        // 단, 긴급 상황(벌 공격 100.0, 탈진 50.0)보다는 낮습니다.
+        // 나무 위에 있을 때는 ClimbTreeAction이 유지되도록 우선순위를 낮춥니다.
+        if (_pet.isSelected && !_pet.isHolding)
+        {
+            // 나무 위에 있으면 낮은 우선순위
+            if (_pet.isClimbingTree)
+                return 5.5f; // ClimbTreeAction(6.0)보다 낮게
+            else
+                return 30.0f; // 일반 상황에서는 높은 우선순위
+        }
+        return 0f;
     }
 
     public void OnEnter()
