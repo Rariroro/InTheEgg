@@ -848,5 +848,11 @@ public void HideEmotion()
     public float GetDroppedFoodAffectionMax() { return droppedFoodAffectionMax; }
     public float GetEnvironmentFoodAffectionMin() { return environmentFoodAffectionMin; }
     public float GetEnvironmentFoodAffectionMax() { return environmentFoodAffectionMax; }
+    
+    // 현재 실행 중인 Action 반환 (PetMovementController에서 사용)
+    public IPetAction GetCurrentAction()
+    {
+        return _currentAction;
+    }
 
 }
