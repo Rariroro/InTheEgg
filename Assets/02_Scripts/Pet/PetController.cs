@@ -375,7 +375,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         interactionController?.HandleInput();
         
         // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
-        if (petState.IsPlayerControlled || isActionLocked) return;
+        // 선택된 상태는 PlayerControl이지만 AI 업데이트와 Action 실행이 필요함
+        if ((petState.IsPlayerControlled && !isSelected) || isActionLocked) return;
         // ★★★★★ 새로 추가된 부분 ★★★★★
         // 2. 욕구 상태 업데이트 (매 프레임)
         UpdateNeeds();
@@ -390,9 +391,22 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             UpdateAI();
             _aiUpdateTimer = 0f;
         }
+        
+        // ★ 선택 상태가 변경되었을 때 즉시 AI 업데이트
+        if (isSelected && _currentAction?.GetType() != typeof(SelectedAction))
+        {
+            _aiUpdateTimer = _aiUpdateInterval; // 다음 프레임에 즉시 업데이트
+            UpdateAI();
+        }
 
         // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
         _currentAction?.OnUpdate();
+        
+        // ★ 디버그: 선택 상태인데 SelectedAction이 아닌 경우
+        if (isSelected && _currentAction != null && !(_currentAction is SelectedAction))
+        {
+            Debug.LogWarning($"[PetController] {petName}: 선택되었지만 현재 액션이 {_currentAction.GetType().Name}입니다!");
+        }
 
         // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
         // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
@@ -449,23 +463,27 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         }
 
         // ★★★ 수정: 행동 전환 로직 개선 ★★★
-        if (bestAction != null && bestAction.GetType() != _currentAction?.GetType())
+        if (bestAction != null)
         {
-            // ★ [Phase 1] 상태 전환 로깅 추가 (디버깅용)
-            if (Debug.isDebugBuild)
+            // 현재 행동과 다른 행동이거나, 현재 행동이 없을 때
+            if (_currentAction == null || bestAction.GetType() != _currentAction.GetType())
             {
-                Debug.Log($"[AI] {petName} 행동 전환: {_currentAction?.GetType().Name} -> {bestAction.GetType().Name} " +
-                         $"(우선순위: {maxPriority}, 상태: {petState.CurrentStatus})");
+                // ★ [Phase 1] 상태 전환 로깅 추가 (디버깅용)
+                if (Debug.isDebugBuild)
+                {
+                    Debug.Log($"[AI] {petName} 행동 전환: {_currentAction?.GetType().Name ?? "None"} -> {bestAction.GetType().Name} " +
+                             $"(우선순위: {maxPriority}, 상태: {petState.CurrentStatus})");
+                }
+
+                // 1. 이전 행동의 종료 처리
+                _currentAction?.OnExit();
+
+                // 2. 현재 행동을 새로운 행동으로 교체
+                _currentAction = bestAction;
+
+                // 3. 새로운 행동의 시작 처리
+                _currentAction.OnEnter();
             }
-
-            // 1. 이전 행동의 종료 처리
-            _currentAction?.OnExit();
-
-            // 2. 현재 행동을 새로운 행동으로 교체
-            _currentAction = bestAction;
-
-            // 3. 새로운 행동의 시작 처리
-            _currentAction.OnEnter();
         }
     }
     /// <summary>
@@ -576,6 +594,34 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         //    (예: isGathering, isInteracting 플래그 등)
         //    이 부분은 각 Action의 OnExit에서 잘 처리되고 있다면 생략 가능합니다.
         GetComponent<PetAnimationController>()?.ForceStopAllAnimations();
+    }
+    
+    /// <summary>
+    /// SelectedAction을 찾아서 반환합니다.
+    /// </summary>
+    public IPetAction GetSelectedAction()
+    {
+        return _allActions?.Find(a => a is SelectedAction);
+    }
+    
+    /// <summary>
+    /// 특정 Action을 강제로 설정합니다.
+    /// </summary>
+    public void ForceSetAction(IPetAction newAction)
+    {
+        if (newAction == null) return;
+        
+        // 현재 액션 종료
+        if (_currentAction != null)
+        {
+            _currentAction.OnExit();
+        }
+        
+        // 새 액션 시작
+        _currentAction = newAction;
+        _currentAction.OnEnter();
+        
+        Debug.Log($"[PetController] {petName}: Action 강제 전환 → {newAction.GetType().Name}");
     }
     
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)

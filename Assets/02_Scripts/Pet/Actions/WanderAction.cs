@@ -86,7 +86,11 @@ public class WanderAction : IPetAction
             DecideNextBehavior();
         }
         
-        _pet.HandleRotation();
+        // ★ 선택 상태가 아닐 때만 회전 처리
+        if (!_pet.isSelected)
+        {
+            _pet.HandleRotation();
+        }
     }
 
     public void OnExit()

@@ -74,6 +74,10 @@ public class SelectedAction : IPetAction
                 );
             }
         }
+        else if (_pet.isClimbingTree)
+        {
+            Debug.Log($"[SelectedAction] {_pet.petName}: OnUpdate - 나무 위에 있어서 회전하지 않음");
+        }
     }
 
     public void OnExit()

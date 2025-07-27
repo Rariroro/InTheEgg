@@ -583,8 +583,20 @@ private void Select()
     isSelected = true; // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
     
-    // ★ AI를 즉시 업데이트하여 SelectedAction이 바로 활성화되도록 함
-    petController.UpdateAI();
+    // ★ 현재 Action을 강제로 종료하고 AI를 즉시 업데이트
+    petController.InterruptAndResetAI();
+    
+    // ★ SelectedAction을 즉시 시작 (3초 대기 없이)
+    var selectedAction = petController.GetSelectedAction();
+    if (selectedAction != null)
+    {
+        Debug.Log($"[PetInteractionController] SelectedAction을 찾았습니다. 강제 설정 중...");
+        petController.ForceSetAction(selectedAction);
+    }
+    else
+    {
+        Debug.LogError($"[PetInteractionController] SelectedAction을 찾을 수 없습니다!");
+    }
 
     // 터치 횟수 관련 로직은 유지
     touchCount++;
