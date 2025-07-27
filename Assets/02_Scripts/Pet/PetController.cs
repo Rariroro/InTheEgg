@@ -101,6 +101,10 @@ public partial class PetController : MonoBehaviour
     public PetSleepingController sleepingController; // 추가: 수면 컨트롤러
     private PetWaterBehaviorController waterBehaviorController; // ★ 추가
     private PetTreeClimbingController treeClimbingController;
+    
+    // AI 시스템
+    private PetAI petAI;
+    
     // 현재 활성화된 감정 말풍선
     private EmotionBubble activeBubble;
 private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기 위한 변수 추가
@@ -177,7 +181,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     private PetNeeds petNeeds;
     
     [Header("Experimental Features")]
-    [SerializeField] private bool useActivitySystem = false; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부
+    [SerializeField] private bool useActivitySystem = true; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부 (true로 변경)
     
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
@@ -400,18 +404,25 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         _allActivities = new List<IPetActivity>();
         
         // 새로운 Activity들 추가
+        // Basic Activities
         _allActivities.Add(new WanderActivity(this, movementController));
-        _allActivities.Add(new EatActivity(this, feedingController));
+        _allActivities.Add(new SelectedActivity(this));
+        _allActivities.Add(new ClimbTreeActivity(this, treeClimbingController));
         
-        // 기존 Action들을 어댑터로 래핑하여 추가 (점진적 마이그레이션)
-        foreach (var action in _allActions)
-        {
-            // 이미 Activity로 변환된 것들은 제외
-            if (!(action is WanderAction) && !(action is EatAction))
-            {
-                _allActivities.Add(new ActionToActivityAdapter(action, this));
-            }
-        }
+        // Needs Activities
+        _allActivities.Add(new EatActivity(this, feedingController));
+        _allActivities.Add(new SleepActivity(this, sleepingController));
+        _allActivities.Add(new ExhaustedActivity(this));
+        
+        // Emergency Activities
+        _allActivities.Add(new BeeEscapeActivity(this));
+        
+        // Social Activities
+        _allActivities.Add(new GatherActivity(this));
+        _allActivities.Add(new InteractWithPetActivity(this));
+        
+        // Environment Activities
+        _allActivities.Add(new EnvironmentGatherActivity(this));
         
         Debug.Log($"[Phase 3] {petName}의 Activity 시스템이 초기화되었습니다. 활동 수: {_allActivities.Count}");
     }
@@ -1107,6 +1118,8 @@ public void HideEmotion()
                 petState.UpdateHoldingState(isHolding);
                 petState.UpdateSelectedState(isSelected);
             }
+            // PlayerControl 상태일 때는 다른 상태 체크를 하지 않음
+            return;
         }
         
         // 긴급 상태 동기화

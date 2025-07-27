@@ -1,0 +1,181 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// 펫의 AI 시스템. Activity 우선순위 기반으로 행동을 결정합니다.
+/// </summary>
+public class PetAI : MonoBehaviour
+{
+    private PetController petController;
+    private PetState petState;
+    private PetNeeds petNeeds;
+    
+    // 사용 가능한 모든 활동들
+    private List<IPetActivity> availableActivities = new List<IPetActivity>();
+    
+    // 현재 실행 중인 활동
+    private IPetActivity currentActivity;
+    
+    [Header("AI Settings")]
+    [SerializeField] private float updateInterval = 0.5f; // AI 업데이트 주기
+    private float lastUpdateTime;
+    
+    /// <summary>
+    /// AI 시스템 초기화
+    /// </summary>
+    public void Init(PetController controller)
+    {
+        petController = controller;
+        petState = GetComponent<PetState>();
+        petNeeds = GetComponent<PetNeeds>();
+        
+        // 모든 활동들 등록
+        RegisterActivities();
+    }
+    
+    /// <summary>
+    /// 사용 가능한 모든 활동들을 등록
+    /// </summary>
+    private void RegisterActivities()
+    {
+        // 컨트롤러들 가져오기
+        var feedingController = GetComponent<PetFeedingController>();
+        var sleepingController = GetComponent<PetSleepingController>();
+        var climbingController = GetComponent<PetTreeClimbingController>();
+        var movementController = GetComponent<PetMovementController>();
+        
+        // Basic Activities
+        availableActivities.Add(new WanderActivity(petController, movementController));
+        availableActivities.Add(new SelectedActivity(petController));
+        availableActivities.Add(new ClimbTreeActivity(petController, climbingController));
+        
+        // Needs Activities
+        availableActivities.Add(new EatActivity(petController, feedingController));
+        availableActivities.Add(new SleepActivity(petController, sleepingController));
+        availableActivities.Add(new ExhaustedActivity(petController));
+        
+        // Emergency Activities
+        availableActivities.Add(new BeeEscapeActivity(petController));
+        
+        // Social Activities
+        availableActivities.Add(new GatherActivity(petController));
+        availableActivities.Add(new InteractWithPetActivity(petController));
+        
+        // Environment Activities
+        availableActivities.Add(new EnvironmentGatherActivity(petController));
+        
+        Debug.Log($"[PetAI] {petController.petName}: {availableActivities.Count}개의 활동 등록 완료");
+    }
+    
+    private void Update()
+    {
+        // 주기적으로 AI 업데이트
+        if (Time.time - lastUpdateTime >= updateInterval)
+        {
+            lastUpdateTime = Time.time;
+            UpdateAI();
+        }
+        
+        // 현재 활동 업데이트
+        currentActivity?.Update();
+    }
+    
+    /// <summary>
+    /// AI 업데이트 - 가장 우선순위가 높은 활동 선택
+    /// </summary>
+    public void UpdateAI()
+    {
+        // 플레이어가 직접 제어 중이면 AI 중단
+        if (petState?.CurrentStatus == PetStatus.PlayerControl)
+            return;
+            
+        // 가장 우선순위가 높은 활동 찾기
+        IPetActivity bestActivity = null;
+        float highestPriority = 0f;
+        
+        foreach (var activity in availableActivities)
+        {
+            if (activity.CanStart(petState, petNeeds))
+            {
+                float priority = activity.GetPriority(petState, petNeeds);
+                if (priority > highestPriority)
+                {
+                    highestPriority = priority;
+                    bestActivity = activity;
+                }
+            }
+        }
+        
+        // 현재 활동과 다르면 전환
+        if (bestActivity != currentActivity)
+        {
+            // 현재 활동 중단
+            if (currentActivity != null)
+            {
+                Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 종료");
+                currentActivity.Stop();
+            }
+            
+            // 새 활동 시작
+            currentActivity = bestActivity;
+            if (currentActivity != null)
+            {
+                Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 시작 (우선순위: {highestPriority})");
+                currentActivity.Start();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 현재 활동을 강제로 중단하고 AI를 재평가
+    /// </summary>
+    public void InterruptAndResetAI()
+    {
+        if (currentActivity != null)
+        {
+            Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 강제 중단");
+            currentActivity.Stop();
+            currentActivity = null;
+        }
+        
+        // 즉시 AI 재평가
+        UpdateAI();
+    }
+    
+    /// <summary>
+    /// 특정 활동을 강제로 설정 (SelectedActivity 등에서 사용)
+    /// </summary>
+    public void ForceSetActivity(IPetActivity activity)
+    {
+        if (activity == null) return;
+        
+        // 현재 활동 중단
+        if (currentActivity != null && currentActivity != activity)
+        {
+            currentActivity.Stop();
+        }
+        
+        // 새 활동 시작
+        currentActivity = activity;
+        Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 강제 설정");
+        currentActivity.Start();
+    }
+    
+    /// <summary>
+    /// 현재 실행 중인 활동 가져오기
+    /// </summary>
+    public IPetActivity GetCurrentActivity() => currentActivity;
+    
+    /// <summary>
+    /// 특정 타입의 활동 찾기
+    /// </summary>
+    public T GetActivity<T>() where T : IPetActivity
+    {
+        foreach (var activity in availableActivities)
+        {
+            if (activity is T)
+                return (T)activity;
+        }
+        return default(T);
+    }
+}
