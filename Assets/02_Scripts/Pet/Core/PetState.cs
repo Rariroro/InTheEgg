@@ -109,8 +109,17 @@ public class PetState
         // PlayerControl은 언제든 전환 가능 (플레이어 우선)
         if (to == PetStatus.PlayerControl) return true;
         
-        // PlayerControl에서는 다른 상태로 전환 불가 (플레이어가 해제해야 함)
-        if (from == PetStatus.PlayerControl) return false;
+        // Idle로는 언제든 전환 가능 (기본 상태)
+        if (to == PetStatus.Idle) return true;
+        
+        // PlayerControl에서는 Idle로만 전환 가능
+        if (from == PetStatus.PlayerControl) return to == PetStatus.Idle;
+        
+        // Interacting 상태는 Idle, Environmental에서 진입 가능
+        if (to == PetStatus.Interacting)
+        {
+            return from == PetStatus.Idle || from == PetStatus.Environmental;
+        }
         
         // Gathering 상태는 Idle이나 Environmental에서만 진입 가능
         if (to == PetStatus.Gathering)
@@ -118,8 +127,14 @@ public class PetState
             return from == PetStatus.Idle || from == PetStatus.Environmental;
         }
         
-        // 나머지는 Idle 상태에서만 전환 가능
-        return from == PetStatus.Idle;
+        // Environmental 상태는 Idle에서만 진입 가능
+        if (to == PetStatus.Environmental)
+        {
+            return from == PetStatus.Idle;
+        }
+        
+        // 그 외의 경우는 전환 불가
+        return false;
     }
     
     /// <summary>

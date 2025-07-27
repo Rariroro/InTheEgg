@@ -424,10 +424,23 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
         IPetAction bestAction = null;
         float maxPriority = -1f;
+        
+        // 디버깅용: 선택된 상태일 때 모든 액션의 우선순위 출력
+        if (isSelected && Debug.isDebugBuild)
+        {
+            Debug.Log($"[UpdateAI] {petName} - 모든 액션 우선순위 체크:");
+        }
 
         foreach (var action in _allActions)
         {
             float currentPriority = action.GetPriority();
+            
+            // 디버깅용: 선택된 상태일 때 각 액션의 우선순위 출력
+            if (isSelected && Debug.isDebugBuild && currentPriority > 0)
+            {
+                Debug.Log($"  - {action.GetType().Name}: {currentPriority}");
+            }
+            
             if (currentPriority > maxPriority)
             {
                 maxPriority = currentPriority;

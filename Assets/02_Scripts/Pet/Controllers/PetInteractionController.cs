@@ -299,13 +299,13 @@ public class PetInteractionController : MonoBehaviour
         }
         // ★★★ 여기까지 추가 ★★★
 
-        var movementController = petController.GetComponent<PetMovementController>();
-
+        // ★ 수정: PetTreeClimbingController를 통해 나무 오르기 취소
         if (petController.isClimbingTree)
         {
-            if (movementController != null)
+            var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
+            if (treeClimbingController != null)
             {
-                movementController.ForceCancelClimbing();
+                treeClimbingController.ForceCancelClimbing();
             }
         }
 
@@ -550,10 +550,11 @@ public class PetInteractionController : MonoBehaviour
         petController.agent.Warp(petController.transform.position);
     }
 
-    var movementController = petController.GetComponent<PetMovementController>();
-    if (movementController != null)
+    // ★ 수정: PetTreeClimbingController를 통해 나무 오르기 취소
+    var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
+    if (treeClimbingController != null)
     {
-        movementController.ForceCancelClimbing();
+        treeClimbingController.ForceCancelClimbing();
     }
 
     // 펫의 움직임 재개
@@ -581,6 +582,9 @@ private void Select()
     petController.isSelected = true;
     isSelected = true; // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
+    
+    // ★ AI를 즉시 업데이트하여 SelectedAction이 바로 활성화되도록 함
+    petController.UpdateAI();
 
     // 터치 횟수 관련 로직은 유지
     touchCount++;
@@ -619,6 +623,9 @@ private void Select()
         // AI 시스템이 이 상태 변화를 감지하고 자동으로 WanderAction으로 전환할 것입니다.
         petController.isSelected = false;
         isSelected = false; // 내부 상태 추적용 플래그
+        
+        // ★ AI를 즉시 업데이트하여 다른 Action으로 전환되도록 함
+        petController.UpdateAI();
 
         if (!isHolding)
         {

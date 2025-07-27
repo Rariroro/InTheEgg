@@ -25,9 +25,10 @@ public class PetWaterBehaviorController : MonoBehaviour
             if (waterArea != -1)
             {
                 // 물 속성 펫은 물 영역 비용 낮게, 비물 속성은 높게 설정
+                // Unity는 1보다 작은 cost 값에 대해 경고를 표시하므로 최소값을 1로 설정
                 petController.agent.SetAreaCost(
                     waterArea,
-                    petController.habitat == PetAIProperties.Habitat.Water ? 0.5f : 10f
+                    petController.habitat == PetAIProperties.Habitat.Water ? 1f : 10f
                 );
             }
         }
