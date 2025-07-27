@@ -34,7 +34,7 @@ public static class PetAIProperties
 }
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.
-public partial class PetController : MonoBehaviour
+public class PetController : MonoBehaviour
 {
     [Header("Pet Movement & Animation Settings")]
     public float speed = 3.5f;

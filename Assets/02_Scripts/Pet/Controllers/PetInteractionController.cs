@@ -65,8 +65,7 @@ public class PetInteractionController : MonoBehaviour
             nameText.color = Color.white;              // 텍스트 색상
 
             // Billboard 컴포넌트를 추가합니다. (카메라를 항상 바라보도록)
-            var billboard = nameTextObject.AddComponent<Billboard>();
-            billboard.mainTransform = petController.transform;
+            nameTextObject.AddComponent<Billboard>();
 
             // 초기에는 이름 텍스트를 비활성화합니다.
             nameTextObject.SetActive(false);
