@@ -250,12 +250,30 @@ public class PetFeedingController : MonoBehaviour
         }
 
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(PetAnimationController.PetAnimationType.Eat));
-        petController.hunger = 0f;
+        
+        // ★ [Phase 2] PetNeeds를 통해 배고픔 감소
+        if (petController.Needs != null)
+        {
+            petController.Needs.ReduceHunger(100f); // 배고픔 완전 해소
+        }
+        else
+        {
+            petController.hunger = 0f; // 폴백
+        }
         
         // 음식 섭취시 친밀도 증가
         float affectionIncrease = UnityEngine.Random.Range(petController.GetDroppedFoodAffectionMin(), petController.GetDroppedFoodAffectionMax());
-        petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f);
-        Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        
+        // ★ [Phase 2] PetNeeds를 통해 친밀도 증가
+        if (petController.Needs != null)
+        {
+            petController.Needs.IncreaseAffection(affectionIncrease);
+        }
+        else
+        {
+            petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f); // 폴백
+            Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        }
         
         // 친밀도에 따른 감정 표현
         if (petController.affection >= petController.GetHighAffectionThreshold())
@@ -315,12 +333,30 @@ public class PetFeedingController : MonoBehaviour
         }
         
         yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5f, true, true));
-        petController.hunger = 0f;
+        
+        // ★ [Phase 2] PetNeeds를 통해 배고픔 감소
+        if (petController.Needs != null)
+        {
+            petController.Needs.ReduceHunger(100f); // 배고픔 완전 해소
+        }
+        else
+        {
+            petController.hunger = 0f; // 폴백
+        }
         
         // 환경 음식 섭취시 친밀도 증가
         float affectionIncrease = UnityEngine.Random.Range(petController.GetEnvironmentFoodAffectionMin(), petController.GetEnvironmentFoodAffectionMax());
-        petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f);
-        Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        
+        // ★ [Phase 2] PetNeeds를 통해 친밀도 증가
+        if (petController.Needs != null)
+        {
+            petController.Needs.IncreaseAffection(affectionIncrease);
+        }
+        else
+        {
+            petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f); // 폴백
+            Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+        }
         
         // 친밀도에 따른 감정 표현
         if (petController.affection >= petController.GetHighAffectionThreshold())

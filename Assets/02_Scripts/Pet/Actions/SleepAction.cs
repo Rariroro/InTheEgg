@@ -32,10 +32,12 @@ public class SleepAction : IPetAction
         }
 
         // ★★★ 수정: 졸음 수치가 70 이상일 때, WanderAction(0.1f)보다 즉시 높은 우선순위를 갖도록 변경 ★★★
-        if (_pet.sleepiness >= 70f)
+        // ★ [Phase 2] PetNeeds를 통해 졸림 확인 (폴백 포함)
+        float currentSleepiness = _pet.Needs != null ? _pet.Needs.Sleepiness : _pet.sleepiness;
+        if (currentSleepiness >= 70f)
         {
             // 기본 우선순위 0.2f를 부여하고, 졸음 수치에 따라 점진적으로 증가시킵니다.
-            return 0.2f + ((_pet.sleepiness - 70f) / 30f); // 0.2 ~ 1.2 사이의 값
+            return 0.2f + ((currentSleepiness - 70f) / 30f); // 0.2 ~ 1.2 사이의 값
         }
 
         return 0f;

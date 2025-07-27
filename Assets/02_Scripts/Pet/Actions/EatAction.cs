@@ -40,10 +40,12 @@ public float GetPriority()
     if (_pet.isClimbingTree) return 0f;
 
     // 배고픔 수치가 70 이상일 때만 새로운 식사 행동을 시작할 수 있습니다.
-    if (_pet.hunger >= 70f)
+    // ★ [Phase 2] PetNeeds를 통해 배고픔 확인 (폴백 포함)
+    float currentHunger = _pet.Needs != null ? _pet.Needs.Hunger : _pet.hunger;
+    if (currentHunger >= 70f)
     {
         // 배고픔 수치에 비례하여 우선순위가 증가합니다 (0.0 ~ 1.0).
-        return (_pet.hunger - 70f) / 30f;
+        return (currentHunger - 70f) / 30f;
     }
 
     // 그 외의 경우는 우선순위가 없습니다.

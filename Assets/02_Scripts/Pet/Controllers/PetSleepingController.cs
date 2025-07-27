@@ -163,7 +163,15 @@ public class PetSleepingController : MonoBehaviour
             yield return petController.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, sleepDuration, false, false);
 
             // 피로 완전 회복
-            petController.sleepiness = 0f;
+            // ★ [Phase 2] PetNeeds를 통해 졸림 리셋
+            if (petController.Needs != null)
+            {
+                petController.Needs.ResetSleepiness();
+            }
+            else
+            {
+                petController.sleepiness = 0f; // 폴백
+            }
             petController.ShowEmotion(EmotionType.Happy, 3f);
 
             Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
@@ -267,12 +275,30 @@ public class PetSleepingController : MonoBehaviour
 
         if (isProperArea)
         {
-            petController.sleepiness = 0f; // 완전 회복
+            // ★ [Phase 2] PetNeeds를 통해 졸림 리셋
+            if (petController.Needs != null)
+            {
+                petController.Needs.ResetSleepiness(); // 완전 회복
+            }
+            else
+            {
+                petController.sleepiness = 0f; // 폴백
+            }
             petController.ShowEmotion(EmotionType.Happy, 3f);
         }
         else
         {
-            petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 불완전 회복
+            // ★ [Phase 2] 부분 회복도 PetNeeds를 통해 처리
+            if (petController.Needs != null)
+            {
+                // ReduceSleepiness 메서드가 없으므로 직접 계산
+                float currentSleepiness = petController.Needs.Sleepiness;
+                petController.sleepiness = Mathf.Max(0f, currentSleepiness - 60f);
+            }
+            else
+            {
+                petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 폴백
+            }
             petController.ShowEmotion(EmotionType.Happy, 3f); // 불편하게 잤어도 일단은 감정 표시
         }
         // 상태 초기화 및 이동 재개

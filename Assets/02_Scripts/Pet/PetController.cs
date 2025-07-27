@@ -97,8 +97,8 @@ public class PetController : MonoBehaviour
     private PetMovementController movementController;
     private PetAnimationController animationController;
     private PetInteractionController interactionController;
-    private PetFeedingController feedingController;
-    private PetSleepingController sleepingController; // 추가: 수면 컨트롤러
+    public PetFeedingController feedingController;
+    public PetSleepingController sleepingController; // 추가: 수면 컨트롤러
     private PetWaterBehaviorController waterBehaviorController; // ★ 추가
     private PetTreeClimbingController treeClimbingController;
     // 현재 활성화된 감정 말풍선
@@ -142,17 +142,17 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
     [Header("Pet Needs Settings")] // 인스펙터에서 편하게 관리하기 위해 헤더 추가
     [Tooltip("초당 배고픔 증가량")]
-    [SerializeField] private float hungerIncreaseRate = 0.2f;
+    public float hungerIncreaseRate = 0.2f;
     [Tooltip("초당 졸림 증가량")]
-    [SerializeField] private float sleepinessIncreaseRate = 0.1f;
+    public float sleepinessIncreaseRate = 0.1f;
     
     [Header("Affection Settings")] // 친밀도 관련 설정
     [Tooltip("배고픔이 이 수치 이상일 때 친밀도가 감소하기 시작합니다")]
-    [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;
+    public float hungerThresholdForAffectionDecrease = 80f;
     [Tooltip("배고플 때 초당 친밀도 감소량 (최대 배고픔 상태에서)")]
-    [SerializeField] private float affectionDecreaseRateWhenHungry = 0.5f;
+    public float affectionDecreaseRateWhenHungry = 0.5f;
     [Tooltip("친밀도가 이 수치 이하로 떨어지면 Sad 감정을 표현합니다")]
-    [SerializeField] private float lowAffectionThreshold = 20f;
+    public float lowAffectionThreshold = 20f;
     [Tooltip("친밀도가 이 수치 이상이면 Love 감정을 표현합니다")]
     [SerializeField] private float highAffectionThreshold = 80f;
     
@@ -173,10 +173,21 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [Header("State Management (New)")]
     [SerializeField] private PetState petState = new PetState();
     
+    [Header("Needs Management (New)")]
+    private PetNeeds petNeeds;
+    
+    [Header("Experimental Features")]
+    [SerializeField] private bool useActivitySystem = false; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부
+    
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
     /// </summary>
     public PetState State => petState;
+    
+    /// <summary>
+    /// 외부에서 욕구를 읽기 위한 프로퍼티
+    /// </summary>
+    public PetNeeds Needs => petNeeds;
     
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
@@ -194,6 +205,10 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     // 행동 시스템 관련 변수
     private List<IPetAction> _allActions;
     private IPetAction _currentAction;
+    
+    // ★ [Phase 3] 새로운 Activity 시스템
+    private List<IPetActivity> _allActivities;
+    private IPetActivity _currentActivity;
     // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
     private void Awake()
     {
@@ -315,6 +330,18 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
         // 행동 리스트 초기화
         InitializeActions();
+        
+        // ★ [Phase 3] Activity 시스템 초기화
+        InitializeActivities();
+        
+        // ★ [Phase 2] 욕구 시스템 초기화
+        petNeeds = gameObject.AddComponent<PetNeeds>();
+        petNeeds.Init(this);
+        
+        // 욕구 변화 이벤트 구독
+        petNeeds.OnNeedChanged += OnNeedChanged;
+        petNeeds.OnNeedCritical += OnNeedCritical;
+        petNeeds.OnEmotionRequired += (emotionType) => ShowEmotion(emotionType, 3f);
 
 
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
@@ -364,6 +391,30 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         _currentAction?.OnEnter();
         Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
     }
+    
+    /// <summary>
+    /// ★ [Phase 3] 새로운 Activity 시스템 초기화
+    /// </summary>
+    private void InitializeActivities()
+    {
+        _allActivities = new List<IPetActivity>();
+        
+        // 새로운 Activity들 추가
+        _allActivities.Add(new WanderActivity(this, movementController));
+        _allActivities.Add(new EatActivity(this, feedingController));
+        
+        // 기존 Action들을 어댑터로 래핑하여 추가 (점진적 마이그레이션)
+        foreach (var action in _allActions)
+        {
+            // 이미 Activity로 변환된 것들은 제외
+            if (!(action is WanderAction) && !(action is EatAction))
+            {
+                _allActivities.Add(new ActionToActivityAdapter(action, this));
+            }
+        }
+        
+        Debug.Log($"[Phase 3] {petName}의 Activity 시스템이 초기화되었습니다. 활동 수: {_allActivities.Count}");
+    }
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
     {
@@ -388,7 +439,15 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         _aiUpdateTimer += Time.deltaTime;
         if (_aiUpdateTimer >= _aiUpdateInterval)
         {
-            UpdateAI();
+            // ★ [Phase 3] 실험적 기능: Activity 시스템 사용
+            if (useActivitySystem && _allActivities != null && _allActivities.Count > 0)
+            {
+                UpdateActivityAI();
+            }
+            else
+            {
+                UpdateAI();
+            }
             _aiUpdateTimer = 0f;
         }
         
@@ -400,7 +459,15 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         }
 
         // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
-        _currentAction?.OnUpdate();
+        // ★ [Phase 3] Activity와 Action 병행 실행 (점진적 마이그레이션)
+        if (_currentActivity != null)
+        {
+            _currentActivity.Update();
+        }
+        else
+        {
+            _currentAction?.OnUpdate();
+        }
         
         // ★ 디버그: 선택 상태인데 SelectedAction이 아닌 경우
         if (isSelected && _currentAction != null && !(_currentAction is SelectedAction))
@@ -486,55 +553,128 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             }
         }
     }
+    
+    /// <summary>
+    /// ★ [Phase 3] 새로운 Activity 기반 AI 업데이트 (실험적)
+    /// </summary>
+    private void UpdateActivityAI()
+    {
+        if (petState.CurrentStatus == PetStatus.PlayerControl || isActionLocked) return;
+        if (isHolding) return;
+        
+        IPetActivity bestActivity = null;
+        float maxPriority = -1f;
+        
+        // 모든 활동의 우선순위 체크
+        foreach (var activity in _allActivities)
+        {
+            if (activity.CanStart(petState, petNeeds))
+            {
+                float priority = activity.GetPriority(petState, petNeeds);
+                if (priority > maxPriority)
+                {
+                    maxPriority = priority;
+                    bestActivity = activity;
+                }
+            }
+        }
+        
+        // 활동 전환
+        if (bestActivity != null && bestActivity != _currentActivity)
+        {
+            _currentActivity?.Stop();
+            _currentActivity = bestActivity;
+            _currentActivity.Start();
+            
+            Debug.Log($"[ActivityAI] {petName}: 활동 전환 → {_currentActivity.Name} (우선순위: {maxPriority:F2})");
+        }
+    }
+    
     /// <summary>
     /// 펫의 배고픔과 졸림 수치를 시간에 따라 지속적으로 업데이트합니다.
     /// </summary>
     private void UpdateNeeds()
     {
-        // 펫이 먹고 있거나, 먹을 것을 찾아가는 중이 아닐 때만 배고픔 증가
-        if (feedingController != null && !feedingController.IsEatingOrSeeking())
+        // ★ [Phase 2] 욕구 업데이트를 PetNeeds에 위임
+        if (petNeeds != null)
         {
-            hunger = Mathf.Clamp(hunger + hungerIncreaseRate * Time.deltaTime, 0f, 100f);
-            
-            // 배고픔에 따른 친밀도 감소
-            if (hunger >= hungerThresholdForAffectionDecrease) // 설정된 배고픔 임계값 이상일 때
-            {
-                // 초당 친밀도 감소 (배고픔이 심할수록 더 빠르게 감소)
-                float affectionDecreaseRate = affectionDecreaseRateWhenHungry * (hunger / 100f);
-                float previousAffection = affection;
-                affection = Mathf.Clamp(affection - affectionDecreaseRate * Time.deltaTime, 0f, 100f);
-                
-                // 친밀도가 설정된 임계값 이하로 떨어지고, 이전에는 그보다 높았다면 Sad 감정 표현
-                if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
-                {
-                    ShowEmotion(EmotionType.Sad, 3f);
-                    Debug.Log($"[Affection] {petName}의 친밀도가 낮아졌습니다: {affection:F1}");
-                }
-            }
+            petNeeds.UpdateNeeds();
         }
-
-        // 펫이 자고 있거나, 잠잘 곳을 찾아가는 중이 아닐 때만 졸림 증가
-        if (sleepingController != null && !sleepingController.IsSleepingOrSeeking())
+        else
         {
-            sleepiness = Mathf.Clamp(sleepiness + sleepinessIncreaseRate * Time.deltaTime, 0f, 100f);
-
-            // ▼▼▼ [추가] 졸릴 때 간헐적으로 감정 표현 ▼▼▼
-            if (sleepiness >= 70f)
+            // 폴백: PetNeeds가 아직 초기화되지 않았을 경우 기존 로직 사용
+            // 펫이 먹고 있거나, 먹을 것을 찾아가는 중이 아닐 때만 배고픔 증가
+            if (feedingController != null && !feedingController.IsEatingOrSeeking())
             {
-                _sleepyEmotionTimer += Time.deltaTime;
-                if (_sleepyEmotionTimer >= SLEEPY_EMOTION_INTERVAL)
+                hunger = Mathf.Clamp(hunger + hungerIncreaseRate * Time.deltaTime, 0f, 100f);
+                
+                // 배고픔에 따른 친밀도 감소
+                if (hunger >= hungerThresholdForAffectionDecrease) // 설정된 배고픔 임계값 이상일 때
                 {
-                    if (UnityEngine.Random.value < SLEEPY_EMOTION_CHANCE)
+                    // 초당 친밀도 감소 (배고픔이 심할수록 더 빠르게 감소)
+                    float affectionDecreaseRate = affectionDecreaseRateWhenHungry * (hunger / 100f);
+                    float previousAffection = affection;
+                    affection = Mathf.Clamp(affection - affectionDecreaseRate * Time.deltaTime, 0f, 100f);
+                    
+                    // 친밀도가 설정된 임계값 이하로 떨어지고, 이전에는 그보다 높았다면 Sad 감정 표현
+                    if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
                     {
-                        ShowEmotion(EmotionType.Sleepy, 2f); // 2초간 '졸림' 표시
+                        ShowEmotion(EmotionType.Sad, 3f);
+                        Debug.Log($"[Affection] {petName}의 친밀도가 낮아졌습니다: {affection:F1}");
                     }
-                    _sleepyEmotionTimer = 0f; // 타이머 초기화
                 }
             }
-            // ▲▲▲ [여기까지 추가] ▲▲▲
+
+            // 펫이 자고 있거나, 잠잘 곳을 찾아가는 중이 아닐 때만 졸림 증가
+            if (sleepingController != null && !sleepingController.IsSleepingOrSeeking())
+            {
+                sleepiness = Mathf.Clamp(sleepiness + sleepinessIncreaseRate * Time.deltaTime, 0f, 100f);
+
+                // ▼▼▼ [추가] 졸릴 때 간헐적으로 감정 표현 ▼▼▼
+                if (sleepiness >= 70f)
+                {
+                    _sleepyEmotionTimer += Time.deltaTime;
+                    if (_sleepyEmotionTimer >= SLEEPY_EMOTION_INTERVAL)
+                    {
+                        if (UnityEngine.Random.value < SLEEPY_EMOTION_CHANCE)
+                        {
+                            ShowEmotion(EmotionType.Sleepy, 2f); // 2초간 '졸림' 표시
+                        }
+                        _sleepyEmotionTimer = 0f; // 타이머 초기화
+                    }
+                }
+                // ▲▲▲ [여기까지 추가] ▲▲▲
+            }
         }
     }
 
+    // ★ [Phase 2] 욕구 변화 이벤트 핸들러
+    private void OnNeedChanged(PetNeeds.NeedType needType, float value)
+    {
+        // 욕구 값을 기존 변수에 동기화 (호환성 유지)
+        switch (needType)
+        {
+            case PetNeeds.NeedType.Hunger:
+                hunger = value;
+                break;
+            case PetNeeds.NeedType.Sleepiness:
+                sleepiness = value;
+                break;
+            case PetNeeds.NeedType.Affection:
+                affection = value;
+                break;
+        }
+    }
+    
+    // ★ [Phase 2] 욕구가 임계값을 넘었을 때
+    private void OnNeedCritical(PetNeeds.NeedType needType)
+    {
+        Debug.Log($"[PetController] {petName}의 {needType}이(가) 임계값을 넘었습니다!");
+        
+        // 필요시 여기에 추가 로직 구현
+        // 예: 특정 Action의 우선순위 증가, 긴급 상태 전환 등
+    }
+    
     // ▼▼▼ [수정] 이 헬퍼 메서드를 PetController 클래스 내부에 추가합니다. ▼▼▼
     /// <summary>
     /// 지정된 부모 Transform 아래에서 특정 이름을 가진 자식을 재귀적으로 탐색하여 반환합니다.
