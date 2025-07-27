@@ -177,7 +177,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     private PetNeeds petNeeds;
     
     [Header("Experimental Features")]
-    [SerializeField] private bool useActivitySystem = false; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부
+    [SerializeField] private bool useActivitySystem = true; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부
     
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
@@ -203,7 +203,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         }
     }
     // 행동 시스템 관련 변수
-    private List<IPetAction> _allActions;
+    // private List<IPetAction> _allActions; // Deprecated - Activity 시스템으로 대체됨
     private IPetAction _currentAction;
     
     // ★ [Phase 3] 새로운 Activity 시스템
@@ -329,7 +329,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         treeClimbingController.Init(this);
 
         // 행동 리스트 초기화
-        InitializeActions();
+        // InitializeActions(); // Deprecated - Actions 폴더가 제거됨
         
         // ★ [Phase 3] Activity 시스템 초기화
         InitializeActivities();
@@ -354,43 +354,13 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             StartCoroutine(RegisterToPetManager());
         }
     }
-    /// <summary>
-    /// 펫이 수행할 수 있는 모든 행동을 생성하고 리스트에 추가합니다.
-    /// </summary>
-    private void InitializeActions()
-    {
-        _allActions = new List<IPetAction>
-    {
-        // === 최우선순위: 긴급 상황 ===
-        new BeeEscapeAction(this),               // 벌 공격 도망 [우선순위: 100.0]
-        new ExhaustedAction(this),               // 탈진 [우선순위: 50.0]
+    // InitializeActions 메서드는 Deprecated됨 - Activity 시스템으로 대체
+    
 
-        // === 최상위 우선순위: 외부 명령 ===
-        new GatherAction(this),                  // 모이기 [우선순위: 20.0]
 
-        
-                new EnvironmentGatherAction(this),       // 환경 스폰 모이기 [우선순위: 15.0]
-        new InteractWithPetAction(this),         // 펫 간 상호작용 [우선순위: 10.0]
 
-        // ★★★ 추가: 플레이어 선택 행동 ★★★
-        new SelectedAction(this),                // 플레이어 선택 [우선순위: 5.0]
 
-        // === 중간 우선순위: 긴급한 욕구 ===
-        new EatAction(this, feedingController),      // 식사 [우선순위: ~1.0]
-        new SleepAction(this, sleepingController),   // 수면 [우선순위: ~1.0]
 
-        // === 낮은 우선순위: 자율 행동 ===
-        new ClimbTreeAction(this, treeClimbingController), // 나무 오르기 [우선순위: 0.3]
-
-        // === 최하위 우선순위: 기본 행동 ===
-        new WanderAction(this, movementController)   // 배회 [우선순위: 0.1]
-    };
-
-        // 기본 행동 설정
-        _currentAction = _allActions.Find(a => a is WanderAction);
-        _currentAction?.OnEnter();
-        Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
-    }
     
     /// <summary>
     /// ★ [Phase 3] 새로운 Activity 시스템 초기화
@@ -398,22 +368,26 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     private void InitializeActivities()
     {
         _allActivities = new List<IPetActivity>();
-        
-        // 새로운 Activity들 추가
-        _allActivities.Add(new WanderActivity(this, movementController));
+
+        // === 최우선순위: 긴급 상황 ===
+        _allActivities.Add(new BeeEscapeActivity(this, movementController, animationController));
+        _allActivities.Add(new ExhaustedActivity(this, animationController));
+
+        // === 외부 명령 ===
+        _allActivities.Add(new GatherActivity(this, movementController));
+        _allActivities.Add(new SelectedActivity(this));
+
+        // === 기본 욕구 ===
         _allActivities.Add(new EatActivity(this, feedingController));
-        
-        // 기존 Action들을 어댑터로 래핑하여 추가 (점진적 마이그레이션)
-        foreach (var action in _allActions)
-        {
-            // 이미 Activity로 변환된 것들은 제외
-            if (!(action is WanderAction) && !(action is EatAction))
-            {
-                _allActivities.Add(new ActionToActivityAdapter(action, this));
-            }
-        }
-        
-        Debug.Log($"[Phase 3] {petName}의 Activity 시스템이 초기화되었습니다. 활동 수: {_allActivities.Count}");
+        _allActivities.Add(new SleepActivity(this, sleepingController, movementController));
+
+        // === 기본 행동 ===
+        _allActivities.Add(new WanderActivity(this, movementController));
+
+        // 나머지 복잡한 Action들은 나중에 Activity로 변환 예정
+        // TODO: ClimbTreeAction, EnvironmentGatherAction, InteractWithPetAction을 Activity로 변환
+
+        Debug.Log($"[Activity System] {petName}의 Activity 시스템이 초기화되었습니다. 활동 수: {_allActivities.Count}");
     }
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
@@ -496,62 +470,14 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     /// </summary>
     public void UpdateAI()
     {
-        // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
-        // PlayerControl 상태나 isActionLocked일 때는 AI 의사결정 중지
-        if (petState.CurrentStatus == PetStatus.PlayerControl || isActionLocked) return;
+        // Legacy Action 시스템은 제거됨 - Activity 시스템 사용
+        if (useActivitySystem)
+        {
+            // UpdateActivityAI는 Update()에서 직접 호출됨
+            return;
+        }
         
-        // 기존 플래그도 체크 (호환성)
-        if (isHolding) return;
-
-        IPetAction bestAction = null;
-        float maxPriority = -1f;
-        
-        // 디버깅용: 선택된 상태일 때 모든 액션의 우선순위 출력
-        if (isSelected && Debug.isDebugBuild)
-        {
-            Debug.Log($"[UpdateAI] {petName} - 모든 액션 우선순위 체크:");
-        }
-
-        foreach (var action in _allActions)
-        {
-            float currentPriority = action.GetPriority();
-            
-            // 디버깅용: 선택된 상태일 때 각 액션의 우선순위 출력
-            if (isSelected && Debug.isDebugBuild && currentPriority > 0)
-            {
-                Debug.Log($"  - {action.GetType().Name}: {currentPriority}");
-            }
-            
-            if (currentPriority > maxPriority)
-            {
-                maxPriority = currentPriority;
-                bestAction = action;
-            }
-        }
-
-        // ★★★ 수정: 행동 전환 로직 개선 ★★★
-        if (bestAction != null)
-        {
-            // 현재 행동과 다른 행동이거나, 현재 행동이 없을 때
-            if (_currentAction == null || bestAction.GetType() != _currentAction.GetType())
-            {
-                // ★ [Phase 1] 상태 전환 로깅 추가 (디버깅용)
-                if (Debug.isDebugBuild)
-                {
-                    Debug.Log($"[AI] {petName} 행동 전환: {_currentAction?.GetType().Name ?? "None"} -> {bestAction.GetType().Name} " +
-                             $"(우선순위: {maxPriority}, 상태: {petState.CurrentStatus})");
-                }
-
-                // 1. 이전 행동의 종료 처리
-                _currentAction?.OnExit();
-
-                // 2. 현재 행동을 새로운 행동으로 교체
-                _currentAction = bestAction;
-
-                // 3. 새로운 행동의 시작 처리
-                _currentAction.OnEnter();
-            }
-        }
+        Debug.LogError($"[UpdateAI] {petName} - Legacy Action 시스템은 제거되었습니다. useActivitySystem을 true로 설정하세요.");
     }
     
     /// <summary>
@@ -741,7 +667,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     /// </summary>
     public IPetAction GetSelectedAction()
     {
-        return _allActions?.Find(a => a is SelectedAction);
+        // Deprecated - Activity 시스템으로 마이그레이션 필요
+        return null;
     }
     
     /// <summary>
