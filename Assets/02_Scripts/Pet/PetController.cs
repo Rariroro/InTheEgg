@@ -168,6 +168,16 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
     [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
     [HideInInspector] public bool isExhausted = false;
+    
+    // ★★★ [Phase 1 추가] 새로운 상태 관리 시스템 ★★★
+    [Header("State Management (New)")]
+    [SerializeField] private PetState petState = new PetState();
+    
+    /// <summary>
+    /// 외부에서 상태를 읽기 위한 프로퍼티
+    /// </summary>
+    public PetState State => petState;
+    
     // ... 다른 변수들 ...
     private float _aiUpdateTimer = 0f;
     private float _aiUpdateInterval = 0.5f; // 1초에 2번만 AI 의사결정을 하도록 설정 (조절 가능)
@@ -357,10 +367,15 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
     {
+        // ★ [Phase 1] 상태 동기화 - 기존 플래그와 새 상태 시스템 연동
+        SyncStateWithFlags();
+        
         // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
         // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
         interactionController?.HandleInput();
-        if (isHolding || isActionLocked) return;
+        
+        // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
+        if (petState.IsPlayerControlled || isActionLocked) return;
         // ★★★★★ 새로 추가된 부분 ★★★★★
         // 2. 욕구 상태 업데이트 (매 프레임)
         UpdateNeeds();
@@ -400,7 +415,12 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     /// </summary>
     public void UpdateAI()
     {
-        if (isActionLocked || isHolding) return; // isHolding 상태도 AI 결정 중지 조건에 추가
+        // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
+        // PlayerControl 상태나 isActionLocked일 때는 AI 의사결정 중지
+        if (petState.CurrentStatus == PetStatus.PlayerControl || isActionLocked) return;
+        
+        // 기존 플래그도 체크 (호환성)
+        if (isHolding) return;
 
         IPetAction bestAction = null;
         float maxPriority = -1f;
@@ -418,7 +438,12 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         // ★★★ 수정: 행동 전환 로직 개선 ★★★
         if (bestAction != null && bestAction.GetType() != _currentAction?.GetType())
         {
-            // Debug.Log($"[AI] 행동 전환: {_currentAction?.GetType().Name} -> {bestAction.GetType().Name} (우선순위: {maxPriority})");
+            // ★ [Phase 1] 상태 전환 로깅 추가 (디버깅용)
+            if (Debug.isDebugBuild)
+            {
+                Debug.Log($"[AI] {petName} 행동 전환: {_currentAction?.GetType().Name} -> {bestAction.GetType().Name} " +
+                         $"(우선순위: {maxPriority}, 상태: {petState.CurrentStatus})");
+            }
 
             // 1. 이전 행동의 종료 처리
             _currentAction?.OnExit();
@@ -542,9 +567,16 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
     {
+        // ★ [Phase 1] 기존 플래그 설정
         isInteracting = true;
         interactionPartner = partner;
         currentInteractionLogic = interactionLogic;
+        
+        // ★ [Phase 1] 새로운 상태 시스템에도 반영
+        // SyncStateWithFlags가 다음 Update에서 자동으로 처리하지만
+        // 즉시 반영을 위해 여기서도 호출
+        petState.StartInteraction(partner);
+        
         // 여기서 UpdateAI()를 강제 호출하지 않습니다.
         // 다음 AI 업데이트 주기 때 자연스럽게 InteractWithPetAction으로 전환될 것입니다.
     }
@@ -854,5 +886,83 @@ public void HideEmotion()
     {
         return _currentAction;
     }
+    
+    #region Phase 1 - State System Integration
+    
+    /// <summary>
+    /// 기존 플래그들과 새로운 상태 시스템을 동기화
+    /// 점진적 마이그레이션을 위한 임시 메서드
+    /// </summary>
+    private void SyncStateWithFlags()
+    {
+        // 플레이어 제어 상태 동기화
+        if (isHolding || isSelected)
+        {
+            if (petState.CurrentStatus != PetStatus.PlayerControl)
+            {
+                petState.SetPlayerControl(isHolding, isSelected);
+            }
+            else
+            {
+                // 상태는 이미 PlayerControl이므로 세부 플래그만 업데이트
+                petState.UpdateHoldingState(isHolding);
+                petState.UpdateSelectedState(isSelected);
+            }
+        }
+        
+        // 긴급 상태 동기화
+        else if (isExhausted || isBeingAttackedByBees)
+        {
+            if (petState.CurrentStatus != PetStatus.Emergency)
+            {
+                petState.SetEmergencyState(isExhausted, isBeingAttackedByBees);
+            }
+        }
+        
+        // 상호작용 상태 동기화
+        else if (isInteracting && interactionPartner != null)
+        {
+            if (petState.CurrentStatus != PetStatus.Interacting)
+            {
+                petState.StartInteraction(interactionPartner);
+            }
+        }
+        
+        // 환경 상호작용 상태 동기화
+        else if (isClimbingTree || isInWater)
+        {
+            if (petState.CurrentStatus != PetStatus.Environmental)
+            {
+                petState.SetEnvironmentalState(isClimbingTree, isInWater, currentTree);
+            }
+        }
+        
+        // 모이기 상태 동기화
+        else if (isGathering)
+        {
+            if (petState.CurrentStatus != PetStatus.Gathering)
+            {
+                petState.SetGatheringState(gatherTargetPosition);
+            }
+        }
+        
+        // 모든 플래그가 false면 Idle 상태로
+        else if (petState.CurrentStatus != PetStatus.Idle)
+        {
+            petState.TrySetStatus(PetStatus.Idle);
+        }
+    }
+    
+    /// <summary>
+    /// 상태 시스템을 통해 플래그 업데이트 (역방향 동기화)
+    /// Phase 2에서 사용될 예정
+    /// </summary>
+    private void UpdateFlagsFromState()
+    {
+        // TODO: Phase 2에서 구현
+        // 새로운 상태 시스템의 값으로 기존 플래그들을 업데이트
+    }
+    
+    #endregion
 
 }

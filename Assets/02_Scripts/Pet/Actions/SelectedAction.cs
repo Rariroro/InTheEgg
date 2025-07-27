@@ -17,18 +17,30 @@ public class SelectedAction : IPetAction
 
     public float GetPriority()
     {
+        // ★ [Phase 1] 새로운 상태 시스템과 기존 플래그 병행 사용
         // 펫이 '선택'되었고, '들려있지' 않을 때 높은 우선순위를 가집니다. (30.0f)
         // 이 우선순위는 모든 다른 행동보다 높아야 합니다 (모이기 20.0, 환경 모이기 15.0보다 높음)
         // 단, 긴급 상황(벌 공격 100.0, 탈진 50.0)보다는 낮습니다.
-        // 나무 위에 있을 때는 ClimbTreeAction이 유지되도록 우선순위를 낮춥니다.
-        if (_pet.isSelected && !_pet.isHolding)
+        
+        // 새로운 상태 체크 (권장)
+        if (_pet.State.IsPlayerControlled && _pet.State.IsSelected && !_pet.State.IsHolding)
         {
             // 나무 위에 있으면 낮은 우선순위
-            if (_pet.isClimbingTree)
+            if (_pet.State.IsClimbingTree)
                 return 5.5f; // ClimbTreeAction(6.0)보다 낮게
             else
                 return 30.0f; // 일반 상황에서는 높은 우선순위
         }
+        
+        // 기존 플래그도 체크 (호환성 유지)
+        if (_pet.isSelected && !_pet.isHolding)
+        {
+            if (_pet.isClimbingTree)
+                return 5.5f;
+            else
+                return 30.0f;
+        }
+        
         return 0f;
     }
 
