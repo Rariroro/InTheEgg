@@ -2,8 +2,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
-// PetInteractionController 클래스는 펫과의 상호작용(터치, 드래그, 홀드 등)을 처리하는 클래스입니다.
-public class PetInteractionController : MonoBehaviour
+// PetInputController 클래스는 유저의 입력(터치, 드래그, 홀드 등)을 통한 펫 제어를 처리하는 클래스입니다.
+public class PetInputController : MonoBehaviour
 {
     // 펫 컨트롤러, 이름 텍스트, 이름 텍스트 오브젝트에 대한 참조를 저장합니다.
     private PetController petController;
@@ -284,7 +284,7 @@ public class PetInteractionController : MonoBehaviour
         }
     }
 
-    // PetInteractionController.cs
+    // PetInputController.cs
 
     private void StartHolding()
     {
@@ -523,7 +523,7 @@ public class PetInteractionController : MonoBehaviour
         CompletePetPlacement();
     }
 
-    // PetInteractionController.cs
+    // PetInputController.cs
 
    private void CompletePetPlacement()
 {
@@ -559,8 +559,6 @@ public class PetInteractionController : MonoBehaviour
     Deselect();
 }
     // 펫을 선택하는 함수
-    // PetInteractionController.cs 파일의 Select 메서드를 아래 코드로 교체하세요.
-
    // 펫을 선택하는 함수
 private void Select()
 {

@@ -105,7 +105,7 @@ public partial class PetController : MonoBehaviour
     // 각 기능별 컨트롤러 참조
     private PetMovementController movementController;
     private PetAnimationController animationController;
-    private PetInteractionController interactionController;
+    private PetInputController inputController;
     public PetFeedingController feedingController;
     public PetSleepingController sleepingController; // 추가: 수면 컨트롤러
     private PetWaterBehaviorController waterBehaviorController; // ★ 추가
@@ -333,8 +333,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         movementController.Init(this);
         animationController = gameObject.AddComponent<PetAnimationController>();
         animationController.Init(this);
-        interactionController = gameObject.AddComponent<PetInteractionController>();
-        interactionController.Init(this);
+        inputController = gameObject.AddComponent<PetInputController>();
+        inputController.Init(this);
         feedingController = gameObject.AddComponent<PetFeedingController>();
         feedingController.Init(this);
         sleepingController = gameObject.AddComponent<PetSleepingController>();
@@ -371,7 +371,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         
         // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
         // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
-        interactionController?.HandleInput();
+        inputController?.HandleInput();
         
         // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
         // 선택된 상태는 PlayerControl이지만 AI 업데이트와 Action 실행이 필요함
@@ -593,8 +593,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
                 movementController.Init(this);
             if (animationController != null)
                 animationController.Init(this);
-            if (interactionController != null)
-                interactionController.Init(this);
+            if (inputController != null)
+                inputController.Init(this);
             if (feedingController != null)
                 feedingController.Init(this);
         }
