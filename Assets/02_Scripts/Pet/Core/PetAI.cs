@@ -26,8 +26,8 @@ public class PetAI : MonoBehaviour
     public void Init(PetController controller)
     {
         petController = controller;
-        petState = GetComponent<PetState>();
-        petNeeds = GetComponent<PetNeeds>();
+        petState = controller.State;  // PetController의 PetState 사용
+        petNeeds = controller.Needs;  // PetController의 PetNeeds 사용
         
         // 모든 활동들 등록
         RegisterActivities();
@@ -38,11 +38,11 @@ public class PetAI : MonoBehaviour
     /// </summary>
     private void RegisterActivities()
     {
-        // 컨트롤러들 가져오기
-        var feedingController = GetComponent<PetFeedingController>();
-        var sleepingController = GetComponent<PetSleepingController>();
-        var climbingController = GetComponent<PetTreeClimbingController>();
-        var movementController = GetComponent<PetMovementController>();
+        // 컨트롤러들 가져오기 (PetController를 통해)
+        var feedingController = petController.feedingController;
+        var sleepingController = petController.sleepingController;
+        var climbingController = petController.GetComponent<PetTreeClimbingController>();
+        var movementController = petController.GetComponent<PetMovementController>();
         
         // Basic Activities
         availableActivities.Add(new WanderActivity(petController, movementController));
@@ -177,5 +177,21 @@ public class PetAI : MonoBehaviour
                 return (T)activity;
         }
         return default(T);
+    }
+    
+    /// <summary>
+    /// 현재 활동이 특정 타입인지 확인
+    /// </summary>
+    public bool IsCurrentActivity<T>() where T : IPetActivity
+    {
+        return currentActivity is T;
+    }
+    
+    /// <summary>
+    /// 현재 활동 이름 가져오기 (디버깅용)
+    /// </summary>
+    public string GetCurrentActivityName()
+    {
+        return currentActivity?.Name ?? "None";
     }
 }

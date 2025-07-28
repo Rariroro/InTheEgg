@@ -12,7 +12,7 @@ public class PetInteractionController : MonoBehaviour
 
     // 펫 선택 관련 변수
     private float selectionTimer = 0f;   // 펫 선택 후 경과 시간을 측정하는 타이머
-    private bool isSelected = false;     // 펫이 현재 선택되었는지 여부
+    // isSelected는 PetController.isSelected 사용
 
     // 터치 횟수 관련 변수
     private int touchCount = 0;         // 플레이어가 펫을 터치한 횟수
@@ -21,7 +21,7 @@ public class PetInteractionController : MonoBehaviour
     private int maxTouchCount = 10;    // 특별한 애니메이션을 트리거하기 위한 최대 터치 횟수
 
     // 펫 들기 관련 변수
-    private bool isHolding = false;       // 펫을 현재 들고 있는지 여부
+    // isHolding은 PetController.isHolding 사용
     private float holdTimer = 0f;        // 펫을 길게 누르고 있는 시간을 측정하는 타이머
     private float holdThreshold = 0.5f;  // 펫을 들기 위한 최소 홀드 시간 (길게 누르기 인식 시간)
     private float holdHeight = 6f;       // 펫을 들었을 때 지면으로부터의 높이
@@ -79,7 +79,7 @@ public class PetInteractionController : MonoBehaviour
     if (petController.isExhausted)
     {
         // 만약 탈진 상태가 되었을 때 펫을 들고 있었다면, 강제로 놓게 합니다.
-        if (isHolding)
+        if (petController.isHolding)
         {
             ForceStopHolding();
         }
@@ -95,13 +95,13 @@ public class PetInteractionController : MonoBehaviour
         if (petController.isGathering || petController.isGathered)
         {
             // 펫을 들고 있었다면 강제로 놓기
-            if (isHolding)
+            if (petController.isHolding)
             {
                 ForceStopHolding();
             }
 
             // 선택되어 있었다면 선택 해제
-            if (isSelected)
+            if (petController.isSelected)
             {
                 Deselect();
             }
@@ -137,7 +137,7 @@ public class PetInteractionController : MonoBehaviour
                     isTouchingPet = true;
                     holdTimer = 0f;
                 }
-                else if (isSelected)
+                else if (petController.isSelected)
                 {
                     Deselect();
                 }
@@ -149,12 +149,12 @@ public class PetInteractionController : MonoBehaviour
             holdTimer += Time.deltaTime; // 홀드 타이머 증가
 
             // 펫을 아직 들고 있지 않고, 홀드 타이머가 임계값을 초과하면 펫 들기 시작
-            if (!isHolding && holdTimer >= holdThreshold)
+            if (!petController.isHolding && holdTimer >= holdThreshold)
             {
                 StartHolding(); // 펫 들기 시작
             }
             // 펫을 들고 있는 경우, 펫 이동 처리
-            else if (isHolding)
+            else if (petController.isHolding)
             {
                 HandleHoldingMovement(); // 펫 들고 이동
             }
@@ -163,7 +163,7 @@ public class PetInteractionController : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             // 펫을 들고 있었다면 놓기
-            if (isHolding)
+            if (petController.isHolding)
             {
                 StopHolding(); // 펫 놓기
             }
@@ -178,7 +178,7 @@ public class PetInteractionController : MonoBehaviour
         }
 
         // 펫이 선택되었고, 들고 있지 않은 상태에서 일정 시간이 지나면 선택 해제
-        if (isSelected && !isHolding)
+        if (petController.isSelected && !petController.isHolding)
         {
             selectionTimer += Time.deltaTime;
             if (selectionTimer >= 3f)
@@ -223,7 +223,7 @@ public class PetInteractionController : MonoBehaviour
                 }
                 Select();
             }
-            else if (isSelected)
+            else if (petController.isSelected)
             {
                 Deselect();
             }
@@ -307,8 +307,8 @@ public class PetInteractionController : MonoBehaviour
             }
         }
 
-        isHolding = true;
-        petController.State.SetPlayerControl(holding: true, selected: isSelected);
+        // isHolding = true; // PetState가 관리
+        petController.State.SetPlayerControl(holding: true, selected: petController.isSelected);
 
         if (petController.animator != null)
         {
@@ -364,7 +364,7 @@ public class PetInteractionController : MonoBehaviour
             animController.StopContinuousAnimation();
         }
 
-        isHolding = false;
+        // isHolding = false; // PetState가 관리
 
         // 현재 회전값 저장
         Quaternion currentRotation = petController.petModelTransform != null
@@ -392,7 +392,7 @@ public class PetInteractionController : MonoBehaviour
     // ForceStopHolding() 메서드 수정
     private void ForceStopHolding()
     {
-        if (!isHolding) return;
+        if (!petController.isHolding) return;
         petController.State.UpdateHoldingState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
 
         // ★ 애니메이션 정상화
@@ -409,7 +409,7 @@ public class PetInteractionController : MonoBehaviour
             animController.StopContinuousAnimation();
         }
 
-        isHolding = false;
+        // isHolding = false; // PetState가 관리
         isTouchingPet = false;
         holdTimer = 0f;
 
@@ -527,7 +527,7 @@ public class PetInteractionController : MonoBehaviour
 
    private void CompletePetPlacement()
 {
-    isHolding = false;
+    // isHolding = false; // PetState가 관리
     // ★ [Phase 4] PetState를 통한 상태 업데이트
     petController.State.UpdateHoldingState(false);
     petController.State.UpdateTreeClimbingState(false);
@@ -573,7 +573,7 @@ private void Select()
 
     // ★ [Phase 4] PetState를 통한 상태 업데이트
     petController.State.SetPlayerControl(holding: false, selected: true);
-    isSelected = true; // 내부 상태 추적용 플래그는 유지
+    // isSelected = true; // PetState가 관리 // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
     
     // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
@@ -615,11 +615,11 @@ private void Select()
     {
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         petController.State.UpdateSelectedState(false);
-        isSelected = false; // 내부 상태 추적용 플래그
+        // isSelected = false; // PetState가 관리 // 내부 상태 추적용 플래그
         
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
-        if (!isHolding)
+        if (!petController.isHolding)
         {
             if (nameTextObject != null)
                 nameTextObject.SetActive(false);
@@ -673,7 +673,7 @@ private void Select()
         yield return new WaitForSeconds(0.5f);
 
         // isSelected 상태가 여전히 유효할 때만 공격을 실행합니다.
-        if (isSelected)
+        if (petController.isSelected)
         {
             var animController = petController.GetComponent<PetAnimationController>();
             if (animController != null)

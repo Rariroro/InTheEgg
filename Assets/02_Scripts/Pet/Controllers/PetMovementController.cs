@@ -53,9 +53,13 @@ public class PetMovementController : MonoBehaviour
     /// </summary>
     public void DecideNextBehavior()
     {
-        // WanderAction이 활성화되도록 간단히 처리
-        // 실제 행동 결정은 WanderAction에서 수행됨
-        Debug.Log($"[PetMovementController] {petController.petName}: 다음 행동 결정 요청");
+        // PetAI가 자동으로 다음 Activity를 결정함
+        // 상호작용 종료 시 AI가 재평가되도록 요청
+        if (petController.AI != null)
+        {
+            petController.AI.UpdateAI();
+        }
+        Debug.Log($"[PetMovementController] {petController.petName}: 다음 행동 결정 요청 → PetAI에 위임");
     }
 
     /// <summary>
@@ -104,12 +108,4 @@ public class PetMovementController : MonoBehaviour
         SetRandomDestination(50f); // 기본 반경 50f
     }
     
-    // === 레거시 메서드들 (점진적 마이그레이션을 위해 유지) ===
-    
-    // ExecuteWanderBehavior는 더 이상 사용되지 않음 (WanderAction에서 직접 처리)
-    [System.Obsolete("Use WanderAction directly")]
-    public void ExecuteWanderBehavior()
-    {
-        Debug.LogWarning("[PetMovementController] ExecuteWanderBehavior는 더 이상 사용되지 않습니다. WanderAction을 직접 사용하세요.");
-    }
 }

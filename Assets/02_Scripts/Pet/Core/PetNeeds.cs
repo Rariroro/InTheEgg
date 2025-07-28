@@ -16,19 +16,53 @@ public class PetNeeds : MonoBehaviour
         Affection
     }
     
-    [Header("욕구 상태")]
+    [Header("욕구 상태 (실시간 값)")]
+    [Range(0, 100)]
     [SerializeField] private float hunger = 50f;       // 배고픔 (0-100)
+    [Range(0, 100)]
     [SerializeField] private float sleepiness = 30f;   // 졸림 (0-100)
+    [Range(0, 100)]
     [SerializeField] private float affection = 50f;    // 친밀도 (0-100)
     
     [Header("욕구 증가율")]
-    [SerializeField] private float hungerIncreaseRate = 5f;      // 초당 배고픔 증가량
-    [SerializeField] private float sleepinessIncreaseRate = 3f;  // 초당 졸림 증가량
+    [Tooltip("초당 배고픔 증가량 (기본값: 0.5)")]
+    [SerializeField] private float hungerIncreaseRate = 0.5f;      // 초당 배고픔 증가량
+    [Tooltip("초당 졸림 증가량 (기본값: 0.3)")]
+    [SerializeField] private float sleepinessIncreaseRate = 0.3f;  // 초당 졸림 증가량
+    
+    // 프로퍼티로 외부 접근 허용
+    public float HungerIncreaseRate
+    {
+        get => hungerIncreaseRate;
+        set => hungerIncreaseRate = value;
+    }
+    public float SleepinessIncreaseRate
+    {
+        get => sleepinessIncreaseRate;
+        set => sleepinessIncreaseRate = value;
+    }
     
     [Header("친밀도 설정")]
-    [SerializeField] private float affectionDecreaseRateWhenHungry = 2f;  // 배고플 때 초당 친밀도 감소량
+    [SerializeField] private float affectionDecreaseRateWhenHungry = 0.2f;  // 배고플 때 초당 친밀도 감소량 (2f → 0.2f로 감소)
     [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;  // 친밀도가 감소하기 시작하는 배고픔 임계값
     [SerializeField] private float lowAffectionThreshold = 30f;  // 낮은 친밀도 임계값
+    
+    // 프로퍼티로 외부 접근 허용
+    public float AffectionDecreaseRateWhenHungry
+    {
+        get => affectionDecreaseRateWhenHungry;
+        set => affectionDecreaseRateWhenHungry = value;
+    }
+    public float HungerThresholdForAffectionDecrease
+    {
+        get => hungerThresholdForAffectionDecrease;
+        set => hungerThresholdForAffectionDecrease = value;
+    }
+    public float LowAffectionThreshold
+    {
+        get => lowAffectionThreshold;
+        set => lowAffectionThreshold = value;
+    }
     
     [Header("욕구 임계값")]
     [SerializeField] private float hungryThreshold = 70f;    // 배고픔 임계값
@@ -81,9 +115,9 @@ public class PetNeeds : MonoBehaviour
     }
     
     /// <summary>
-    /// 매 프레임 욕구 업데이트
+    /// Unity Update - 매 프레임 욕구 자동 업데이트
     /// </summary>
-    public void UpdateNeeds()
+    private void Update()
     {
         if (!isInitialized) return;
         
@@ -226,6 +260,34 @@ public class PetNeeds : MonoBehaviour
             
             Debug.Log($"[PetNeeds] {petController.petName}의 친밀도 증가: {affection:F1} (+{amount})");
         }
+    }
+    
+    /// <summary>
+    /// 배고픔 값 직접 설정 (호환성용)
+    /// </summary>
+    public void SetHunger(float value)
+    {
+        hunger = Mathf.Clamp(value, 0f, 100f);
+        OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
+    }
+    
+    /// <summary>
+    /// 졸림 값 직접 설정 (호환성용)
+    /// </summary>
+    public void SetSleepiness(float value)
+    {
+        sleepiness = Mathf.Clamp(value, 0f, 100f);
+        sleepyEmotionTimer = 0f;
+        OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
+    }
+    
+    /// <summary>
+    /// 친밀도 값 직접 설정 (호환성용)
+    /// </summary>
+    public void SetAffection(float value)
+    {
+        affection = Mathf.Clamp(value, 0f, 100f);
+        OnNeedChanged?.Invoke(NeedType.Affection, affection);
     }
     
     /// <summary>
