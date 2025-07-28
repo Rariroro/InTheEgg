@@ -505,7 +505,8 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
                 spectators.Add(potentialSpectator);
                 spectatorStates.Add(new PetOriginalState(potentialSpectator));
-                potentialSpectator.isInteracting = true;
+                // ★ [Phase 4] PetState를 통한 상태 업데이트
+                potentialSpectator.State.StartInteraction(null); // 관중은 특정 파트너가 없음
                 
                 Debug.Log($"[SlothKoalaRace] {potentialSpectator.petName}을(를) 관중으로 모집!");
 
@@ -552,7 +553,8 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             {
                 spec.HideEmotion();
                 spectatorStates[i].Restore(spec);
-                spec.isInteracting = false;
+                // ★ [Phase 4] PetState를 통한 상태 업데이트
+                spec.State.EndInteraction();
                 spec.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 spec.GetComponent<PetMovementController>()?.DecideNextBehavior();
                 Debug.Log($"[SlothKoalaRace] 관중 {spec.petName}의 상태를 복원했습니다.");

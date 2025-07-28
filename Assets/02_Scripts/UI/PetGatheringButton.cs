@@ -93,8 +93,8 @@ public class PetGatheringButton : MonoBehaviour
 
                     // ★★★ 역할 축소: 이제 버튼은 상태와 목표만 설정합니다. ★★★
                     // 실제 이동 로직(속도 변경, 애니메이션)은 GatherAction이 책임집니다.
-                    pet.gatherTargetPosition = targetPoint; // 펫 컨트롤러에 목표 위치 저장
-                    pet.isGathering = true; // 펫의 모이기 상태를 true로 설정 -> 다음 AI 업데이트에서 GatherAction이 활성화됩니다.
+                    // ★ [Phase 4] PetState를 통한 상태 업데이트
+                    pet.State.SetGatheringState(targetPoint);
                 }
 
                 Debug.Log($"모이기 명령 완료: {pets.Length}마리에게 명령 전달.");
@@ -122,7 +122,8 @@ public class PetGatheringButton : MonoBehaviour
                 // OnExit 로직을 수행하고 다른 행동으로 전환합니다.
                 if (pet != null)
                 {
-                    pet.isGathering = false;
+                    // ★ [Phase 4] PetState를 통한 상태 업데이트
+                    pet.State.TrySetStatus(PetStatus.Idle); // Gathering 상태를 해제
                 }
             }
             isGatheringActive = false;

@@ -171,7 +171,8 @@ public class PetAnimationController : MonoBehaviour
 
     public IEnumerator PlaySpecialAnimation(PetAnimationType animationType, bool isBlocking = true)
     {
-        petController.isAnimationLocked = true;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        petController.State.SetAnimationLocked(true);
         isSpecialAnimationPlaying = true;
 
         try
@@ -205,7 +206,8 @@ public class PetAnimationController : MonoBehaviour
         finally
         {
             isSpecialAnimationPlaying = false;
-            petController.isAnimationLocked = false;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            petController.State.SetAnimationLocked(false);
 
             if (petController.animator != null)
             {

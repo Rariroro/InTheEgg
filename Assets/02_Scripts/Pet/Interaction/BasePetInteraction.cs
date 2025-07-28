@@ -32,15 +32,12 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
-        // 상호작용 상태 플래그 설정
-        pet1.isInteracting = true;
-        pet2.isInteracting = true;
-        pet1.interactionPartner = pet2;
-        pet2.interactionPartner = pet1;
-
-        // 상호작용 로직 할당
-        pet1.currentInteractionLogic = this;
-        pet2.currentInteractionLogic = this;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet1.State.StartInteraction(pet2);
+        pet1.State.SetInteractionLogic(this);
+        
+        pet2.State.StartInteraction(pet1);
+        pet2.State.SetInteractionLogic(this);
 
         // 이동 중지
         pet1.StopMovement();
@@ -130,11 +127,9 @@ public abstract class BasePetInteraction : MonoBehaviour
     // 상호작용 시퀀스 관리
     private IEnumerator InteractionSequence(PetController pet1, PetController pet2)
     {
-        // 상호작용 상태 설정
-        pet1.isInteracting = true;
-        pet2.isInteracting = true;
-        pet1.interactionPartner = pet2;
-        pet2.interactionPartner = pet1;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet1.State.StartInteraction(pet2);
+        pet2.State.StartInteraction(pet1);
 
         // 이동 중지
         pet1.StopMovement();
@@ -218,10 +213,9 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         if (pet == null) return;
 
-        // 상호작용 상태 플래그를 확실히 해제합니다.
-        pet.isInteracting = false;
-        pet.interactionPartner = null;
-        pet.currentInteractionLogic = null;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.EndInteraction();
+        pet.State.SetInteractionLogic(null);
 
         // 감정 말풍선 숨기기
         pet.HideEmotion();

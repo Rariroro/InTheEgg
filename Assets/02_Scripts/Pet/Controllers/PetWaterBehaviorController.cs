@@ -52,7 +52,8 @@ public class PetWaterBehaviorController : MonoBehaviour
                 if (currentlyInWater != isInWater)
                 {
                     isInWater = currentlyInWater;
-                    petController.isInWater = isInWater;
+                    // ★ [Phase 4] PetState를 통한 상태 업데이트
+                    petController.State.UpdateWaterState(isInWater);
 
                     if (isInWater)
                     {
@@ -71,7 +72,8 @@ public class PetWaterBehaviorController : MonoBehaviour
         // 부드러운 깊이 전환
         float targetDepth = isInWater ? -petController.waterSinkDepth : 0f;
         currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
-        petController.waterDepthOffset = currentDepth;
+        // ★ [Phase 4] PetState를 통한 오프셋 업데이트
+        petController.State.SetWaterDepthOffset(currentDepth);
     }
 
     private void OnEnterWater()

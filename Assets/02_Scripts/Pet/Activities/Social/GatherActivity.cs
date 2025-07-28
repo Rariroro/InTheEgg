@@ -55,7 +55,7 @@ public class GatherActivity : PetActivityAdapter
     {
         Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 시작");
         hasArrived = false;
-        pet.isGathered = false; // 도착 상태 초기화
+        pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
         
         // 나무에 올라가고 있었다면, 강제로 내려오게 함
         if (pet.isClimbingTree)
@@ -95,7 +95,7 @@ public class GatherActivity : PetActivityAdapter
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             hasArrived = true;
-            pet.isGathered = true; // 도착 완료 플래그 설정
+            pet.State.SetGatheredState(true); // ★ [Phase 4] PetState를 통한 상태 업데이트
             agent.isStopped = true;
             
             // 정지 애니메이션
@@ -110,7 +110,7 @@ public class GatherActivity : PetActivityAdapter
     public override void OnExit()
     {
         Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 종료");
-        pet.isGathered = false; 
+        pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트 
         
         if (agent != null && agent.enabled)
         {

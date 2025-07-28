@@ -151,7 +151,8 @@ public class PetSleepingController : MonoBehaviour
         if (isSleeping) yield break;
 
         isSleeping = true;
-        petController.isActionLocked = true; // 자는 동안에는 다른 액션 방지
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        petController.State.SetActionLocked(true); // 자는 동안에는 다른 액션 방지
 
         try
         {
@@ -179,7 +180,8 @@ public class PetSleepingController : MonoBehaviour
         finally
         {
             isSleeping = false;
-            petController.isActionLocked = false; // 잠에서 깨면 액션 잠금 해제
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            petController.State.SetActionLocked(false); // 잠에서 깨면 액션 잠금 해제
         }
     }
     /// <summary>

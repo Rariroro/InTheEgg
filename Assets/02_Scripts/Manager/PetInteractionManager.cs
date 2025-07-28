@@ -463,10 +463,8 @@ public class PetInteractionManager : MonoBehaviour
                 interactingPets.Remove(pet1);
             }
             
-            // 상호작용 관련 상태 초기화
-            pet1.interactionPartner = null;
-            pet1.currentInteractionLogic = null;
-            pet1.isInteracting = false; // 명시적으로 플래그 해제
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            pet1.State.EndInteraction();
         }
         
         if (pet2Valid)
@@ -477,10 +475,8 @@ public class PetInteractionManager : MonoBehaviour
                 interactingPets.Remove(pet2);
             }
             
-            // 상호작용 관련 상태 초기화
-            pet2.interactionPartner = null;
-            pet2.currentInteractionLogic = null;
-            pet2.isInteracting = false; // 명시적으로 플래그 해제
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            pet2.State.EndInteraction();
         }
 
         Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");

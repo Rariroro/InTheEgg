@@ -66,8 +66,8 @@ public class PetTreeClimbingController : MonoBehaviour
 
         if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
         {
-            petController.currentTree = nearestTree;
-            petController.isClimbingTree = true;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            petController.State.UpdateTreeClimbingState(true, nearestTree);
 
             // 1. 나무 오르기
             yield return StartCoroutine(ClimbUpPhase(nearestTree));
@@ -82,8 +82,8 @@ public class PetTreeClimbingController : MonoBehaviour
             yield return StartCoroutine(ClimbDownTree());
 
             // 4. 모든 상태 초기화
-            petController.isClimbingTree = false;
-            petController.currentTree = null;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            petController.State.UpdateTreeClimbingState(false);
         }
         else
         {
@@ -106,7 +106,7 @@ public class PetTreeClimbingController : MonoBehaviour
         ResetPetStateForSeeking();
 
         // ★★★ 행동 잠금 시작 ★★★
-        petController.isActionLocked = true;
+        petController.State.SetActionLocked(true);
 
         Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
 
@@ -114,8 +114,8 @@ public class PetTreeClimbingController : MonoBehaviour
         {
             try
             {
-                petController.currentTree = nearestTree;
-                petController.isClimbingTree = true;
+                // ★ [Phase 4] PetState를 통한 상태 업데이트
+                petController.State.UpdateTreeClimbingState(true, nearestTree);
 
                 // 1. 나무 오르기
                 // ClimbUpPhase 내부에서는 isActionLocked를 제어할 필요가 없어졌습니다.
@@ -132,14 +132,14 @@ public class PetTreeClimbingController : MonoBehaviour
             {
                 // 4. 모든 상태 최종 정리 및 ★★★ 행동 잠금 해제 ★★★
                 ReleaseTreeAndResetState();
-                petController.isActionLocked = false;
+                petController.State.SetActionLocked(false);
                 isSearchingForTree = false;
             }
         }
         else
         {
             // 나무를 못 찾았을 경우에도 잠금 해제
-            petController.isActionLocked = false;
+            petController.State.SetActionLocked(false);
             isSearchingForTree = false;
         }
     }
@@ -201,9 +201,9 @@ private IEnumerator RestOnTree()
         {
             TreeManager.Instance.ReleaseTree(petController.currentTree);
         }
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
-        petController.isActionLocked = false;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        petController.State.UpdateTreeClimbingState(false);
+        petController.State.SetActionLocked(false);
         // NavMeshAgent 재활성화는 ClimbDownTree에서 이미 처리됨
     }
 
@@ -223,10 +223,10 @@ private IEnumerator RestOnTree()
     private IEnumerator ClimbUpPhase(Transform tree)
     {
         // ★★★ 행동 잠금 시작 ★★★
-        petController.isActionLocked = true;
+        petController.State.SetActionLocked(true);
         try
         {
-            petController.isClimbingTree = true;
+            // ★ [Phase 4] 상태는 이미 UpdateTreeClimbingState에서 설정됨
 
             // 1단계: 나무 근처로 이동
             Vector3 treeBaseTarget = tree.position;
@@ -297,7 +297,7 @@ private IEnumerator RestOnTree()
         {
             // ★★★ 나무 오르기 이동이 끝나면 잠금 해제 ★★★
             // (올라가서 쉬거나 자는 행동은 잠금 상태가 아님)
-            petController.isActionLocked = false;
+            petController.State.SetActionLocked(false);
         }
     }
 
@@ -313,7 +313,7 @@ private IEnumerator RestOnTree()
         }
 
         // ★★★ 행동 잠금 시작 ★★★
-        petController.isActionLocked = true;
+        petController.State.SetActionLocked(true);
         try
         {
             petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -355,7 +355,7 @@ private IEnumerator RestOnTree()
         finally
         {
             // ★★★ 내려오기 행동이 완전히 끝나면 잠금 해제 ★★★
-            petController.isActionLocked = false;
+            petController.State.SetActionLocked(false);
         }
     }
 
@@ -371,8 +371,8 @@ private IEnumerator RestOnTree()
                 TreeManager.Instance.ReleaseTree(petController.currentTree);
             }
 
-            petController.isClimbingTree = false;
-            petController.currentTree = null;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            petController.State.UpdateTreeClimbingState(false);
 
         }
 
@@ -384,7 +384,7 @@ private IEnumerator RestOnTree()
 
         GetComponent<PetAnimationController>()?.ForceStopAllAnimations();
 
-        if (petController != null) petController.isActionLocked = false;
+        if (petController != null) petController.State.SetActionLocked(false);
 
     }
 

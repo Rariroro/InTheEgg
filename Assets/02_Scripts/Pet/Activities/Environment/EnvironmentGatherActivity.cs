@@ -96,7 +96,8 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         
         // 다른 고순위 행동에 의해 중단될 경우
         isGathering = false;
-        pet.isAttractedToEnvironment = false;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.SetEnvironmentAttraction(false);
         
         // 펫의 이동 속도를 원래대로 복구
         if (agent != null && agent.enabled)
@@ -168,6 +169,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         }
         
         // 중요: 모든 행동이 끝났으므로, 펫이 다른 행동을 할 수 있도록 상태를 해제
-        pet.isAttractedToEnvironment = false;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.SetEnvironmentAttraction(false);
     }
 }

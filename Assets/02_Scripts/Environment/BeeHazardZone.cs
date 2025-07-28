@@ -176,10 +176,8 @@ public class BeeHazardZone : MonoBehaviour
             
         Debug.Log($"[BeeHazardZone] {pet.petName}에게 벌 공격 시작!");
         
-        // 벌 공격 플래그 설정
-        pet.isBeingAttackedByBees = true;
-        pet.beeAttackSource = transform.position;
-        pet.beeAttackStartTime = Time.time;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.SetBeeAttackState(true, transform.position);
         
         // 벌떼 파티클 생성
         GameObject beeSwarm = null;
@@ -252,7 +250,8 @@ public class BeeHazardZone : MonoBehaviour
         // 벌 공격 종료
         if (pet != null)
         {
-            pet.isBeingAttackedByBees = false;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            pet.State.SetBeeAttackState(false);
             // beeAttackSource는 아직 유지 (도망 방향 계산용)
             petsBeingAttacked.Remove(pet);  // 중복 방지 리스트에서 제거
             Debug.Log($"[BeeHazardZone] {pet.petName}의 벌 공격 종료");
@@ -269,7 +268,8 @@ public class BeeHazardZone : MonoBehaviour
         yield return new WaitForSeconds(5f);
         if (pet != null)
         {
-            pet.beeAttackSource = Vector3.zero;
+            // ★ [Phase 4] 벌 공격 소스 초기화
+            pet.State.SetBeeAttackState(false, Vector3.zero);
             Debug.Log($"[BeeHazardZone] {pet.petName}의 도망 시간 종료");
         }
     }

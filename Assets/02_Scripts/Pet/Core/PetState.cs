@@ -32,10 +32,23 @@ public class PetState
     [SerializeField] private bool isExhausted;        // Emergency 상태의 세부 정보
     [SerializeField] private bool isBeingAttacked;    // Emergency 상태의 세부 정보
     
+    // 추가 플래그들
+    [SerializeField] private bool isGathering;         // 모이기 명령 수행 중
+    [SerializeField] private bool isGathered;          // 모이기 완료 상태
+    [SerializeField] private bool isAnimationLocked;   // 특별 애니메이션 재생 중
+    [SerializeField] private bool isActionLocked;      // 행동이 잠긴 상태
+    [SerializeField] private bool isAttractedToEnvironment; // 환경 오브젝트에 끌림
+    
     // 상호작용 관련
     [SerializeField] private PetController interactionPartner;
     [SerializeField] private Transform currentTree;
     [SerializeField] private Vector3 gatherTargetPosition;
+    [SerializeField] private Vector3 environmentTargetPosition;
+    [SerializeField] private Vector3 beeAttackSource;
+    [SerializeField] private float beeAttackStartTime;
+    [SerializeField] private BasePetInteraction currentInteractionLogic;
+    [SerializeField] private int gatherCommandVersion;
+    [SerializeField] private float waterDepthOffset;
     
     // 이벤트
     public event Action<PetStatus, PetStatus> OnStatusChanged; // (이전 상태, 새 상태)
@@ -72,9 +85,22 @@ public class PetState
     public bool IsInWater => isInWater;
     public bool IsExhausted => isExhausted;
     public bool IsBeingAttacked => isBeingAttacked;
+    public bool IsGathering => isGathering;
+    public bool IsGathered => isGathered;
+    public bool IsAnimationLocked => isAnimationLocked;
+    public bool IsActionLocked => isActionLocked;
+    public bool IsAttractedToEnvironment => isAttractedToEnvironment;
+    
+    // 상호작용 관련 접근자
     public PetController InteractionPartner => interactionPartner;
     public Transform CurrentTree => currentTree;
     public Vector3 GatherTargetPosition => gatherTargetPosition;
+    public Vector3 EnvironmentTargetPosition => environmentTargetPosition;
+    public Vector3 BeeAttackSource => beeAttackSource;
+    public float BeeAttackStartTime => beeAttackStartTime;
+    public BasePetInteraction CurrentInteractionLogic => currentInteractionLogic;
+    public int GatherCommandVersion => gatherCommandVersion;
+    public float WaterDepthOffset => waterDepthOffset;
     
     /// <summary>
     /// 상태 전환 시도
@@ -158,9 +184,21 @@ public class PetState
         isInWater = false;
         isExhausted = false;
         isBeingAttacked = false;
+        isGathering = false;
+        isGathered = false;
+        isAnimationLocked = false;
+        isActionLocked = false;
+        isAttractedToEnvironment = false;
+        
         interactionPartner = null;
         currentTree = null;
+        currentInteractionLogic = null;
         gatherTargetPosition = Vector3.zero;
+        environmentTargetPosition = Vector3.zero;
+        beeAttackSource = Vector3.zero;
+        beeAttackStartTime = 0f;
+        gatherCommandVersion = 0;
+        waterDepthOffset = 0f;
     }
     
     #region 세부 상태 설정 메서드
@@ -260,11 +298,136 @@ public class PetState
     /// <summary>
     /// 모이기 상태 설정
     /// </summary>
-    public void SetGatheringState(Vector3 targetPosition)
+    public void SetGatheringState(Vector3 targetPosition, int commandVersion = 0)
     {
         if (TrySetStatus(PetStatus.Gathering))
         {
             gatherTargetPosition = targetPosition;
+            gatherCommandVersion = commandVersion;
+            isGathering = true;
+            isGathered = false;
+        }
+    }
+    
+    /// <summary>
+    /// 모이기 완료 상태 설정
+    /// </summary>
+    public void SetGatheredState(bool gathered)
+    {
+        if (currentStatus == PetStatus.Gathering)
+        {
+            isGathered = gathered;
+            if (gathered)
+            {
+                isGathering = false;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 애니메이션 잠금 상태 설정
+    /// </summary>
+    public void SetAnimationLocked(bool locked)
+    {
+        isAnimationLocked = locked;
+    }
+    
+    /// <summary>
+    /// 액션 잠금 상태 설정
+    /// </summary>
+    public void SetActionLocked(bool locked)
+    {
+        isActionLocked = locked;
+    }
+    
+    /// <summary>
+    /// 환경 끌림 상태 설정
+    /// </summary>
+    public void SetEnvironmentAttraction(bool attracted, Vector3 targetPosition = default)
+    {
+        isAttractedToEnvironment = attracted;
+        if (attracted)
+        {
+            environmentTargetPosition = targetPosition;
+        }
+    }
+    
+    /// <summary>
+    /// 벌 공격 상태 설정
+    /// </summary>
+    public void SetBeeAttackState(bool attacked, Vector3 attackSource = default)
+    {
+        isBeingAttacked = attacked;
+        if (attacked)
+        {
+            beeAttackSource = attackSource;
+            beeAttackStartTime = Time.time;
+            SetEmergencyState(beingAttacked: true);
+        }
+    }
+    
+    /// <summary>
+    /// 물 깊이 오프셋 설정
+    /// </summary>
+    public void SetWaterDepthOffset(float offset)
+    {
+        waterDepthOffset = offset;
+    }
+    
+    /// <summary>
+    /// 현재 상호작용 로직 설정
+    /// </summary>
+    public void SetInteractionLogic(BasePetInteraction logic)
+    {
+        currentInteractionLogic = logic;
+    }
+    
+    /// <summary>
+    /// 환경 상태 업데이트 (물에 들어가거나 나올 때)
+    /// </summary>
+    public void UpdateWaterState(bool inWater)
+    {
+        if (inWater && !isInWater)
+        {
+            isInWater = true;
+            if (currentStatus == PetStatus.Idle)
+            {
+                TrySetStatus(PetStatus.Environmental);
+            }
+        }
+        else if (!inWater && isInWater)
+        {
+            isInWater = false;
+            waterDepthOffset = 0f;
+            if (currentStatus == PetStatus.Environmental && !isClimbingTree)
+            {
+                TrySetStatus(PetStatus.Idle);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 나무 오르기 상태 업데이트
+    /// </summary>
+    public void UpdateTreeClimbingState(bool climbing, Transform tree = null)
+    {
+        if (climbing && !isClimbingTree)
+        {
+            isClimbingTree = true;
+            currentTree = tree;
+            if (currentStatus == PetStatus.Idle)
+            {
+                TrySetStatus(PetStatus.Environmental);
+            }
+        }
+        else if (!climbing && isClimbingTree)
+        {
+            isClimbingTree = false;
+            currentTree = null;
+            if (currentStatus == PetStatus.Environmental && !isInWater)
+            {
+                TrySetStatus(PetStatus.Idle);
+            }
         }
     }
     
@@ -283,7 +446,7 @@ public class PetState
                 details += $" (Holding: {isHolding}, Selected: {isSelected})";
                 break;
             case PetStatus.Interacting:
-                details += $" (Partner: {interactionPartner?.petName ?? "None"})";
+                details += $" (Partner: {(interactionPartner != null ? interactionPartner.petName : "None")})";
                 break;
             case PetStatus.Environmental:
                 details += $" (Tree: {isClimbingTree}, Water: {isInWater})";

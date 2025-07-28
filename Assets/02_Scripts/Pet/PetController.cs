@@ -82,11 +82,10 @@ public partial class PetController : MonoBehaviour
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator animator;
     [HideInInspector] public Transform petModelTransform;
-    [HideInInspector] public bool isGathered = false;
-    [HideInInspector] public bool isGathering = false; // 추가: 모이기 중인지 확인하는 플래그
-    [HideInInspector] public int gatherCommandVersion = 0; // 추가: 모으기 명령 버전 추적
-    [HideInInspector] public bool isGatheringAnimationOverride = false; // 추가: 모이기 애니메이션 오버라이드 플래그
-    // [HideInInspector] public bool isGatheringRotationOverride = false; // ★ 추가: 모이기 방향 오버라이드 플래그
+    public bool isGathered => petState.IsGathered;
+    public bool isGathering => petState.IsGathering;
+    public int gatherCommandVersion => petState.GatherCommandVersion;
+    [HideInInspector] public bool isGatheringAnimationOverride = false; // 이것만 별도 유지 (애니메이션 전용)
 
     [HideInInspector] public float baseSpeed;
     [HideInInspector] public float baseAngularSpeed;
@@ -119,30 +118,29 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
     [SerializeField] private bool manuallySetPetType = false; // 수동 설정 여부 체크 필드 추가
 
-    // 상호작용 관련 변수
-    [HideInInspector] public bool isInteracting = false;
-    [HideInInspector] public PetController interactionPartner = null;
-    // PetController에 물 상태 플래그 추가
-    [HideInInspector] public bool isInWater = false;
-    [HideInInspector] public float waterDepthOffset = 0f;
-    // PetController.cs에 추가
-    [HideInInspector] public bool isClimbingTree = false;
-    [HideInInspector] public Transform currentTree = null;
-    [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이
-    [HideInInspector] public bool isSelected = false;
-    [HideInInspector] public bool isHolding = false; // 들고 있는 상태 추적
-    [HideInInspector] public bool isAnimationLocked = false; // 특별 애니메이션 재생으로 상호작용이 잠겼는지 확인
-    [HideInInspector] public bool isActionLocked = false;
-    [HideInInspector] public Vector3 gatherTargetPosition;
-    [HideInInspector] public BasePetInteraction currentInteractionLogic;
-
-    [HideInInspector] public bool isAttractedToEnvironment = false;
-    [HideInInspector] public Vector3 environmentTargetPosition;
-
-    // 벌 공격 관련 상태
-    [HideInInspector] public bool isBeingAttackedByBees = false;
-    [HideInInspector] public Vector3 beeAttackSource = Vector3.zero;
-    [HideInInspector] public float beeAttackStartTime = 0f;
+    // ★ [Phase 4] 호환성을 위한 프로퍼티 (기존 플래그를 PetState로 리다이렉트)
+    public bool isInteracting => petState.IsInteracting;
+    public PetController interactionPartner => petState.InteractionPartner;
+    public bool isInWater => petState.IsInWater;
+    public float waterDepthOffset 
+    { 
+        get => petState.WaterDepthOffset;
+        set => petState.SetWaterDepthOffset(value);
+    }
+    public bool isClimbingTree => petState.IsClimbingTree;
+    public Transform currentTree => petState.CurrentTree;
+    [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이 (이것만 유지)
+    public bool isSelected => petState.IsSelected;
+    public bool isHolding => petState.IsHolding;
+    public bool isAnimationLocked => petState.IsAnimationLocked;
+    public bool isActionLocked => petState.IsActionLocked;
+    public Vector3 gatherTargetPosition => petState.GatherTargetPosition;
+    public BasePetInteraction currentInteractionLogic => petState.CurrentInteractionLogic;
+    public bool isAttractedToEnvironment => petState.IsAttractedToEnvironment;
+    public Vector3 environmentTargetPosition => petState.EnvironmentTargetPosition;
+    public bool isBeingAttackedByBees => petState.IsBeingAttacked;
+    public Vector3 beeAttackSource => petState.BeeAttackSource;
+    public float beeAttackStartTime => petState.BeeAttackStartTime;
 
     [Header("Pet Needs Settings")] // 인스펙터에서 편하게 관리하기 위해 헤더 추가
     [Tooltip("초당 배고픔 증가량")]
@@ -170,17 +168,14 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
     [SerializeField] private float environmentFoodAffectionMax = 7f;
 
-    [Tooltip("펫이 현재 탈진 상태인지 여부를 나타냅니다.")]
-    [HideInInspector] public bool isExhausted = false;
+    public bool isExhausted => petState.IsExhausted;
     
-    // ★★★ [Phase 1 추가] 새로운 상태 관리 시스템 ★★★
-    [Header("State Management (New)")]
+    // ★★★ [Phase 4] 통합된 상태 관리 시스템 ★★★
+    [Header("State Management")]
     [SerializeField] private PetState petState = new PetState();
     
-    [Header("Needs Management (New)")]
+    [Header("Needs Management")]
     private PetNeeds petNeeds;
-    
-    [Header("Experimental Features")]
     
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
@@ -585,18 +580,9 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
     {
-        // ★ [Phase 1] 기존 플래그 설정
-        isInteracting = true;
-        interactionPartner = partner;
-        currentInteractionLogic = interactionLogic;
-        
-        // ★ [Phase 1] 새로운 상태 시스템에도 반영
-        // SyncStateWithFlags가 다음 Update에서 자동으로 처리하지만
-        // 즉시 반영을 위해 여기서도 호출
+        // ★ [Phase 4] PetState를 통한 상태 설정
         petState.StartInteraction(partner);
-        
-        // 여기서 UpdateAI()를 강제 호출하지 않습니다.
-        // 다음 AI 업데이트 주기 때 자연스럽게 InteractWithPetAction으로 전환될 것입니다.
+        petState.SetInteractionLogic(interactionLogic);
     }
 
     public void InterruptCurrentActionFor(InteractionType type)

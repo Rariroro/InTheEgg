@@ -308,7 +308,7 @@ public class PetInteractionController : MonoBehaviour
         }
 
         isHolding = true;
-        petController.isHolding = true;
+        petController.State.SetPlayerControl(holding: true, selected: isSelected);
 
         if (petController.animator != null)
         {
@@ -348,7 +348,7 @@ public class PetInteractionController : MonoBehaviour
     // StopHolding() 메서드 수정
     private void StopHolding()
     {
-        petController.isHolding = false; // ★ 추가: 들기 상태 해제
+        petController.State.UpdateHoldingState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
 
         // ★ 애니메이션 속도 원래대로 복구
         if (petController.animator != null)
@@ -393,7 +393,7 @@ public class PetInteractionController : MonoBehaviour
     private void ForceStopHolding()
     {
         if (!isHolding) return;
-        petController.isHolding = false; // ★ 추가: 들기 상태 해제
+        petController.State.UpdateHoldingState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
 
         // ★ 애니메이션 정상화
         if (petController.animator != null)
@@ -441,12 +441,9 @@ public class PetInteractionController : MonoBehaviour
 
     private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
     {
-        // ★ 추가: 나무 타기 상태 완전히 클리어
-        petController.isClimbingTree = false;
-        petController.currentTree = null;
-
-        // ★ 추가: 모든 Y 오프셋 초기화
-        petController.waterDepthOffset = 0f;
+        // ★ [Phase 4] PetState를 통한 환경 상태 클리어
+        petController.State.UpdateTreeClimbingState(false);
+        petController.State.SetWaterDepthOffset(0f);
 
         Vector3 startPosition = petController.transform.position;
         float startY = startPosition.y;
@@ -531,11 +528,10 @@ public class PetInteractionController : MonoBehaviour
    private void CompletePetPlacement()
 {
     isHolding = false;
-    petController.isHolding = false;
-
-    petController.isClimbingTree = false;
-    petController.currentTree = null;
-    petController.waterDepthOffset = 0f;
+    // ★ [Phase 4] PetState를 통한 상태 업데이트
+    petController.State.UpdateHoldingState(false);
+    petController.State.UpdateTreeClimbingState(false);
+    petController.State.SetWaterDepthOffset(0f);
 
     if (petController.petModelTransform != null)
     {
@@ -575,8 +571,8 @@ private void Select()
         return;
     }
 
-    // 이제 움직임을 멈추고 카메라를 보는 로직은 SelectedAction이 모두 담당합니다.
-    petController.isSelected = true;
+    // ★ [Phase 4] PetState를 통한 상태 업데이트
+    petController.State.SetPlayerControl(holding: false, selected: true);
     isSelected = true; // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
     
@@ -617,9 +613,8 @@ private void Select()
     // 펫 선택을 해제하는 함수
     private void Deselect()
     {
-        // ★★★ 수정: isSelected 플래그만 false로 설정합니다. ★★★
-        // AI 시스템이 이 상태 변화를 감지하고 자동으로 WanderAction으로 전환할 것입니다.
-        petController.isSelected = false;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        petController.State.UpdateSelectedState(false);
         isSelected = false; // 내부 상태 추적용 플래그
         
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★

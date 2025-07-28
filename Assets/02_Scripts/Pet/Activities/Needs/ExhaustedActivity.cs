@@ -57,7 +57,8 @@ public class ExhaustedActivity : PetActivityAdapter
     
     public override void OnEnter()
     {
-        pet.isExhausted = true;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.SetEmergencyState(exhausted: true);
         isTryingToEat = false;
         searchTimer = 0f;
         
@@ -102,7 +103,8 @@ public class ExhaustedActivity : PetActivityAdapter
     
     public override void OnExit()
     {
-        pet.isExhausted = false;
+        // ★ [Phase 4] PetState를 통한 상태 업데이트
+        pet.State.SetEmergencyState(exhausted: false);
         isTryingToEat = false;
         
         Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 회복됩니다.");

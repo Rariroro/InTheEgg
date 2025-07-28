@@ -126,9 +126,8 @@ private IEnumerator AttractPetsToEnvironment(List<PetController> pets, Vector3 c
         // 더 이상 MovePetToEnvironment 코루틴을 직접 호출하지 않습니다.
         if (pet != null && !pet.isGathering) // 플레이어 모이기가 아닐 때만
         {
-            // 펫 컨트롤러의 상태 플래그만 설정해줍니다.
-            pet.environmentTargetPosition = targetPosition;
-            pet.isAttractedToEnvironment = true;
+            // ★ [Phase 4] PetState를 통한 상태 업데이트
+            pet.State.SetEnvironmentAttraction(true, targetPosition);
         }
         // ▲▲▲ 수정된 부분 끝 ▲▲▲
     }
