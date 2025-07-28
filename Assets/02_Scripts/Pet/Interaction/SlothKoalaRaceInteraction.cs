@@ -502,7 +502,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 !potentialSpectator.isInteracting && !potentialSpectator.isHolding &&
                 potentialSpectator.hunger < 70f && potentialSpectator.sleepiness < 70f)
             {
-                potentialSpectator.InterruptAndResetAI();
+                // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
                 spectators.Add(potentialSpectator);
                 spectatorStates.Add(new PetOriginalState(potentialSpectator));
                 potentialSpectator.isInteracting = true;

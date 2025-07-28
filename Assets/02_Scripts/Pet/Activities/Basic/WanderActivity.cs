@@ -64,6 +64,7 @@ public class WanderActivity : PetActivityAdapter
         return CanStart(state, needs) ? 0.1f : 0f;
     }
     
+    
     // 기존 IPetAction 메서드 구현
     public override float GetPriority()
     {
@@ -100,7 +101,7 @@ public class WanderActivity : PetActivityAdapter
             DecideNextBehavior();
         }
         
-        // 선택 상태가 아닐 때만 회전 처리
+        // 선택 상탌가 아닐 때만 회전 처리
         if (!pet.isSelected)
         {
             pet.HandleRotation();

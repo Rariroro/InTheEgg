@@ -290,7 +290,7 @@ public class PetInteractor : MonoBehaviour
         PetController otherPet = target.GetComponent<PetController>();
         if (otherPet != null && otherPet != petController)
         {
-            return otherPet.isActive && !otherPet.isActionLocked;
+            return otherPet != null && !otherPet.isAnimationLocked;
         }
         
         // 아이템인지 확인

@@ -288,8 +288,7 @@ public class PetInteractionController : MonoBehaviour
 
     private void StartHolding()
     {
-        // ★★★ 최상단에 이 코드를 추가하여 AI 상태를 즉시 리셋합니다. ★★★
-        petController.InterruptAndResetAI();
+        // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
         
         // 상호작용 중이라면 강제로 중단
         if (petController.isInteracting && petController.currentInteractionLogic != null)
@@ -559,8 +558,7 @@ public class PetInteractionController : MonoBehaviour
     // 펫의 움직임 재개
     petController.ResumeMovement();
     
-    // ★★★ 중요: AI를 완전히 리셋하여 현재 상태를 다시 평가하도록 함 ★★★
-    petController.InterruptAndResetAI();
+    // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
     
     Deselect();
 }
@@ -582,20 +580,9 @@ private void Select()
     isSelected = true; // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
     
-    // ★ 현재 Action을 강제로 종료하고 AI를 즉시 업데이트
-    petController.InterruptAndResetAI();
+    // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
     
-    // ★ SelectedAction을 즉시 시작 (3초 대기 없이)
-    var selectedAction = petController.GetSelectedAction();
-    if (selectedAction != null)
-    {
-        Debug.Log($"[PetInteractionController] SelectedAction을 찾았습니다. 강제 설정 중...");
-        petController.ForceSetAction(selectedAction);
-    }
-    else
-    {
-        Debug.LogError($"[PetInteractionController] SelectedAction을 찾을 수 없습니다!");
-    }
+    // ★★★ SelectedActivity가 높은 우선순위를 가지므로 자동으로 활성화됨 ★★★
 
     // 터치 횟수 관련 로직은 유지
     touchCount++;
@@ -635,8 +622,7 @@ private void Select()
         petController.isSelected = false;
         isSelected = false; // 내부 상태 추적용 플래그
         
-        // ★ AI를 즉시 업데이트하여 다른 Action으로 전환되도록 함
-        petController.UpdateAI();
+        // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
         if (!isHolding)
         {

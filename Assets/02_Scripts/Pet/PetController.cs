@@ -181,7 +181,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     private PetNeeds petNeeds;
     
     [Header("Experimental Features")]
-    [SerializeField] private bool useActivitySystem = true; // ★ [Phase 3] 새로운 Activity 시스템 사용 여부 (true로 변경)
     
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
@@ -206,9 +205,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             manuallySetPetType = true; // 값이 설정되면 수동 설정됨으로 표시
         }
     }
-    // 행동 시스템 관련 변수
-    private List<IPetAction> _allActions;
-    private IPetAction _currentAction;
+    // Activity 시스템 관련 변수
     
     // ★ [Phase 3] 새로운 Activity 시스템
     private List<IPetActivity> _allActivities;
@@ -332,8 +329,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
         treeClimbingController.Init(this);
 
-        // 행동 리스트 초기화
-        InitializeActions();
         
         // ★ [Phase 3] Activity 시스템 초기화
         InitializeActivities();
@@ -357,43 +352,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             // 약간의 지연 후 등록 (매니저가 완전히 초기화된 후)
             StartCoroutine(RegisterToPetManager());
         }
-    }
-    /// <summary>
-    /// 펫이 수행할 수 있는 모든 행동을 생성하고 리스트에 추가합니다.
-    /// </summary>
-    private void InitializeActions()
-    {
-        _allActions = new List<IPetAction>
-    {
-        // === 최우선순위: 긴급 상황 ===
-        new BeeEscapeAction(this),               // 벌 공격 도망 [우선순위: 100.0]
-        new ExhaustedAction(this),               // 탈진 [우선순위: 50.0]
-
-        // === 최상위 우선순위: 외부 명령 ===
-        new GatherAction(this),                  // 모이기 [우선순위: 20.0]
-
-        
-                new EnvironmentGatherAction(this),       // 환경 스폰 모이기 [우선순위: 15.0]
-        new InteractWithPetAction(this),         // 펫 간 상호작용 [우선순위: 10.0]
-
-        // ★★★ 추가: 플레이어 선택 행동 ★★★
-        new SelectedAction(this),                // 플레이어 선택 [우선순위: 5.0]
-
-        // === 중간 우선순위: 긴급한 욕구 ===
-        new EatAction(this, feedingController),      // 식사 [우선순위: ~1.0]
-        new SleepAction(this, sleepingController),   // 수면 [우선순위: ~1.0]
-
-        // === 낮은 우선순위: 자율 행동 ===
-        new ClimbTreeAction(this, treeClimbingController), // 나무 오르기 [우선순위: 0.3]
-
-        // === 최하위 우선순위: 기본 행동 ===
-        new WanderAction(this, movementController)   // 배회 [우선순위: 0.1]
-    };
-
-        // 기본 행동 설정
-        _currentAction = _allActions.Find(a => a is WanderAction);
-        _currentAction?.OnEnter();
-        Debug.Log($"{petName}의 AI 시스템이 초기화되었습니다. 현재 행동: {_currentAction.GetType().Name}");
     }
     
     /// <summary>
@@ -429,8 +387,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     // 기존 Update 메서드를 완전히 대체합니다.
     private void Update()
     {
-        // ★ [Phase 1] 상태 동기화 - 기존 플래그와 새 상태 시스템 연동
-        SyncStateWithFlags();
         
         // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
         // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
@@ -450,41 +406,18 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         _aiUpdateTimer += Time.deltaTime;
         if (_aiUpdateTimer >= _aiUpdateInterval)
         {
-            // ★ [Phase 3] 실험적 기능: Activity 시스템 사용
-            if (useActivitySystem && _allActivities != null && _allActivities.Count > 0)
+            // Activity AI 업데이트
+            if (_allActivities != null && _allActivities.Count > 0)
             {
                 UpdateActivityAI();
-            }
-            else
-            {
-                UpdateAI();
             }
             _aiUpdateTimer = 0f;
         }
         
-        // ★ 선택 상태가 변경되었을 때 즉시 AI 업데이트
-        if (isSelected && _currentAction?.GetType() != typeof(SelectedAction))
-        {
-            _aiUpdateTimer = _aiUpdateInterval; // 다음 프레임에 즉시 업데이트
-            UpdateAI();
-        }
 
         // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
-        // ★ [Phase 3] Activity와 Action 병행 실행 (점진적 마이그레이션)
-        if (_currentActivity != null)
-        {
-            _currentActivity.Update();
-        }
-        else
-        {
-            _currentAction?.OnUpdate();
-        }
-        
-        // ★ 디버그: 선택 상태인데 SelectedAction이 아닌 경우
-        if (isSelected && _currentAction != null && !(_currentAction is SelectedAction))
-        {
-            Debug.LogWarning($"[PetController] {petName}: 선택되었지만 현재 액션이 {_currentAction.GetType().Name}입니다!");
-        }
+        // 현재 활동 업데이트
+        _currentActivity?.Update();
 
         // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
         // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
@@ -502,68 +435,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         // }
     }
 
-    /// <summary>
-    /// AI의 핵심 의사결정 루프. 주기적으로 호출됩니다.
-    /// </summary>
-    public void UpdateAI()
-    {
-        // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
-        // PlayerControl 상태나 isActionLocked일 때는 AI 의사결정 중지
-        if (petState.CurrentStatus == PetStatus.PlayerControl || isActionLocked) return;
-        
-        // 기존 플래그도 체크 (호환성)
-        if (isHolding) return;
-
-        IPetAction bestAction = null;
-        float maxPriority = -1f;
-        
-        // 디버깅용: 선택된 상태일 때 모든 액션의 우선순위 출력
-        if (isSelected && Debug.isDebugBuild)
-        {
-            Debug.Log($"[UpdateAI] {petName} - 모든 액션 우선순위 체크:");
-        }
-
-        foreach (var action in _allActions)
-        {
-            float currentPriority = action.GetPriority();
-            
-            // 디버깅용: 선택된 상태일 때 각 액션의 우선순위 출력
-            if (isSelected && Debug.isDebugBuild && currentPriority > 0)
-            {
-                Debug.Log($"  - {action.GetType().Name}: {currentPriority}");
-            }
-            
-            if (currentPriority > maxPriority)
-            {
-                maxPriority = currentPriority;
-                bestAction = action;
-            }
-        }
-
-        // ★★★ 수정: 행동 전환 로직 개선 ★★★
-        if (bestAction != null)
-        {
-            // 현재 행동과 다른 행동이거나, 현재 행동이 없을 때
-            if (_currentAction == null || bestAction.GetType() != _currentAction.GetType())
-            {
-                // ★ [Phase 1] 상태 전환 로깅 추가 (디버깅용)
-                if (Debug.isDebugBuild)
-                {
-                    Debug.Log($"[AI] {petName} 행동 전환: {_currentAction?.GetType().Name ?? "None"} -> {bestAction.GetType().Name} " +
-                             $"(우선순위: {maxPriority}, 상태: {petState.CurrentStatus})");
-                }
-
-                // 1. 이전 행동의 종료 처리
-                _currentAction?.OnExit();
-
-                // 2. 현재 행동을 새로운 행동으로 교체
-                _currentAction = bestAction;
-
-                // 3. 새로운 행동의 시작 처리
-                _currentAction.OnEnter();
-            }
-        }
-    }
     
     /// <summary>
     /// ★ [Phase 3] 새로운 Activity 기반 AI 업데이트 (실험적)
@@ -711,69 +582,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         return null;
     }
     // ▲▲▲ 여기까지 추가 ▲▲▲
-    /// <summary>
-    /// 외부의 강력한 중단(Interrupt)에 의해 현재 진행 중인 행동을 강제로 무효화합니다.
-    /// </summary>
-    public void InvalidateCurrentAction()
-    {
-        if (_currentAction != null)
-        {
-            _currentAction.OnExit();
-            _currentAction = null;
-        }
-    }
-   // PetController.cs
-
-    /// <summary>
-    /// 플레이어의 직접적인 개입 등으로 AI의 현재 행동을 강제로 중단하고 초기화합니다.
-    /// 다음 AI 업데이트 시 가장 적절한 행동을 처음부터 다시 선택하게 됩니다.
-    /// </summary>
-    public void InterruptAndResetAI()
-    {
-        if (_currentAction != null)
-        {
-            // 1. 현재 진행 중인 행동의 OnExit()를 호출하여 상태를 깨끗하게 정리합니다.
-            //    (예: EatAction -> CancelFeeding() 호출, WanderAction -> 코루틴 중지 등)
-            _currentAction.OnExit();
-            // Debug.Log($"[AI Reset] 현재 행동 '{_currentAction.GetType().Name}'이 외부 요인에 의해 중단되었습니다.");
-        }
-
-        // 2. 현재 행동을 null로 설정하여 다음 UpdateAI()에서 반드시 새로운 행동을 찾도록 합니다.
-        _currentAction = null;
-
-        // 3. 만약을 대비해 모든 컨트롤러의 주요 상태를 한 번 더 초기화할 수 있습니다.
-        //    (예: isGathering, isInteracting 플래그 등)
-        //    이 부분은 각 Action의 OnExit에서 잘 처리되고 있다면 생략 가능합니다.
-        GetComponent<PetAnimationController>()?.ForceStopAllAnimations();
-    }
-    
-    /// <summary>
-    /// SelectedAction을 찾아서 반환합니다.
-    /// </summary>
-    public IPetAction GetSelectedAction()
-    {
-        return _allActions?.Find(a => a is SelectedAction);
-    }
-    
-    /// <summary>
-    /// 특정 Action을 강제로 설정합니다.
-    /// </summary>
-    public void ForceSetAction(IPetAction newAction)
-    {
-        if (newAction == null) return;
-        
-        // 현재 액션 종료
-        if (_currentAction != null)
-        {
-            _currentAction.OnExit();
-        }
-        
-        // 새 액션 시작
-        _currentAction = newAction;
-        _currentAction.OnEnter();
-        
-        Debug.Log($"[PetController] {petName}: Action 강제 전환 → {newAction.GetType().Name}");
-    }
     
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
     {
@@ -793,18 +601,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
     public void InterruptCurrentActionFor(InteractionType type)
     {
-        if (_currentAction != null)
-        {
-            Debug.Log($"{petName}의 현재 행동 '{_currentAction.GetType().Name}'이 '{type}'으로 인해 중단됩니다.");
-            // isInteracting, isGathering 등의 플래그가 설정되면
-            // 다음 UpdateAI에서 자동으로 새 Action으로 전환되므로 OnExit()만 호출해도 충분합니다.
-            _currentAction.OnExit();
-
-            // 특정 Action으로 즉시 전환해야 할 경우
-            // IPetAction newAction = _allActions.Find(a => a is InteractWithPetAction);
-            // _currentAction = newAction;
-            // _currentAction.OnEnter();
-        }
+        // Activity 시스템에서 처리
+        Debug.Log($"{petName}의 현재 활동이 '{type}'으로 인해 중단됩니다.");
     }
     // ★ 물 속도 조정을 위한 public 메소드 추가
     public void AdjustSpeedForWater()
@@ -1091,90 +889,5 @@ public void HideEmotion()
     public float GetEnvironmentFoodAffectionMin() { return environmentFoodAffectionMin; }
     public float GetEnvironmentFoodAffectionMax() { return environmentFoodAffectionMax; }
     
-    // 현재 실행 중인 Action 반환 (PetMovementController에서 사용)
-    public IPetAction GetCurrentAction()
-    {
-        return _currentAction;
-    }
-    
-    #region Phase 1 - State System Integration
-    
-    /// <summary>
-    /// 기존 플래그들과 새로운 상태 시스템을 동기화
-    /// 점진적 마이그레이션을 위한 임시 메서드
-    /// </summary>
-    private void SyncStateWithFlags()
-    {
-        // 플레이어 제어 상태 동기화
-        if (isHolding || isSelected)
-        {
-            if (petState.CurrentStatus != PetStatus.PlayerControl)
-            {
-                petState.SetPlayerControl(isHolding, isSelected);
-            }
-            else
-            {
-                // 상태는 이미 PlayerControl이므로 세부 플래그만 업데이트
-                petState.UpdateHoldingState(isHolding);
-                petState.UpdateSelectedState(isSelected);
-            }
-            // PlayerControl 상태일 때는 다른 상태 체크를 하지 않음
-            return;
-        }
-        
-        // 긴급 상태 동기화
-        else if (isExhausted || isBeingAttackedByBees)
-        {
-            if (petState.CurrentStatus != PetStatus.Emergency)
-            {
-                petState.SetEmergencyState(isExhausted, isBeingAttackedByBees);
-            }
-        }
-        
-        // 상호작용 상태 동기화
-        else if (isInteracting && interactionPartner != null)
-        {
-            if (petState.CurrentStatus != PetStatus.Interacting)
-            {
-                petState.StartInteraction(interactionPartner);
-            }
-        }
-        
-        // 환경 상호작용 상태 동기화
-        else if (isClimbingTree || isInWater)
-        {
-            if (petState.CurrentStatus != PetStatus.Environmental)
-            {
-                petState.SetEnvironmentalState(isClimbingTree, isInWater, currentTree);
-            }
-        }
-        
-        // 모이기 상태 동기화
-        else if (isGathering)
-        {
-            if (petState.CurrentStatus != PetStatus.Gathering)
-            {
-                petState.SetGatheringState(gatherTargetPosition);
-            }
-        }
-        
-        // 모든 플래그가 false면 Idle 상태로
-        else if (petState.CurrentStatus != PetStatus.Idle)
-        {
-            petState.TrySetStatus(PetStatus.Idle);
-        }
-    }
-    
-    /// <summary>
-    /// 상태 시스템을 통해 플래그 업데이트 (역방향 동기화)
-    /// Phase 2에서 사용될 예정
-    /// </summary>
-    private void UpdateFlagsFromState()
-    {
-        // TODO: Phase 2에서 구현
-        // 새로운 상태 시스템의 값으로 기존 플래그들을 업데이트
-    }
-    
-    #endregion
 
 }

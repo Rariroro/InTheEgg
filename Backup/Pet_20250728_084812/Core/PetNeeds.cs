@@ -1,0 +1,238 @@
+using System;
+using UnityEngine;
+
+/// <summary>
+/// 펫의 욕구(필요) 상태를 관리하는 클래스
+/// PetController에서 분리하여 단일 책임 원칙을 준수
+/// </summary>
+[Serializable]
+public class PetNeeds : MonoBehaviour
+{
+    // 욕구 타입 정의
+    public enum NeedType
+    {
+        Hunger,
+        Sleepiness,
+        Affection
+    }
+    
+    [Header("욕구 상태")]
+    [SerializeField] private float hunger = 50f;       // 배고픔 (0-100)
+    [SerializeField] private float sleepiness = 30f;   // 졸림 (0-100)
+    [SerializeField] private float affection = 50f;    // 친밀도 (0-100)
+    
+    [Header("욕구 증가율")]
+    [SerializeField] private float hungerIncreaseRate = 5f;      // 초당 배고픔 증가량
+    [SerializeField] private float sleepinessIncreaseRate = 3f;  // 초당 졸림 증가량
+    
+    [Header("친밀도 설정")]
+    [SerializeField] private float affectionDecreaseRateWhenHungry = 2f;  // 배고플 때 초당 친밀도 감소량
+    [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;  // 친밀도가 감소하기 시작하는 배고픔 임계값
+    [SerializeField] private float lowAffectionThreshold = 30f;  // 낮은 친밀도 임계값
+    
+    [Header("욕구 임계값")]
+    [SerializeField] private float hungryThreshold = 70f;    // 배고픔 임계값
+    [SerializeField] private float sleepyThreshold = 70f;    // 졸림 임계값
+    
+    // 이벤트
+    public event Action<NeedType, float> OnNeedChanged;      // 욕구 변화 이벤트
+    public event Action<NeedType> OnNeedCritical;           // 욕구가 임계값을 넘었을 때
+    public event Action<EmotionType> OnEmotionRequired;     // 감정 표현이 필요할 때
+    
+    // 프로퍼티
+    public float Hunger => hunger;
+    public float Sleepiness => sleepiness;
+    public float Affection => affection;
+    
+    public bool IsHungry => hunger >= hungryThreshold;
+    public bool IsSleepy => sleepiness >= sleepyThreshold;
+    public bool HasLowAffection => affection <= lowAffectionThreshold;
+    
+    // 졸림 감정 표현 타이머
+    private float sleepyEmotionTimer = 0f;
+    private const float SLEEPY_EMOTION_INTERVAL = 10f;
+    private const float SLEEPY_EMOTION_CHANCE = 0.3f;
+    
+    private PetController petController;
+    private bool isInitialized = false;
+    
+    /// <summary>
+    /// PetNeeds 초기화
+    /// </summary>
+    public void Init(PetController controller)
+    {
+        petController = controller;
+        
+        // 기존 PetController의 값들을 가져와서 초기화
+        if (controller != null)
+        {
+            hunger = controller.hunger;
+            sleepiness = controller.sleepiness;
+            affection = controller.affection;
+            
+            hungerIncreaseRate = controller.hungerIncreaseRate;
+            sleepinessIncreaseRate = controller.sleepinessIncreaseRate;
+            affectionDecreaseRateWhenHungry = controller.affectionDecreaseRateWhenHungry;
+            hungerThresholdForAffectionDecrease = controller.hungerThresholdForAffectionDecrease;
+            lowAffectionThreshold = controller.lowAffectionThreshold;
+        }
+        
+        isInitialized = true;
+    }
+    
+    /// <summary>
+    /// 매 프레임 욕구 업데이트
+    /// </summary>
+    public void UpdateNeeds()
+    {
+        if (!isInitialized) return;
+        
+        UpdateHunger();
+        UpdateSleepiness();
+        UpdateAffection();
+    }
+    
+    /// <summary>
+    /// 배고픔 업데이트
+    /// </summary>
+    private void UpdateHunger()
+    {
+        // 펫이 음식을 먹고 있지 않을 때만 배고픔 증가
+        if (petController == null || petController.feedingController == null || !petController.feedingController.IsEatingOrSeeking())
+        {
+            float previousHunger = hunger;
+            hunger = Mathf.Clamp(hunger + hungerIncreaseRate * Time.deltaTime, 0f, 100f);
+            
+            if (hunger != previousHunger)
+            {
+                OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
+                
+                // 배고픔 임계값을 처음 넘었을 때
+                if (!IsHungry && hunger >= hungryThreshold)
+                {
+                    OnNeedCritical?.Invoke(NeedType.Hunger);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 졸림 업데이트
+    /// </summary>
+    private void UpdateSleepiness()
+    {
+        // 펫이 자고 있거나 잠잘 곳을 찾아가는 중이 아닐 때만 졸림 증가
+        if (petController == null || petController.sleepingController == null || !petController.sleepingController.IsSleepingOrSeeking())
+        {
+            float previousSleepiness = sleepiness;
+            sleepiness = Mathf.Clamp(sleepiness + sleepinessIncreaseRate * Time.deltaTime, 0f, 100f);
+            
+            if (sleepiness != previousSleepiness)
+            {
+                OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
+                
+                // 졸림 임계값을 처음 넘었을 때
+                if (!IsSleepy && sleepiness >= sleepyThreshold)
+                {
+                    OnNeedCritical?.Invoke(NeedType.Sleepiness);
+                }
+            }
+            
+            // 졸릴 때 간헐적으로 감정 표현
+            if (sleepiness >= sleepyThreshold)
+            {
+                sleepyEmotionTimer += Time.deltaTime;
+                if (sleepyEmotionTimer >= SLEEPY_EMOTION_INTERVAL)
+                {
+                    if (UnityEngine.Random.value < SLEEPY_EMOTION_CHANCE)
+                    {
+                        OnEmotionRequired?.Invoke(EmotionType.Sleepy);
+                    }
+                    sleepyEmotionTimer = 0f;
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 친밀도 업데이트
+    /// </summary>
+    private void UpdateAffection()
+    {
+        // 배고픔에 따른 친밀도 감소
+        if (hunger >= hungerThresholdForAffectionDecrease)
+        {
+            float affectionDecreaseRate = affectionDecreaseRateWhenHungry * (hunger / 100f);
+            float previousAffection = affection;
+            affection = Mathf.Clamp(affection - affectionDecreaseRate * Time.deltaTime, 0f, 100f);
+            
+            if (affection != previousAffection)
+            {
+                OnNeedChanged?.Invoke(NeedType.Affection, affection);
+                
+                // 친밀도가 낮은 임계값 이하로 떨어지고, 이전에는 그보다 높았다면
+                if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
+                {
+                    OnEmotionRequired?.Invoke(EmotionType.Sad);
+                    Debug.Log($"[PetNeeds] {petController.petName}의 친밀도가 낮아졌습니다: {affection:F1}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 배고픔 감소 (음식 섭취)
+    /// </summary>
+    public void ReduceHunger(float amount)
+    {
+        float previousHunger = hunger;
+        hunger = Mathf.Clamp(hunger - amount, 0f, 100f);
+        
+        if (hunger != previousHunger)
+        {
+            OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
+            Debug.Log($"[PetNeeds] {petController.petName}의 배고픔 감소: {hunger:F1}");
+        }
+    }
+    
+    /// <summary>
+    /// 졸림 리셋 (수면 완료)
+    /// </summary>
+    public void ResetSleepiness()
+    {
+        sleepiness = 0f;
+        sleepyEmotionTimer = 0f;
+        OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
+        Debug.Log($"[PetNeeds] {petController.petName}이(가) 충분히 잠을 잤습니다.");
+    }
+    
+    /// <summary>
+    /// 친밀도 증가
+    /// </summary>
+    public void IncreaseAffection(float amount)
+    {
+        float previousAffection = affection;
+        affection = Mathf.Clamp(affection + amount, 0f, 100f);
+        
+        if (affection != previousAffection)
+        {
+            OnNeedChanged?.Invoke(NeedType.Affection, affection);
+            
+            // 친밀도가 크게 증가했을 때 기쁨 표현
+            if (amount >= 10f)
+            {
+                OnEmotionRequired?.Invoke(EmotionType.Happy);
+            }
+            
+            Debug.Log($"[PetNeeds] {petController.petName}의 친밀도 증가: {affection:F1} (+{amount})");
+        }
+    }
+    
+    /// <summary>
+    /// 현재 욕구 상태를 디버그용 문자열로 반환
+    /// </summary>
+    public override string ToString()
+    {
+        return $"Hunger: {hunger:F1}, Sleepiness: {sleepiness:F1}, Affection: {affection:F1}";
+    }
+}

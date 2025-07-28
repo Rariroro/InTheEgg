@@ -88,18 +88,9 @@ public class PetMovementController : MonoBehaviour
                 petController.agent.SetDestination(hit.position);
                 petController.ResumeMovement();
                 
-                // 현재 움직임 상태에 따라 애니메이션 설정
-                var currentAction = petController.GetCurrentAction();
-                if (currentAction is WanderAction)
-                {
-                    // WanderAction이 애니메이션을 관리함
-                }
-                else
-                {
-                    // 다른 Action들을 위한 기본 걷기 애니메이션
-                    var anim = petController.GetComponent<PetAnimationController>();
-                    anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-                }
+                // 기본 걷기 애니메이션 설정
+                var anim = petController.GetComponent<PetAnimationController>();
+                anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             }
             catch (System.Exception e)
             {

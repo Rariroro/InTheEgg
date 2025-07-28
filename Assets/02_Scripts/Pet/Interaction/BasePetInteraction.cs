@@ -30,9 +30,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 1. 사전 준비 단계
         Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
 
-        // 펫의 현재 AI 행동을 강제로 중단하고 초기화합니다.
-        pet1.InterruptAndResetAI();
-        pet2.InterruptAndResetAI();
+        // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
         // 상호작용 상태 플래그 설정
         pet1.isInteracting = true;

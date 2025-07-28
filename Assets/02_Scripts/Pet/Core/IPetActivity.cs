@@ -57,10 +57,9 @@ public interface IPetActivity
 }
 
 /// <summary>
-/// 기존 IPetAction과의 호환성을 위한 어댑터 클래스
-/// Phase 3에서 점진적 마이그레이션을 위해 사용
+/// Activity 구현을 위한 기본 어댑터 클래스
 /// </summary>
-public abstract class PetActivityAdapter : IPetActivity, IPetAction
+public abstract class PetActivityAdapter : IPetActivity
 {
     protected readonly PetController pet;
     
@@ -73,16 +72,14 @@ public abstract class PetActivityAdapter : IPetActivity, IPetAction
         pet = petController;
     }
     
-    // IPetActivity 구현
+    // IPetActivity 구현 - 기본 구현 제공
     public virtual bool CanStart(PetState state, PetNeeds needs)
     {
-        // 기본적으로 GetPriority > 0이면 시작 가능
         return GetPriority() > 0f;
     }
     
     public virtual float GetPriority(PetState state, PetNeeds needs)
     {
-        // 기존 GetPriority 호출
         return GetPriority();
     }
     
@@ -91,7 +88,7 @@ public abstract class PetActivityAdapter : IPetActivity, IPetAction
         OnEnter();
     }
     
-    public virtual void Update()
+    public virtual void Update() 
     {
         OnUpdate();
     }
@@ -101,9 +98,9 @@ public abstract class PetActivityAdapter : IPetActivity, IPetAction
         OnExit();
     }
     
-    // IPetAction 구현 (기존 코드와의 호환성)
+    // 하위 클래스에서 구현할 메서드들 (기존 구조 유지)
     public abstract float GetPriority();
     public abstract void OnEnter();
-    public abstract void OnUpdate();
+    public abstract void OnUpdate(); 
     public abstract void OnExit();
 }

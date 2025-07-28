@@ -66,7 +66,7 @@ public class PetSensor : MonoBehaviour
         foreach (var collider in colliders)
         {
             PetController otherPet = collider.GetComponent<PetController>();
-            if (otherPet != null && otherPet != petController && otherPet.isActive)
+            if (otherPet != null && otherPet != petController)
             {
                 nearbyPets.Add(otherPet);
             }
