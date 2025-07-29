@@ -19,8 +19,67 @@ public class PetMovementController : PetControllerBase
     {
         // 추가 초기화 로직 필요시 여기에 작성
     }
+    
+    // Unity Update - 회전 처리
+    private void Update()
+    {
+        HandleRotation();
+    }
 
     // === 공용 유틸리티 메서드들 (다른 곳에서 호출됨) ===
+    
+    /// <summary>
+    /// 펫의 회전을 관리합니다.
+    /// 특별한 상태(선택, 모이기 등)에서만 수동 회전을 처리합니다.
+    /// </summary>
+    public void HandleRotation()
+    {
+        var agent = petController.agent;
+        var petState = petController.State;
+        var petModelTransform = petController.petModelTransform;
+        
+        // NavMeshAgent가 없거나 비활성화된 경우 처리하지 않음
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            return;
+        }
+
+        // 선택된 상태나 모인 상태에서는 수동 회전 제어
+        if (petState.IsSelected || petState.IsGathered)
+        {
+            // NavMeshAgent의 자동 회전 비활성화
+            if (agent.updateRotation)
+            {
+                agent.updateRotation = false;
+            }
+            
+            // 선택된 상태에서는 회전하지 않음 (플레이어가 제어)
+            return;
+        }
+        
+        // 상호작용 중이지만 이동하지 않는 경우
+        if (petState.IsInteracting && agent.velocity.magnitude < 0.1f)
+        {
+            // NavMeshAgent의 자동 회전 비활성화
+            if (agent.updateRotation)
+            {
+                agent.updateRotation = false;
+            }
+            return;
+        }
+        
+        // 일반적인 이동 상태에서는 NavMeshAgent가 자동으로 회전 처리
+        if (!agent.updateRotation)
+        {
+            agent.updateRotation = true;
+        }
+        
+        // 펫 모델이 본체와 동기화되도록 보장
+        if (petModelTransform != null && petModelTransform.rotation != transform.rotation)
+        {
+            petModelTransform.rotation = transform.rotation;
+        }
+    }
     
     /// <summary>
     /// 행동을 강제로 중단합니다. (SelectedAction, ExhaustedAction 등에서 호출)
@@ -45,6 +104,50 @@ public class PetMovementController : PetControllerBase
             }
             catch { /* 예외 무시 */ }
         }
+    }
+    
+    /// <summary>
+    /// 펫의 이동을 정지합니다.
+    /// </summary>
+    public void StopMovement()
+    {
+        if (!IsNavMeshAgentValid()) return;
+        
+        try
+        {
+            petController.agent.isStopped = true;
+            petController.agent.ResetPath();
+            petController.agent.velocity = Vector3.zero;
+        }
+        catch (System.Exception e)
+        {
+            PetDebug.LogWarning($"{petController.petName}: StopMovement 실패 - {e.Message}", petController);
+        }
+    }
+
+    /// <summary>
+    /// 펫의 이동을 재개합니다.
+    /// </summary>
+    public void ResumeMovement()
+    {
+        if (petController.State.IsGathering || !IsNavMeshAgentValid()) return;
+
+        try
+        {
+            petController.agent.isStopped = false;
+        }
+        catch (System.Exception e)
+        {
+            PetDebug.LogWarning($"{petController.petName}: ResumeMovement 실패 - {e.Message}", petController);
+        }
+    }
+    
+    /// <summary>
+    /// NavMeshAgent 유효성을 검사합니다.
+    /// </summary>
+    private bool IsNavMeshAgentValid()
+    {
+        return petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh;
     }
     
     /// <summary>

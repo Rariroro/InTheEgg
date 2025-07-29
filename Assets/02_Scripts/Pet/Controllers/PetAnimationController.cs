@@ -25,6 +25,16 @@ public class PetAnimationController : PetControllerBase
     {
         // 추가 초기화 로직 필요시 여기에 작성
     }
+    
+    // Unity Update - 매 프레임 애니메이션 업데이트
+    private void Update()
+    {
+        // 특별한 애니메이션이 재생 중이 아닐 때만 업데이트
+        if (!petController.isGatheringAnimationOverride)
+        {
+            UpdateAnimation();
+        }
+    }
 
     public void UpdateAnimation()
     {

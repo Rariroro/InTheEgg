@@ -67,27 +67,17 @@ public partial class PetController : MonoBehaviour
     public PetController interactionPartner => petState.InteractionPartner;
     public Transform currentTree => petState.CurrentTree;
     
-    [HideInInspector] public float climbHeight = 5f;
+    // climbHeight는 MovementSettings에서 관리
+    public float climbHeight => movement.climbHeight;
 
     // 욕구 설정은 Needs 프로퍼티를 통해 직접 접근
-    [SerializeField] private float highAffectionThreshold = 80f;
-    
-    [Header("Food Affection Settings")] // 음식 관련 친밀도 설정
-    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최소값")]
-    [SerializeField] private float droppedFoodAffectionMin = 5f;
-    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최대값")]
-    [SerializeField] private float droppedFoodAffectionMax = 10f;
-    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최소값")]
-    [SerializeField] private float environmentFoodAffectionMin = 3f;
-    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
-    [SerializeField] private float environmentFoodAffectionMax = 7f;
     
     // ★★★ [Phase 4] 통합된 상태 관리 시스템 ★★★
     [Header("State Management")]
     [SerializeField] private PetState petState = new PetState();
     
     [Header("Needs Management")]
-    private PetNeeds petNeeds;
+    [SerializeField] private PetNeeds petNeeds = new PetNeeds();
     
     /// <summary>
     /// 외부에서 상태를 읽기 위한 프로퍼티
@@ -221,8 +211,13 @@ public partial class PetController : MonoBehaviour
         petAI = gameObject.AddComponent<PetAI>();
         petAI.Init(this);
         
-        // ★ [Phase 4] 욕구 시스템 초기화 - 자체 Update 처리
-        petNeeds = gameObject.AddComponent<PetNeeds>();
+        // ★ [Phase 4] 욕구 시스템 초기화
+        // PetNeeds는 이제 일반 클래스이므로 이미 SerializeField로 생성됨
+        if (petNeeds == null)
+        {
+            petNeeds = new PetNeeds();
+        }
+        
         petNeeds.Init(this);
         
         // 욕구 변화 이벤트 구독
@@ -243,24 +238,20 @@ public partial class PetController : MonoBehaviour
             StartCoroutine(RegisterToPetManager());
         }
     }
-    // 기존 Update 메서드를 완전히 대체합니다.
+    // Update 메서드는 이제 각 컨트롤러가 자체적으로 처리
     private void Update()
     {
+        // PetController는 이제 순수 오케스트레이터로서
+        // 각 컨트롤러들이 자체 Update에서 필요한 처리를 수행합니다.
+        // - PetInputController: 입력 처리
+        // - PetWaterBehaviorController: 물 영역 체크
+        // - PetAnimationController: 애니메이션 업데이트
+        // - PetAI: AI 의사결정 (자체 타이머로)
         
-        // 1. 최우선 순위 처리: 플레이어의 직접적인 조작 (들기)
-        // isHolding은 물리적인 상태이므로 최상단에서 제어하는 것이 좋습니다.
-        inputController?.HandleInput();
-        
-        // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
-        // 선택된 상태는 PlayerControl이지만 AI 업데이트와 Action 실행이 필요함
-        if ((petState.IsPlayerControlled && !petState.IsSelected) || petState.IsActionLocked) return;
-        // 2. 환경 상태 업데이트 (매 프레임)
-        if (waterBehaviorController != null) waterBehaviorController.CheckWaterArea();
-
-        // 3. 애니메이션 업데이트 (특별한 애니메이션이 재생 중이 아닐 때만)
-        if (!isGatheringAnimationOverride && animationController != null)
+        // PetNeeds는 MonoBehaviour가 아니므로 여기서 업데이트
+        if (petNeeds != null)
         {
-            animationController.UpdateAnimation();
+            petNeeds.UpdateNeeds();
         }
     }
     
@@ -320,53 +311,15 @@ public partial class PetController : MonoBehaviour
             waterBehaviorController.AdjustSpeedForWater();
         }
     }
-    // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
+    // HandleRotation은 이제 PetMovementController에서 처리
     /// <summary>
-    /// 펫의 회전을 중앙에서 관리합니다.
-    /// 특별한 상태(선택, 모이기 등)에서만 수동 회전을 처리합니다.
+    /// 펫의 회전을 처리합니다. (호환성을 위해 유지)
     /// </summary>
     public void HandleRotation()
     {
-        // NavMeshAgent가 없거나 비활성화된 경우 처리하지 않음
-        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        if (movementController != null)
         {
-            return;
-        }
-
-        // 선택된 상태나 모인 상태에서는 수동 회전 제어
-        if (petState.IsSelected || petState.IsGathered)
-        {
-            // NavMeshAgent의 자동 회전 비활성화
-            if (agent.updateRotation)
-            {
-                agent.updateRotation = false;
-            }
-            
-            // 선택된 상태에서는 회전하지 않음 (플레이어가 제어)
-            return;
-        }
-        
-        // 상호작용 중이지만 이동하지 않는 경우
-        if (petState.IsInteracting && agent.velocity.magnitude < 0.1f)
-        {
-            // NavMeshAgent의 자동 회전 비활성화
-            if (agent.updateRotation)
-            {
-                agent.updateRotation = false;
-            }
-            return;
-        }
-        
-        // 일반적인 이동 상태에서는 NavMeshAgent가 자동으로 회전 처리
-        if (!agent.updateRotation)
-        {
-            agent.updateRotation = true;
-        }
-        
-        // 펫 모델이 본체와 동기화되도록 보장
-        if (petModelTransform != null && petModelTransform.rotation != transform.rotation)
-        {
-            petModelTransform.rotation = transform.rotation;
+            movementController.HandleRotation();
         }
     }
     // PetController.cs에 추가
@@ -502,43 +455,17 @@ public partial class PetController : MonoBehaviour
     }
 
 
-    // NavMeshAgent 제어 메서드들
+    // NavMeshAgent 제어는 PetMovementController에서 처리
     public void StopMovement()
     {
-        if (!IsNavMeshAgentValid()) return;
-        
-        try
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-            agent.velocity = Vector3.zero;
-            // 회전 제어는 HandleRotation()에서 통합 관리
-        }
-        catch (System.Exception e)
-        {
-            PetDebug.LogWarning($"{petName}: StopMovement 실패 - {e.Message}", this);
-        }
+        if (movementController != null)
+            movementController.StopMovement();
     }
 
     public void ResumeMovement()
     {
-        if (petState.IsGathering || !IsNavMeshAgentValid()) return;
-
-        try
-        {
-            agent.isStopped = false;
-            // 회전 제어는 HandleRotation()에서 통합 관리
-        }
-        catch (System.Exception e)
-        {
-            PetDebug.LogWarning($"{petName}: ResumeMovement 실패 - {e.Message}", this);
-        }
-    }
-    
-    // NavMeshAgent 유효성 검사 헬퍼 메서드
-    private bool IsNavMeshAgentValid()
-    {
-        return agent != null && agent.enabled && agent.isOnNavMesh;
+        if (movementController != null)
+            movementController.ResumeMovement();
     }
 
     // 감정 표현 메서드 - EmotionController로 위임
@@ -585,14 +512,14 @@ public partial class PetController : MonoBehaviour
     // 친밀도 임계값 getter
     public float GetHighAffectionThreshold()
     {
-        return highAffectionThreshold;
+        return petNeeds != null ? petNeeds.HighAffectionThreshold : 80f;
     }
     
-    // 음식 관련 친밀도 설정 getter
-    public float GetDroppedFoodAffectionMin() { return droppedFoodAffectionMin; }
-    public float GetDroppedFoodAffectionMax() { return droppedFoodAffectionMax; }
-    public float GetEnvironmentFoodAffectionMin() { return environmentFoodAffectionMin; }
-    public float GetEnvironmentFoodAffectionMax() { return environmentFoodAffectionMax; }
+    // 음식 관련 친밀도 설정 getter - PetNeeds에서 가져오도록 수정
+    public float GetDroppedFoodAffectionMin() { return petNeeds != null ? petNeeds.DroppedFoodAffectionMin : 5f; }
+    public float GetDroppedFoodAffectionMax() { return petNeeds != null ? petNeeds.DroppedFoodAffectionMax : 10f; }
+    public float GetEnvironmentFoodAffectionMin() { return petNeeds != null ? petNeeds.EnvironmentFoodAffectionMin : 3f; }
+    public float GetEnvironmentFoodAffectionMax() { return petNeeds != null ? petNeeds.EnvironmentFoodAffectionMax : 7f; }
     
 
 }

@@ -29,6 +29,12 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
     }
+    
+    // Unity Update - 매 프레임 물 영역 체크
+    private void Update()
+    {
+        CheckWaterArea();
+    }
 
     public void CheckWaterArea()
     {

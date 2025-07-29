@@ -70,6 +70,12 @@ public class PetInputController : PetControllerBase
         }
     }
 
+    // Unity Update - 매 프레임 입력 처리
+    private void Update()
+    {
+        HandleInput();
+    }
+    
     // 사용자 입력을 처리하는 함수입니다.
     public void HandleInput()
     {

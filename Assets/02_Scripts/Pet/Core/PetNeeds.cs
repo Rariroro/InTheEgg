@@ -6,7 +6,7 @@ using UnityEngine;
 /// PetController에서 분리하여 단일 책임 원칙을 준수
 /// </summary>
 [Serializable]
-public class PetNeeds : MonoBehaviour
+public class PetNeeds
 {
     // 욕구 타입 정의
     public enum NeedType
@@ -46,6 +46,17 @@ public class PetNeeds : MonoBehaviour
     [SerializeField] private float affectionDecreaseRateWhenHungry = 0.2f;  // 배고플 때 초당 친밀도 감소량 (2f → 0.2f로 감소)
     [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;  // 친밀도가 감소하기 시작하는 배고픔 임계값
     [SerializeField] private float lowAffectionThreshold = 30f;  // 낮은 친밀도 임계값
+    [SerializeField] private float highAffectionThreshold = 80f; // 높은 친밀도 임계값
+    
+    [Header("음식으로 인한 친밀도 증가 설정")]
+    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최소값")]
+    [SerializeField] private float droppedFoodAffectionMin = 5f;
+    [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최대값")]
+    [SerializeField] private float droppedFoodAffectionMax = 10f;
+    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최소값")]
+    [SerializeField] private float environmentFoodAffectionMin = 3f;
+    [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
+    [SerializeField] private float environmentFoodAffectionMax = 7f;
     
     // 프로퍼티로 외부 접근 허용
     public float AffectionDecreaseRateWhenHungry
@@ -63,6 +74,17 @@ public class PetNeeds : MonoBehaviour
         get => lowAffectionThreshold;
         set => lowAffectionThreshold = value;
     }
+    public float HighAffectionThreshold
+    {
+        get => highAffectionThreshold;
+        set => highAffectionThreshold = value;
+    }
+    
+    // 음식 관련 친밀도 프로퍼티
+    public float DroppedFoodAffectionMin => droppedFoodAffectionMin;
+    public float DroppedFoodAffectionMax => droppedFoodAffectionMax;
+    public float EnvironmentFoodAffectionMin => environmentFoodAffectionMin;
+    public float EnvironmentFoodAffectionMax => environmentFoodAffectionMax;
     
     [Header("욕구 임계값")]
     [SerializeField] private float hungryThreshold = 70f;    // 배고픔 임계값
@@ -103,9 +125,9 @@ public class PetNeeds : MonoBehaviour
     }
     
     /// <summary>
-    /// Unity Update - 매 프레임 욕구 자동 업데이트
+    /// 욕구 업데이트 - PetController에서 호출
     /// </summary>
-    private void Update()
+    public void UpdateNeeds()
     {
         if (!isInitialized) return;
         
