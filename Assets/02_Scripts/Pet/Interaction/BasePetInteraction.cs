@@ -97,8 +97,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         while (interaction.MoveNext())
         {
             // 둘 중 하나라도 터치/홀드되면 즉시 중단
-            if ((pet1 != null && (pet1.isHolding || pet1.isSelected)) || 
-                (pet2 != null && (pet2.isHolding || pet2.isSelected)))
+            if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
+                (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
                 Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
                 yield break;
@@ -360,8 +360,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         while (Time.time - startTime < timeout)
         {
             // 터치/홀드 체크 - 이동 중에도 즉시 중단
-            if ((pet1 != null && (pet1.isHolding || pet1.isSelected)) || 
-                (pet2 != null && (pet2.isHolding || pet2.isSelected)))
+            if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
+                (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
                 Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
                 // 애니메이션 정지

@@ -37,8 +37,8 @@ public class PetSleepingController : PetControllerBase
     public bool TryStartSleepingSequence()
     {
         // 다른 중요 행동 중이면 시작하지 않음
-        if (petController.isActionLocked || petController.isGathering || petController.isInteracting || 
-            petController.isHolding || petController.isSelected || isSleeping) // 터치된 상태에서는 잠자기 중단
+        if (petController.State.IsActionLocked || petController.State.IsGathering || petController.State.IsInteracting || 
+            petController.State.IsHolding || petController.State.IsSelected || isSleeping) // 터치된 상태에서는 잠자기 중단
         {
             return false;
         }
@@ -100,7 +100,7 @@ public class PetSleepingController : PetControllerBase
         // 졸음이 70%를 넘었을 때 행동 개시
         if (petController.Needs.Sleepiness > 70f)
         {
-            if (petController.isClimbingTree)
+            if (petController.State.IsClimbingTree)
             {
                 StartCoroutine(SleepInTree());
                 return true; // 행동 시작
@@ -114,7 +114,7 @@ public class PetSleepingController : PetControllerBase
 
         // 나무를 못 찾은 상태에서 졸음이 한계에 도달한 경우
         float personalityThreshold = GetPersonalityForceSleepThreshold();
-        if (petController.Needs.Sleepiness >= personalityThreshold && !petController.isClimbingTree && !isSeekingTreeToSleep)
+        if (petController.Needs.Sleepiness >= personalityThreshold && !petController.State.IsClimbingTree && !isSeekingTreeToSleep)
         {
             Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
             StartCoroutine(ForceSleepAtCurrentLocation());
@@ -245,7 +245,7 @@ public class PetSleepingController : PetControllerBase
         petController.StopMovement();
         
         // 터치/홀드 상태가 되면 즉시 중단
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelSleeping();
             yield break;
@@ -261,7 +261,7 @@ public class PetSleepingController : PetControllerBase
         
         while (elapsed < sleepDuration)
         {
-            if (petController.isHolding || petController.isSelected)
+            if (petController.State.IsHolding || petController.State.IsSelected)
             {
                 animController.StopContinuousAnimation();
                 CancelSleeping();
@@ -317,7 +317,7 @@ public class PetSleepingController : PetControllerBase
         petController.StopMovement();
         
         // 터치/홀드 상태가 되면 즉시 중단
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelSleeping();
             yield break;
@@ -335,7 +335,7 @@ public class PetSleepingController : PetControllerBase
         
         while (elapsed < sleepDuration)
         {
-            if (petController.isHolding || petController.isSelected)
+            if (petController.State.IsHolding || petController.State.IsSelected)
             {
                 animController.StopContinuousAnimation();
                 CancelSleeping();

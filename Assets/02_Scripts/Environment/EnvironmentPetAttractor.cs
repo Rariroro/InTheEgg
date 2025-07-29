@@ -56,7 +56,7 @@ public class EnvironmentPetAttractor : MonoBehaviour
 
         foreach (PetController pet in allPets)
         {
-            if (pet.isGathering || pet.isInteracting)
+            if (pet.State.IsGathering || pet.State.IsInteracting)
                 continue;
 
             bool shouldAttract = false;
@@ -124,7 +124,7 @@ private IEnumerator AttractPetsToEnvironment(List<PetController> pets, Vector3 c
         
         // ▼▼▼ 수정된 부분 시작 ▼▼▼
         // 더 이상 MovePetToEnvironment 코루틴을 직접 호출하지 않습니다.
-        if (pet != null && !pet.isGathering) // 플레이어 모이기가 아닐 때만
+        if (pet != null && !pet.State.IsGathering) // 플레이어 모이기가 아닐 때만
         {
             // ★ [Phase 4] PetState를 통한 상태 업데이트
             pet.State.SetEnvironmentAttraction(true, targetPosition);

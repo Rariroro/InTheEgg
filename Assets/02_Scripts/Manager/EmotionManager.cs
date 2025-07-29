@@ -193,10 +193,11 @@ public GameObject ShowPetEmotion(PetController pet, EmotionType emotion, float d
         // ▼▼▼ [수정] 파티클 생성 위치 결정 로직 ▼▼▼
         Vector3 spawnPosition;
 
-        // 1순위: pet.emotionOrigin이 설정되어 있으면 그 위치를 사용합니다.
-        if (pet.emotionOrigin != null)
+        // 1순위: PetEmotionController의 emotionOrigin이 설정되어 있으면 그 위치를 사용합니다.
+        var emotionController = pet.GetComponent<PetEmotionController>();
+        if (emotionController != null && emotionController.GetEmotionOrigin() != null)
         {
-            spawnPosition = pet.emotionOrigin.position;
+            spawnPosition = emotionController.GetEmotionOrigin().position;
         }
         // 2순위: emotionOrigin이 없으면 기존처럼 콜라이더 기준으로 계산합니다. (하위 호환성)
         else
@@ -236,10 +237,11 @@ public GameObject ShowPetEmotion(PetController pet, EmotionType emotion, float d
         if (bubble != null)
         {
             // ▼▼▼ [수정] 말풍선 타겟 결정 로직 ▼▼▼
-            // 1순위: pet.emotionOrigin이 설정되어 있으면 그것을 타겟으로 설정합니다.
-            if (pet.emotionOrigin != null)
+            // 1순위: PetEmotionController의 emotionOrigin이 설정되어 있으면 그것을 타겟으로 설정합니다.
+            var emotionController = pet.GetComponent<PetEmotionController>();
+            if (emotionController != null && emotionController.GetEmotionOrigin() != null)
             {
-                bubble.SetTargetPet(pet.emotionOrigin);
+                bubble.SetTargetPet(emotionController.GetEmotionOrigin());
             }
             // 2순위: 없으면 기존처럼 petModelTransform을 타겟으로 설정합니다.
             else

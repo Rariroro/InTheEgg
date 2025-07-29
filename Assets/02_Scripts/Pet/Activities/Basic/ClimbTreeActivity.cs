@@ -22,11 +22,11 @@ public class ClimbTreeActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 터치/홀드 상태에서는 나무 오르기 중단
-        if (pet.isHolding || (pet.isSelected && !pet.isClimbingTree))
+        if (pet.State.IsHolding || (pet.State.IsSelected && !pet.State.IsClimbingTree))
             return false;
             
         // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 계속
-        if (pet.isClimbingTree || climbingController.IsSearchingForTree())
+        if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
             return true;
             
         // 'Tree' 서식지 펫이 아니면 실행하지 않음
@@ -49,7 +49,7 @@ public class ClimbTreeActivity : PetActivityAdapter
             return 0f;
             
         // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 높은 우선순위
-        if (pet.isClimbingTree || climbingController.IsSearchingForTree())
+        if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
         {
             // SelectedAction(5.5f)보다 높은 우선순위로 설정
             return 6.0f;
@@ -63,11 +63,11 @@ public class ClimbTreeActivity : PetActivityAdapter
     public override float GetPriority()
     {
         // 터치/홀드 상태에서는 나무 오르기도 중단
-        if (pet.isHolding || (pet.isSelected && !pet.isClimbingTree))
+        if (pet.State.IsHolding || (pet.State.IsSelected && !pet.State.IsClimbingTree))
             return 0f;
             
         // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 최상위 우선순위
-        if (pet.isClimbingTree || climbingController.IsSearchingForTree())
+        if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
         {
             return 6.0f;
         }
@@ -97,7 +97,7 @@ public class ClimbTreeActivity : PetActivityAdapter
         
         // 이미 나무 위에 있는 상태에서 이 액션이 다시 시작될 수 있으므로,
         // isClimbingTree가 false일 때만 새로 나무를 찾도록 함
-        if (!pet.isClimbingTree)
+        if (!pet.State.IsClimbingTree)
         {
             pet.StartCoroutine(climbingController.SearchAndClimbTreeRegularly());
         }
@@ -106,7 +106,7 @@ public class ClimbTreeActivity : PetActivityAdapter
     public override void OnUpdate()
     {
         // 나무 위에 있을 때 펫이 선택되었다면, 카메라를 바라보도록 처리
-        if (pet.isClimbingTree && pet.isSelected)
+        if (pet.State.IsClimbingTree && pet.State.IsSelected)
         {
             // 1. 카메라 바라보기
             if (Camera.main != null)

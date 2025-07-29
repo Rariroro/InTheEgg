@@ -44,10 +44,10 @@ public class PetFeedingController : PetControllerBase
     /// </summary>
     public bool TryStartFeedingSequence()
     {
-        if (petController.isInteracting || petController.isGathering || isEating || petController.isHolding ||
-            petController.isSelected || // 터치된 상태에서는 먹이 찾기 중단
+        if (petController.State.IsInteracting || petController.State.IsGathering || isEating || petController.State.IsHolding ||
+            petController.State.IsSelected || // 터치된 상태에서는 먹이 찾기 중단
             (petController.GetComponent<PetSleepingController>() != null && petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking()) ||
-            petController.isClimbingTree)
+            petController.State.IsClimbingTree)
         {
             return false;
         }
@@ -229,7 +229,7 @@ public class PetFeedingController : PetControllerBase
         petController.StopMovement();
         
         // 터치/홀드 상태가 되면 즉시 중단
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelFeeding();
             yield break;
@@ -241,7 +241,7 @@ public class PetFeedingController : PetControllerBase
         }
 
         // 애니메이션 재생 중에도 터치/홀드 체크
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelFeeding();
             yield break;
@@ -300,7 +300,7 @@ public class PetFeedingController : PetControllerBase
         petController.StopMovement();
         
         // 터치/홀드 상태가 되면 즉시 중단
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelFeeding();
             yield break;
@@ -324,7 +324,7 @@ public class PetFeedingController : PetControllerBase
         yield return StartCoroutine(LookAtTarget(targetFeedingArea.transform));
         
         // 애니메이션 재생 중에도 터치/홀드 체크
-        if (petController.isHolding || petController.isSelected)
+        if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelFeeding();
             yield break;

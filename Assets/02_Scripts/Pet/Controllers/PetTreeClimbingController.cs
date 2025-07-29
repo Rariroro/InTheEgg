@@ -38,7 +38,7 @@ public class PetTreeClimbingController : PetControllerBase
         }
         // ★★★ 잠을 자려 하거나, 특정 상태일 때는 일반 등반 로직 실행 안 함
         if (petController.habitat != PetAIProperties.Habitat.Tree ||
-            petController.isClimbingTree || petController.isInWater || isSearchingForTree ||
+            petController.State.IsClimbingTree || petController.State.IsInWater || isSearchingForTree ||
             petController.GetComponent<PetSleepingController>().IsSleepingOrSeeking())
         {
             return;
@@ -155,7 +155,7 @@ private IEnumerator RestOnTree()
     while (waited < waitTime)
     {
         // ★★★ 수정: 펫이 선택되면 휴식을 잠시 멈춥니다. ★★★
-        if (petController.isSelected)
+        if (petController.State.IsSelected)
         {
             // ClimbTreeAction의 OnUpdate가 카메라 보기와 Idle 애니메이션을 처리하므로,
             // 여기서는 선택이 해제될 때까지 그냥 기다리기만 하면 됩니다.
@@ -187,8 +187,8 @@ private IEnumerator RestOnTree()
     {
         return petController.Needs.Hunger > 70f ||
                petController.Needs.Sleepiness > 90f || // 나무에서 졸다가 바로 잠들지는 않도록
-               petController.isGathering ||
-               petController.isHolding;
+               petController.State.IsGathering ||
+               petController.State.IsHolding;
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ private IEnumerator RestOnTree()
                 petController.agent.isStopped = false;
                 petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
-                while (!petController.isHolding && petController.agent.enabled &&
+                while (!petController.State.IsHolding && petController.agent.enabled &&
                        (petController.agent.pathPending || petController.agent.remainingDistance > 0.5f))
                 {
                     // 이동 중 애니메이션 동기화를 위해 HandleRotation 호출
@@ -255,7 +255,7 @@ private IEnumerator RestOnTree()
                     yield return null;
                 }
 
-                if (petController.isHolding || !petController.agent.enabled)
+                if (petController.State.IsHolding || !petController.agent.enabled)
                 {
                     ForceCancelClimbing();
                     yield break;
@@ -281,7 +281,7 @@ private IEnumerator RestOnTree()
 
             while (elapsed < moveTime)
             {
-                if (petController.isHolding)
+                if (petController.State.IsHolding)
                 {
                     ForceCancelClimbing();
                     yield break;
@@ -330,7 +330,7 @@ private IEnumerator RestOnTree()
 
             while (elapsed < moveTime)
             {
-                if (petController.isHolding)
+                if (petController.State.IsHolding)
                 {
                     ForceCancelClimbing();
                     yield break;

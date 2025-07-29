@@ -16,11 +16,11 @@ public class InteractWithPetActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 터치/홀드 상태에서는 펫 간 상호작용 중단
-        if (pet.isHolding || pet.isSelected)
+        if (pet.State.IsHolding || pet.State.IsSelected)
             return false;
             
         // 상호작용 중일 때만 시작 가능
-        return pet.isInteracting;
+        return pet.State.IsInteracting;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -37,11 +37,11 @@ public class InteractWithPetActivity : PetActivityAdapter
     public override float GetPriority()
     {
         // 터치/홀드 상태에서는 펫 간 상호작용도 중단
-        if (pet.isHolding || pet.isSelected)
+        if (pet.State.IsHolding || pet.State.IsSelected)
             return 0f;
             
         // 펫이 상호작용 중일 때, 다른 저순위 행동을 막기 위해 중간 정도의 우선순위 유지
-        return pet.isInteracting ? 1.5f : 0f;
+        return pet.State.IsInteracting ? 1.5f : 0f;
     }
     
     public override void OnEnter()

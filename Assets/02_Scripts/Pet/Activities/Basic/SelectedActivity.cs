@@ -19,7 +19,7 @@ public class SelectedActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 펫이 선택되었고 들려있지 않을 때만 시작 가능
-        return pet.isSelected && !pet.isHolding;
+        return pet.State.IsSelected && !pet.State.IsHolding;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -29,17 +29,17 @@ public class SelectedActivity : PetActivityAdapter
             
         // 나무 위에 있을 때는 약간 낮은 우선순위
         // 일반 상태에서는 높은 우선순위 (긴급 상황 제외 모든 행동보다 높음)
-        return pet.isClimbingTree ? 5.5f : 30.0f;
+        return pet.State.IsClimbingTree ? 5.5f : 30.0f;
     }
     
     // 기존 IPetAction 메서드 구현 (호환성)
     public override float GetPriority()
     {
         // 펫이 '선택'되었고, '들려있지' 않을 때 높은 우선순위
-        if (pet.isSelected && !pet.isHolding)
+        if (pet.State.IsSelected && !pet.State.IsHolding)
         {
-            float priority = pet.isClimbingTree ? 5.5f : 30.0f;
-            Debug.Log($"[SelectedActivity] {pet.petName}: GetPriority = {priority} (isSelected={pet.isSelected}, isHolding={pet.isHolding})");
+            float priority = pet.State.IsClimbingTree ? 5.5f : 30.0f;
+            Debug.Log($"[SelectedActivity] {pet.petName}: GetPriority = {priority} (isSelected={pet.State.IsSelected}, isHolding={pet.State.IsHolding})");
             return priority;
         }
         
@@ -55,7 +55,7 @@ public class SelectedActivity : PetActivityAdapter
         moveController?.ForceStopCurrentBehavior();
         
         // 나무에 오르지 않았을 때만 움직임을 멈춤
-        if (!pet.isClimbingTree)
+        if (!pet.State.IsClimbingTree)
         {
             pet.StopMovement();
         }
@@ -67,7 +67,7 @@ public class SelectedActivity : PetActivityAdapter
     public override void OnUpdate()
     {
         // 카메라를 부드럽게 바라봄 (나무 위에 있을 때는 제외)
-        if (Camera.main != null && !pet.isClimbingTree)
+        if (Camera.main != null && !pet.State.IsClimbingTree)
         {
             Vector3 directionToCamera = Camera.main.transform.position - pet.transform.position;
             directionToCamera.y = 0; // Y축 고정
@@ -83,7 +83,7 @@ public class SelectedActivity : PetActivityAdapter
                 );
             }
         }
-        else if (pet.isClimbingTree)
+        else if (pet.State.IsClimbingTree)
         {
             Debug.Log($"[SelectedActivity] {pet.petName}: 나무 위에 있어서 회전하지 않음");
         }

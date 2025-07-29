@@ -28,7 +28,7 @@ public class SleepActivity : PetActivityAdapter
             return false;
             
         // 터치/홀드 상태에서는 잠자기 중단
-        if (pet.isHolding || pet.isSelected)
+        if (pet.State.IsHolding || pet.State.IsSelected)
             return false;
             
         // 나무 위에 있어도 잠들 수 있음
@@ -60,7 +60,7 @@ public class SleepActivity : PetActivityAdapter
     public override float GetPriority()
     {
         // 터치/홀드 상태에서는 잠자기도 중단
-        if (pet.isHolding || pet.isSelected)
+        if (pet.State.IsHolding || pet.State.IsSelected)
             return 0f;
             
         // 이미 잠을 자거나 잠잘 곳을 찾는 중이라면, 높은 우선순위를 유지

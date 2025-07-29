@@ -390,7 +390,7 @@ public class PetInteractionManager : MonoBehaviour
         // 빠른 거부 조건들 - 가장 빠른 체크부터 순서대로
         if (pet1 == pet2) return; // 같은 펫인지 먼저 체크
         if (pet1 == null || pet2 == null) return;
-        if (pet1.isHolding || pet2.isHolding) return; // 간단한 bool 체크를 먼저
+        if (pet1.State.IsHolding || pet2.State.IsHolding) return; // 간단한 bool 체크를 먼저
         if (IsInteracting(pet1) || IsInteracting(pet2)) return;
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2)) return;
 

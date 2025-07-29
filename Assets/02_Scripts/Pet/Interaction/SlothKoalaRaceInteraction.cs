@@ -499,7 +499,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
         {
             PetController potentialSpectator = hit.GetComponent<PetController>();
             if (potentialSpectator != null && potentialSpectator != pet1 && potentialSpectator != pet2 &&
-                !potentialSpectator.isInteracting && !potentialSpectator.isHolding &&
+                !potentialSpectator.State.IsInteracting && !potentialSpectator.State.IsHolding &&
                 potentialSpectator.Needs.Hunger < 70f && potentialSpectator.Needs.Sleepiness < 70f)
             {
                 // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★

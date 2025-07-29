@@ -27,7 +27,7 @@ public class ExhaustedActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 플레이어가 직접 선택했을 때는 탈진 상태 진입을 막음
-        if (pet.isSelected)
+        if (pet.State.IsSelected)
             return false;
             
         // 배고픔 수치가 100 이상일 때 시작
@@ -48,7 +48,7 @@ public class ExhaustedActivity : PetActivityAdapter
     public override float GetPriority()
     {
         // 플레이어가 직접 선택했을 때는 우선순위를 낮춰 상호작용이 가능하게 함
-        if (pet.isSelected)
+        if (pet.State.IsSelected)
             return 0f;
             
         // 배고픔 수치가 100 이상이면 최상위 우선순위

@@ -538,7 +538,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         {
             PetController nearbyPet = col.GetComponent<PetController>();
             if (nearbyPet != null && nearbyPet != runner && 
-                !nearbyPet.isInteracting && Random.value < 0.1f) // 10% 확률
+                !nearbyPet.State.IsInteracting && Random.value < 0.1f) // 10% 확률
             {
                 nearbyPet.ShowEmotion(EmotionType.Surprised, 2f);
                 

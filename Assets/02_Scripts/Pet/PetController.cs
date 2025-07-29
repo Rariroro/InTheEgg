@@ -28,10 +28,6 @@ public partial class PetController : MonoBehaviour
     public PetTraits.Habitat habitat => profile.habitat;
     public float treeClimbChance => profile.treeClimbChance;
     public float waterSinkDepth => profile.waterSinkDepth;
-  // ▼▼▼ [수정] 이 부분을 추가합니다 ▼▼▼
-    [Tooltip("감정 표현(이모티콘, 파티클)이 생성될 기준 위치입니다. 비워두면 자식 중 'EmotionOrigin'을 자동으로 찾습니다.")]
-    public Transform emotionOrigin;
-    // ▲▲▲ 여기까지 추가 ▲▲▲
     // 공용 컴포넌트
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator animator;
@@ -39,13 +35,9 @@ public partial class PetController : MonoBehaviour
     [HideInInspector] public bool isGatheringAnimationOverride = false; // 이것만 별도 유지 (애니메이션 전용)
 
     // baseSpeed 등은 Movement 프로퍼티를 통해 접근
-    [System.Obsolete("Use Movement.walkSpeed instead")]
     public float baseSpeed => movement.walkSpeed;
-    [System.Obsolete("Use Movement.angularSpeed instead")]
     public float baseAngularSpeed => movement.angularSpeed;
-    [System.Obsolete("Use Movement.acceleration instead")]
     public float baseAcceleration => movement.acceleration;
-    [System.Obsolete("Use Movement.stoppingDistance instead")]
     public float baseStoppingDistance => movement.stoppingDistance;
 
     // 각 기능별 컨트롤러 참조
@@ -56,13 +48,11 @@ public partial class PetController : MonoBehaviour
     public PetSleepingController sleepingController; // 추가: 수면 컨트롤러
     private PetWaterBehaviorController waterBehaviorController; // ★ 추가
     private PetTreeClimbingController treeClimbingController;
+    private PetEmotionController emotionController; // 감정 표현 컨트롤러
     
     // AI 시스템
     private PetAI petAI;
     
-    // 현재 활성화된 감정 말풍선
-    private EmotionBubble activeBubble;
-private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기 위한 변수 추가
 
     // 졸음 이모티콘 표시 - PetNeeds로 이동됨
 
@@ -70,24 +60,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
     [SerializeField] private bool manuallySetPetType = false; // 수동 설정 여부 체크 필드 추가
 
-    // ★ 호환성 프로퍼티 - 새 코드는 State 프로퍼티 사용 권장
-    // 예: petController.State.IsSelected 대신 petController.isSelected
-    [System.Obsolete("Use State.IsSelected instead")]
-    public bool isSelected => petState.IsSelected;
-    [System.Obsolete("Use State.IsHolding instead")]
-    public bool isHolding => petState.IsHolding;
-    [System.Obsolete("Use State.IsInteracting instead")]
-    public bool isInteracting => petState.IsInteracting;
-    [System.Obsolete("Use State.IsInWater instead")]
-    public bool isInWater => petState.IsInWater;
-    [System.Obsolete("Use State.IsClimbingTree instead")]
-    public bool isClimbingTree => petState.IsClimbingTree;
-    [System.Obsolete("Use State.IsGathering instead")]
-    public bool isGathering => petState.IsGathering;
-    [System.Obsolete("Use State.IsActionLocked instead")]
-    public bool isActionLocked => petState.IsActionLocked;
-    
-    // 사용 빈도가 높은 필수 프로퍼티들만 유지
+    // ★ 필수 프로퍼티들만 유지 (나머지는 State 프로퍼티로 직접 접근)
     public bool isExhausted => petState.IsExhausted;
     public bool isGathered => petState.IsGathered;
     public bool isAnimationLocked => petState.IsAnimationLocked;
@@ -219,12 +192,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             }
         }
         
-        // EmotionOrigin 자동 탐색 (인스펙터에서 할당하지 않은 경우만)
-        if (emotionOrigin == null)
-        {
-            Transform rootToSearch = petModelTransform != null ? petModelTransform : transform;
-            emotionOrigin = FindDeepChild(rootToSearch, "EmotionOrigin");
-        }
         // 인스펙터에서 수동으로 설정하지 않았을 경우에만 자동 감지 실행
         if (!manuallySetPetType)
         {
@@ -246,6 +213,8 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         sleepingController.Init(this);
         treeClimbingController = gameObject.AddComponent<PetTreeClimbingController>();
         treeClimbingController.Init(this);
+        emotionController = gameObject.AddComponent<PetEmotionController>();
+        emotionController.Initialize(petModelTransform);
 
         
         // ★ [Phase 3] PetAI 초기화 (Activity 시스템 포함)
@@ -284,7 +253,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         
         // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
         // 선택된 상태는 PlayerControl이지만 AI 업데이트와 Action 실행이 필요함
-        if ((petState.IsPlayerControlled && !isSelected) || isActionLocked) return;
+        if ((petState.IsPlayerControlled && !petState.IsSelected) || petState.IsActionLocked) return;
         // 2. 환경 상태 업데이트 (매 프레임)
         if (waterBehaviorController != null) waterBehaviorController.CheckWaterArea();
 
@@ -572,71 +541,31 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         return agent != null && agent.enabled && agent.isOnNavMesh;
     }
 
-   // ▼▼▼ ShowEmotion 메서드를 아래와 같이 수정합니다. ▼▼▼
-public void ShowEmotion(EmotionType emotion, float duration = 10f)
-{
-    // 기존에 표시되던 감정 표현(말풍선 또는 파티클)을 먼저 제거합니다.
-    HideEmotion();
-
-    if (EmotionManager.Instance != null)
+    // 감정 표현 메서드 - EmotionController로 위임
+    public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
-        // EmotionManager로부터 생성된 오브젝트(말풍선 또는 파티클)를 받습니다.
-        GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(this, emotion, duration);
+        if (emotionController != null)
+            emotionController.ShowEmotion(emotion, duration);
+    }
 
-        if (emotionObject != null)
-        {
-            // 반환된 오브젝트가 EmotionBubble 타입인지 확인하고, activeBubble에 할당합니다.
-            if (emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
-            {
-                activeBubble = bubble;
-            }
-            // 파티클인 경우 activeParticle에 할당합니다.
-            else
-            {
-                activeParticle = emotionObject;
-            }
-        }
-    }
-}
-
-// ▼▼▼ HideEmotion 메서드를 아래와 같이 수정합니다. ▼▼▼
-public void HideEmotion()
-{
-    // 활성화된 말풍선이 있다면 풀에 반환합니다.
-    if (activeBubble != null)
+    public void HideEmotion()
     {
-        EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
-        activeBubble = null;
+        if (emotionController != null)
+            emotionController.HideEmotion();
     }
-    // 활성화된 파티클이 있다면 파괴합니다.
-    if (activeParticle != null)
-    {
-        Destroy(activeParticle);
-        activeParticle = null;
-    }
-}
 
     // 이벤트 핸들러
     private void OnPetStatusChanged(PetStatus oldStatus, PetStatus newStatus)
     {
         // 상태 변경에 따른 추가 처리
-        switch (newStatus)
-        {
-            case PetStatus.Emergency:
-                // 긴급 상태일 때 경고 이모티콘
-                ShowEmotion(EmotionType.Scared, 2f);
-                break;
-            case PetStatus.Interacting:
-                // 상호작용 시작 시 기쁨 이모티콘
-                if (UnityEngine.Random.value < 0.5f)
-                    ShowEmotion(EmotionType.Happy, 2f);
-                break;
-        }
+        if (emotionController != null)
+            emotionController.OnStatusChanged(newStatus);
     }
     
     private void OnEmotionRequired(EmotionType emotionType)
     {
-        ShowEmotion(emotionType, 3f);
+        if (emotionController != null)
+            emotionController.OnEmotionRequired(emotionType);
     }
     
     private void OnNeedCritical(PetNeeds.NeedType needType)

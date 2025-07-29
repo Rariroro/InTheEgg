@@ -24,5 +24,127 @@ Unity 기반의 펫 시뮬레이션 게임으로, 다양한 동물 펫들이 AI�
 ### 개발 단계 현황
 - **Phase 1: 상태 시스템 정리 (안정성 최우선)** - 완료
 - **Phase 2: 욕구 시스템 분리** - 완료
+- **Phase 3: 행동 시스템 재구성** - 진행 예정
+- **Phase 4: 컨트롤러 단순화** - 진행 예정
+- **Phase 5: 이벤트 시스템 도입** - 진행 예정
 
-(이하 기존 내용 동일)
+### 최근 리팩토링 내용 (Phase 3)
+1. **PetController 책임 분리**
+   - PetEmotionController 생성: 감정 표현 관련 로직 분리
+   - 구식 속성 제거: 직접 속성 접근 대신 State 속성 사용
+   - 코드 라인 수: 852줄 → 더 깔끔한 구조
+
+2. **상태 접근 패턴 통일**
+   - 이전: `pet.isHolding`, `pet.isSelected`
+   - 이후: `pet.State.IsHolding`, `pet.State.IsSelected`
+   - 모든 Activity와 Controller 클래스에 적용
+
+## 프로젝트 구조
+
+### 핵심 디렉토리
+```
+Assets/
+├── 02_Scripts/
+│   ├── Pet/
+│   │   ├── Core/              # 핵심 펫 시스템
+│   │   │   ├── PetController.cs
+│   │   │   ├── PetState.cs
+│   │   │   └── PetNeeds.cs
+│   │   ├── Controllers/       # 기능별 컨트롤러
+│   │   │   ├── PetEmotionController.cs (새로 추가)
+│   │   │   ├── PetMovementController.cs
+│   │   │   └── ...
+│   │   ├── Actions/          # AI 행동 정의
+│   │   └── Interaction/      # 펫 간 상호작용
+│   └── UI/                   # UI 관련 스크립트
+└── Scenes/
+    ├── PetChoice.unity
+    └── PetVillage.unity
+```
+
+### 주요 시스템 설명
+
+#### 1. 상태 시스템 (PetState)
+```csharp
+public enum PetStatus {
+    Idle,           // 기본 상태
+    PlayerControl,  // 플레이어가 제어 중
+    Interacting,    // 다른 펫과 상호작용
+    Environmental,  // 환경과 상호작용
+    Emergency,      // 긴급 상태
+    Gathering       // 모이기 명령 수행 중
+}
+```
+
+#### 2. AI 행동 시스템
+- **우선순위 기반**: 0.5초마다 모든 가능한 행동의 우선순위 계산
+- **Action Pattern**: IPetAction 인터페이스 구현
+- **자율적 의사결정**: 욕구, 환경, 상태에 따른 동적 행동 선택
+
+#### 3. 상호작용 시스템
+- **BasePetInteraction**: 모든 상호작용의 기본 클래스
+- **다양한 상호작용**: 추격전, 경주, 놀이 등
+- **상태 자동 관리**: 상호작용 시작/종료 시 상태 자동 전환
+
+## 개발 가이드라인
+
+### 코드 컨벤션
+1. **상태 접근**: 항상 `pet.State.속성명` 패턴 사용
+2. **감정 표현**: `pet.ShowEmotion()` 메서드 사용 (PetEmotionController가 처리)
+3. **null 체크**: 펫 관련 작업 시 항상 null 체크 수행
+4. **코루틴 사용**: 시간이 걸리는 작업은 코루틴으로 구현
+
+### 새로운 Action 추가 시
+```csharp
+public class NewAction : IPetAction {
+    public float GetPriority(PetController pet) {
+        // State 속성 사용
+        if (pet.State.IsHolding) return 0f;
+        // 우선순위 계산 로직
+    }
+}
+```
+
+### 주의사항
+1. **직접 속성 접근 금지**: `pet.isHolding` (X) → `pet.State.IsHolding` (O)
+2. **PetController 수정 자제**: 기능 추가 시 별도 컨트롤러 생성 고려
+3. **상호작용 로직**: Interactions 폴더의 기존 구현은 수정하지 않음
+
+## 테스트 및 디버깅
+
+### 일반 명령어
+```bash
+# Unity 에디터 실행 (Mac)
+open -n -a "Unity Hub"
+
+# 프로젝트 빌드 (Unity CLI 필요)
+Unity -batchmode -quit -projectPath . -buildTarget StandaloneOSX
+```
+
+### 디버깅 팁
+1. **상태 확인**: PetState의 CurrentStatus 로그 출력
+2. **AI 디버깅**: UpdateAI() 메서드에 브레이크포인트 설정
+3. **상호작용 디버깅**: BasePetInteraction의 로그 확인
+
+## 향후 계획
+
+### Phase 3: 행동 시스템 재구성
+- Action → Activity 리네이밍
+- 책임 명확화
+- 새로운 인터페이스 설계
+
+### Phase 4: 컨트롤러 단순화
+- 각 컨트롤러가 하나의 기능만 담당
+- PetMovement, PetAnimator, PetSensor 등으로 분리
+
+### Phase 5: 이벤트 시스템
+- 컴포넌트 간 직접 참조 제거
+- 이벤트 버스 패턴 도입
+
+## 참고 문서
+- PET_SYSTEM_REFACTORING_PLAN.md: 전체 리팩토링 계획
+- Unity 공식 문서: https://docs.unity3d.com/
+
+---
+
+*이 문서는 Claude Code와의 효율적인 협업을 위해 작성되었습니다.*

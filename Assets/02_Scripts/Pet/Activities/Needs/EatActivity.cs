@@ -28,11 +28,11 @@ public class EatActivity : PetActivityAdapter
             return false;
             
         // 터치/홀드 상태에서는 먹이 찾기 중단
-        if (pet.isHolding || pet.isSelected)
+        if (pet.State.IsHolding || pet.State.IsSelected)
             return false;
             
         // 나무 위에 있다면 식사 불가
-        if (pet.isClimbingTree)
+        if (pet.State.IsClimbingTree)
             return false;
             
         // 이미 먹고 있거나 찾으러 가는 중이라면 계속
@@ -60,7 +60,7 @@ public class EatActivity : PetActivityAdapter
     // 기존 IPetAction 메서드 구현 (호환성)
     public override float GetPriority()
     {
-        if (pet.isHolding || pet.isSelected || pet.isClimbingTree)
+        if (pet.State.IsHolding || pet.State.IsSelected || pet.State.IsClimbingTree)
             return 0f;
             
         if (feedingController.IsEatingOrSeeking())
