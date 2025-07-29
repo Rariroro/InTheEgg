@@ -3,7 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using PetAIProperties = PetTraits;
 public class PetFeedingController : MonoBehaviour
 {
     private PetController petController;
@@ -258,7 +258,7 @@ public class PetFeedingController : MonoBehaviour
         }
         else
         {
-            petController.hunger = 0f; // 폴백
+            petController.Needs.SetHunger(0f); // 폴백
         }
         
         // 음식 섭취시 친밀도 증가
@@ -271,12 +271,12 @@ public class PetFeedingController : MonoBehaviour
         }
         else
         {
-            petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f); // 폴백
-            Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+            petController.Needs.SetAffection(Mathf.Clamp(petController.Needs.Affection + affectionIncrease, 0f, 100f)); // 폴백
+            Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
         }
         
         // 친밀도에 따른 감정 표현
-        if (petController.affection >= petController.GetHighAffectionThreshold())
+        if (petController.Needs.Affection >= petController.GetHighAffectionThreshold())
         {
             petController.ShowEmotion(EmotionType.Love, 3f);
         }
@@ -341,7 +341,7 @@ public class PetFeedingController : MonoBehaviour
         }
         else
         {
-            petController.hunger = 0f; // 폴백
+            petController.Needs.SetHunger(0f); // 폴백
         }
         
         // 환경 음식 섭취시 친밀도 증가
@@ -354,12 +354,12 @@ public class PetFeedingController : MonoBehaviour
         }
         else
         {
-            petController.affection = Mathf.Clamp(petController.affection + affectionIncrease, 0f, 100f); // 폴백
-            Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.affection:F1}");
+            petController.Needs.SetAffection(Mathf.Clamp(petController.Needs.Affection + affectionIncrease, 0f, 100f)); // 폴백
+            Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
         }
         
         // 친밀도에 따른 감정 표현
-        if (petController.affection >= petController.GetHighAffectionThreshold())
+        if (petController.Needs.Affection >= petController.GetHighAffectionThreshold())
         {
             petController.ShowEmotion(EmotionType.Love, 3f);
         }

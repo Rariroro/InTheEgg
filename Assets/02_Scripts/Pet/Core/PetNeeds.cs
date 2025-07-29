@@ -18,9 +18,9 @@ public class PetNeeds : MonoBehaviour
     
     [Header("욕구 상태 (실시간 값)")]
     [Range(0, 100)]
-    [SerializeField] private float hunger = 50f;       // 배고픔 (0-100)
+    [SerializeField] private float hunger = 0f;       // 배고픔 (0-100)
     [Range(0, 100)]
-    [SerializeField] private float sleepiness = 30f;   // 졸림 (0-100)
+    [SerializeField] private float sleepiness = 0f;   // 졸림 (0-100)
     [Range(0, 100)]
     [SerializeField] private float affection = 50f;    // 친밀도 (0-100)
     
@@ -97,19 +97,7 @@ public class PetNeeds : MonoBehaviour
     {
         petController = controller;
         
-        // 기존 PetController의 값들을 가져와서 초기화
-        if (controller != null)
-        {
-            hunger = controller.hunger;
-            sleepiness = controller.sleepiness;
-            affection = controller.affection;
-            
-            hungerIncreaseRate = controller.hungerIncreaseRate;
-            sleepinessIncreaseRate = controller.sleepinessIncreaseRate;
-            affectionDecreaseRateWhenHungry = controller.affectionDecreaseRateWhenHungry;
-            hungerThresholdForAffectionDecrease = controller.hungerThresholdForAffectionDecrease;
-            lowAffectionThreshold = controller.lowAffectionThreshold;
-        }
+        // 기본값으로 초기화 (이제는 PetNeeds 자체에서 관리)
         
         isInitialized = true;
     }

@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class PetSleepingController : MonoBehaviour
 {
     private PetController petController;
@@ -48,9 +48,9 @@ public class PetSleepingController : MonoBehaviour
         if (IsSleepingOrSeeking()) return true; // 이미 잠을 자러 가는 중
 
         // 졸음 수치 증가 (상태 업데이트는 Action에서 담당하는게 더 좋지만, 편의상 여기에 유지)
-        // petController.sleepiness = Mathf.Clamp(petController.sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
+        // petController.Needs.Sleepiness = Mathf.Clamp(petController.Needs.Sleepiness + Time.deltaTime * sleepIncreaseRate, 0, 100);
 
-        if (petController.sleepiness < 70f) return false;
+        if (petController.Needs.Sleepiness < 70f) return false;
 
         // 'Tree' 서식지 펫 로직
         if (petController.habitat == PetAIProperties.Habitat.Tree)
@@ -71,7 +71,7 @@ public class PetSleepingController : MonoBehaviour
 
         // 강제 수면 체크
         float personalityThreshold = GetPersonalityForceSleepThreshold();
-        if (petController.sleepiness >= personalityThreshold && targetSleepingArea == null && !isSeekingTreeToSleep)
+        if (petController.Needs.Sleepiness >= personalityThreshold && targetSleepingArea == null && !isSeekingTreeToSleep)
         {
             StartCoroutine(ForceSleepAtCurrentLocation());
             return true; // 강제로 잠
@@ -100,7 +100,7 @@ public class PetSleepingController : MonoBehaviour
     private bool HandleTreePetSleeping()
     {
         // 졸음이 70%를 넘었을 때 행동 개시
-        if (petController.sleepiness > 70f)
+        if (petController.Needs.Sleepiness > 70f)
         {
             if (petController.isClimbingTree)
             {
@@ -116,7 +116,7 @@ public class PetSleepingController : MonoBehaviour
 
         // 나무를 못 찾은 상태에서 졸음이 한계에 도달한 경우
         float personalityThreshold = GetPersonalityForceSleepThreshold();
-        if (petController.sleepiness >= personalityThreshold && !petController.isClimbingTree && !isSeekingTreeToSleep)
+        if (petController.Needs.Sleepiness >= personalityThreshold && !petController.isClimbingTree && !isSeekingTreeToSleep)
         {
             Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
             StartCoroutine(ForceSleepAtCurrentLocation());
@@ -171,7 +171,7 @@ public class PetSleepingController : MonoBehaviour
             }
             else
             {
-                petController.sleepiness = 0f; // 폴백
+                petController.Needs.SetSleepiness(0f); // 폴백
             }
             petController.ShowEmotion(EmotionType.Happy, 3f);
 
@@ -284,7 +284,7 @@ public class PetSleepingController : MonoBehaviour
             }
             else
             {
-                petController.sleepiness = 0f; // 폴백
+                petController.Needs.SetSleepiness(0f); // 폴백
             }
             petController.ShowEmotion(EmotionType.Happy, 3f);
         }
@@ -295,11 +295,11 @@ public class PetSleepingController : MonoBehaviour
             {
                 // ReduceSleepiness 메서드가 없으므로 직접 계산
                 float currentSleepiness = petController.Needs.Sleepiness;
-                petController.sleepiness = Mathf.Max(0f, currentSleepiness - 60f);
+                petController.Needs.SetSleepiness(Mathf.Max(0f, currentSleepiness - 60f));
             }
             else
             {
-                petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f); // 폴백
+                petController.Needs.SetSleepiness(Mathf.Max(0f, petController.Needs.Sleepiness - 60f)); // 폴백
             }
             petController.ShowEmotion(EmotionType.Happy, 3f); // 불편하게 잤어도 일단은 감정 표시
         }
@@ -350,7 +350,7 @@ public class PetSleepingController : MonoBehaviour
         animController.StopContinuousAnimation();
 
         // 불완전 회복
-        petController.sleepiness = Mathf.Max(0f, petController.sleepiness - 60f);
+        petController.Needs.SetSleepiness(Mathf.Max(0f, petController.Needs.Sleepiness - 60f));
         // ▼▼▼ [수정] 잠에서 깬 후에는 'Happy' 감정 표시 ▼▼▼
         petController.ShowEmotion(EmotionType.Happy, 3f);
 

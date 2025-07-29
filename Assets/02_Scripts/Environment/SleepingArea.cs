@@ -1,6 +1,6 @@
 // SleepingArea.cs - 새로운 스크립트
 using UnityEngine;
-
+using PetAIProperties = PetTraits;
 /// <summary>
 /// 펫들의 수면 공간을 정의하는 컴포넌트입니다.
 /// 이 공간이 어떤 서식지(Habitat)에 해당하는지 지정합니다.

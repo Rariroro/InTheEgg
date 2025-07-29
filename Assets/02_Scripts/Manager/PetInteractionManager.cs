@@ -397,8 +397,8 @@ public class PetInteractionManager : MonoBehaviour
         // =================================================================
         // ★★★★★ [요청 사항 반영] ★★★★★
         // 두 펫 중 하나라도 배고프거나(70 이상) 졸리면(70 이상) 상호작용을 시작하지 않습니다.
-        if (pet1.hunger >= 70f || pet1.sleepiness >= 70f ||
-            pet2.hunger >= 70f || pet2.sleepiness >= 70f)
+        if (pet1.Needs.Hunger >= 70f || pet1.Needs.Sleepiness >= 70f ||
+            pet2.Needs.Hunger >= 70f || pet2.Needs.Sleepiness >= 70f)
         {
             return; // 상호작용 체크를 즉시 중단합니다.
         }

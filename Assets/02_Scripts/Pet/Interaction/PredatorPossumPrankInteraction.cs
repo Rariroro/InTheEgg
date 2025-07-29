@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class PredatorPossumPrankInteraction : BasePetInteraction
 {
     // 상호작용 이름 변경

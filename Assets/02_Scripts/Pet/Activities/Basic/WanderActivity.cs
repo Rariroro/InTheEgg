@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 /// <summary>
 /// 펫의 배회 활동을 담당하는 클래스
 /// 기존 WanderAction을 개선하여 더 명확한 구조를 제공합니다.

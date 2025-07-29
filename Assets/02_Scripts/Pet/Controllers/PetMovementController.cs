@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using PetAIProperties = PetTraits;
 
 /// <summary>
 /// 펫의 이동 관련 공용 유틸리티 메서드들을 제공합니다.

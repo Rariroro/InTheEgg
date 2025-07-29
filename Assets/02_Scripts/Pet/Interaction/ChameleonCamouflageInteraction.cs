@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class ChameleonCamouflageInteraction : BasePetInteraction
 {
     public override string InteractionName => "ChameleonCamouflage";

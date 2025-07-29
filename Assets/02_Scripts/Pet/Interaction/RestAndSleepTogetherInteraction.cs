@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class RestAndSleepTogetherInteraction : BasePetInteraction
 {
     public override string InteractionName => "RestAndSleepTogether";

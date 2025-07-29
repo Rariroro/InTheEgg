@@ -38,7 +38,7 @@ public class SleepActivity : PetActivityAdapter
             return true;
             
         // 졸림 확인 (70 이상)
-        return needs != null ? needs.IsSleepy : pet.sleepiness >= 70f;
+        return needs != null ? needs.IsSleepy : pet.Needs.Sleepiness >= 70f;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -51,7 +51,7 @@ public class SleepActivity : PetActivityAdapter
             return 2.0f;
             
         // 졸림 수치에 비례하여 우선순위 증가
-        float sleepiness = needs != null ? needs.Sleepiness : pet.sleepiness;
+        float sleepiness = needs != null ? needs.Sleepiness : pet.Needs.Sleepiness;
         // 기본 우선순위 0.2f를 부여하고, 졸음 수치에 따라 점진적으로 증가
         return 0.2f + ((sleepiness - 70f) / 30f); // 0.2 ~ 1.2
     }
@@ -67,7 +67,7 @@ public class SleepActivity : PetActivityAdapter
         if (sleepingController.IsSleepingOrSeeking())
             return 2.0f;
             
-        float currentSleepiness = pet.Needs != null ? pet.Needs.Sleepiness : pet.sleepiness;
+        float currentSleepiness = pet.Needs != null ? pet.Needs.Sleepiness : 30f;
         if (currentSleepiness >= 70f)
             return 0.2f + ((currentSleepiness - 70f) / 30f);
             
@@ -76,7 +76,7 @@ public class SleepActivity : PetActivityAdapter
     
     public override void OnEnter()
     {
-        Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.sleepiness:F1})");
+        Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.Needs.Sleepiness:F1})");
         isPreparingToSleep = sleepingController.TryStartSleepingSequence();
         searchTimer = 0f;
     }

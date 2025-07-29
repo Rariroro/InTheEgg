@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using PetAIProperties = PetTraits;
 
 /// <summary>
 /// 펫의 물 속 행동을 전담하는 컨트롤러

@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class PredatorMoleInteraction : BasePetInteraction
 {
     public override string InteractionName => "PredatorMoleHunt";

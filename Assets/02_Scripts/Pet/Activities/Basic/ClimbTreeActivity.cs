@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using PetAIProperties = PetTraits;
 /// <summary>
 /// 펫의 나무 오르기 활동을 담당하는 클래스
 /// </summary>
@@ -34,8 +34,8 @@ public class ClimbTreeActivity : PetActivityAdapter
             return false;
             
         // 다른 중요한 행동(식사, 수면 등)을 하면 실행하지 않음
-        float hunger = needs != null ? needs.Hunger : pet.hunger;
-        float sleepiness = needs != null ? needs.Sleepiness : pet.sleepiness;
+        float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
+        float sleepiness = needs != null ? needs.Sleepiness : pet.Needs.Sleepiness;
         if (hunger > 70f || sleepiness > 70f)
             return false;
             
@@ -77,7 +77,7 @@ public class ClimbTreeActivity : PetActivityAdapter
             return 0f;
         
         // 다른 중요한 행동(식사, 수면 등)을 하면 실행하지 않음
-        if (pet.hunger > 70f || pet.sleepiness > 70f)
+        if (pet.Needs.Hunger > 70f || pet.Needs.Sleepiness > 70f)
         {
             return 0f;
         }

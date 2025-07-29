@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI; // NavMeshAgent 사용을 위해 추가
-
+using PetAIProperties = PetTraits;
 public class EnvironmentPetAttractor : MonoBehaviour
 {
     [Header("환경별 펫 유인 설정")]

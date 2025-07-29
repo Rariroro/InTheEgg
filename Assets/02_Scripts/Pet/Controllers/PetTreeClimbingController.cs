@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 using UnityEngine;
 using UnityEngine.AI;
-
+using PetAIProperties = PetTraits;
 public class PetTreeClimbingController : MonoBehaviour
 {
     private PetController petController;
@@ -33,7 +33,7 @@ public class PetTreeClimbingController : MonoBehaviour
     {
 
         // ★★★ 추가: 배고플 때는 나무에 오르지 않음
-        if (petController.hunger > 70f)
+        if (petController.Needs.Hunger > 70f)
         {
             return;
         }
@@ -186,8 +186,8 @@ private IEnumerator RestOnTree()
     /// </summary>
     private bool ShouldInterruptTreeRest()
     {
-        return petController.hunger > 70f ||
-               petController.sleepiness > 90f || // 나무에서 졸다가 바로 잠들지는 않도록
+        return petController.Needs.Hunger > 70f ||
+               petController.Needs.Sleepiness > 90f || // 나무에서 졸다가 바로 잠들지는 않도록
                petController.isGathering ||
                petController.isHolding;
     }

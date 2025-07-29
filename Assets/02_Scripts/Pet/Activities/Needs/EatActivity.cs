@@ -40,7 +40,7 @@ public class EatActivity : PetActivityAdapter
             return true;
             
         // 배고픔 확인 (70 이상)
-        return needs != null ? needs.IsHungry : pet.hunger >= 70f;
+        return needs != null ? needs.IsHungry : pet.Needs.Hunger >= 70f;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -53,7 +53,7 @@ public class EatActivity : PetActivityAdapter
             return 2.0f;
             
         // 배고픔 수치에 비례하여 우선순위 증가
-        float hunger = needs != null ? needs.Hunger : pet.hunger;
+        float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
         return (hunger - 70f) / 30f; // 0.0 ~ 1.0
     }
     
@@ -66,7 +66,7 @@ public class EatActivity : PetActivityAdapter
         if (feedingController.IsEatingOrSeeking())
             return 2.0f;
             
-        float currentHunger = pet.Needs != null ? pet.Needs.Hunger : pet.hunger;
+        float currentHunger = pet.Needs != null ? pet.Needs.Hunger : 50f;
         if (currentHunger >= 70f)
             return (currentHunger - 70f) / 30f;
             
@@ -75,7 +75,7 @@ public class EatActivity : PetActivityAdapter
     
     public override void OnEnter()
     {
-        Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.hunger:F1})");
+        Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.Needs.Hunger:F1})");
         searchTimer = 0f;
         
         // 즉시 음식 탐색 시작

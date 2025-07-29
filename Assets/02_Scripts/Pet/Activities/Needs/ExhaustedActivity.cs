@@ -31,7 +31,7 @@ public class ExhaustedActivity : PetActivityAdapter
             return false;
             
         // 배고픔 수치가 100 이상일 때 시작
-        float hunger = needs != null ? needs.Hunger : pet.hunger;
+        float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
         return hunger >= 100f;
     }
     
@@ -52,7 +52,7 @@ public class ExhaustedActivity : PetActivityAdapter
             return 0f;
             
         // 배고픔 수치가 100 이상이면 최상위 우선순위
-        return (pet.hunger >= 100f) ? 50.0f : 0f;
+        return (pet.Needs.Hunger >= 100f) ? 50.0f : 0f;
     }
     
     public override void OnEnter()

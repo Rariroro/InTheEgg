@@ -1,6 +1,6 @@
 using UnityEngine;
 using System.Collections;
-
+using PetAIProperties = PetTraits;
 /// <summary>
 /// 꿀 지역에서 벌떼가 펫을 공격하는 위험 지역을 관리하는 컴포넌트
 /// FeedingArea와 함께 사용되어 꿀을 먹으려는 펫에게 벌 공격 이벤트를 발생시킵니다.

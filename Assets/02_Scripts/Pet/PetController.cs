@@ -6,84 +6,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public static class PetAIProperties
-{
-    public enum Personality { Shy, Brave, Lazy, Playful }
-
-    // public enum DietType { Carnivore, Herbivore, Omnivore } // << 기존 DietType 주석 처리 또는 삭제
-
-    // ▼▼▼▼▼ [새로운 부분] Flags 열거형으로 식성 재정의 ▼▼▼▼▼
-    [Flags] // 여러 값을 가질 수 있도록 Flags 특성 추가
-    public enum DietaryFlags
-    {
-        None = 0, // 아무것도 먹지 않음
-        SeedsAndGrains = 1 << 0, // 씨앗 및 곡물 (값: 1)
-        FruitsAndVegetables = 1 << 1, // 과일 및 채소 (값: 2)
-        Grass = 1 << 2, // 풀(초목) (값: 4)
-        Honey = 1 << 3, // 꿀 (값: 8)
-        Meat = 1 << 4, // 고기(육류) (값: 16)
-        Fish = 1 << 5, // 생선(어류) (값: 32)
-
-        // (선택) 조합 예시
-        Omnivore_General = SeedsAndGrains | FruitsAndVegetables | Meat | Fish, // 일반적인 잡식
-        Herbivore_General = FruitsAndVegetables | Grass | SeedsAndGrains // 일반적인 초식
-    }
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-    public enum Habitat { Water, Forest, Field, Fence, Tree }
-}
+// PetAIProperties는 PetTraits로 이동되었습니다.
+// 기존 코드와의 호환성을 위해 별칭(alias) 제공
+using PetAIProperties = PetTraits;
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.
 public partial class PetController : MonoBehaviour
 {
-    [Header("Pet Movement & Animation Settings")]
-    public float speed = 3.5f;
-    public float angularSpeed = 120f;
-    public float acceleration = 8f;
-    public float stoppingDistance = 0.5f;
-    public float rotationSpeed = 5f;
-    public float smoothTime = 0.3f;
+    [Header("Pet Settings")]
+    [SerializeField] private PetProfile profile = new PetProfile();
+    [SerializeField] private MovementSettings movement = new MovementSettings();
+    
+    // 공개 프로퍼티로 외부 접근 허용
+    public PetProfile Profile => profile;
+    public MovementSettings Movement => movement;
+    
+    // === 기존 코드와의 호환성을 위한 프로퍼티들 ===
+    // Phase 2에서 제거 예정
+    public float speed => movement.walkSpeed;
+    public float angularSpeed => movement.angularSpeed;
+    public float acceleration => movement.acceleration;
+    public float stoppingDistance => movement.stoppingDistance;
+    public float rotationSpeed => movement.rotationSmoothness;
+    public float smoothTime => movement.animationSmoothTime;
+    
+    public PetTraits.Personality personality => profile.personality;
+    public PetTraits.DietaryFlags diet => profile.diet;
+    public PetTraits.Habitat habitat => profile.habitat;
+    public float treeClimbChance => profile.treeClimbChance;
+    public float waterSinkDepth => profile.waterSinkDepth;
 
-    [Header("Pet Properties")]
-    public PetAIProperties.Personality personality = PetAIProperties.Personality.Shy;
-    // ▼▼▼▼▼ [새로운 부분] 새로운 식성 변수 추가 ▼▼▼▼▼
-    [Tooltip("펫이 먹는 음식의 종류를 중복 선택할 수 있습니다.")]
-    public PetAIProperties.DietaryFlags diet = PetAIProperties.DietaryFlags.None;
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    public PetAIProperties.Habitat habitat = PetAIProperties.Habitat.Forest;
+    // 욕구는 Needs 프로퍼티를 통해 직접 접근
+    // 예: petController.Needs.Hunger, petController.Needs.Affection
 
-
-    // ▼▼▼ [수정된 부분] 이 아래에 새로운 변수를 추가합니다. ▼▼▼
-    [Tooltip("서식지가 'Tree'인 펫이 평소에 나무에 오를 확률 (0.0 ~ 1.0 사이 값)")]
-    [Range(0f, 1f)]
-    public float treeClimbChance = 0.1f; // 기본값 10%
-                                         // ▲▲▲ [수정된 부분] 여기까지 추가합니다. ▲▲▲
-                                         // ▼▼▼▼▼ [이 부분 추가] 펫마다 다른 물 깊이를 설정하기 위한 변수 ▼▼▼▼▼
-    [Tooltip("펫이 물에 잠기는 깊이를 설정합니다. 값이 클수록 더 깊이 잠깁니다.")]
-    [Range(0f, 5f)]
-    public float waterSinkDepth = 1.0f;
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-    // 욕구 관련 프로퍼티 - PetNeeds로 완전 위임
-    public float affection
-    {
-        get => petNeeds != null ? petNeeds.Affection : 50f;
-        set { if (petNeeds != null) petNeeds.SetAffection(value); }
+    // 기존 코드와의 호환성을 위한 프로퍼티
+    public string petName 
+    { 
+        get => profile.name; 
+        set => profile.name = value;
     }
-    public float hunger 
-    {
-        get => petNeeds != null ? petNeeds.Hunger : 50f;
-        set { if (petNeeds != null) petNeeds.SetHunger(value); }
+    public DateTime birthday 
+    { 
+        get => profile.birthday; 
+        set => profile.birthday = value;
     }
-    public float sleepiness
-    {
-        get => petNeeds != null ? petNeeds.Sleepiness : 30f;
-        set { if (petNeeds != null) petNeeds.SetSleepiness(value); }
-    }
-
-    [Header("Pet Information")]
-    public string petName = "Buddy";
-    public DateTime birthday = default;
   // ▼▼▼ [수정] 이 부분을 추가합니다 ▼▼▼
     [Tooltip("감정 표현(이모티콘, 파티클)이 생성될 기준 위치입니다. 비워두면 자식 중 'EmotionOrigin'을 자동으로 찾습니다.")]
     public Transform emotionOrigin;
@@ -92,9 +58,6 @@ public partial class PetController : MonoBehaviour
     [HideInInspector] public NavMeshAgent agent;
     [HideInInspector] public Animator animator;
     [HideInInspector] public Transform petModelTransform;
-    public bool isGathered => petState.IsGathered;
-    public bool isGathering => petState.IsGathering;
-    public int gatherCommandVersion => petState.GatherCommandVersion;
     [HideInInspector] public bool isGatheringAnimationOverride = false; // 이것만 별도 유지 (애니메이션 전용)
 
     [HideInInspector] public float baseSpeed;
@@ -124,58 +87,39 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
     [SerializeField] private bool manuallySetPetType = false; // 수동 설정 여부 체크 필드 추가
 
-    // ★ [Phase 4] 호환성을 위한 프로퍼티 (기존 플래그를 PetState로 리다이렉트)
+    // 자주 사용되는 상태는 편의를 위해 일부 유지
+    public bool isSelected => petState.IsSelected;
+    public bool isHolding => petState.IsHolding;
     public bool isInteracting => petState.IsInteracting;
-    public PetController interactionPartner => petState.InteractionPartner;
     public bool isInWater => petState.IsInWater;
+    public bool isClimbingTree => petState.IsClimbingTree;
+    public bool isGathered => petState.IsGathered;
+    public bool isGathering => petState.IsGathering;
+    public bool isBeingAttackedByBees => petState.IsBeingAttacked;
+    public bool isExhausted => petState.IsExhausted;
+    public bool isActionLocked => petState.IsActionLocked;
+    public bool isAnimationLocked => petState.IsAnimationLocked;
+    public int gatherCommandVersion => petState.GatherCommandVersion;
+    public Vector3 gatherTargetPosition => petState.GatherTargetPosition;
+    public PetController interactionPartner => petState.InteractionPartner;
+    public Transform currentTree => petState.CurrentTree;
+    public BasePetInteraction currentInteractionLogic => petState.CurrentInteractionLogic;
+    public bool isAttractedToEnvironment => petState.IsAttractedToEnvironment;
+    public Vector3 environmentTargetPosition => petState.EnvironmentTargetPosition;
+    public Vector3 beeAttackSource => petState.BeeAttackSource;
+    public float beeAttackStartTime => petState.BeeAttackStartTime;
+    
+    // 나무 올라가는 높이는 MovementSettings로 이동 가능하지만, 현재는 유지
+    [HideInInspector] public float climbHeight = 5f;
+    
+    // 자주 변경되는 값들은 setter도 유지
     public float waterDepthOffset 
     { 
         get => petState.WaterDepthOffset;
         set => petState.SetWaterDepthOffset(value);
     }
-    public bool isClimbingTree => petState.IsClimbingTree;
-    public Transform currentTree => petState.CurrentTree;
-    [HideInInspector] public float climbHeight = 5f; // 나무 올라가는 높이 (이것만 유지)
-    public bool isSelected => petState.IsSelected;
-    public bool isHolding => petState.IsHolding;
-    public bool isAnimationLocked => petState.IsAnimationLocked;
-    public bool isActionLocked => petState.IsActionLocked;
-    public Vector3 gatherTargetPosition => petState.GatherTargetPosition;
-    public BasePetInteraction currentInteractionLogic => petState.CurrentInteractionLogic;
-    public bool isAttractedToEnvironment => petState.IsAttractedToEnvironment;
-    public Vector3 environmentTargetPosition => petState.EnvironmentTargetPosition;
-    public bool isBeingAttackedByBees => petState.IsBeingAttacked;
-    public Vector3 beeAttackSource => petState.BeeAttackSource;
-    public float beeAttackStartTime => petState.BeeAttackStartTime;
 
-    // Pet Needs Settings - PetNeeds로 이동됨
-    public float hungerIncreaseRate
-    {
-        get => petNeeds != null ? petNeeds.HungerIncreaseRate : 0.2f;
-        set { if (petNeeds != null) petNeeds.HungerIncreaseRate = value; }
-    }
-    public float sleepinessIncreaseRate
-    {
-        get => petNeeds != null ? petNeeds.SleepinessIncreaseRate : 0.1f;
-        set { if (petNeeds != null) petNeeds.SleepinessIncreaseRate = value; }
-    }
-    
-    // Affection Settings - PetNeeds로 이동됨
-    public float hungerThresholdForAffectionDecrease
-    {
-        get => petNeeds != null ? petNeeds.HungerThresholdForAffectionDecrease : 80f;
-        set { if (petNeeds != null) petNeeds.HungerThresholdForAffectionDecrease = value; }
-    }
-    public float affectionDecreaseRateWhenHungry
-    {
-        get => petNeeds != null ? petNeeds.AffectionDecreaseRateWhenHungry : 0.5f;
-        set { if (petNeeds != null) petNeeds.AffectionDecreaseRateWhenHungry = value; }
-    }
-    public float lowAffectionThreshold
-    {
-        get => petNeeds != null ? petNeeds.LowAffectionThreshold : 20f;
-        set { if (petNeeds != null) petNeeds.LowAffectionThreshold = value; }
-    }
+    // 욕구 설정은 Needs 프로퍼티를 통해 직접 접근
     [SerializeField] private float highAffectionThreshold = 80f;
     
     [Header("Food Affection Settings")] // 음식 관련 친밀도 설정
@@ -187,8 +131,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private float environmentFoodAffectionMin = 3f;
     [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
     [SerializeField] private float environmentFoodAffectionMax = 7f;
-
-    public bool isExhausted => petState.IsExhausted;
     
     // ★★★ [Phase 4] 통합된 상태 관리 시스템 ★★★
     [Header("State Management")]
@@ -226,7 +168,12 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
     private void Awake()
     {
-        birthday = DateTime.Now;
+        // 새로운 구조 초기화
+        if (profile == null) profile = new PetProfile();
+        if (movement == null) movement = new MovementSettings();
+        
+        // 프로필 초기화
+        profile.birthday = DateTime.Now;
   // ▼▼▼ [수정] 이 부분을 Awake() 메서드 상단에 추가합니다. ▼▼▼
 
         // 1. EmotionOrigin 자동 탐색
@@ -247,10 +194,10 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
         {
-            agent.speed = speed;
-            agent.angularSpeed = angularSpeed;
-            agent.acceleration = acceleration;
-            agent.stoppingDistance = stoppingDistance;
+            agent.speed = movement.walkSpeed;
+            agent.angularSpeed = movement.angularSpeed;
+            agent.acceleration = movement.acceleration;
+            agent.stoppingDistance = movement.stoppingDistance;
 
             // ★ 추가 설정 - 회전 관련 설정 개선
             agent.updateRotation = false;  // 펫 모델의 회전은 직접 제어
@@ -258,10 +205,10 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             agent.updateUpAxis = false;    // Y축 회전만 필요
 
             // 기본 값 저장
-            baseSpeed = speed;
-            baseAngularSpeed = angularSpeed;
-            baseAcceleration = acceleration;
-            baseStoppingDistance = stoppingDistance;
+            baseSpeed = movement.walkSpeed;
+            baseAngularSpeed = movement.angularSpeed;
+            baseAcceleration = movement.acceleration;
+            baseStoppingDistance = movement.stoppingDistance;
         }
         
         // Rigidbody 확인 및 추가 (Trigger 충돌 감지를 위해 필요)

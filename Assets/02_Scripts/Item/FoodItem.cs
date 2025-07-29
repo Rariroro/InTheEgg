@@ -1,6 +1,6 @@
 // FoodItem.cs - 레이어 시스템에 맞게 수정된 버전
 using UnityEngine;
-
+using PetAIProperties = PetTraits;
 /// <summary>
 /// 드롭된 음식 아이템을 관리하는 컴포넌트입니다.
 /// 이제 아이템의 음식 종류 데이터만 가지고 있으며, 레이어를 통해 탐지됩니다.
