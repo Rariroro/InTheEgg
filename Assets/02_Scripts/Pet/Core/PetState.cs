@@ -102,6 +102,10 @@ public class PetState
     public int GatherCommandVersion => gatherCommandVersion;
     public float WaterDepthOffset => waterDepthOffset;
     
+    // 추가 프로퍼티들
+    public bool IsBeingAttackedByBees => isBeingAttacked; // BeeHazardZone 호환성
+    public BasePetInteraction InteractionLogic => currentInteractionLogic; // PetInputController 호환성
+    
     /// <summary>
     /// 상태 전환 시도
     /// </summary>
@@ -109,7 +113,7 @@ public class PetState
     {
         if (!CanTransition(currentStatus, newStatus))
         {
-            Debug.LogWarning($"[PetState] {currentStatus}에서 {newStatus}로 전환할 수 없습니다.");
+            PetDebug.LogWarning($"{currentStatus}에서 {newStatus}로 전환할 수 없습니다.");
             return false;
         }
         
@@ -117,7 +121,7 @@ public class PetState
         currentStatus = newStatus;
         OnStatusChanged?.Invoke(previousStatus, newStatus);
         
-        Debug.Log($"[PetState] 상태 전환: {previousStatus} → {newStatus}");
+        PetDebug.LogStateChange("Pet", previousStatus.ToString(), newStatus.ToString());
         return true;
     }
     

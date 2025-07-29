@@ -25,7 +25,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 환경에 이끌리는 상태일 때만 시작 가능
-        return pet.isAttractedToEnvironment;
+        return pet.State.IsAttractedToEnvironment;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -40,7 +40,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     // 기존 IPetAction 메서드 구현 (호환성)
     public override float GetPriority()
     {
-        return pet.isAttractedToEnvironment ? 15.0f : 0f;
+        return pet.State.IsAttractedToEnvironment ? 15.0f : 0f;
     }
     
     public override void OnEnter()
@@ -54,7 +54,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경에 이끌려 모이기 시작");
         
         // 나무에서 내려오기
-        if (pet.isClimbingTree)
+        if (pet.State.IsClimbingTree)
         {
             var treeClimber = pet.GetComponent<PetTreeClimbingController>();
             if (treeClimber != null)
@@ -68,7 +68,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         {
             agent.speed = pet.baseSpeed * SPEED_MULTIPLIER;
             agent.acceleration = pet.baseAcceleration * SPEED_MULTIPLIER;
-            agent.SetDestination(pet.environmentTargetPosition);
+            agent.SetDestination(pet.State.EnvironmentTargetPosition);
             agent.isStopped = false;
             
             if (pet.animator) 
@@ -120,7 +120,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         {
             agent.isStopped = true;
             // 환경의 중심을 바라보게 함
-            Vector3 lookDirection = (pet.environmentTargetPosition - pet.transform.position).normalized;
+            Vector3 lookDirection = (pet.State.EnvironmentTargetPosition - pet.transform.position).normalized;
             lookDirection.y = 0;
             if (lookDirection != Vector3.zero)
             {

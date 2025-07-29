@@ -2,13 +2,8 @@
 // 공통 열거형은 별도 static 클래스에 모아둡니다.
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-
-// PetAIProperties는 PetTraits로 이동되었습니다.
-// 기존 코드와의 호환성을 위해 별칭(alias) 제공
-using PetAIProperties = PetTraits;
 
 // PetController는 각 기능별 컴포넌트를 초기화하고 업데이트를 관리합니다.
 public partial class PetController : MonoBehaviour
@@ -22,34 +17,17 @@ public partial class PetController : MonoBehaviour
     public MovementSettings Movement => movement;
     
     // === 기존 코드와의 호환성을 위한 프로퍼티들 ===
-    // Phase 2에서 제거 예정
-    public float speed => movement.walkSpeed;
-    public float angularSpeed => movement.angularSpeed;
-    public float acceleration => movement.acceleration;
-    public float stoppingDistance => movement.stoppingDistance;
-    public float rotationSpeed => movement.rotationSmoothness;
-    public float smoothTime => movement.animationSmoothTime;
-    
-    public PetTraits.Personality personality => profile.personality;
-    public PetTraits.DietaryFlags diet => profile.diet;
-    public PetTraits.Habitat habitat => profile.habitat;
-    public float treeClimbChance => profile.treeClimbChance;
-    public float waterSinkDepth => profile.waterSinkDepth;
-
-    // 욕구는 Needs 프로퍼티를 통해 직접 접근
-    // 예: petController.Needs.Hunger, petController.Needs.Affection
-
-    // 기존 코드와의 호환성을 위한 프로퍼티
+    // 자주 사용되는 것들만 유지
     public string petName 
     { 
         get => profile.name; 
         set => profile.name = value;
     }
-    public DateTime birthday 
-    { 
-        get => profile.birthday; 
-        set => profile.birthday = value;
-    }
+    public PetTraits.Personality personality => profile.personality;
+    public PetTraits.DietaryFlags diet => profile.diet;
+    public PetTraits.Habitat habitat => profile.habitat;
+    public float treeClimbChance => profile.treeClimbChance;
+    public float waterSinkDepth => profile.waterSinkDepth;
   // ▼▼▼ [수정] 이 부분을 추가합니다 ▼▼▼
     [Tooltip("감정 표현(이모티콘, 파티클)이 생성될 기준 위치입니다. 비워두면 자식 중 'EmotionOrigin'을 자동으로 찾습니다.")]
     public Transform emotionOrigin;
@@ -60,10 +38,15 @@ public partial class PetController : MonoBehaviour
     [HideInInspector] public Transform petModelTransform;
     [HideInInspector] public bool isGatheringAnimationOverride = false; // 이것만 별도 유지 (애니메이션 전용)
 
-    [HideInInspector] public float baseSpeed;
-    [HideInInspector] public float baseAngularSpeed;
-    [HideInInspector] public float baseAcceleration;
-    [HideInInspector] public float baseStoppingDistance;
+    // baseSpeed 등은 Movement 프로퍼티를 통해 접근
+    [System.Obsolete("Use Movement.walkSpeed instead")]
+    public float baseSpeed => movement.walkSpeed;
+    [System.Obsolete("Use Movement.angularSpeed instead")]
+    public float baseAngularSpeed => movement.angularSpeed;
+    [System.Obsolete("Use Movement.acceleration instead")]
+    public float baseAcceleration => movement.acceleration;
+    [System.Obsolete("Use Movement.stoppingDistance instead")]
+    public float baseStoppingDistance => movement.stoppingDistance;
 
     // 각 기능별 컨트롤러 참조
     private PetMovementController movementController;
@@ -87,37 +70,31 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
     [SerializeField] private bool manuallySetPetType = false; // 수동 설정 여부 체크 필드 추가
 
-    // 자주 사용되는 상태는 편의를 위해 일부 유지
+    // ★ 호환성 프로퍼티 - 새 코드는 State 프로퍼티 사용 권장
+    // 예: petController.State.IsSelected 대신 petController.isSelected
+    [System.Obsolete("Use State.IsSelected instead")]
     public bool isSelected => petState.IsSelected;
+    [System.Obsolete("Use State.IsHolding instead")]
     public bool isHolding => petState.IsHolding;
+    [System.Obsolete("Use State.IsInteracting instead")]
     public bool isInteracting => petState.IsInteracting;
+    [System.Obsolete("Use State.IsInWater instead")]
     public bool isInWater => petState.IsInWater;
+    [System.Obsolete("Use State.IsClimbingTree instead")]
     public bool isClimbingTree => petState.IsClimbingTree;
-    public bool isGathered => petState.IsGathered;
+    [System.Obsolete("Use State.IsGathering instead")]
     public bool isGathering => petState.IsGathering;
-    public bool isBeingAttackedByBees => petState.IsBeingAttacked;
-    public bool isExhausted => petState.IsExhausted;
+    [System.Obsolete("Use State.IsActionLocked instead")]
     public bool isActionLocked => petState.IsActionLocked;
+    
+    // 사용 빈도가 높은 필수 프로퍼티들만 유지
+    public bool isExhausted => petState.IsExhausted;
+    public bool isGathered => petState.IsGathered;
     public bool isAnimationLocked => petState.IsAnimationLocked;
-    public int gatherCommandVersion => petState.GatherCommandVersion;
-    public Vector3 gatherTargetPosition => petState.GatherTargetPosition;
     public PetController interactionPartner => petState.InteractionPartner;
     public Transform currentTree => petState.CurrentTree;
-    public BasePetInteraction currentInteractionLogic => petState.CurrentInteractionLogic;
-    public bool isAttractedToEnvironment => petState.IsAttractedToEnvironment;
-    public Vector3 environmentTargetPosition => petState.EnvironmentTargetPosition;
-    public Vector3 beeAttackSource => petState.BeeAttackSource;
-    public float beeAttackStartTime => petState.BeeAttackStartTime;
     
-    // 나무 올라가는 높이는 MovementSettings로 이동 가능하지만, 현재는 유지
     [HideInInspector] public float climbHeight = 5f;
-    
-    // 자주 변경되는 값들은 setter도 유지
-    public float waterDepthOffset 
-    { 
-        get => petState.WaterDepthOffset;
-        set => petState.SetWaterDepthOffset(value);
-    }
 
     // 욕구 설정은 Needs 프로퍼티를 통해 직접 접근
     [SerializeField] private float highAffectionThreshold = 80f;
@@ -174,22 +151,6 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         
         // 프로필 초기화
         profile.birthday = DateTime.Now;
-  // ▼▼▼ [수정] 이 부분을 Awake() 메서드 상단에 추가합니다. ▼▼▼
-
-        // 1. EmotionOrigin 자동 탐색
-        // 인스펙터에서 수동으로 emotionOrigin을 할당하지 않은 경우에만 자동 탐색을 시도합니다.
-        if (emotionOrigin == null)
-        {
-            // petModelTransform이 있으면 그 자식들 안에서 먼저 찾고, 없으면 전체 자식에서 찾습니다.
-            Transform rootToSearch = petModelTransform != null ? petModelTransform : transform;
-            emotionOrigin = FindDeepChild(rootToSearch, "EmotionOrigin");
-
-            if (emotionOrigin != null)
-            {
-                // Debug.Log($"{petName}: 자식 오브젝트에서 'EmotionOrigin'을 자동으로 찾아 할당했습니다.");
-            }
-        }
-        // ▲▲▲ 여기까지 추가 ▲▲▲
         // NavMeshAgent 초기화
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
@@ -199,16 +160,12 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             agent.acceleration = movement.acceleration;
             agent.stoppingDistance = movement.stoppingDistance;
 
-            // ★ 추가 설정 - 회전 관련 설정 개선
-            agent.updateRotation = false;  // 펫 모델의 회전은 직접 제어
+            // ★ 수정: 회전 제어 방식 통일
+            // 기본적으로 NavMeshAgent가 회전을 제어하도록 설정
+            // 특별한 경우(선택, 상호작용 등)에만 수동 제어
+            agent.updateRotation = true;   // NavMeshAgent가 회전 제어
             agent.updatePosition = true;   // 위치는 NavMeshAgent가 제어
             agent.updateUpAxis = false;    // Y축 회전만 필요
-
-            // 기본 값 저장
-            baseSpeed = movement.walkSpeed;
-            baseAngularSpeed = movement.angularSpeed;
-            baseAcceleration = movement.acceleration;
-            baseStoppingDistance = movement.stoppingDistance;
         }
         
         // Rigidbody 확인 및 추가 (Trigger 충돌 감지를 위해 필요)
@@ -219,7 +176,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             rb.useGravity = false;
             rb.isKinematic = true;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            Debug.Log($"[PetController] {petName}에 Rigidbody 자동 추가됨 (Trigger 충돌 감지용)");
+            PetDebug.LogDebug($"{petName}에 Rigidbody 자동 추가됨 (Trigger 충돌 감지용)", this);
         }
 
         // // petModelTransform: 첫 번째 자식을 우선 사용, 없으면 Renderer가 있는 오브젝트 사용
@@ -247,25 +204,26 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         //         // Debug.LogWarning("Animator component not found on the pet model.");
         //     }
         // }
-   // [새로운 안정적인 코드]
-        // 1. 자식 오브젝트 중에서 Animator 컴포넌트를 직접 찾습니다.
+        // Animator와 모델 Transform 찾기
         animator = GetComponentInChildren<Animator>();
-
-        // 2. Animator를 성공적으로 찾았다면,
         if (animator != null)
         {
-            // Animator가 붙어있는 트랜스폼을 petModelTransform으로 확정합니다.
             petModelTransform = animator.transform;
         }
-        // 3. Animator를 찾지 못했을 경우에 대한 예외 처리
         else
         {
-            Debug.LogWarning($"[PetController] {this.gameObject.name}에서 Animator 컴포넌트를 찾을 수 없습니다! 애니메이션이 작동하지 않습니다.");
-            // Animator가 없다면, 모델이라도 찾으려는 시도를 할 수 있습니다. (선택사항)
+            PetDebug.LogWarning($"{this.gameObject.name}에서 Animator 컴포넌트를 찾을 수 없습니다! 애니메이션이 작동하지 않습니다.", this);
             if (transform.childCount > 0)
             {
                 petModelTransform = transform.GetChild(0);
             }
+        }
+        
+        // EmotionOrigin 자동 탐색 (인스펙터에서 할당하지 않은 경우만)
+        if (emotionOrigin == null)
+        {
+            Transform rootToSearch = petModelTransform != null ? petModelTransform : transform;
+            emotionOrigin = FindDeepChild(rootToSearch, "EmotionOrigin");
         }
         // 인스펙터에서 수동으로 설정하지 않았을 경우에만 자동 감지 실행
         if (!manuallySetPetType)
@@ -273,7 +231,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             SetPetTypeFromName();
         }
 
-        // ★ waterBehaviorController를 movementController보다 먼저 초기화
+        // 컨트롤러들 초기화 - 의존성 순서대로
         waterBehaviorController = gameObject.AddComponent<PetWaterBehaviorController>();
         waterBehaviorController.Init(this);
         movementController = gameObject.AddComponent<PetMovementController>();
@@ -299,9 +257,13 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         petNeeds.Init(this);
         
         // 욕구 변화 이벤트 구독
-        petNeeds.OnEmotionRequired += (emotionType) => ShowEmotion(emotionType, 3f);
+        petNeeds.OnEmotionRequired += OnEmotionRequired;
+        petNeeds.OnNeedCritical += OnNeedCritical;
 
 
+        // 상태 변경 이벤트 구독
+        petState.OnStatusChanged += OnPetStatusChanged;
+        
         // 초기화 순서 변경 - NavMesh 위치 확인 후 컨트롤러 초기화
         StartCoroutine(EnsureNavMeshPlacement());
 
@@ -323,30 +285,14 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         // ★ [Phase 1] 새로운 상태 체크와 기존 플래그 체크 병행
         // 선택된 상태는 PlayerControl이지만 AI 업데이트와 Action 실행이 필요함
         if ((petState.IsPlayerControlled && !isSelected) || isActionLocked) return;
-        // ★ [Phase 4] PetNeeds가 자체적으로 Update 처리함
         // 2. 환경 상태 업데이트 (매 프레임)
-        waterBehaviorController?.CheckWaterArea();
+        if (waterBehaviorController != null) waterBehaviorController.CheckWaterArea();
 
-        // 3. AI 의사결정 (PetAI에서 처리)
-        // PetAI가 자체적으로 Update에서 처리함
-        
-        // 4. 현재 행동 실행 및 시각적 표현 업데이트 (매 프레임)
-        // PetAI가 현재 활동을 업데이트함
-
-        // isGatheringAnimationOverride와 같은 복잡한 플래그 대신
-        // 각 Action의 OnUpdate에서 애니메이션을 직접 제어하는 것이 더 좋습니다.
-        // 하지만 현재 구조를 유지한다면 그대로 둬도 괜찮습니다.
-        if (!isGatheringAnimationOverride)
+        // 3. 애니메이션 업데이트 (특별한 애니메이션이 재생 중이 아닐 때만)
+        if (!isGatheringAnimationOverride && animationController != null)
         {
-            animationController?.UpdateAnimation();
+            animationController.UpdateAnimation();
         }
-        // HandleRotation();
-
-        // if (petModelTransform != null)
-        // {
-        //     Vector3 targetLocalPos = new Vector3(0, waterDepthOffset, 0);
-        //     petModelTransform.localPosition = Vector3.Lerp(petModelTransform.localPosition, targetLocalPos, Time.deltaTime * 5f);
-        // }
     }
     
     // ★ [Phase 4] UpdateNeeds와 관련 이벤트 핸들러 제거 - PetNeeds가 자체 처리
@@ -377,12 +323,16 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     }
     // ▲▲▲ 여기까지 추가 ▲▲▲
     
+    
+    // ★ [Phase 1] 상호작용 시작 - PetState 메서드 직접 사용 권장
+    // 호환성을 위해 유지하되, 향후 제거 예정
+    [System.Obsolete("Use State.StartInteraction() directly")]
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
     {
-        // ★ [Phase 4] PetState를 통한 상태 설정
         petState.StartInteraction(partner);
         petState.SetInteractionLogic(interactionLogic);
     }
+
 
     public void InterruptCurrentActionFor(InteractionType type)
     {
@@ -391,7 +341,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         {
             petAI.InterruptAndResetAI();
         }
-        Debug.Log($"{petName}의 현재 활동이 '{type}'으로 인해 중단됩니다.");
+        PetDebug.Log($"{petName}의 현재 활동이 '{type}'으로 인해 중단됩니다.", this);
     }
     // ★ 물 속도 조정을 위한 public 메소드 추가
     public void AdjustSpeedForWater()
@@ -404,72 +354,56 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
     // [수정 2] 아래 메서드를 클래스 내부에 새로 추가합니다.
     /// <summary>
     /// 펫의 회전을 중앙에서 관리합니다.
-    /// NavMeshAgent의 이동 방향(velocity)에 맞춰 펫을 부드럽게 회전시킵니다.
+    /// 특별한 상태(선택, 모이기 등)에서만 수동 회전을 처리합니다.
     /// </summary>
     public void HandleRotation()
     {
-        // 선택된 상태에서는 자동 회전하지 않음
-        if (isGathered  || isSelected)
-        {
-            return;
-        }
-
-        // ★★★ 수정: 상호작용 중이면서 NavMeshAgent가 자동 회전을 담당하는 경우 ★★★
-        if (isInteracting && agent != null && agent.enabled && agent.updateRotation)
-        {
-            // NavMeshAgent가 회전을 담당하므로 여기서는 처리하지 않음
-            return;
-        }
-        if (isInteracting)
-        {
-            // NavMeshAgent가 실제로 이동 중이라면 회전 허용
-            if (agent != null && agent.enabled && agent.isOnNavMesh &&
-                agent.velocity.magnitude > 0.1f && !agent.isStopped)
-            {
-                // 이동 중이므로 회전 허용 (아래 로직 계속 진행)
-            }
-            else
-            {
-                // 이동하지 않는 상호작용이면 회전하지 않음
-                return;
-            }
-        }
-        // ★ NavMeshAgent 상태 체크 추가
+        // NavMeshAgent가 없거나 비활성화된 경우 처리하지 않음
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
             return;
         }
-        // NavMeshAgent가 멈춰있거나, 경로가 없으면 회전하지 않습니다.
-        if (agent.isStopped || !agent.hasPath || agent.remainingDistance < 0.1f)
+
+        // 선택된 상태나 모인 상태에서는 수동 회전 제어
+        if (petState.IsSelected || petState.IsGathered)
         {
+            // NavMeshAgent의 자동 회전 비활성화
+            if (agent.updateRotation)
+            {
+                agent.updateRotation = false;
+            }
+            
+            // 선택된 상태에서는 회전하지 않음 (플레이어가 제어)
             return;
         }
-
-       // ★★★ 수정: NavMeshAgent가 자동 회전을 담당하지 않을 때만 수동으로 회전 ★★★
-    if (!agent.updateRotation)
-    {
-        Vector3 moveDirection = agent.velocity.normalized;
-
-        if (moveDirection.magnitude > 0.1f)
+        
+        // 상호작용 중이지만 이동하지 않는 경우
+        if (petState.IsInteracting && agent.velocity.magnitude < 0.1f)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                targetRotation,
-                rotationSpeed * Time.deltaTime
-            );
-
-            if (petModelTransform != null)
+            // NavMeshAgent의 자동 회전 비활성화
+            if (agent.updateRotation)
             {
-                petModelTransform.rotation = transform.rotation;
+                agent.updateRotation = false;
             }
+            return;
         }
-    }
+        
+        // 일반적인 이동 상태에서는 NavMeshAgent가 자동으로 회전 처리
+        if (!agent.updateRotation)
+        {
+            agent.updateRotation = true;
+        }
+        
+        // 펫 모델이 본체와 동기화되도록 보장
+        if (petModelTransform != null && petModelTransform.rotation != transform.rotation)
+        {
+            petModelTransform.rotation = transform.rotation;
+        }
     }
     // PetController.cs에 추가
     public void SetRandomDestination()
     {
-        movementController?.SetRandomDestination();
+        if (movementController != null) movementController.SetRandomDestination();
     }
     private IEnumerator RegisterToPetManager()
     {
@@ -484,6 +418,18 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
 
     private void OnDestroy()
     {
+        // 이벤트 구독 해제
+        if (petState != null)
+        {
+            petState.OnStatusChanged -= OnPetStatusChanged;
+        }
+        
+        if (petNeeds != null)
+        {
+            petNeeds.OnEmotionRequired -= OnEmotionRequired;
+            petNeeds.OnNeedCritical -= OnNeedCritical;
+        }
+        
         // PetInteractionManager에서 이 펫 제거
         if (PetInteractionManager.Instance != null)
         {
@@ -500,7 +446,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         // NavMeshAgent가 존재하는지 확인
         if (agent == null)
         {
-            Debug.LogWarning($"[PetController] {petName}: NavMeshAgent가 없습니다.");
+            PetDebug.LogWarning($"{petName}: NavMeshAgent가 없습니다.", this);
             yield break;
         }
 
@@ -526,7 +472,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             }
             else
             {
-                Debug.LogWarning($"[PetController] {petName}: 적절한 NavMesh 위치를 찾을 수 없습니다.");
+                PetDebug.LogWarning($"{petName}: 적절한 NavMesh 위치를 찾을 수 없습니다.", this);
             }
         }
 
@@ -547,7 +493,7 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
         }
         else
         {
-            Debug.LogError($"[PetController] {petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.");
+            PetDebug.LogError($"{petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.", this);
         }
     }
 
@@ -581,47 +527,49 @@ private GameObject activeParticle; // <<< 파티클 오브젝트를 추적하기
             else if (name.Contains("dog")) petType = PetType.Dog;
             else
             {
-                Debug.LogWarning($"[PetController] 펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {petType}을(를) 사용합니다.");
+                PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {petType}을(를) 사용합니다.", this);
             }
         }
     }
 
 
-    // ★ 외부에서 이동을 제어하기 위한 메서드들 개선
+    // NavMeshAgent 제어 메서드들
     public void StopMovement()
     {
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        if (!IsNavMeshAgentValid()) return;
+        
+        try
         {
-            try
-            {
-                agent.isStopped = true;
-                agent.ResetPath();  // ★ 추가: 경로 완전히 초기화
-                agent.velocity = Vector3.zero;  // ★ 추가: 속도도 0으로
-                agent.updateRotation = false;  // ★ 추가: 자동 회전 중지
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: StopMovement 실패 - {e.Message}");
-            }
+            agent.isStopped = true;
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            // 회전 제어는 HandleRotation()에서 통합 관리
+        }
+        catch (System.Exception e)
+        {
+            PetDebug.LogWarning($"{petName}: StopMovement 실패 - {e.Message}", this);
         }
     }
 
     public void ResumeMovement()
     {
-        if (isGathering) return;
+        if (petState.IsGathering || !IsNavMeshAgentValid()) return;
 
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        try
         {
-            try
-            {
-                agent.updateRotation = true;  // ★ 추가: 자동 회전 재개
-                agent.isStopped = false;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[PetController] {petName}: ResumeMovement 실패 - {e.Message}");
-            }
+            agent.isStopped = false;
+            // 회전 제어는 HandleRotation()에서 통합 관리
         }
+        catch (System.Exception e)
+        {
+            PetDebug.LogWarning($"{petName}: ResumeMovement 실패 - {e.Message}", this);
+        }
+    }
+    
+    // NavMeshAgent 유효성 검사 헬퍼 메서드
+    private bool IsNavMeshAgentValid()
+    {
+        return agent != null && agent.enabled && agent.isOnNavMesh;
     }
 
    // ▼▼▼ ShowEmotion 메서드를 아래와 같이 수정합니다. ▼▼▼
@@ -668,6 +616,43 @@ public void HideEmotion()
     }
 }
 
+    // 이벤트 핸들러
+    private void OnPetStatusChanged(PetStatus oldStatus, PetStatus newStatus)
+    {
+        // 상태 변경에 따른 추가 처리
+        switch (newStatus)
+        {
+            case PetStatus.Emergency:
+                // 긴급 상태일 때 경고 이모티콘
+                ShowEmotion(EmotionType.Scared, 2f);
+                break;
+            case PetStatus.Interacting:
+                // 상호작용 시작 시 기쁨 이모티콘
+                if (UnityEngine.Random.value < 0.5f)
+                    ShowEmotion(EmotionType.Happy, 2f);
+                break;
+        }
+    }
+    
+    private void OnEmotionRequired(EmotionType emotionType)
+    {
+        ShowEmotion(emotionType, 3f);
+    }
+    
+    private void OnNeedCritical(PetNeeds.NeedType needType)
+    {
+        // 욕구가 임계치에 도달했을 때 처리
+        switch (needType)
+        {
+            case PetNeeds.NeedType.Hunger:
+                PetDebug.Log($"{petName}이(가) 배고파합니다!", this);
+                break;
+            case PetNeeds.NeedType.Sleepiness:
+                PetDebug.Log($"{petName}이(가) 졸려합니다!", this);
+                break;
+        }
+    }
+    
     // 친밀도 임계값 getter
     public float GetHighAffectionThreshold()
     {

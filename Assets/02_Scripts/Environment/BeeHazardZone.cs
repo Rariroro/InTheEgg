@@ -115,7 +115,7 @@ public class BeeHazardZone : MonoBehaviour
         Debug.Log($"[BeeHazardZone] 펫 감지: {pet.petName}");
         
         // 이미 벌 공격을 받고 있거나 처리 중이면 무시
-        if (pet.isBeingAttackedByBees || petsBeingAttacked.Contains(pet))
+        if (pet.State.IsBeingAttackedByBees || petsBeingAttacked.Contains(pet))
             return;
         
         // 트리거에 들어온 펫을 추적 시작
@@ -127,7 +127,7 @@ public class BeeHazardZone : MonoBehaviour
     // PetFeedingController에서 직접 호출하는 메서드
     public void OnPetStartedEating(PetController pet)
     {
-        if (pet == null || pet.isBeingAttackedByBees || petsBeingAttacked.Contains(pet))
+        if (pet == null || pet.State.IsBeingAttackedByBees || petsBeingAttacked.Contains(pet))
             return;
             
         Debug.Log($"[BeeHazardZone] {pet.petName}이(가) 꿀을 먹기 시작함! 즉시 벌 공격!");
@@ -145,7 +145,7 @@ public class BeeHazardZone : MonoBehaviour
         float monitorTime = 0f;
         PetFeedingController feedingController = pet.GetComponent<PetFeedingController>();
         
-        while (pet != null && !pet.isBeingAttackedByBees && monitorTime < 30f)
+        while (pet != null && !pet.State.IsBeingAttackedByBees && monitorTime < 30f)
         {
             if (feedingController != null && feedingController.IsEatingOrSeeking())
             {
@@ -201,7 +201,7 @@ public class BeeHazardZone : MonoBehaviour
         float elapsedTime = 0f;
         Vector3 hivePosition = transform.position; // 벌집 위치
         
-        while (pet != null && pet.isBeingAttackedByBees)
+        while (pet != null && pet.State.IsBeingAttackedByBees)
         {
             // 펫과 벌집 사이의 거리 계산
             float distanceFromHive = Vector3.Distance(pet.transform.position, hivePosition);

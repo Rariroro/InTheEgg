@@ -5,20 +5,15 @@ using PetAIProperties = PetTraits;
 /// <summary>
 /// 펫의 물 속 행동을 전담하는 컨트롤러
 /// </summary>
-public class PetWaterBehaviorController : MonoBehaviour
+public class PetWaterBehaviorController : PetControllerBase
 {
-    private PetController petController;
-    
     // 물 상태 관련
     private bool isInWater = false;
-    private float waterSpeedMultiplier = 0.3f;
     private float currentDepth = 0f;
     private float depthTransitionSpeed = 2f;
 
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
-        
         // NavMeshAgent가 이미 활성화되어 NavMesh 위에 있을 때만 물 영역 비용을 설정
         if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
         {
@@ -79,34 +74,32 @@ public class PetWaterBehaviorController : MonoBehaviour
 
     private void OnEnterWater()
     {
-        // 물 서식지 펫은 덜 느려짐
-        float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
-                          ? 0.7f : waterSpeedMultiplier;
-
+        // MovementSettings를 통해 물 속 속도 계산
+        bool isAquatic = petController.habitat == PetAIProperties.Habitat.Water;
+        
         // 속도 감소
-        if (petController.agent != null && !petController.isGathering)
+        if (petController.agent != null && !petController.State.IsGathering)
         {
-            petController.agent.speed = petController.baseSpeed * speedMult;
-            petController.agent.acceleration = petController.baseAcceleration * speedMult;
+            petController.agent.speed = petController.Movement.GetWaterSpeed(isAquatic, petController.personality);
+            petController.agent.acceleration = petController.Movement.acceleration * 
+                (isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier);
         }
 
         // 애니메이션 속도도 감소
-        var anim = petController.GetComponent<PetAnimationController>();
-        if (anim != null && petController.animator != null)
+        if (petController.animator != null)
         {
-            petController.animator.speed = speedMult;
+            float animSpeedMult = isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier;
+            petController.animator.speed = animSpeedMult;
         }
     }
 
     private void OnExitWater()
     {
-        // 속도 복구
-        if (petController.agent != null && !petController.isGathering)
+        // 속도 복구 - 성격이 적용된 속도로
+        if (petController.agent != null && !petController.State.IsGathering)
         {
-            // PersonalityBehavior 정보를 가져와야 하므로 PetMovementController와 연동 필요
-            // 기본적으로는 baseSpeed로 복구
-            petController.agent.speed = petController.baseSpeed;
-            petController.agent.acceleration = petController.baseAcceleration;
+            petController.agent.speed = petController.Movement.GetAdjustedWalkSpeed(petController.personality);
+            petController.agent.acceleration = petController.Movement.acceleration;
         }
 
         // 애니메이션 속도 복구
@@ -121,8 +114,8 @@ public class PetWaterBehaviorController : MonoBehaviour
     {
         if (isInWater && petController.agent != null)
         {
-            float speedMult = (petController.habitat == PetAIProperties.Habitat.Water)
-                              ? 0.7f : waterSpeedMultiplier;
+            bool isAquatic = petController.habitat == PetAIProperties.Habitat.Water;
+            float speedMult = isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier;
             petController.agent.speed *= speedMult;
         }
     }

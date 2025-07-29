@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class PetAnimationController : MonoBehaviour
+public class PetAnimationController : PetControllerBase
 {
     // ▼▼▼ 사용자께서 확정해주신 최종 애니메이션 열거형입니다 ▼▼▼
     public enum PetAnimationType
@@ -17,21 +17,20 @@ public class PetAnimationController : MonoBehaviour
         Die = 8         // 죽은 척, 특별한 행동 등
     }
 
-    private PetController petController;
     private bool isSpecialAnimationPlaying = false;
     private bool isContinuousAnimationPlaying = false;
     private PetAnimationType continuousAnimationType = PetAnimationType.Idle;
 
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
+        // 추가 초기화 로직 필요시 여기에 작성
     }
 
     public void UpdateAnimation()
     {
         if (petController.petModelTransform != null)
         {
-            Vector3 targetLocalPos = new Vector3(0, petController.waterDepthOffset, 0);
+            Vector3 targetLocalPos = new Vector3(0, petController.State.WaterDepthOffset, 0);
             petController.petModelTransform.localPosition = Vector3.Lerp(
                 petController.petModelTransform.localPosition,
                 targetLocalPos,
@@ -39,7 +38,7 @@ public class PetAnimationController : MonoBehaviour
             );
         }
 
-        if (petController.isSelected || petController.isHolding || petController.isInteracting || petController.isActionLocked)
+        if (petController.State.IsSelected || petController.State.IsHolding || petController.State.IsInteracting || petController.State.IsActionLocked)
         {
             return;
         }
@@ -69,9 +68,9 @@ public class PetAnimationController : MonoBehaviour
             // 걷기 또는 달리기 상태일 때만 이동 속도에 애니메이션 속도를 동기화
             if (currentAnimation == PetAnimationType.Walk || currentAnimation == PetAnimationType.Run)
             {
-                if (petController.baseSpeed > 0)
+                if (petController.Movement.walkSpeed > 0)
                 {
-                    petController.animator.speed = petController.agent.velocity.magnitude / petController.baseSpeed;
+                    petController.animator.speed = petController.agent.velocity.magnitude / petController.Movement.walkSpeed;
                 }
                 else
                 {
@@ -231,7 +230,7 @@ public class PetAnimationController : MonoBehaviour
             }
 
             // 나무 위에 있지 않을 때만 이동 재개
-            if (!petController.isClimbingTree && petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
+            if (!petController.State.IsClimbingTree && petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
             {
                 petController.ResumeMovement();
             }

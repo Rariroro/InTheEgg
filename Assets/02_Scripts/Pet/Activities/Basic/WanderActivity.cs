@@ -51,11 +51,11 @@ public class WanderActivity : PetActivityAdapter
     {
         // Idle 상태이고 특별한 활동이 없을 때만 배회 가능
         return state.CurrentStatus == PetStatus.Idle && 
-               !pet.isInteracting && 
-               !pet.isSelected && 
-               !pet.isHolding && 
-               !pet.isClimbingTree && 
-               !pet.isGathering;
+               !state.IsInteracting && 
+               !state.IsSelected && 
+               !state.IsHolding && 
+               !state.IsClimbingTree && 
+               !state.IsGathering;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -69,7 +69,7 @@ public class WanderActivity : PetActivityAdapter
     public override float GetPriority()
     {
         // 호환성을 위해 기존 로직 유지
-        if (pet.isInteracting || pet.isSelected || pet.isHolding || pet.isClimbingTree || pet.isGathering)
+        if (pet.State.IsInteracting || pet.State.IsSelected || pet.State.IsHolding || pet.State.IsClimbingTree || pet.State.IsGathering)
         {
             return 0f;
         }
@@ -102,7 +102,7 @@ public class WanderActivity : PetActivityAdapter
         }
         
         // 선택 상탌가 아닐 때만 회전 처리
-        if (!pet.isSelected)
+        if (!pet.State.IsSelected)
         {
             pet.HandleRotation();
         }
@@ -288,7 +288,7 @@ public class WanderActivity : PetActivityAdapter
     
     private void SafeSetAgentMovement(float speed, bool isStopped)
     {
-        if (!IsAgentReady() || pet.isGathering) return;
+        if (!IsAgentReady() || pet.State.IsGathering) return;
         
         try
         {

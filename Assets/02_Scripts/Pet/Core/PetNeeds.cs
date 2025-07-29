@@ -196,7 +196,7 @@ public class PetNeeds : MonoBehaviour
                 if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
                 {
                     OnEmotionRequired?.Invoke(EmotionType.Sad);
-                    Debug.Log($"[PetNeeds] {petController.petName}의 친밀도가 낮아졌습니다: {affection:F1}");
+                    PetDebug.Log($"{petController.petName}의 친밀도가 낮아졌습니다: {affection:F1}", petController);
                 }
             }
         }
@@ -213,7 +213,7 @@ public class PetNeeds : MonoBehaviour
         if (hunger != previousHunger)
         {
             OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
-            Debug.Log($"[PetNeeds] {petController.petName}의 배고픔 감소: {hunger:F1}");
+            PetDebug.LogNeedChange(petController.petName, "Hunger", previousHunger, hunger);
         }
     }
     
@@ -225,7 +225,7 @@ public class PetNeeds : MonoBehaviour
         sleepiness = 0f;
         sleepyEmotionTimer = 0f;
         OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
-        Debug.Log($"[PetNeeds] {petController.petName}이(가) 충분히 잠을 잤습니다.");
+        PetDebug.Log($"{petController.petName}이(가) 충분히 잠을 잤습니다.", petController);
     }
     
     /// <summary>
@@ -246,7 +246,7 @@ public class PetNeeds : MonoBehaviour
                 OnEmotionRequired?.Invoke(EmotionType.Happy);
             }
             
-            Debug.Log($"[PetNeeds] {petController.petName}의 친밀도 증가: {affection:F1} (+{amount})");
+            PetDebug.LogNeedChange(petController.petName, "Affection", previousAffection, affection);
         }
     }
     

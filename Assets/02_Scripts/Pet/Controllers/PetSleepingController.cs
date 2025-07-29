@@ -3,9 +3,8 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using PetAIProperties = PetTraits;
-public class PetSleepingController : MonoBehaviour
+public class PetSleepingController : PetControllerBase
 {
-    private PetController petController;
     private GameObject targetSleepingArea;
 
     // 탐색 및 상태 관련 변수
@@ -26,9 +25,8 @@ public class PetSleepingController : MonoBehaviour
     private float braveForceSleepThreshold = 100f;
     private float shyForceSleepThreshold = 90f;
 
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
         sleepingAreaLayer = LayerMask.GetMask("SleepingArea");
     }
 

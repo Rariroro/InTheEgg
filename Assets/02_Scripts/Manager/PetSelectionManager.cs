@@ -27,6 +27,7 @@ public class PetSelectionManager : MonoBehaviour
         }
     }
 
+
     // 펫 ID 추가 메서드
     public void AddPet(string petId)
     {

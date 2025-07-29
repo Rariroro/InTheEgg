@@ -4,9 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using PetAIProperties = PetTraits;
-public class PetFeedingController : MonoBehaviour
+public class PetFeedingController : PetControllerBase
 {
-    private PetController petController;
     private GameObject targetFood;
     private GameObject targetFeedingArea;
 
@@ -34,9 +33,8 @@ public class PetFeedingController : MonoBehaviour
     private const float CHASE_UPDATE_INTERVAL = 0.25f; // 0.25초마다 목표 위치 갱신
     // ★★★ 여기까지 추가 ★★★
 
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
         foodItemLayer = LayerMask.GetMask("FoodItem");
         feedingAreaLayer = LayerMask.GetMask("FeedingArea");
     }

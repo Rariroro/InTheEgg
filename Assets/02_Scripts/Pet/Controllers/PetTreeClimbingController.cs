@@ -4,9 +4,8 @@ using System;
 using UnityEngine;
 using UnityEngine.AI;
 using PetAIProperties = PetTraits;
-public class PetTreeClimbingController : MonoBehaviour
+public class PetTreeClimbingController : PetControllerBase
 {
-    private PetController petController;
 
     // 나무 탐지 설정
     private float treeDetectionRadius = 50f;
@@ -15,9 +14,9 @@ public class PetTreeClimbingController : MonoBehaviour
     private float lastTreeSearchTime = 0f;
     private float treeSearchCooldown = 10f; // 일반 탐색 쿨다운은 길게
 
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
+        // 추가 초기화 로직 필요시 여기에 작성
     }
     
     // 외부에서 나무 찾기 상태를 확인할 수 있는 메서드

@@ -121,7 +121,7 @@ public class ClimbTreeActivity : PetActivityAdapter
                     pet.transform.rotation = Quaternion.Slerp(
                         pet.transform.rotation,
                         targetRotation,
-                        pet.rotationSpeed * Time.deltaTime
+                        pet.Movement.rotationSmoothness * 2f * Time.deltaTime
                     );
                 }
             }

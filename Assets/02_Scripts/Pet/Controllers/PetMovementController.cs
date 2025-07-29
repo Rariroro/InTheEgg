@@ -7,19 +7,17 @@ using PetAIProperties = PetTraits;
 /// 펫의 이동 관련 공용 유틸리티 메서드들을 제공합니다.
 /// 리팩토링: 배회 로직은 WanderAction으로 이동됨
 /// </summary>
-public class PetMovementController : MonoBehaviour
+public class PetMovementController : PetControllerBase
 {
-    private PetController petController;
-    
     /// <summary>
     /// 물 속성 펫이 물 vs 육지 목적지를 고를 확률 (0~1).
     /// </summary>
     [Range(0f, 1f)] public float waterDestinationChance = 0.8f;
 
     // === 초기화 ===
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
+        // 추가 초기화 로직 필요시 여기에 작성
     }
 
     // === 공용 유틸리티 메서드들 (다른 곳에서 호출됨) ===

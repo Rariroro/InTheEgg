@@ -79,7 +79,7 @@ public class SelectedActivity : PetActivityAdapter
                 pet.transform.rotation = Quaternion.Slerp(
                     pet.transform.rotation,
                     targetRotation,
-                    pet.rotationSpeed * 2f * Time.deltaTime // 조금 더 빠른 회전
+                    pet.Movement.rotationSmoothness * 2f * Time.deltaTime // 조금 더 빠른 회전
                 );
             }
         }

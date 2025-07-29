@@ -3,10 +3,9 @@ using UnityEngine;
 using UnityEngine.AI;
 
 // PetInputController 클래스는 유저의 입력(터치, 드래그, 홀드 등)을 통한 펫 제어를 처리하는 클래스입니다.
-public class PetInputController : MonoBehaviour
+public class PetInputController : PetControllerBase
 {
-    // 펫 컨트롤러, 이름 텍스트, 이름 텍스트 오브젝트에 대한 참조를 저장합니다.
-    private PetController petController;
+    // 이름 텍스트, 이름 텍스트 오브젝트에 대한 참조를 저장합니다.
     private TextMesh nameText;
     private GameObject nameTextObject;
 
@@ -36,9 +35,8 @@ public class PetInputController : MonoBehaviour
     private bool isTouchingPet = false;   // 현재 펫을 터치하고 있는지 여부
 
     // PetController 초기화 함수.
-    public void Init(PetController controller)
+    protected override void OnInitialize()
     {
-        petController = controller;
         CreateNameText(); // 펫 이름 텍스트 생성
         terrainLayer = LayerMask.GetMask("Terrain"); // "Terrain" 레이어의 마스크를 가져옵니다.
     }
@@ -76,10 +74,10 @@ public class PetInputController : MonoBehaviour
     public void HandleInput()
     {
         // ★★★ 수정: 탈진 상태일 때 로직 변경 ★★★
-    if (petController.isExhausted)
+    if (petController.State.IsExhausted)
     {
         // 만약 탈진 상태가 되었을 때 펫을 들고 있었다면, 강제로 놓게 합니다.
-        if (petController.isHolding)
+        if (petController.State.IsHolding)
         {
             ForceStopHolding();
         }
@@ -92,16 +90,16 @@ public class PetInputController : MonoBehaviour
     }
     // ★★★ 여기까지 수정 ★★★
         // 모이기 중이거나 이미 모였을 때는 일반적인 상호작용을 제한
-        if (petController.isGathering || petController.isGathered)
+        if (petController.State.IsGathering || petController.State.IsGathered)
         {
             // 펫을 들고 있었다면 강제로 놓기
-            if (petController.isHolding)
+            if (petController.State.IsHolding)
             {
                 ForceStopHolding();
             }
 
             // 선택되어 있었다면 선택 해제
-            if (petController.isSelected)
+            if (petController.State.IsSelected)
             {
                 Deselect();
             }
@@ -132,12 +130,12 @@ public class PetInputController : MonoBehaviour
                 // ★★★ 추가: 펫이 물에 있어도 상호작용 가능하도록 콜라이더 체크 개선 ★★★
                 PetController hitPet = hit.collider.GetComponent<PetController>();
                 if (hitPet == petController ||
-                    (hit.collider.transform.IsChildOf(petController.transform) && petController.isInWater))
+                    (hit.collider.transform.IsChildOf(petController.transform) && petController.State.IsInWater))
                 {
                     isTouchingPet = true;
                     holdTimer = 0f;
                 }
-                else if (petController.isSelected)
+                else if (petController.State.IsSelected)
                 {
                     Deselect();
                 }
@@ -149,12 +147,12 @@ public class PetInputController : MonoBehaviour
             holdTimer += Time.deltaTime; // 홀드 타이머 증가
 
             // 펫을 아직 들고 있지 않고, 홀드 타이머가 임계값을 초과하면 펫 들기 시작
-            if (!petController.isHolding && holdTimer >= holdThreshold)
+            if (!petController.State.IsHolding && holdTimer >= holdThreshold)
             {
                 StartHolding(); // 펫 들기 시작
             }
             // 펫을 들고 있는 경우, 펫 이동 처리
-            else if (petController.isHolding)
+            else if (petController.State.IsHolding)
             {
                 HandleHoldingMovement(); // 펫 들고 이동
             }
@@ -163,7 +161,7 @@ public class PetInputController : MonoBehaviour
         else if (Input.GetMouseButtonUp(0))
         {
             // 펫을 들고 있었다면 놓기
-            if (petController.isHolding)
+            if (petController.State.IsHolding)
             {
                 StopHolding(); // 펫 놓기
             }
@@ -178,7 +176,7 @@ public class PetInputController : MonoBehaviour
         }
 
         // 펫이 선택되었고, 들고 있지 않은 상태에서 일정 시간이 지나면 선택 해제
-        if (petController.isSelected && !petController.isHolding)
+        if (petController.State.IsSelected && !petController.State.IsHolding)
         {
             selectionTimer += Time.deltaTime;
             if (selectionTimer >= 3f)
@@ -217,13 +215,13 @@ public class PetInputController : MonoBehaviour
             if (hit.collider.gameObject == petController.gameObject)
             {
                 // 상호작용 중이라면 강제로 중단
-                if (petController.isInteracting && petController.currentInteractionLogic != null)
+                if (petController.State.IsInteracting && petController.State.InteractionLogic != null)
                 {
                     ForceStopInteraction();
                 }
                 Select();
             }
-            else if (petController.isSelected)
+            else if (petController.State.IsSelected)
             {
                 Deselect();
             }
@@ -257,7 +255,7 @@ public class PetInputController : MonoBehaviour
                         petController.petModelTransform.rotation = Quaternion.Lerp(
                             petController.petModelTransform.rotation,
                             targetRotation,
-                            Time.deltaTime * petController.rotationSpeed
+                            Time.deltaTime * petController.Movement.rotationSmoothness
                         );
                     }
                 }
@@ -291,14 +289,14 @@ public class PetInputController : MonoBehaviour
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
         
         // 상호작용 중이라면 강제로 중단
-        if (petController.isInteracting && petController.currentInteractionLogic != null)
+        if (petController.State.IsInteracting && petController.State.InteractionLogic != null)
         {
             ForceStopInteraction();
         }
         // ★★★ 여기까지 추가 ★★★
 
         // ★ 수정: PetTreeClimbingController를 통해 나무 오르기 취소
-        if (petController.isClimbingTree)
+        if (petController.State.IsClimbingTree)
         {
             var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
             if (treeClimbingController != null)
@@ -308,7 +306,7 @@ public class PetInputController : MonoBehaviour
         }
 
         // isHolding = true; // PetState가 관리
-        petController.State.SetPlayerControl(holding: true, selected: petController.isSelected);
+        petController.State.SetPlayerControl(holding: true, selected: petController.State.IsSelected);
 
         if (petController.animator != null)
         {
@@ -392,7 +390,7 @@ public class PetInputController : MonoBehaviour
     // ForceStopHolding() 메서드 수정
     private void ForceStopHolding()
     {
-        if (!petController.isHolding) return;
+        if (!petController.State.IsHolding) return;
         petController.State.UpdateHoldingState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
 
         // ★ 애니메이션 정상화
@@ -564,7 +562,7 @@ private void Select()
 {
     // ★★★ 수정: isAnimationLocked 체크를 제거하거나 isExhausted 예외를 추가합니다. ★★★
     // 탈진 상태에서도 펫을 선택하여 상태를 확인하거나 들어올릴 수 있어야 합니다.
-    if (petController.isAnimationLocked && !petController.isExhausted)
+    if (petController.State.IsAnimationLocked && !petController.State.IsExhausted)
     {
         return;
     }
@@ -601,7 +599,7 @@ private void Select()
             nameTextObject.SetActive(true);
             
         // 나무 위에 있으면 추가적인 이동 중지나 행동 중단을 하지 않음
-        if (petController.isClimbingTree)
+        if (petController.State.IsClimbingTree)
         {
             Debug.Log($"{petController.petName}이(가) 나무 위에서 선택되었습니다.");
         }
@@ -617,7 +615,7 @@ private void Select()
         
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
-        if (!petController.isHolding)
+        if (!petController.State.IsHolding)
         {
             if (nameTextObject != null)
                 nameTextObject.SetActive(false);
@@ -626,7 +624,7 @@ private void Select()
             StopAllCoroutines();
 
             // 나무 위에서 선택 해제 시, 휴식 애니메이션으로 돌려놓습니다.
-            if (petController.isClimbingTree)
+            if (petController.State.IsClimbingTree)
             {
                 var animController = petController.GetComponent<PetAnimationController>();
                 animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
@@ -637,21 +635,21 @@ private void Select()
     // 진행 중인 상호작용을 강제로 중단
     private void ForceStopInteraction()
     {
-        if (petController.currentInteractionLogic != null)
+        if (petController.State.InteractionLogic != null)
         {
             // BasePetInteraction의 코루틴을 중단
-            var interactionLogic = petController.currentInteractionLogic;
+            var interactionLogic = petController.State.InteractionLogic;
             interactionLogic.StopAllCoroutines();
             
             // 상호작용 파트너가 있다면 그 쪽도 중단
-            if (petController.interactionPartner != null)
+            if (petController.State.InteractionPartner != null)
             {
-                var partner = petController.interactionPartner;
+                var partner = petController.State.InteractionPartner;
                 
                 // 파트너의 상호작용 로직도 중단
-                if (partner.currentInteractionLogic != null)
+                if (partner.State.InteractionLogic != null)
                 {
-                    partner.currentInteractionLogic.StopAllCoroutines();
+                    partner.State.InteractionLogic.StopAllCoroutines();
                 }
                 
                 // 매니저에 종료 알림
@@ -671,7 +669,7 @@ private void Select()
         yield return new WaitForSeconds(0.5f);
 
         // isSelected 상태가 여전히 유효할 때만 공격을 실행합니다.
-        if (petController.isSelected)
+        if (petController.State.IsSelected)
         {
             var animController = petController.GetComponent<PetAnimationController>();
             if (animController != null)

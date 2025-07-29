@@ -27,7 +27,7 @@ public class GatherActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 모이기 명령이 활성화되어 있을 때만 시작 가능
-        return pet.isGathering;
+        return pet.State.IsGathering;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -42,7 +42,7 @@ public class GatherActivity : PetActivityAdapter
     // 기존 IPetAction 메서드 구현 (호환성)
     public override float GetPriority()
     {
-        return pet.isGathering ? 20.0f : 0f;
+        return pet.State.IsGathering ? 20.0f : 0f;
     }
     
     public override void OnEnter()
@@ -58,7 +58,7 @@ public class GatherActivity : PetActivityAdapter
         pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
         
         // 나무에 올라가고 있었다면, 강제로 내려오게 함
-        if (pet.isClimbingTree)
+        if (pet.State.IsClimbingTree)
         {
             var treeClimber = pet.GetComponent<PetTreeClimbingController>();
             treeClimber?.ForceCancelClimbing();
@@ -70,12 +70,12 @@ public class GatherActivity : PetActivityAdapter
         if (agent != null && agent.enabled)
         {
             // 모이기 속도 설정
-            agent.speed = pet.baseSpeed * SPEED_MULTIPLIER;
-            agent.angularSpeed = pet.baseAngularSpeed * ANGULAR_SPEED_MULTIPLIER;
-            agent.acceleration = pet.baseAcceleration * ACCELERATION_MULTIPLIER;
-            agent.stoppingDistance = pet.baseStoppingDistance * STOPPING_DISTANCE_MULTIPLIER;
+            agent.speed = pet.Movement.walkSpeed * SPEED_MULTIPLIER;
+            agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
+            agent.acceleration = pet.Movement.acceleration * ACCELERATION_MULTIPLIER;
+            agent.stoppingDistance = pet.Movement.stoppingDistance * STOPPING_DISTANCE_MULTIPLIER;
             
-            agent.SetDestination(pet.gatherTargetPosition);
+            agent.SetDestination(pet.State.GatherTargetPosition);
             agent.isStopped = false;
             
             // 뛰기 애니메이션
@@ -115,10 +115,10 @@ public class GatherActivity : PetActivityAdapter
         if (agent != null && agent.enabled)
         {
             // 속도 원래대로 복구
-            agent.speed = pet.baseSpeed;
-            agent.angularSpeed = pet.baseAngularSpeed;
-            agent.acceleration = pet.baseAcceleration;
-            agent.stoppingDistance = pet.baseStoppingDistance;
+            agent.speed = pet.Movement.walkSpeed;
+            agent.angularSpeed = pet.Movement.angularSpeed;
+            agent.acceleration = pet.Movement.acceleration;
+            agent.stoppingDistance = pet.Movement.stoppingDistance;
             agent.isStopped = false;
         }
         
@@ -144,9 +144,9 @@ public class GatherActivity : PetActivityAdapter
         Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
         
         // 펫이 여전히 모이기 상태일 때만 카메라를 바라봄
-        while (pet.isGathering && Quaternion.Angle(pet.transform.rotation, targetRotation) > 1.0f)
+        while (pet.State.IsGathering && Quaternion.Angle(pet.transform.rotation, targetRotation) > 1.0f)
         {
-            pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, pet.rotationSpeed * Time.deltaTime);
+            pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, pet.Movement.rotationSmoothness * Time.deltaTime);
             yield return null;
         }
     }

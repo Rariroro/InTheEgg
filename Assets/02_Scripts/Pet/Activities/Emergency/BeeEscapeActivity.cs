@@ -30,7 +30,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 벌 공격을 받고 있거나 도망 중인 경우
-        return pet.isBeingAttackedByBees || isEscaping;
+        return pet.State.IsBeingAttacked || isEscaping;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -39,7 +39,7 @@ public class BeeEscapeActivity : PetActivityAdapter
             return 0f;
             
         // 벌 공격을 받고 있으면서
-        if (pet.isBeingAttackedByBees)
+        if (pet.State.IsBeingAttacked)
         {
             // 아직 먹고 있는 중이면 먹기를 우선시
             PetFeedingController feedingController = pet.GetComponent<PetFeedingController>();
@@ -53,10 +53,10 @@ public class BeeEscapeActivity : PetActivityAdapter
         }
         
         // 벌 공격이 끝난 후에도 계속 도망
-        if (isEscaping && !pet.isBeingAttackedByBees)
+        if (isEscaping && !pet.State.IsBeingAttacked)
         {
             // beeAttackSource가 초기화되었는지 확인 (Vector3.zero면 5초 경과)
-            if (pet.beeAttackSource == Vector3.zero)
+            if (pet.State.BeeAttackSource == Vector3.zero)
             {
                 // 벌이 완전히 돌아갔으므로 도망 종료
                 isEscaping = false;
@@ -116,7 +116,7 @@ public class BeeEscapeActivity : PetActivityAdapter
             if (!pet.agent.pathPending && pet.agent.remainingDistance < 1f)
             {
                 // 벌 공격이 계속되고 있으면 다시 도망
-                if (pet.isBeingAttackedByBees)
+                if (pet.State.IsBeingAttacked)
                 {
                     CalculateEscapeDestination();
                 }
@@ -151,7 +151,7 @@ public class BeeEscapeActivity : PetActivityAdapter
         }
         
         // 안도 감정 표현
-        if (emotionManager != null && !pet.isBeingAttackedByBees)
+        if (emotionManager != null && !pet.State.IsBeingAttacked)
         {
             emotionManager.ShowPetEmotion(pet, EmotionType.Sad, 2f);
         }
@@ -162,7 +162,7 @@ public class BeeEscapeActivity : PetActivityAdapter
         if (pet.agent == null || !pet.agent.enabled) return;
         
         // 벌 공격 소스로부터 반대 방향 계산
-        Vector3 escapeDirection = (pet.transform.position - pet.beeAttackSource).normalized;
+        Vector3 escapeDirection = (pet.transform.position - pet.State.BeeAttackSource).normalized;
         
         // 약간의 랜덤성 추가 (좌우로 30도 정도)
         float randomAngle = Random.Range(-30f, 30f);
