@@ -54,12 +54,6 @@ public partial class PetController : MonoBehaviour
     private PetAI petAI;
     
 
-    // 졸음 이모티콘 표시 - PetNeeds로 이동됨
-
-    [Header("Pet Type")]
-    [SerializeField] private PetType petType = PetType.Dog; // 기본값 설정
-    [SerializeField] private bool manuallySetPetType = false; // 수동 설정 여부 체크 필드 추가
-
     // ★ 필수 프로퍼티들만 유지 (나머지는 State 프로퍼티로 직접 접근)
     public bool isExhausted => petState.IsExhausted;
     public bool isGathered => petState.IsGathered;
@@ -95,15 +89,11 @@ public partial class PetController : MonoBehaviour
     public PetAI AI => petAI;
     
     // ... 다른 변수들 ...
-    // 펫 타입 프로퍼티 - 외부에서 접근 가능하도록
+    // 펫 타입 프로퍼티 - PetProfile에서 관리
     public PetType PetType
     {
-        get { return petType; }
-        set
-        {
-            petType = value;
-            manuallySetPetType = true; // 값이 설정되면 수동 설정됨으로 표시
-        }
+        get { return profile.type; }
+        set { profile.type = value; }
     }
     // PetController.cs의 Awake() 메서드에서 NavMeshAgent 초기화 부분 수정
     private void Awake()
@@ -182,8 +172,8 @@ public partial class PetController : MonoBehaviour
             }
         }
         
-        // 인스펙터에서 수동으로 설정하지 않았을 경우에만 자동 감지 실행
-        if (!manuallySetPetType)
+        // 펫 타입이 기본값인 경우에만 자동 감지 실행
+        if (profile.type == PetType.Dog && gameObject.name.ToLower() != "dog")
         {
             SetPetTypeFromName();
         }
@@ -431,9 +421,9 @@ public partial class PetController : MonoBehaviour
             string typeName = type.ToString().ToLower();
             if (name.Contains(typeName))
             {
-                petType = type;
+                profile.type = type;
                 typeFound = true;
-                // Debug.Log($"[PetController] 펫 타입 감지됨: {petType} (이름에서 '{typeName}' 문자열 발견)");
+                // Debug.Log($"[PetController] 펫 타입 감지됨: {profile.type} (이름에서 '{typeName}' 문자열 발견)");
                 break;
             }
         }
@@ -441,15 +431,15 @@ public partial class PetController : MonoBehaviour
         if (!typeFound)
         {
             // 추가 이름 매핑 로직 (수동 매핑)
-            if (name.Contains("lion")) petType = PetType.Lion;
-            else if (name.Contains("tiger")) petType = PetType.Tiger;
-            else if (name.Contains("turtle")) petType = PetType.Turtle;
-            else if (name.Contains("rabbit")) petType = PetType.Rabbit;
-            else if (name.Contains("cat")) petType = PetType.Cat;
-            else if (name.Contains("dog")) petType = PetType.Dog;
+            if (name.Contains("lion")) profile.type = PetType.Lion;
+            else if (name.Contains("tiger")) profile.type = PetType.Tiger;
+            else if (name.Contains("turtle")) profile.type = PetType.Turtle;
+            else if (name.Contains("rabbit")) profile.type = PetType.Rabbit;
+            else if (name.Contains("cat")) profile.type = PetType.Cat;
+            else if (name.Contains("dog")) profile.type = PetType.Dog;
             else
             {
-                PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {petType}을(를) 사용합니다.", this);
+                PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {profile.type}을(를) 사용합니다.", this);
             }
         }
     }
