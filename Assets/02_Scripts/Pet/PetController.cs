@@ -90,6 +90,11 @@ public partial class PetController : MonoBehaviour
             agent.updateRotation = true;
             agent.updatePosition = true;
             agent.updateUpAxis = false;
+            
+            // 충돌 회피 설정
+            agent.radius = 0.5f; // 펫의 물리적 크기
+            agent.avoidancePriority = UnityEngine.Random.Range(30, 70); // 랜덤 우선순위로 교착상태 방지
+            agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.HighQualityObstacleAvoidance;
         }
         
         // Rigidbody 확인 및 추가

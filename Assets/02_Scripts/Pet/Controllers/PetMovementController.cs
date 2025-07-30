@@ -13,17 +13,24 @@ public class PetMovementController : PetControllerBase
     /// 물 속성 펫이 물 vs 육지 목적지를 고를 확률 (0~1).
     /// </summary>
     [Range(0f, 1f)] public float waterDestinationChance = 0.8f;
+    
+    // 막힘 감지 관련 변수
+    private Vector3 lastPosition;
+    private float stuckTimer = 0f;
+    private const float STUCK_THRESHOLD = 3f; // 3초 동안 움직이지 않으면 막힌 것으로 판단
+    private const float MIN_MOVE_DISTANCE = 0.5f; // 최소 이동 거리
 
     // === 초기화 ===
     protected override void OnInitialize()
     {
-        // 추가 초기화 로직 필요시 여기에 작성
+        lastPosition = transform.position;
     }
     
-    // Unity Update - 회전 처리
+    // Unity Update - 회전 처리 및 막힘 감지
     private void Update()
     {
         HandleRotation();
+        CheckIfStuck();
     }
 
     // === 공용 유틸리티 메서드들 (다른 곳에서 호출됨) ===
@@ -208,6 +215,73 @@ public class PetMovementController : PetControllerBase
     public void SetRandomDestination()
     {
         SetRandomDestination(50f); // 기본 반경 50f
+    }
+    
+    /// <summary>
+    /// 펫이 막혔는지 감지하고 해결합니다.
+    /// </summary>
+    private void CheckIfStuck()
+    {
+        if (!IsNavMeshAgentValid() || petController.State.IsHolding || petController.State.IsSelected)
+        {
+            stuckTimer = 0f;
+            lastPosition = transform.position;
+            return;
+        }
+        
+        // 이동 중이지만 실제로 움직이지 않는 경우
+        if (petController.agent != null && !petController.agent.isStopped && petController.agent.hasPath)
+        {
+            float movedDistance = Vector3.Distance(transform.position, lastPosition);
+            
+            if (movedDistance < MIN_MOVE_DISTANCE)
+            {
+                stuckTimer += Time.deltaTime;
+                
+                if (stuckTimer >= STUCK_THRESHOLD)
+                {
+                    Debug.Log($"[PetMovementController] {petController.petName}: 막힘 감지! 새로운 경로 찾기");
+                    ResolveStuck();
+                    stuckTimer = 0f;
+                }
+            }
+            else
+            {
+                stuckTimer = 0f;
+                lastPosition = transform.position;
+            }
+        }
+        else
+        {
+            stuckTimer = 0f;
+            lastPosition = transform.position;
+        }
+    }
+    
+    /// <summary>
+    /// 막힌 상태를 해결합니다.
+    /// </summary>
+    private void ResolveStuck()
+    {
+        if (!IsNavMeshAgentValid()) return;
+        
+        // 방법 1: 현재 경로 취소하고 새로운 목적지 설정
+        petController.agent.ResetPath();
+        
+        // 방법 2: 약간 뒤로 이동
+        Vector3 backDirection = -transform.forward;
+        Vector3 newPosition = transform.position + backDirection * 1f;
+        
+        // NavMesh 위의 유효한 위치 찾기
+        if (NavMesh.SamplePosition(newPosition, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+        {
+            petController.agent.Warp(hit.position);
+        }
+        
+        // 방법 3: 새로운 랜덤 목적지 설정 (짧은 거리)
+        SetRandomDestination(10f);
+        
+        Debug.Log($"[PetMovementController] {petController.petName}: 막힌 상태 해결 시도");
     }
     
 }
