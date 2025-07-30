@@ -71,9 +71,12 @@ public class EatActivity : PetActivityAdapter
     
     public override void Update()
     {
-        // 이미 먹고 있거나 음식을 향해 이동 중이라면 대기
+        // 이미 먹고 있거나 음식을 향해 이동 중이라면 업데이트
         if (feedingController.IsEatingOrSeeking())
+        {
+            feedingController.UpdateMovementToFood();
             return;
+        }
             
         // 광역 탐색 타이머 업데이트
         searchTimer += Time.deltaTime;
