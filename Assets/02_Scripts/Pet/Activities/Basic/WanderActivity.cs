@@ -49,12 +49,16 @@ public class WanderActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // Idle 상태이고 특별한 활동이 없을 때만 배회 가능
-        return state.CurrentStatus == PetStatus.Idle && 
+        // Idle 상태이거나, Environmental 상태에서 물 속에만 있을 때 배회 가능
+        bool canStartInIdle = state.CurrentStatus == PetStatus.Idle;
+        bool canStartInWater = state.CurrentStatus == PetStatus.Environmental && 
+                               state.IsInWater && 
+                               !state.IsClimbingTree;
+        
+        return (canStartInIdle || canStartInWater) && 
                !state.IsInteracting && 
                !state.IsSelected && 
                !state.IsHolding && 
-               !state.IsClimbingTree && 
                !state.IsGathering;
     }
     
