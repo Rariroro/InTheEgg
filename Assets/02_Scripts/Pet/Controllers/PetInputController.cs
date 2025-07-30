@@ -235,8 +235,9 @@ public class PetInputController : PetControllerBase
                 }
                 Select();
             }
-            else if (petController.State.IsSelected)
+            else if (petController.State.IsSelected && !isProcessingSpecialAnimation)
             {
+                // Die 애니메이션 처리 중이 아닐 때만 선택 해제
                 Deselect();
             }
         }
@@ -635,8 +636,13 @@ private void Select()
             if (nameTextObject != null)
                 nameTextObject.SetActive(false);
 
-            // 현재 진행중인 AttackAfterDelay 같은 코루틴을 중지합니다.
-            StopAllCoroutines();
+            // Die 애니메이션이 처리 중이 아닐 때만 코루틴 중지
+            // Die 애니메이션은 중단되면 안 되므로 끝까지 재생되도록 보장
+            if (!isProcessingSpecialAnimation)
+            {
+                // 현재 진행중인 AttackAfterDelay 같은 코루틴을 중지합니다.
+                StopAllCoroutines();
+            }
 
             // 나무 위에서 선택 해제 시, 휴식 애니메이션으로 돌려놓습니다.
             if (petController.State.IsClimbingTree)
