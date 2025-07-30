@@ -56,7 +56,7 @@ MonoBehaviour:
     diet: 48
     habitat: 0
     treeClimbChance: 0.1
-    waterSinkDepth: 0.21
+    waterSinkDepth: 0.4
   movement:
     walkSpeed: 3.5
     runMultiplier: 2
@@ -109,8 +109,8 @@ MonoBehaviour:
     hunger: 0
     sleepiness: 0
     affection: 50
-    hungerIncreaseRate: 0.5
-    sleepinessIncreaseRate: 0.3
+    hungerIncreaseRate: 0
+    sleepinessIncreaseRate: 0
     affectionDecreaseRateWhenHungry: 0.2
     hungerThresholdForAffectionDecrease: 80
     lowAffectionThreshold: 30

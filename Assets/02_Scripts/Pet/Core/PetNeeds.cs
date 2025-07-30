@@ -26,9 +26,11 @@ public class PetNeeds
     
     [Header("욕구 증가율")]
     [Tooltip("초당 배고픔 증가량 (기본값: 0.5)")]
-    [SerializeField] private float hungerIncreaseRate = 0.5f;      // 초당 배고픔 증가량
+    [SerializeField] private float hungerIncreaseRate = 0f;      // 초당 배고픔 증가량
     [Tooltip("초당 졸림 증가량 (기본값: 0.3)")]
-    [SerializeField] private float sleepinessIncreaseRate = 0.3f;  // 초당 졸림 증가량
+    [SerializeField] private float sleepinessIncreaseRate = 0f;  // 초당 졸림 증가량
+    
+
     
     // 프로퍼티로 외부 접근 허용
     public float HungerIncreaseRate
