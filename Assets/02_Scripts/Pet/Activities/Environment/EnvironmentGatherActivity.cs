@@ -37,13 +37,8 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         return 15.0f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        return pet.State.IsAttractedToEnvironment ? 15.0f : 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         isGathering = true;
         pet.StartCoroutine(EnterSequence());
@@ -76,7 +71,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         if (!isGathering) return;
         
@@ -93,7 +88,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경 모이기 중단");
         

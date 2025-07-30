@@ -65,24 +65,13 @@ public class WanderActivity : PetActivityAdapter
     }
     
     
-    // 기존 IPetAction 메서드 구현
-    public override float GetPriority()
-    {
-        // 호환성을 위해 기존 로직 유지
-        if (pet.State.IsInteracting || pet.State.IsSelected || pet.State.IsHolding || pet.State.IsClimbingTree || pet.State.IsGathering)
-        {
-            return 0f;
-        }
-        return 0.1f;
-    }
-    
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 시작");
         DecideNextBehavior();
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         if (!IsAgentReady()) return;
         
@@ -108,7 +97,7 @@ public class WanderActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 종료");
         ForceStopCurrentBehavior();

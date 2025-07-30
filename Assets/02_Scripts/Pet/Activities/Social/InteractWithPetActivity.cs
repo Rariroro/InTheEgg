@@ -33,18 +33,8 @@ public class InteractWithPetActivity : PetActivityAdapter
         return 1.5f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        // 터치/홀드 상태에서는 펫 간 상호작용도 중단
-        if (pet.State.IsHolding || pet.State.IsSelected)
-            return 0f;
-            
-        // 펫이 상호작용 중일 때, 다른 저순위 행동을 막기 위해 중간 정도의 우선순위 유지
-        return pet.State.IsInteracting ? 1.5f : 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 상태 유지 중");
         // BasePetInteraction이 이미 이동을 제어하므로 여기서는 움직임만 중지
@@ -54,13 +44,13 @@ public class InteractWithPetActivity : PetActivityAdapter
         } 
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         // 모든 실제 행동은 BasePetInteraction 코루틴에서 처리되므로
         // 여기서는 추가 작업 없음
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 종료");
         // BasePetInteraction의 finally 블록에서 모든 정리를 수행하므로

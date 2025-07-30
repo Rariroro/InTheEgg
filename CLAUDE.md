@@ -39,6 +39,11 @@ Unity 기반의 펫 시뮬레이션 게임으로, 다양한 동물 펫들이 AI�
    - 이후: `pet.State.IsHolding`, `pet.State.IsSelected`
    - 모든 Activity와 Controller 클래스에 적용
 
+3. **IPetActivity 인터페이스 간소화** (2025-07-30)
+   - GetPriority() 메서드 통일: `GetPriority(PetState state, PetNeeds needs)` 하나만 사용
+   - 메서드 이름 변경: OnEnter/OnUpdate/OnExit → Start/Update/Stop
+   - PetActivityAdapter에서 중복 메서드 제거로 더 명확한 구조
+
 ## 프로젝트 구조
 
 ### 핵심 디렉토리
@@ -94,13 +99,33 @@ public enum PetStatus {
 3. **null 체크**: 펫 관련 작업 시 항상 null 체크 수행
 4. **코루틴 사용**: 시간이 걸리는 작업은 코루틴으로 구현
 
-### 새로운 Action 추가 시
+### 새로운 Activity 추가 시
 ```csharp
-public class NewAction : IPetAction {
-    public float GetPriority(PetController pet) {
+public class NewActivity : PetActivityAdapter {
+    public override string Name => "NewActivity";
+    
+    public override bool CanStart(PetState state, PetNeeds needs) {
         // State 속성 사용
-        if (pet.State.IsHolding) return 0f;
+        if (state.IsHolding) return false;
+        // 시작 가능 조건 체크
+        return true;
+    }
+    
+    public override float GetPriority(PetState state, PetNeeds needs) {
         // 우선순위 계산 로직
+        return 1.0f;
+    }
+    
+    public override void Start() {
+        // 활동 시작 시 실행
+    }
+    
+    public override void Update() {
+        // 매 프레임 실행
+    }
+    
+    public override void Stop() {
+        // 활동 종료 시 실행
     }
 }
 ```

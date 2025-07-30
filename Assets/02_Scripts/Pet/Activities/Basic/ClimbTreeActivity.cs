@@ -59,39 +59,8 @@ public class ClimbTreeActivity : PetActivityAdapter
         return 0.3f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        // 터치/홀드 상태에서는 나무 오르기도 중단
-        if (pet.State.IsHolding || (pet.State.IsSelected && !pet.State.IsClimbingTree))
-            return 0f;
-            
-        // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 최상위 우선순위
-        if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
-        {
-            return 6.0f;
-        }
-        
-        // 'Tree' 서식지 펫이 아니면 실행하지 않음
-        if (pet.habitat != PetAIProperties.Habitat.Tree) 
-            return 0f;
-        
-        // 다른 중요한 행동(식사, 수면 등)을 하면 실행하지 않음
-        if (pet.Needs.Hunger > 70f || pet.Needs.Sleepiness > 70f)
-        {
-            return 0f;
-        }
-        
-        // 설정된 확률에 따라 우선순위를 가끔씩 높게 줌
-        if (Random.value < pet.treeClimbChance * 0.1f)
-        {
-            return 0.3f;
-        }
-        
-        return 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 시작");
         
@@ -103,7 +72,7 @@ public class ClimbTreeActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         // 나무 위에 있을 때 펫이 선택되었다면, 카메라를 바라보도록 처리
         if (pet.State.IsClimbingTree && pet.State.IsSelected)
@@ -141,7 +110,7 @@ public class ClimbTreeActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 중단");
         

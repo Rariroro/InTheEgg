@@ -56,32 +56,15 @@ public class SleepActivity : PetActivityAdapter
         return 0.2f + ((sleepiness - 70f) / 30f); // 0.2 ~ 1.2
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        // 터치/홀드 상태에서는 잠자기도 중단
-        if (pet.State.IsHolding || pet.State.IsSelected)
-            return 0f;
-            
-        // 이미 잠을 자거나 잠잘 곳을 찾는 중이라면, 높은 우선순위를 유지
-        if (sleepingController.IsSleepingOrSeeking())
-            return 2.0f;
-            
-        float currentSleepiness = pet.Needs != null ? pet.Needs.Sleepiness : 30f;
-        if (currentSleepiness >= 70f)
-            return 0.2f + ((currentSleepiness - 70f) / 30f);
-            
-        return 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.Needs.Sleepiness:F1})");
         isPreparingToSleep = sleepingController.TryStartSleepingSequence();
         searchTimer = 0f;
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         if (isPreparingToSleep)
         {
@@ -116,7 +99,7 @@ public class SleepActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 종료");
         sleepingController.InterruptSleep();

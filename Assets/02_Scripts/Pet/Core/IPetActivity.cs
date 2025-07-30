@@ -72,35 +72,10 @@ public abstract class PetActivityAdapter : IPetActivity
         pet = petController;
     }
     
-    // IPetActivity 구현 - 기본 구현 제공
-    public virtual bool CanStart(PetState state, PetNeeds needs)
-    {
-        return GetPriority() > 0f;
-    }
-    
-    public virtual float GetPriority(PetState state, PetNeeds needs)
-    {
-        return GetPriority();
-    }
-    
-    public virtual void Start()
-    {
-        OnEnter();
-    }
-    
-    public virtual void Update() 
-    {
-        OnUpdate();
-    }
-    
-    public virtual void Stop()
-    {
-        OnExit();
-    }
-    
-    // 하위 클래스에서 구현할 메서드들 (기존 구조 유지)
-    public abstract float GetPriority();
-    public abstract void OnEnter();
-    public abstract void OnUpdate(); 
-    public abstract void OnExit();
+    // IPetActivity 구현 - 하위 클래스에서 구현
+    public abstract bool CanStart(PetState state, PetNeeds needs);
+    public abstract float GetPriority(PetState state, PetNeeds needs);
+    public abstract void Start();
+    public abstract void Update();
+    public abstract void Stop();
 }

@@ -32,21 +32,8 @@ public class SelectedActivity : PetActivityAdapter
         return pet.State.IsClimbingTree ? 5.5f : 30.0f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        // 펫이 '선택'되었고, '들려있지' 않을 때 높은 우선순위
-        if (pet.State.IsSelected && !pet.State.IsHolding)
-        {
-            float priority = pet.State.IsClimbingTree ? 5.5f : 30.0f;
-            Debug.Log($"[SelectedActivity] {pet.petName}: GetPriority = {priority} (isSelected={pet.State.IsSelected}, isHolding={pet.State.IsHolding})");
-            return priority;
-        }
-        
-        return 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 시작");
         
@@ -67,7 +54,7 @@ public class SelectedActivity : PetActivityAdapter
         animController?.SetContinuousAnimation((int)PetAnimationController.PetAnimationType.Idle);
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         // 카메라를 부드럽게 바라봄 (나무 위에 있을 때는 제외)
         if (Camera.main != null && !pet.State.IsClimbingTree)
@@ -92,7 +79,7 @@ public class SelectedActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 종료");
         // 특별한 정리 작업 없음

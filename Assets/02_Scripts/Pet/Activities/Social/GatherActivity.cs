@@ -39,13 +39,8 @@ public class GatherActivity : PetActivityAdapter
         return 20.0f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        return pet.State.IsGathering ? 20.0f : 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         // 코루틴 시작
         pet.StartCoroutine(EnterSequence());
@@ -84,7 +79,7 @@ public class GatherActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         if (pet.movementController != null)
         {
@@ -110,7 +105,7 @@ public class GatherActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 종료");
         pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트 

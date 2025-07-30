@@ -57,23 +57,7 @@ public class EatActivity : PetActivityAdapter
         return (hunger - 70f) / 30f; // 0.0 ~ 1.0
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        if (pet.State.IsHolding || pet.State.IsSelected || pet.State.IsClimbingTree)
-            return 0f;
-            
-        if (feedingController.IsEatingOrSeeking())
-            return 2.0f;
-            
-        float currentHunger = pet.Needs != null ? pet.Needs.Hunger : 50f;
-        if (currentHunger >= 70f)
-            return (currentHunger - 70f) / 30f;
-            
-        return 0f;
-    }
-    
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.Needs.Hunger:F1})");
         searchTimer = 0f;
@@ -85,7 +69,7 @@ public class EatActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         // 이미 먹고 있거나 음식을 향해 이동 중이라면 대기
         if (feedingController.IsEatingOrSeeking())
@@ -107,7 +91,7 @@ public class EatActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 종료");
         // 먹이 찾기 중단

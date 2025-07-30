@@ -70,13 +70,8 @@ public class BeeEscapeActivity : PetActivityAdapter
         return 0f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        return GetPriority(pet.State, pet.Needs);
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) 벌 공격으로부터 도망가기 시작!");
         
@@ -100,7 +95,7 @@ public class BeeEscapeActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         // 놀람 감정 표현 (한 번만)
         if (!hasShowedEmotion && emotionManager != null)
@@ -134,7 +129,7 @@ public class BeeEscapeActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         Debug.Log($"[BeeEscapeActivity] {pet.petName}의 벌 도망 행동 종료");
         

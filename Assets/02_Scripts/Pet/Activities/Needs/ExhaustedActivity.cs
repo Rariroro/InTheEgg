@@ -44,18 +44,8 @@ public class ExhaustedActivity : PetActivityAdapter
         return 50.0f;
     }
     
-    // 기존 IPetAction 메서드 구현 (호환성)
-    public override float GetPriority()
-    {
-        // 플레이어가 직접 선택했을 때는 우선순위를 낮춰 상호작용이 가능하게 함
-        if (pet.State.IsSelected)
-            return 0f;
-            
-        // 배고픔 수치가 100 이상이면 최상위 우선순위
-        return (pet.Needs.Hunger >= 100f) ? 50.0f : 0f;
-    }
     
-    public override void OnEnter()
+    public override void Start()
     {
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.SetEmergencyState(exhausted: true);
@@ -88,7 +78,7 @@ public class ExhaustedActivity : PetActivityAdapter
         }
     }
     
-    public override void OnUpdate()
+    public override void Update()
     {
         if (isTryingToEat)
         {
@@ -107,7 +97,7 @@ public class ExhaustedActivity : PetActivityAdapter
         }
     }
     
-    public override void OnExit()
+    public override void Stop()
     {
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.SetEmergencyState(exhausted: false);
