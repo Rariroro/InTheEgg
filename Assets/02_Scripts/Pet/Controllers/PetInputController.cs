@@ -16,8 +16,9 @@ public class PetInputController : PetControllerBase
     // 터치 횟수 관련 변수
     private int touchCount = 0;         // 플레이어가 펫을 터치한 횟수
     private float lastTouchTime = 0f;    // 마지막 터치 시간
-    private float touchResetTime = 5f;  // 터치 횟수를 초기화하기 위한 시간 간격
+    private float touchResetTime = 10f;  // 터치 횟수를 초기화하기 위한 시간 간격 (10초로 증가)
     private int maxTouchCount = 10;    // 특별한 애니메이션을 트리거하기 위한 최대 터치 횟수
+    private bool isProcessingSpecialAnimation = false; // 특수 애니메이션 처리 중 플래그
 
     // 펫 들기 관련 변수
     // isHolding은 PetController.isHolding 사용
@@ -194,8 +195,8 @@ public class PetInputController : PetControllerBase
 
     private void HandleShortTouch()
     {
-        // 애니메이션이 잠겨있으면 터치 처리하지 않음
-        if (petController.State.IsAnimationLocked)
+        // 애니메이션이 잠겨있거나 특수 애니메이션 처리 중이면 터치 처리하지 않음
+        if (petController.State.IsAnimationLocked || isProcessingSpecialAnimation)
         {
             Debug.Log($"{petController.petName}: 애니메이션 재생 중 터치 무시됨");
             return;
@@ -575,7 +576,7 @@ private void Select()
 {
     // ★★★ 수정: isAnimationLocked 체크를 제거하거나 isExhausted 예외를 추가합니다. ★★★
     // 탈진 상태에서도 펫을 선택하여 상태를 확인하거나 들어올릴 수 있어야 합니다.
-    if (petController.State.IsAnimationLocked && !petController.State.IsExhausted)
+    if ((petController.State.IsAnimationLocked && !petController.State.IsExhausted) || isProcessingSpecialAnimation)
     {
         return;
     }
@@ -598,9 +599,10 @@ private void Select()
     // 터치 횟수에 따른 특수 애니메이션 재생
     if (touchCount >= maxTouchCount) // 10번 이상 터치
     {
+        // 특수 애니메이션 처리 플래그 설정
+        isProcessingSpecialAnimation = true;
         // 나무 위에 있어도 Die 애니메이션은 재생
-        StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die, true));
-        touchCount = 0;
+        StartCoroutine(PlayDieAnimationAndReset(animController));
     }
     else if (touchCount >= 5) // 5번 이상 터치
     {
@@ -643,10 +645,6 @@ private void Select()
                 animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             }
         }
-        
-        // 선택 해제 시 터치 카운트 리셋
-        touchCount = 0;
-        lastTouchTime = 0f;
     }
     
     // 진행 중인 상호작용을 강제로 중단
@@ -682,6 +680,9 @@ private void Select()
     // 5번 터치 시 공격 애니메이션을 위한 새로운 코루틴
     private IEnumerator AttackAfterDelay()
     {
+        // 특수 애니메이션 처리 시작
+        isProcessingSpecialAnimation = true;
+        
         // SelectedAction이 활성화되어 카메라를 어느정도 바라볼 시간을 줍니다.
         yield return new WaitForSeconds(0.5f);
 
@@ -694,16 +695,16 @@ private void Select()
                 yield return StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack, false));
             }
         }
+        
+        // 특수 애니메이션 처리 완료
+        isProcessingSpecialAnimation = false;
     }
 
-    // 특별한 애니메이션을 재생하는 코루틴
-   private IEnumerator TriggerSpecialAnimation(PetAnimationController.PetAnimationType animationType)
+    // Die 애니메이션 재생 후 터치 카운트 리셋
+    private IEnumerator PlayDieAnimationAndReset(PetAnimationController animController)
     {
-        // 펫의 PetAnimationController를 통해 특별한 애니메이션을 재생하고, 애니메이션이 끝날 때까지 기다립니다.
-        yield return StartCoroutine(petController.GetComponent<PetAnimationController>().PlaySpecialAnimation(animationType));
+        yield return StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die, true));
+        touchCount = 0;
+        isProcessingSpecialAnimation = false;
     }
-
-
-
-
 }
