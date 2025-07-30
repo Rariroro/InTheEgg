@@ -20,6 +20,7 @@ public class PetAnimationController : PetControllerBase
     private bool isSpecialAnimationPlaying = false;
     private bool isContinuousAnimationPlaying = false;
     private PetAnimationType continuousAnimationType = PetAnimationType.Idle;
+    private bool isDieAnimationPlaying = false; // 죽는 애니메이션 특별 처리용
 
     protected override void OnInitialize()
     {
@@ -71,6 +72,12 @@ public class PetAnimationController : PetControllerBase
     /// </summary>
     private void SyncAnimationSpeed()
     {
+        // 특별 애니메이션이 재생 중이면 속도 변경하지 않음
+        if (isSpecialAnimationPlaying)
+        {
+            return;
+        }
+
         if (petController.animator != null && petController.agent != null)
         {
             var currentAnimation = (PetAnimationType)petController.animator.GetInteger("animation");
@@ -153,6 +160,7 @@ public class PetAnimationController : PetControllerBase
         isSpecialAnimationPlaying = false;
         isContinuousAnimationPlaying = false;
         continuousAnimationType = PetAnimationType.Idle;
+        isDieAnimationPlaying = false;
 
         if (petController.animator != null)
         {
@@ -200,10 +208,18 @@ public class PetAnimationController : PetControllerBase
         petController.State.SetAnimationLocked(true);
         isSpecialAnimationPlaying = true;
 
+        // Die 애니메이션 특별 처리
+        if (animationType == PetAnimationType.Die)
+        {
+            isDieAnimationPlaying = true;
+        }
+
         try
         {
             if (petController.animator != null)
             {
+                // 애니메이션 속도를 1.0으로 고정
+                petController.animator.speed = 1.0f;
                 petController.animator.SetInteger("animation", (int)animationType);
                 yield return null;
                 float animationLength = petController.animator.GetCurrentAnimatorStateInfo(0).length;
@@ -231,12 +247,14 @@ public class PetAnimationController : PetControllerBase
         finally
         {
             isSpecialAnimationPlaying = false;
+            isDieAnimationPlaying = false;
             // ★ [Phase 4] PetState를 통한 상태 업데이트
             petController.State.SetAnimationLocked(false);
 
             if (petController.animator != null)
             {
                 petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
+                petController.animator.speed = 1.0f;
             }
 
             // 나무 위에 있지 않을 때만 이동 재개
@@ -246,4 +264,7 @@ public class PetAnimationController : PetControllerBase
             }
         }
     }
+
+    // Die 애니메이션 재생 중인지 확인하는 프로퍼티
+    public bool IsDieAnimationPlaying => isDieAnimationPlaying;
 }

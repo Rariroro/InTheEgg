@@ -194,6 +194,13 @@ public class PetInputController : PetControllerBase
 
     private void HandleShortTouch()
     {
+        // 애니메이션이 잠겨있으면 터치 처리하지 않음
+        if (petController.State.IsAnimationLocked)
+        {
+            Debug.Log($"{petController.petName}: 애니메이션 재생 중 터치 무시됨");
+            return;
+        }
+
         // 화면 터치 위치에서 레이캐스트
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -582,7 +589,7 @@ private void Select()
     
     // ★★★ SelectedActivity가 높은 우선순위를 가지므로 자동으로 활성화됨 ★★★
 
-    // 터치 횟수 관련 로직은 유지
+    // 터치 횟수 관련 로직은 유지 - 애니메이션 잠금 체크 이후에만 증가
     touchCount++;
     lastTouchTime = Time.time;
 
@@ -636,6 +643,10 @@ private void Select()
                 animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             }
         }
+        
+        // 선택 해제 시 터치 카운트 리셋
+        touchCount = 0;
+        lastTouchTime = 0f;
     }
     
     // 진행 중인 상호작용을 강제로 중단
