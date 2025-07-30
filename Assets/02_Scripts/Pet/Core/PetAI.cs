@@ -85,8 +85,8 @@ public class PetAI : MonoBehaviour
     /// </summary>
     public void UpdateAI()
     {
-        // 플레이어가 직접 제어 중이면 AI 중단
-        if (petState?.CurrentStatus == PetStatus.PlayerControl)
+        // 플레이어가 직접 제어 중이면 AI 중단 (단, 들고 있을 때만)
+        if (petState?.CurrentStatus == PetStatus.PlayerControl && petState.IsHolding)
             return;
             
         // 가장 우선순위가 높은 활동 찾기
