@@ -86,7 +86,10 @@ public class GatherActivity : PetActivityAdapter
     
     public override void OnUpdate()
     {
-        pet.HandleRotation(); 
+        if (pet.movementController != null)
+        {
+            pet.movementController.HandleRotation();
+        } 
         
         if (hasArrived || agent == null || !agent.enabled) 
             return;

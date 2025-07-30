@@ -80,7 +80,10 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     {
         if (!isGathering) return;
         
-        pet.HandleRotation();
+        if (pet.movementController != null)
+        {
+            pet.movementController.HandleRotation();
+        }
         
         // 도착 체크 (거리를 넉넉하게 2.5f로 설정)
         if (agent != null && agent.enabled && !agent.pathPending && agent.remainingDistance <= 2.5f)
@@ -129,7 +132,10 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         }
         
         // 2. 축하 애니메이션 및 이모티콘 표시
-        pet.ShowEmotion(EmotionType.Happy, CELEBRATION_DURATION);
+        if (pet.emotionController != null)
+        {
+            pet.emotionController.ShowEmotion(EmotionType.Happy, CELEBRATION_DURATION);
+        }
         float celebrationTime = 0f;
         
         while (celebrationTime < CELEBRATION_DURATION)
@@ -161,7 +167,10 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         // 3. 모든 행동 종료 후 상태 초기화
         if (pet == null) yield break;
         
-        pet.HideEmotion();
+        if (pet.emotionController != null)
+        {
+            pet.emotionController.HideEmotion();
+        }
         
         if (pet.animator != null)
         {

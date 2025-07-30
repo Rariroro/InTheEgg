@@ -100,13 +100,19 @@ public class SleepActivity : PetActivityAdapter
                 pet.GetComponent<PetMovementController>()?.SetRandomDestination(SLEEP_SEARCH_RADIUS);
                 
                 // 졸리다는 감정 표현을 주기적으로 표시
-                pet.ShowEmotion(EmotionType.Sleepy, WIDE_WANDER_INTERVAL);
+                if (pet.emotionController != null)
+                {
+                    pet.emotionController.ShowEmotion(EmotionType.Sleepy, WIDE_WANDER_INTERVAL);
+                }
                 
                 // 다시 잠잘 곳 탐색을 시도
                 isPreparingToSleep = sleepingController.TryStartSleepingSequence();
             }
             
-            pet.HandleRotation();
+            if (pet.movementController != null)
+            {
+                pet.movementController.HandleRotation();
+            }
         }
     }
     

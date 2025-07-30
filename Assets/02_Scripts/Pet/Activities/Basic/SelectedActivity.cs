@@ -57,7 +57,10 @@ public class SelectedActivity : PetActivityAdapter
         // 나무에 오르지 않았을 때만 움직임을 멈춤
         if (!pet.State.IsClimbingTree)
         {
-            pet.StopMovement();
+            if (pet.movementController != null)
+            {
+                pet.movementController.StopMovement();
+            }
         }
         
         // 애니메이션을 즉시 Idle 상태로 전환

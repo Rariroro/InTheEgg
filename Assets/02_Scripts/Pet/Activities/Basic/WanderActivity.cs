@@ -102,9 +102,9 @@ public class WanderActivity : PetActivityAdapter
         }
         
         // 선택 상탌가 아닐 때만 회전 처리
-        if (!pet.State.IsSelected)
+        if (!pet.State.IsSelected && pet.movementController != null)
         {
-            pet.HandleRotation();
+            pet.movementController.HandleRotation();
         }
     }
     
@@ -252,7 +252,10 @@ public class WanderActivity : PetActivityAdapter
         }
         
         // 물에 있으면 속도 재조정
-        pet.AdjustSpeedForWater();
+        if (pet.waterBehaviorController != null)
+        {
+            pet.waterBehaviorController.AdjustSpeedForWater();
+        }
     }
     
     private void ForceStopCurrentBehavior()

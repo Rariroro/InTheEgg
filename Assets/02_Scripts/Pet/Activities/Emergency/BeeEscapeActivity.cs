@@ -128,7 +128,10 @@ public class BeeEscapeActivity : PetActivityAdapter
         }
         
         // 방향 전환 처리
-        pet.HandleRotation();
+        if (pet.movementController != null)
+        {
+            pet.movementController.HandleRotation();
+        }
     }
     
     public override void OnExit()

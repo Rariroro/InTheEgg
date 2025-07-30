@@ -69,7 +69,10 @@ public class ExhaustedActivity : PetActivityAdapter
         pet.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
         pet.GetComponent<PetSleepingController>()?.InterruptSleep();
         pet.GetComponent<PetTreeClimbingController>()?.ForceCancelClimbing();
-        pet.StopMovement();
+        if (pet.movementController != null)
+        {
+            pet.movementController.StopMovement();
+        }
         
         // 즉시 음식 탐색 시도
         AttemptToEat();
@@ -78,7 +81,10 @@ public class ExhaustedActivity : PetActivityAdapter
         if (!isTryingToEat)
         {
             animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
-            pet.ShowEmotion(EmotionType.Hungry, 2f);
+            if (pet.emotionController != null)
+            {
+                pet.emotionController.ShowEmotion(EmotionType.Hungry, 2f);
+            }
         }
     }
     
@@ -114,10 +120,16 @@ public class ExhaustedActivity : PetActivityAdapter
         
         // 애니메이션과 이모티콘을 정리
         animController?.StopContinuousAnimation();
-        pet.HideEmotion();
+        if (pet.emotionController != null)
+        {
+            pet.emotionController.HideEmotion();
+        }
         
         // 다시 움직일 수 있도록 허용
-        pet.ResumeMovement();
+        if (pet.movementController != null)
+        {
+            pet.movementController.ResumeMovement();
+        }
     }
     
     /// <summary>
@@ -132,7 +144,10 @@ public class ExhaustedActivity : PetActivityAdapter
         {
             isTryingToEat = true;
             animController?.StopContinuousAnimation(); // 휴식 애니메이션 중지
-            pet.HideEmotion(); // 배고픔 이모티콘 숨기기
+            if (pet.emotionController != null)
+        {
+            pet.emotionController.HideEmotion();
+        } // 배고픔 이모티콘 숨기기
             Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 음식을 발견하여 이동을 시작합니다.");
         }
         else

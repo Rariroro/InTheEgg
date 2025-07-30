@@ -23,6 +23,15 @@ public class PetEmotionController : MonoBehaviour
     }
     
     /// <summary>
+    /// 컨트롤러를 초기화합니다.
+    /// </summary>
+    public void Init(PetController controller)
+    {
+        petController = controller;
+        Initialize(controller.petModelTransform);
+    }
+    
+    /// <summary>
     /// EmotionOrigin을 초기화합니다. PetController의 InitializeControllers에서 호출됩니다.
     /// </summary>
     public void Initialize(Transform petModelTransform)

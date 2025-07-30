@@ -100,7 +100,10 @@ public class PetFeedingController : PetControllerBase
         }
         
         // 회전 및 도착 처리 로직은 그대로 유지합니다.
-        petController.HandleRotation();
+        if (petController.movementController != null)
+        {
+            petController.movementController.HandleRotation();
+        }
         HandleMovementToTarget();
     }
   

@@ -48,7 +48,10 @@ public class InteractWithPetActivity : PetActivityAdapter
     {
         Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 상태 유지 중");
         // BasePetInteraction이 이미 이동을 제어하므로 여기서는 움직임만 중지
-        pet.StopMovement(); 
+        if (pet.movementController != null)
+        {
+            pet.movementController.StopMovement();
+        } 
     }
     
     public override void OnUpdate()
