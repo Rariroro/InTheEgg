@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eabee8962e9c34fbabed1c599c05c53d, type: 3}
+  m_Name: PetDataDatabase
+  m_EditorClassIdentifier: 
+  petDataList:
+  - petType: 0
+    personality: 2
+    diet: 34
+    habitat: 0
+  - petType: 1
+    personality: 0
+    diet: 33
+    habitat: 0
+  - petType: 2
+    personality: 3
+    diet: 1
+    habitat: 3
+  - petType: 3
+    personality: 0
+    diet: 1
+    habitat: 3
+  - petType: 4
+    personality: 3
+    diet: 3
+    habitat: 3
+  - petType: 5
+    personality: 2
+    diet: 4
+    habitat: 3
+  - petType: 6
+    personality: 3
+    diet: 48
+    habitat: 2
+  - petType: 7
+    personality: 1
+    diet: 16
+    habitat: 2
+  - petType: 8
+    personality: 3
+    diet: 5
+    habitat: 0
+  - petType: 9
+    personality: 1
+    diet: 4
+    habitat: 1
+  - petType: 10
+    personality: 1
+    diet: 18
+    habitat: 1
+  - petType: 11
+    personality: 1
+    diet: 16
+    habitat: 1
+  - petType: 12
+    personality: 0
+    diet: 6
+    habitat: 2
+  - petType: 13
+    personality: 0
+    diet: 18
+    habitat: 1
+  - petType: 14
+    personality: 0
+    diet: 6
+    habitat: 1
+  - petType: 15
+    personality: 3
+    diet: 50
+    habitat: 1
+  - petType: 16
+    personality: 0
+    diet: 16
+    habitat: 4
+  - petType: 17
+    personality: 3
+    diet: 18
+    habitat: 1
+  - petType: 18
+    personality: 3
+    diet: 3
+    habitat: 4
+  - petType: 19
+    personality: 0
+    diet: 16
+    habitat: 2
+  - petType: 20
+    personality: 0
+    diet: 2
+    habitat: 1
+  - petType: 21
+    personality: 2
+    diet: 4
+    habitat: 2
+  - petType: 22
+    personality: 1
+    diet: 4
+    habitat: 3
+  - petType: 23
+    personality: 2
+    diet: 16
+    habitat: 1
+  - petType: 24
+    personality: 2
+    diet: 2
+    habitat: 4
+  - petType: 25
+    personality: 0
+    diet: 16
+    habitat: 1
+  - petType: 26
+    personality: 0
+    diet: 4
+    habitat: 2
+  - petType: 27
+    personality: 3
+    diet: 4
+    habitat: 2
+  - petType: 28
+    personality: 3
+    diet: 16
+    habitat: 2
+  - petType: 29
+    personality: 2
+    diet: 4
+    habitat: 3
+  - petType: 30
+    personality: 1
+    diet: 4
+    habitat: 2
+  - petType: 31
+    personality: 1
+    diet: 5
+    habitat: 2
+  - petType: 32
+    personality: 1
+    diet: 4
+    habitat: 2
+  - petType: 33
+    personality: 0
+    diet: 4
+    habitat: 2
+  - petType: 34
+    personality: 1
+    diet: 4
+    habitat: 3
+  - petType: 35
+    personality: 1
+    diet: 16
+    habitat: 2
+  - petType: 36
+    personality: 0
+    diet: 6
+    habitat: 2
+  - petType: 37
+    personality: 1
+    diet: 16
+    habitat: 2
+  - petType: 38
+    personality: 1
+    diet: 4
+    habitat: 2
+  - petType: 39
+    personality: 1
+    diet: 6
+    habitat: 2
+  - petType: 40
+    personality: 0
+    diet: 4
+    habitat: 3
+  - petType: 41
+    personality: 1
+    diet: 2
+    habitat: 1
+  - petType: 42
+    personality: 0
+    diet: 18
+    habitat: 4
+  - petType: 43
+    personality: 1
+    diet: 16
+    habitat: 1
+  - petType: 44
+    personality: 1
+    diet: 58
+    habitat: 1
+  - petType: 45
+    personality: 0
+    diet: 3
+    habitat: 2
+  - petType: 46
+    personality: 1
+    diet: 16
+    habitat: 1
+  - petType: 47
+    personality: 2
+    diet: 6
+    habitat: 1
+  - petType: 48
+    personality: 3
+    diet: 2
+    habitat: 4
+  - petType: 49
+    personality: 2
+    diet: 2
+    habitat: 4
+  - petType: 50
+    personality: 3
+    diet: 2
+    habitat: 4
+  - petType: 51
+    personality: 2
+    diet: 4
+    habitat: 4
+  - petType: 52
+    personality: 1
+    diet: 16
+    habitat: 1
+  - petType: 53
+    personality: 0
+    diet: 16
+    habitat: 4
+  - petType: 54
+    personality: 1
+    diet: 4
+    habitat: 2
+  - petType: 55
+    personality: 1
+    diet: 4
+    habitat: 0
+  - petType: 56
+    personality: 0
+    diet: 16
+    habitat: 2
+  - petType: 57
+    personality: 1
+    diet: 48
+    habitat: 0
+  - petType: 58
+    personality: 0
+    diet: 48
+    habitat: 0
+  - petType: 59
+    personality: 3
+    diet: 48
+    habitat: 0

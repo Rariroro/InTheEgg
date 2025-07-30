@@ -49,56 +49,78 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac349603c7521496089aa19dc419754a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 3.5
-  angularSpeed: 120
-  acceleration: 8
-  stoppingDistance: 0.5
-  rotationSpeed: 5
-  smoothTime: 0.3
-  personality: 1
-  diet: 16
-  habitat: 1
-  treeClimbChance: 0.1
-  waterSinkDepth: 1
-  affection: 0
-  hunger: 0
-  sleepiness: 0
-  petName: Leopard
-  emotionOrigin: {fileID: 0}
+  profile:
+    name: Buddy
+    type: 43
+    personality: 1
+    diet: 16
+    habitat: 1
+    treeClimbChance: 0.1
+    waterSinkDepth: 1
+  movement:
+    walkSpeed: 3.5
+    runMultiplier: 2
+    angularSpeed: 360
+    acceleration: 8
+    stoppingDistance: 1
+    rotationSmoothness: 10
+    climbHeight: 5
+    waterSpeedMultiplier: 0.3
+    aquaticWaterSpeedMultiplier: 0.7
+    shySpeedMultiplier: 0.8
+    braveSpeedMultiplier: 1.1
+    lazySpeedMultiplier: 0.7
+    playfulSpeedMultiplier: 1.2
   agent: {fileID: 0}
   animator: {fileID: 0}
   petModelTransform: {fileID: 0}
-  isGathered: 0
-  isGathering: 0
-  gatherCommandVersion: 0
   isGatheringAnimationOverride: 0
-  baseSpeed: 0
-  baseAngularSpeed: 0
-  baseAcceleration: 0
-  baseStoppingDistance: 0
-  petType: 0
-  manuallySetPetType: 0
-  isInteracting: 0
-  interactionPartner: {fileID: 0}
-  isInWater: 0
-  waterDepthOffset: 0
-  isClimbingTree: 0
-  currentTree: {fileID: 0}
-  climbHeight: 5
-  isSelected: 0
-  isHolding: 0
-  isAnimationLocked: 0
-  isActionLocked: 0
-  gatherTargetPosition: {x: 0, y: 0, z: 0}
-  currentInteractionLogic: {fileID: 0}
-  isAttractedToEnvironment: 0
-  environmentTargetPosition: {x: 0, y: 0, z: 0}
-  isBeingAttackedByBees: 0
-  beeAttackSource: {x: 0, y: 0, z: 0}
-  beeAttackStartTime: 0
-  hungerIncreaseRate: 0.2
-  sleepinessIncreaseRate: 0.1
-  isExhausted: 0
+  movementController: {fileID: 0}
+  animationController: {fileID: 0}
+  inputController: {fileID: 0}
+  feedingController: {fileID: 0}
+  sleepingController: {fileID: 0}
+  waterBehaviorController: {fileID: 0}
+  treeClimbingController: {fileID: 0}
+  emotionController: {fileID: 0}
+  petState:
+    currentStatus: 0
+    isHolding: 0
+    isSelected: 0
+    isClimbingTree: 0
+    isInWater: 0
+    isExhausted: 0
+    isBeingAttacked: 0
+    isGathering: 0
+    isGathered: 0
+    isAnimationLocked: 0
+    isActionLocked: 0
+    isAttractedToEnvironment: 0
+    interactionPartner: {fileID: 0}
+    currentTree: {fileID: 0}
+    gatherTargetPosition: {x: 0, y: 0, z: 0}
+    environmentTargetPosition: {x: 0, y: 0, z: 0}
+    beeAttackSource: {x: 0, y: 0, z: 0}
+    beeAttackStartTime: 0
+    currentInteractionLogic: {fileID: 0}
+    gatherCommandVersion: 0
+    waterDepthOffset: 0
+  petNeeds:
+    hunger: 0
+    sleepiness: 0
+    affection: 50
+    hungerIncreaseRate: 0.5
+    sleepinessIncreaseRate: 0.3
+    affectionDecreaseRateWhenHungry: 0.2
+    hungerThresholdForAffectionDecrease: 80
+    lowAffectionThreshold: 30
+    highAffectionThreshold: 80
+    droppedFoodAffectionMin: 5
+    droppedFoodAffectionMax: 10
+    environmentFoodAffectionMin: 3
+    environmentFoodAffectionMax: 7
+    hungryThreshold: 70
+    sleepyThreshold: 70
 --- !u!195 &8607425512536192977
 NavMeshAgent:
   m_ObjectHideFlags: 0

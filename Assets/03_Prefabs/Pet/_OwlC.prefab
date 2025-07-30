@@ -82,9 +82,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   profile:
     name: Buddy
-    type: 7
+    type: 16
     personality: 0
-    diet: 0
+    diet: 16
     habitat: 4
     treeClimbChance: 1
     waterSinkDepth: 1

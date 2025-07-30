@@ -118,7 +118,8 @@ public partial class PetController : MonoBehaviour
             }
         }
         
-        if (profile.type == PetType.Dog && gameObject.name.ToLower() != "dog")
+        // 펫 타입과 이름이 일치하지 않거나 기본 이름인 경우 업데이트
+        if (profile.name != profile.type.ToString() || profile.name == "Buddy")
         {
             SetPetTypeFromName();
         }
@@ -253,6 +254,7 @@ public partial class PetController : MonoBehaviour
             if (name.Contains(typeName))
             {
                 profile.type = type;
+                profile.name = type.ToString();  // 펫 이름도 타입명으로 설정
                 typeFound = true;
                 break;
             }
@@ -260,12 +262,36 @@ public partial class PetController : MonoBehaviour
 
         if (!typeFound)
         {
-            if (name.Contains("lion")) profile.type = PetType.Lion;
-            else if (name.Contains("tiger")) profile.type = PetType.Tiger;
-            else if (name.Contains("turtle")) profile.type = PetType.Turtle;
-            else if (name.Contains("rabbit")) profile.type = PetType.Rabbit;
-            else if (name.Contains("cat")) profile.type = PetType.Cat;
-            else if (name.Contains("dog")) profile.type = PetType.Dog;
+            if (name.Contains("lion")) 
+            { 
+                profile.type = PetType.Lion; 
+                profile.name = "Lion";
+            }
+            else if (name.Contains("tiger")) 
+            { 
+                profile.type = PetType.Tiger; 
+                profile.name = "Tiger";
+            }
+            else if (name.Contains("turtle")) 
+            { 
+                profile.type = PetType.Turtle; 
+                profile.name = "Turtle";
+            }
+            else if (name.Contains("rabbit")) 
+            { 
+                profile.type = PetType.Rabbit; 
+                profile.name = "Rabbit";
+            }
+            else if (name.Contains("cat")) 
+            { 
+                profile.type = PetType.Cat; 
+                profile.name = "Cat";
+            }
+            else if (name.Contains("dog")) 
+            { 
+                profile.type = PetType.Dog; 
+                profile.name = "Dog";
+            }
             else
             {
                 PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {profile.type}을(를) 사용합니다.", this);
