@@ -39,14 +39,32 @@ public class PetEmotionController : MonoBehaviour
         // EmotionOrigin 자동 탐색 (인스펙터에서 할당하지 않은 경우만)
         if (emotionOrigin == null)
         {
+            // 1차: petModelTransform에서 찾기
             Transform rootToSearch = petModelTransform != null ? petModelTransform : transform;
+            Debug.Log($"[PetEmotionController] {petController.petName}: EmotionOrigin 탐색 시작. 1차 탐색 루트: {rootToSearch.name}");
             emotionOrigin = FindDeepChild(rootToSearch, "EmotionOrigin");
             
-            // 그래도 없으면 기본값 사용
-            if (emotionOrigin == null)
+            // 2차: 못 찾으면 최상위 GameObject (PetController가 있는 곳)에서 찾기
+            if (emotionOrigin == null && petModelTransform != null)
             {
+                Debug.Log($"[PetEmotionController] {petController.petName}: 1차에서 못 찾음. 2차 탐색 루트: {transform.name}");
+                emotionOrigin = FindDeepChild(transform, "EmotionOrigin");
+            }
+            
+            // 결과 로깅
+            if (emotionOrigin != null)
+            {
+                Debug.Log($"[PetEmotionController] {petController.petName}: EmotionOrigin 찾음! 위치: {emotionOrigin.position}, 부모: {emotionOrigin.parent.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"[PetEmotionController] {petController.petName}: EmotionOrigin을 찾을 수 없음. 기본값(transform) 사용");
                 emotionOrigin = transform;
             }
+        }
+        else
+        {
+            Debug.Log($"[PetEmotionController] {petController.petName}: EmotionOrigin이 이미 인스펙터에서 할당됨. 위치: {emotionOrigin.position}");
         }
     }
     
@@ -61,6 +79,8 @@ public class PetEmotionController : MonoBehaviour
         if (EmotionManager.Instance != null)
         {
             Transform targetTransform = emotionOrigin != null ? emotionOrigin : transform;
+            Debug.Log($"[PetEmotionController] {petController.petName}: 감정 표시 - {emotion}, emotionOrigin 사용: {emotionOrigin != null}, 타겟 위치: {targetTransform.position}");
+            
             GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(petController, emotion, duration);
             
             if (emotionObject != null)
@@ -69,11 +89,13 @@ public class PetEmotionController : MonoBehaviour
                 if (emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
                 {
                     activeBubble = bubble;
+                    Debug.Log($"[PetEmotionController] {petController.petName}: 말풍선 생성됨. 초기 위치: {bubble.transform.position}");
                 }
                 else
                 {
                     // 파티클 시스템인 경우 activeParticle에 저장합니다.
                     activeParticle = emotionObject;
+                    Debug.Log($"[PetEmotionController] {petController.petName}: 파티클 생성됨. 위치: {emotionObject.transform.position}");
                 }
             }
         }
