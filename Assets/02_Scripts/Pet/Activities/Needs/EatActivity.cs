@@ -23,8 +23,9 @@ public class EatActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 기본 상태 체크
-        if (state.CurrentStatus != PetStatus.Idle)
+        // 기본 상태 체크 - Idle 상태이거나, Environmental 상태에서 물 속에만 있을 때도 먹기 가능
+        if (state.CurrentStatus != PetStatus.Idle && 
+            !(state.CurrentStatus == PetStatus.Environmental && state.IsInWater && !state.IsClimbingTree))
             return false;
             
         // 터치/홀드 상태에서는 먹이 찾기 중단

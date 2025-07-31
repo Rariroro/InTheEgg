@@ -12,7 +12,7 @@ public class PetFeedingController : PetControllerBase
     // 탐색 및 상태 관련 변수
     private float detectionRadius = 100f;
     private float eatingDistance = 4f;
-    private float feedingAreaDistance = 6f;
+    private float feedingAreaDistance = 2f;
     private bool isEating = false;
 
     // 타이머 및 간격 변수
