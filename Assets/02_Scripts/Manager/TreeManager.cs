@@ -102,7 +102,9 @@ public class TreeManager : MonoBehaviour
             var pet = treeOccupancy[tree];
             treeOccupancy.Remove(tree);
             if (pet != null)
+            {
                 // Debug.Log($"{pet.petName}이(가) {tree.name}에서 내려왔습니다.");
+            }
         }
     }
 

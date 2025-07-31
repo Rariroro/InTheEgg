@@ -115,9 +115,13 @@ public static class PetDebug
         if (currentLogLevel >= LogLevel.Info)
         {
             if (priority > 0)
+            {
                 //Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity} (Priority: {priority:F1})");
+            }
             else
+            {
                 //Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity}");
+            }
         }
     }
     
