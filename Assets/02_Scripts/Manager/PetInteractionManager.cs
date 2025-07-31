@@ -4,6 +4,7 @@
 // 수정된 PetInteractionManager
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -306,8 +307,8 @@ public class PetInteractionManager : MonoBehaviour
 
             int checksThisFrame = 0;
 
-            // 각 그리드 셀 검사
-            foreach (var gridCell in spatialGrid)
+            // 각 그리드 셀 검사 - Dictionary 복사본으로 순회하여 수정 중 오류 방지
+            foreach (var gridCell in spatialGrid.ToList())
             {
                 if (gridCell.Value.Count == 0)
                     continue;
