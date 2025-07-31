@@ -59,7 +59,7 @@ public class PetGatheringButton : MonoBehaviour
                 feedbackText.gameObject.SetActive(true);
             }
             UpdateButtonText("모이기 해제");
-            Debug.Log("펫 모으기 모드 활성화됨.");
+            // Debug.Log("펫 모으기 모드 활성화됨.");
         }
     }
 
@@ -97,7 +97,7 @@ public class PetGatheringButton : MonoBehaviour
                     pet.State.SetGatheringState(targetPoint);
                 }
 
-                Debug.Log($"모이기 명령 완료: {pets.Length}마리에게 명령 전달.");
+                // Debug.Log($"모이기 명령 완료: {pets.Length}마리에게 명령 전달.");
 
                 if (feedbackText != null)
                     feedbackText.gameObject.SetActive(false);
@@ -127,7 +127,7 @@ public class PetGatheringButton : MonoBehaviour
                 }
             }
             isGatheringActive = false;
-            Debug.Log("펫 모이기 해제됨. 펫들이 정상적으로 움직입니다.");
+            // Debug.Log("펫 모이기 해제됨. 펫들이 정상적으로 움직입니다.");
         }
         
         if (feedbackText != null)

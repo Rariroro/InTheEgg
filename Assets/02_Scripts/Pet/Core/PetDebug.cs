@@ -38,7 +38,7 @@ public static class PetDebug
     {
         if (currentLogLevel >= LogLevel.Info)
         {
-            Debug.Log($"[Pet] {message}", context);
+            //Debug.Log($"[Pet] {message}", context);
         }
     }
     
@@ -51,7 +51,7 @@ public static class PetDebug
     {
         if (currentLogLevel >= LogLevel.Debug)
         {
-            Debug.Log($"[Pet Debug] {message}", context);
+            //Debug.Log($"[Pet Debug] {message}", context);
         }
     }
     
@@ -64,7 +64,7 @@ public static class PetDebug
     {
         if (currentLogLevel >= LogLevel.Verbose)
         {
-            Debug.Log($"[Pet Verbose] {message}", context);
+            //Debug.Log($"[Pet Verbose] {message}", context);
         }
     }
     
@@ -101,7 +101,7 @@ public static class PetDebug
     {
         if (currentLogLevel >= LogLevel.Info)
         {
-            Debug.Log($"[Pet State] {petName}: {oldState} → {newState}");
+            //Debug.Log($"[Pet State] {petName}: {oldState} → {newState}");
         }
     }
     
@@ -115,9 +115,9 @@ public static class PetDebug
         if (currentLogLevel >= LogLevel.Info)
         {
             if (priority > 0)
-                Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity} (Priority: {priority:F1})");
+                //Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity} (Priority: {priority:F1})");
             else
-                Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity}");
+                //Debug.Log($"[Pet Activity] {petName}: {oldActivity} → {newActivity}");
         }
     }
     
@@ -130,7 +130,7 @@ public static class PetDebug
     {
         if (currentLogLevel >= LogLevel.Debug)
         {
-            Debug.Log($"[Pet Needs] {petName}: {needType} {oldValue:F1} → {newValue:F1}");
+            //Debug.Log($"[Pet Needs] {petName}: {needType} {oldValue:F1} → {newValue:F1}");
         }
     }
 }

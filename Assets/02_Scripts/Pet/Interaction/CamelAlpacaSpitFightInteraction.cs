@@ -66,7 +66,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 침 뱉기 싸움 시작!");
+        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 침 뱉기 싸움 시작!");
 
         // 역할 식별
         PetController camel = (pet1.PetType == PetType.Camel) ? pet1 : pet2;
@@ -97,9 +97,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         finally
         {
             // 상호작용이 어떤 이유로든 종료될 때 항상 정리 작업을 수행합니다.
-            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
             EndInteraction(camel, alpaca);
-            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -110,7 +110,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MeetAndConfrontPhase(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 1단계: 대치");
+        // Debug.Log($"[{InteractionName}] 1단계: 대치");
 
         // 감정 표현 (화난 표정)
         pet1.ShowEmotion(EmotionType.Angry, 30f);
@@ -138,14 +138,14 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     // SpitExchangePhase 코루틴에서 코루틴 호출 부분만 수정합니다.
     private IEnumerator SpitExchangePhase(PetController camel, PetController alpaca)
     {
-        Debug.Log($"[{InteractionName}] 2단계: 침 뱉기 공방");
+        // Debug.Log($"[{InteractionName}] 2단계: 침 뱉기 공방");
 
         for (int i = 0; i < spitRounds; i++)
         {
             PetController attacker = (i % 2 == 0) ? camel : alpaca;
             PetController target = (attacker == camel) ? alpaca : camel;
 
-            Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 공격!");
+            // Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 공격!");
 
             yield return StartCoroutine(attacker.GetComponent<PetAnimationController>()
                 .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, attackAnimationDuration, true, false));
@@ -157,14 +157,14 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 
             if (Random.value < dodgeChance)
             {
-                Debug.Log($"[{InteractionName}] {target.petName}이(가) 공격을 회피했습니다!");
+                // Debug.Log($"[{InteractionName}] {target.petName}이(가) 공격을 회피했습니다!");
                 target.ShowEmotion(EmotionType.Happy, 2f);
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, dodgeAnimationDuration, true, false));
             }
             else
             {
-                Debug.Log($"[{InteractionName}] {target.petName}이(가) 침에 맞았습니다!");
+                // Debug.Log($"[{InteractionName}] {target.petName}이(가) 침에 맞았습니다!");
                 // 피격 효과 생성은 이제 SpitEffectCoroutine이 담당하므로 여기서 생성 코드를 제거합니다.
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, damageAnimationDuration, true, false));
@@ -179,7 +179,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator DetermineWinnerPhase(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 3단계: 승패 결정");
+        // Debug.Log($"[{InteractionName}] 3단계: 승패 결정");
 
         // 랜덤으로 승자 결정
         PetController winner = DetermineWinner(pet1, pet2, 0.5f);

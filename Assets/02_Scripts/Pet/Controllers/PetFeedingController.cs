@@ -114,10 +114,12 @@ public class PetFeedingController : PetControllerBase
     {
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
         {
+            Debug.LogWarning($"[Feeding] {petController.petName}: NavMeshAgent 문제로 먹이 탐색 불가");
             return;
         }
 
         Collider[] foodColliders = Physics.OverlapSphere(transform.position, detectionRadius, foodItemLayer);
+        Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {detectionRadius}m)");
         GameObject nearestFood = FindClosestMatchingFood(foodColliders);
 
         if (nearestFood != null)
@@ -126,10 +128,12 @@ public class PetFeedingController : PetControllerBase
             targetFood = nearestFood;
             petController.agent.SetDestination(targetFood.transform.position); 
             petController.ResumeMovement();
+            Debug.Log($"[Feeding] {petController.petName}: 음식 {nearestFood.name}을(를) 향해 이동 시작");
             return;
         }
         
         Collider[] areaColliders = Physics.OverlapSphere(transform.position, detectionRadius, feedingAreaLayer);
+        Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {detectionRadius}m)");
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
 
         if (nearestArea != null)
@@ -138,6 +142,11 @@ public class PetFeedingController : PetControllerBase
             targetFeedingArea = nearestArea;
             petController.agent.SetDestination(nearestArea.transform.position);
             petController.ResumeMovement();
+            Debug.Log($"[Feeding] {petController.petName}: 피딩 에어리어 {nearestArea.name}을(를) 향해 이동 시작");
+        }
+        else
+        {
+            Debug.Log($"[Feeding] {petController.petName}: 먹을 수 있는 음식을 찾지 못함");
         }
     }
     
@@ -146,6 +155,12 @@ public class PetFeedingController : PetControllerBase
         GameObject nearestSource = null;
         float nearestDistSqr = float.MaxValue;
         Vector3 myPos = transform.position;
+
+        // 디버그: 펫의 현재 식성 출력
+        if (colliders.Length > 0)
+        {
+            Debug.Log($"[Feeding] {petController.petName}의 식성: {petController.diet} ({PetTraits.GetDietaryDescription(petController.diet)})");
+        }
 
         foreach (var col in colliders)
         {
@@ -158,6 +173,9 @@ public class PetFeedingController : PetControllerBase
                 if (feedingArea != null) foodType = feedingArea.foodType;
             }
 
+            // 디버그: 발견된 음식 타입 출력
+            Debug.Log($"[Feeding] 발견된 음식: {col.name}, 타입: {foodType} ({PetTraits.GetDietaryDescription(foodType)})");
+
             if ((petController.diet & foodType) != 0)
             {
                 float distSqr = (col.transform.position - myPos).sqrMagnitude;
@@ -165,7 +183,12 @@ public class PetFeedingController : PetControllerBase
                 {
                     nearestSource = col.gameObject;
                     nearestDistSqr = distSqr;
+                    Debug.Log($"[Feeding] {petController.petName}이(가) 먹을 수 있는 음식 발견: {col.name}");
                 }
+            }
+            else
+            {
+                Debug.Log($"[Feeding] {petController.petName}은(는) {col.name}을(를) 먹을 수 없음 (식성 불일치)");
             }
         }
         return nearestSource;
@@ -273,7 +296,7 @@ public class PetFeedingController : PetControllerBase
         else
         {
             petController.Needs.SetAffection(Mathf.Clamp(petController.Needs.Affection + affectionIncrease, 0f, 100f)); // 폴백
-            Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
+            // Debug.Log($"[Affection] {petController.petName}이(가) 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
         }
         
         // 친밀도에 따른 감정 표현
@@ -356,7 +379,7 @@ public class PetFeedingController : PetControllerBase
         else
         {
             petController.Needs.SetAffection(Mathf.Clamp(petController.Needs.Affection + affectionIncrease, 0f, 100f)); // 폴백
-            Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
+            // Debug.Log($"[Affection] {petController.petName}이(가) 환경 음식을 먹고 친밀도가 {affectionIncrease:F1} 증가: {petController.Needs.Affection:F1}");
         }
         
         // 친밀도에 따른 감정 표현

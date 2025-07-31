@@ -113,7 +113,7 @@ public class PetNeedsInitializer : EditorWindow
         
         serializedObject.ApplyModifiedProperties();
         
-        Debug.Log($"{pet.petName}의 PetNeeds가 코드 기본값으로 초기화되었습니다.");
+        //Debug.Log($"{pet.petName}의 PetNeeds가 코드 기본값으로 초기화되었습니다.");
         return true;
     }
     

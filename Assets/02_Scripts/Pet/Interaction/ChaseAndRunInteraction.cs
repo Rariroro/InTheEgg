@@ -129,7 +129,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[ChaseAndRun] {pet1.petName}와(과) {pet2.petName} 사이의 쫓고 쫓기기 상호작용 시작!");
+        // Debug.Log($"[ChaseAndRun] {pet1.petName}와(과) {pet2.petName} 사이의 쫓고 쫓기기 상호작용 시작!");
 
         // 역할 결정
         PetController chaser = null;
@@ -152,7 +152,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             runner = chaser == pet1 ? pet2 : pet1;
         }
 
-        Debug.Log($"[ChaseAndRun] 쫓는 펫: {chaser.petName}, 도망가는 펫: {runner.petName}");
+        // Debug.Log($"[ChaseAndRun] 쫓는 펫: {chaser.petName}, 도망가는 펫: {runner.petName}");
 
         // NavMeshAgent 준비 확인
         yield return StartCoroutine(WaitUntilAgentIsReady(chaser, agentSafetyTimeout));
@@ -198,7 +198,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         }
         finally
         {
-            Debug.Log("[ChaseAndRun] 상호작용 정리 시작.");
+            // Debug.Log("[ChaseAndRun] 상호작용 정리 시작.");
 
             // 파티클 정리
             if (chaserDustParticles != null) Destroy(chaserDustParticles);
@@ -210,7 +210,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
             // 상호작용 종료
             EndInteraction(chaser, runner);
-            Debug.Log("[ChaseAndRun] 상호작용 정리 완료.");
+            // Debug.Log("[ChaseAndRun] 상호작용 정리 완료.");
         }
     }
 
@@ -219,7 +219,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PreparePhase(PetController chaser, PetController runner)
     {
-        Debug.Log("[ChaseAndRun] 1단계: 추격 준비");
+        // Debug.Log("[ChaseAndRun] 1단계: 추격 준비");
 
         // 서로 마주보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(chaser, runner, 0.5f));
@@ -239,7 +239,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator ChasePhase(PetController chaser, PetController runner)
     {
-        Debug.Log("[ChaseAndRun] 2단계: 추격 시작!");
+        // Debug.Log("[ChaseAndRun] 2단계: 추격 시작!");
 
         // 초기 설정
         chaser.agent.isStopped = false;
@@ -283,7 +283,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             if (distance <= catchDistance)
             {
                 chaseCaught = true;
-                Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) {runner.petName}을(를) 잡았습니다!");
+                // Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) {runner.petName}을(를) 잡았습니다!");
                 break;
             }
 
@@ -334,7 +334,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             yield return new WaitForSeconds(updateInterval);
         }
 
-        Debug.Log($"[ChaseAndRun] 추격 종료 (시간: {chaseTimer}초, 잡기 성공: {chaseCaught})");
+        // Debug.Log($"[ChaseAndRun] 추격 종료 (시간: {chaseTimer}초, 잡기 성공: {chaseCaught})");
     }
 
     /// <summary>
@@ -342,7 +342,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PerformUTurn(PetController runner, PetController chaser)
     {
-        Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 180도 회전 페이크!");
+        // Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 180도 회전 페이크!");
         
         // 감정 표현
         runner.ShowEmotion(EmotionType.Confused, 2f);
@@ -368,7 +368,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PerformStopFake(PetController runner, PetController chaser)
     {
-        Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 정지 페이크!");
+        // Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 정지 페이크!");
         
         // 속도를 서서히 줄이면서 멈춤
         float originalSpeed = runner.agent.speed;
@@ -422,7 +422,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PerformPredictShot(PetController chaser, PetController runner)
     {
-        Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) 예측 샷 시도!");
+        // Debug.Log($"[ChaseAndRun] {chaser.petName}이(가) 예측 샷 시도!");
         
         // 도망자의 예상 위치 계산
         Vector3 runnerVelocity = runner.agent.velocity;
@@ -441,7 +441,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // 대부분 실패
         if (Random.value > 0.2f) // 80% 실패
         {
-            Debug.Log($"[ChaseAndRun] 예측 샷 실패!");
+            // Debug.Log($"[ChaseAndRun] 예측 샷 실패!");
             chaser.ShowEmotion(EmotionType.Love, 2f);
         }
         
@@ -491,7 +491,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             runner.agent.speed = runner.baseSpeed * runnerPanicSpeedMultiplier * runnerStaminaMult;
             chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
             phase = 2;
-            Debug.Log("[ChaseAndRun] 매우 가까워짐! 긴급 도망!");
+            // Debug.Log("[ChaseAndRun] 매우 가까워짐! 긴급 도망!");
         }
         else if (distance > farDistance && phase != 3)
         {
@@ -499,7 +499,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
             chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * chaserStaminaMult;
             phase = 3;
-            Debug.Log("[ChaseAndRun] 거리가 멀어짐! 추격 가속!");
+            // Debug.Log("[ChaseAndRun] 거리가 멀어짐! 추격 가속!");
         }
         else if (distance >= panicDistance && distance <= farDistance && phase != 1)
         {
@@ -558,7 +558,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator CaughtPhase(PetController chaser, PetController runner)
     {
-        Debug.Log("[ChaseAndRun] 3단계: 잡기 성공!");
+        // Debug.Log("[ChaseAndRun] 3단계: 잡기 성공!");
         
         // 두 펫 정지
         chaser.agent.isStopped = true;
@@ -609,7 +609,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator EscapeSuccessPhase(PetController chaser, PetController runner)
     {
-        Debug.Log("[ChaseAndRun] 3단계: 도망 성공!");
+        // Debug.Log("[ChaseAndRun] 3단계: 도망 성공!");
         
         // 쫓던 펫 멈춤
         chaser.agent.isStopped = true;
@@ -685,7 +685,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         runTarget = FindValidPositionOnNavMesh(runTarget, 20f);
         runner.agent.SetDestination(runTarget);
         
-        Debug.Log($"[ChaseAndRun] {runner.petName} 방향 변경");
+        // Debug.Log($"[ChaseAndRun] {runner.petName} 방향 변경");
     }
 
     private bool IsAgentSafelyReady(PetController pet)

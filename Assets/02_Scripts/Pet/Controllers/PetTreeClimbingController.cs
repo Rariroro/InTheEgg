@@ -171,7 +171,7 @@ private IEnumerator RestOnTree()
         // 다른 긴급한 행동이 필요한지 체크
         if (ShouldInterruptTreeRest())
         {
-            Debug.Log($"{petController.petName}이(가) 다른 할 일이 생겨 나무에서 내려옵니다.");
+            // Debug.Log($"{petController.petName}이(가) 다른 할 일이 생겨 나무에서 내려옵니다.");
             yield break; // 휴식 종료하고 즉시 내려가기
         }
 

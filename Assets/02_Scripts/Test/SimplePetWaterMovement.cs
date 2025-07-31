@@ -62,7 +62,7 @@ public class SimplePetWaterMovement : MonoBehaviour
         if (waterAreaIndex != -1)
         {
             waterAreaMask = 1 << waterAreaIndex;
-            Debug.Log($"[SimplePetWaterMovement] 물 지역 인덱스: {waterAreaIndex}, 마스크: {waterAreaMask}");
+            // Debug.Log($"[SimplePetWaterMovement] 물 지역 인덱스: {waterAreaIndex}, 마스크: {waterAreaMask}");
         }
         else
         {
@@ -115,7 +115,7 @@ public class SimplePetWaterMovement : MonoBehaviour
             // 물 지역 진입/탈출 시 처리
             if (wasInWater != isInWater)
             {
-                Debug.Log($"[SimplePetWaterMovement] {gameObject.name} - 물 지역 {(isInWater ? "진입" : "탈출")}");
+                // Debug.Log($"[SimplePetWaterMovement] {gameObject.name} - 물 지역 {(isInWater ? "진입" : "탈출")}");
                 
                 // 목표 Y 오프셋 설정
                 targetYOffset = isInWater ? -waterSinkDepth : 0f;
@@ -125,13 +125,13 @@ public class SimplePetWaterMovement : MonoBehaviour
                 {
                     // 물에 들어갔을 때 - 속도 감소
                     agent.speed = moveSpeed * waterSpeedMultiplier;
-                    Debug.Log($"[SimplePetWaterMovement] 물에서 속도: {agent.speed}");
+                    // Debug.Log($"[SimplePetWaterMovement] 물에서 속도: {agent.speed}");
                 }
                 else
                 {
                     // 물에서 나왔을 때 - 원래 속도로 복원
                     agent.speed = moveSpeed;
-                    Debug.Log($"[SimplePetWaterMovement] 육지에서 속도: {agent.speed}");
+                    // Debug.Log($"[SimplePetWaterMovement] 육지에서 속도: {agent.speed}");
                 }
             }
         }
@@ -175,7 +175,7 @@ public class SimplePetWaterMovement : MonoBehaviour
         if (NavMesh.SamplePosition(randomDirection, out hit, moveRadius, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
-            Debug.Log($"[SimplePetWaterMovement] 새 목적지 설정: {hit.position}");
+            // Debug.Log($"[SimplePetWaterMovement] 새 목적지 설정: {hit.position}");
         }
     }
 

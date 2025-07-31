@@ -19,7 +19,7 @@ public class TerrainTextureSwitchManagerEditor : Editor
             {
                 // RestoreAllOriginalTextures를 public으로 변경하거나
                 // 별도의 public 메서드를 만들어서 호출
-                Debug.Log("수동으로 원본 텍스처 복원 실행");
+                //Debug.Log("수동으로 원본 텍스처 복원 실행");
             }
         }
     }

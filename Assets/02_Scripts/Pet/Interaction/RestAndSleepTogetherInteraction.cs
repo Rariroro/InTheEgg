@@ -120,7 +120,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         string actionName = isSleepMode ? "잠자기" : "휴식";
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 {actionName} 시작!");
+        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 {actionName} 시작!");
 
         // NavMeshAgent 준비 확인
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
@@ -153,12 +153,12 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             // 3. 종료 단계
             yield return StartCoroutine(EndPhase(pet1, pet2));
 
-            Debug.Log($"[{InteractionName}] {actionName} 완료!");
+            // Debug.Log($"[{InteractionName}] {actionName} 완료!");
         }
         finally
         {
             // 최종 정리
-            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
 
             // 원래 상태 복원
             pet1State.Restore(pet1);
@@ -170,7 +170,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(pet1, pet2);
-            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -179,7 +179,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PreparePhase(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 1단계: 준비");
+        // Debug.Log($"[{InteractionName}] 1단계: 준비");
 
         // 상호작용 위치 계산
         Vector3 interactionSpot = FindInteractionSpot(pet1, pet2, 2f);
@@ -212,7 +212,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
                 PetController rotatingPet = rotationPet == 1 ? pet1 : pet2;
                 var rotAnim = rotatingPet.GetComponent<PetAnimationController>();
                 
-                Debug.Log($"[{InteractionName}] {rotatingPet.petName}이(가) 편한 자세를 찾습니다.");
+                // Debug.Log($"[{InteractionName}] {rotatingPet.petName}이(가) 편한 자세를 찾습니다.");
                 yield return StartCoroutine(rotAnim.PlayAnimationWithCustomDuration(
                     PetAnimationController.PetAnimationType.Walk, 2f, false, false));
                 
@@ -262,7 +262,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MainInteractionPhase(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 2단계: 메인 상호작용");
+        // Debug.Log($"[{InteractionName}] 2단계: 메인 상호작용");
 
         var pet1Anim = pet1.GetComponent<PetAnimationController>();
         var pet2Anim = pet2.GetComponent<PetAnimationController>();
@@ -293,7 +293,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator EndPhase(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 3단계: 종료");
+        // Debug.Log($"[{InteractionName}] 3단계: 종료");
 
         var pet1Anim = pet1.GetComponent<PetAnimationController>();
         var pet2Anim = pet2.GetComponent<PetAnimationController>();
@@ -349,7 +349,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             // 연쇄 하품 효과
             if (Random.value < 0.7f)
             {
-                Debug.Log($"[{InteractionName}] 연쇄 하품!");
+                // Debug.Log($"[{InteractionName}] 연쇄 하품!");
                 firstAwake.ShowEmotion(EmotionType.Sleepy, 2f);
                 yield return new WaitForSeconds(0.5f);
                 secondAwake.ShowEmotion(EmotionType.Sleepy, 2f);
@@ -378,7 +378,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             yield return new WaitForSeconds(0.5f);
             
             // 동시에 기지개 (아침 체조)
-            Debug.Log($"[{InteractionName}] 함께 기지개를 켭니다.");
+            // Debug.Log($"[{InteractionName}] 함께 기지개를 켭니다.");
             StartCoroutine(pet1Anim.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Jump, 2f, false, false));
             yield return StartCoroutine(pet2Anim.PlayAnimationWithCustomDuration(
@@ -407,7 +407,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
         switch (eventType)
         {
             case 0: // 기지개 (하품)
-                Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 기지개를 켭니다.");
+                // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 기지개를 켭니다.");
                 activePet.ShowEmotion(EmotionType.Sleepy, 3f);
                 yield return StartCoroutine(activeAnim.PlayAnimationWithCustomDuration(
                     PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
@@ -415,20 +415,20 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
                 break;
 
             case 1: // 상대 바라보기
-                Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}을(를) 바라봅니다.");
+                // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}을(를) 바라봅니다.");
                 yield return StartCoroutine(SmoothlyLookAtEachOther(activePet, passivePet, 0.5f));
                 yield return new WaitForSeconds(2f);
                 break;
 
             case 2: // 자세 변경 (앉았다가 다시 눕기)
-                Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 자세를 바꿉니다.");
+                // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 자세를 바꿉니다.");
                 yield return StartCoroutine(activeAnim.PlayAnimationWithCustomDuration(
                     PetAnimationController.PetAnimationType.Eat, 2f, false, false));
                 activeAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
                 break;
 
             case 3: // 제자리에서 빙글빙글 돌다가 다시 눕기
-                Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 편한 자세를 찾습니다.");
+                // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 편한 자세를 찾습니다.");
                 // 짧은 걷기 애니메이션으로 제자리 회전 표현
                 activeAnim.StopContinuousAnimation();
                 yield return StartCoroutine(activeAnim.PlayAnimationWithCustomDuration(
@@ -445,7 +445,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             case 4: // 친구와 가까이 붙기 (친밀도 표현)
                 if (Vector3.Distance(activePet.transform.position, passivePet.transform.position) > 2f)
                 {
-                    Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}에게 더 가까이 갑니다.");
+                    // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}에게 더 가까이 갑니다.");
                     activePet.ShowEmotion(EmotionType.Friend, 3f);
                     passivePet.ShowEmotion(EmotionType.Love, 3f);
                     Vector3 moveDir = (passivePet.transform.position - activePet.transform.position).normalized;
@@ -457,7 +457,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             case 5: // 코골이와 반응
                 if (isSleepMode)
                 {
-                    Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 코를 곱니다.");
+                    // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 코를 곱니다.");
                     // 코골이 표현 (짧은 Attack 애니메이션)
                     yield return StartCoroutine(activeAnim.PlayAnimationWithCustomDuration(
                         PetAnimationController.PetAnimationType.Attack, 0.2f, false, false));
@@ -479,7 +479,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
                     bool isGoodDream = Random.value > 0.5f;
                     if (isGoodDream)
                     {
-                        Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 좋은 꿈을 꿉니다.");
+                        // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 좋은 꿈을 꿉니다.");
                         activePet.ShowEmotion(EmotionType.Happy, 5f);
                         // 다리 살짝 움직이기 (달리는 꿈)
                         yield return StartCoroutine(activeAnim.PlayAnimationWithCustomDuration(
@@ -487,7 +487,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
                     }
                     else
                     {
-                        Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 악몽을 꿉니다.");
+                        // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) 악몽을 꿉니다.");
                         activePet.ShowEmotion(EmotionType.Confused, 3f);
                         // 몸 떨기 효과
                         for (int i = 0; i < 3; i++)
@@ -503,7 +503,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
             case 7: // 장난스럽게 친구 건드리기
                 if (isSleepMode && Random.value < 0.3f)
                 {
-                    Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}을(를) 살짝 건드립니다.");
+                    // Debug.Log($"[{InteractionName}] {activePet.petName}이(가) {passivePet.petName}을(를) 살짝 건드립니다.");
                     activePet.ShowEmotion(EmotionType.Joke, 3f);
                     
                     // 살짝 일어나서

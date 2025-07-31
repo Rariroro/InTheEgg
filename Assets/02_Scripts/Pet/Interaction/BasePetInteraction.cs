@@ -28,7 +28,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
     {
         // 1. 사전 준비 단계
-        Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
+        // Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
 
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
@@ -46,7 +46,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // (선택사항) 펫이 NavMesh 위에 있는지 최종 확인
         yield return StartCoroutine(EnsurePetsOnNavMesh(pet1, pet2));
         // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
-        Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
+        // Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
         // 펫들이 서로 마주볼 위치 계산
         Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
@@ -75,7 +75,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         {
             // 3. 사후 정리 단계
             // 코루틴이 어떤 이유로든 종료될 때(성공, 실패, 중단), 반드시 정리를 수행합니다.
-            Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
+            // Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
             EndInteraction(pet1, pet2);
         }
     }
@@ -100,7 +100,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
-                Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
+                // Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
                 yield break;
             }
             
@@ -152,7 +152,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     // 새로운 메서드 추가 - 펫이 NavMesh 위에 있는지 확인하고 보정
     private IEnumerator EnsurePetsOnNavMesh(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 중...");
+        // Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 중...");
 
         // 첫 번째 펫이 NavMesh 위에 없으면 위치 조정
         if (pet1.agent != null && !pet1.agent.isOnNavMesh)
@@ -161,7 +161,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (NavMesh.SamplePosition(pet1.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet1.transform.position = navHit.position;
-                Debug.Log($"[{InteractionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
+                // Debug.Log($"[{InteractionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet1.agent.enabled = false;
@@ -180,7 +180,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (NavMesh.SamplePosition(pet2.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet2.transform.position = navHit.position;
-                Debug.Log($"[{InteractionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
+                // Debug.Log($"[{InteractionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet2.agent.enabled = false;
@@ -192,7 +192,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             }
         }
 
-        Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
+        // Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
     }
 
 
@@ -294,7 +294,7 @@ public abstract class BasePetInteraction : MonoBehaviour
                 }
             }
 
-            Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}이(가) 서로 마주보도록 설정됨");
+            // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}이(가) 서로 마주보도록 설정됨");
         }
     }
 
@@ -363,19 +363,30 @@ public abstract class BasePetInteraction : MonoBehaviour
             if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
-                Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
+                // Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
                 // 애니메이션 정지
                 pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 yield break;
             }
             
-            bool pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < 0.5f;
-            bool pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < 0.5f;
+            // NavMeshAgent 상태를 먼저 확인
+            bool pet1Arrived = false;
+            bool pet2Arrived = false;
+
+            if (pet1.agent != null && pet1.agent.enabled && pet1.agent.isOnNavMesh)
+            {
+                pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < 0.5f;
+            }
+
+            if (pet2.agent != null && pet2.agent.enabled && pet2.agent.isOnNavMesh)
+            {
+                pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < 0.5f;
+            }
 
             if (pet1Arrived && pet2Arrived)
             {
-                Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
+                // Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
                 break;
             }
             // ▼▼▼ [수정] 이동 중 펫이 자연스럽게 경로를 바라보도록 회전 처리 ▼▼▼
@@ -617,7 +628,7 @@ public abstract class BasePetInteraction : MonoBehaviour
      PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump,
      PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
     {
-        Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
+        // Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
 
         PetAnimationController winnerAnimController = winner.GetComponent<PetAnimationController>();
         PetAnimationController loserAnimController = loser.GetComponent<PetAnimationController>();

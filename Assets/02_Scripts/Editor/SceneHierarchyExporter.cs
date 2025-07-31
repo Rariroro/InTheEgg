@@ -85,7 +85,7 @@ public class SceneHierarchyExporter : EditorWindow
         string fullPath = Path.Combine(outputPath, outputFileName);
         File.WriteAllText(fullPath, sb.ToString());
         
-        Debug.Log($"Scene hierarchy exported to: {fullPath}");
+        //Debug.Log($"Scene hierarchy exported to: {fullPath}");
         EditorUtility.RevealInFinder(fullPath);
     }
 

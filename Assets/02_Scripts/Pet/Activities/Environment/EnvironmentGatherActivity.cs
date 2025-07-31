@@ -46,7 +46,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     
     private IEnumerator EnterSequence()
     {
-        Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경에 이끌려 모이기 시작");
+        // Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경에 이끌려 모이기 시작");
         
         // 나무에서 내려오기
         if (pet.State.IsClimbingTree)
@@ -90,7 +90,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경 모이기 중단");
+        // Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경 모이기 중단");
         
         // 다른 고순위 행동에 의해 중단될 경우
         isGathering = false;

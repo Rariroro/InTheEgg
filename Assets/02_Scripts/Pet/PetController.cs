@@ -105,7 +105,7 @@ public partial class PetController : MonoBehaviour
             rb.useGravity = false;
             rb.isKinematic = true;
             rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            PetDebug.LogDebug($"{petName}에 Rigidbody 자동 추가됨 (Trigger 충돌 감지용)", this);
+            // PetDebug.LogDebug($"{petName}에 Rigidbody 자동 추가됨 (Trigger 충돌 감지용)", this);
         }
 
         // Animator와 모델 Transform 찾기
@@ -116,7 +116,7 @@ public partial class PetController : MonoBehaviour
         }
         else
         {
-            PetDebug.LogWarning($"{this.gameObject.name}에서 Animator 컴포넌트를 찾을 수 없습니다! 애니메이션이 작동하지 않습니다.", this);
+            // PetDebug.LogWarning($"{this.gameObject.name}에서 Animator 컴포넌트를 찾을 수 없습니다! 애니메이션이 작동하지 않습니다.", this);
             if (transform.childCount > 0)
             {
                 petModelTransform = transform.GetChild(0);
@@ -183,7 +183,7 @@ public partial class PetController : MonoBehaviour
         {
             petAI.InterruptAndResetAI();
         }
-        PetDebug.Log($"{petName}의 현재 활동이 '{type}'으로 인해 중단됩니다.", this);
+        // PetDebug.Log($"{petName}의 현재 활동이 '{type}'으로 인해 중단됩니다.", this);
     }
     
     private IEnumerator RegisterToPetManager()
@@ -221,7 +221,7 @@ public partial class PetController : MonoBehaviour
         
         if (agent == null)
         {
-            PetDebug.LogWarning($"{petName}: NavMeshAgent가 없습니다.", this);
+            // PetDebug.LogWarning($"{petName}: NavMeshAgent가 없습니다.", this);
             yield break;
         }
 
@@ -239,13 +239,13 @@ public partial class PetController : MonoBehaviour
             }
             else
             {
-                PetDebug.LogWarning($"{petName}: 적절한 NavMesh 위치를 찾을 수 없습니다.", this);
+                // PetDebug.LogWarning($"{petName}: 적절한 NavMesh 위치를 찾을 수 없습니다.", this);
             }
         }
         
         if (!agent.enabled || !agent.isOnNavMesh)
         {
-            PetDebug.LogError($"{petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.", this);
+            // PetDebug.LogError($"{petName}: NavMeshAgent 초기화 실패. 컨트롤러들을 초기화하지 않습니다.", this);
         }
     }
 
@@ -299,7 +299,7 @@ public partial class PetController : MonoBehaviour
             }
             else
             {
-                PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {profile.type}을(를) 사용합니다.", this);
+                // PetDebug.LogWarning($"펫 이름 '{name}'에서 타입을 감지할 수 없습니다. 기본값 {profile.type}을(를) 사용합니다.", this);
             }
         }
     }
@@ -327,10 +327,10 @@ public partial class PetController : MonoBehaviour
         switch (needType)
         {
             case PetNeeds.NeedType.Hunger:
-                PetDebug.Log($"{petName}이(가) 배고파합니다!", this);
+                // PetDebug.Log($"{petName}이(가) 배고파합니다!", this);
                 break;
             case PetNeeds.NeedType.Sleepiness:
-                PetDebug.Log($"{petName}이(가) 졸려합니다!", this);
+                // PetDebug.Log($"{petName}이(가) 졸려합니다!", this);
                 break;
         }
     }

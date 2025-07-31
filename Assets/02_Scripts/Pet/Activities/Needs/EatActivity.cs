@@ -54,18 +54,21 @@ public class EatActivity : PetActivityAdapter
             
         // 배고픔 수치에 비례하여 우선순위 증가
         float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
-        return (hunger - 70f) / 30f; // 0.0 ~ 1.0
+        
+        // 배고픔 70 이상이면 기본 0.5 + 추가 우선순위
+        // 70일 때: 0.5, 85일 때: 1.0, 100일 때: 1.5
+        return 0.5f + ((hunger - 70f) / 30f); // 0.5 ~ 1.5
     }
     
     public override void Start()
     {
-        Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.Needs.Hunger:F1})");
+        // Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.Needs.Hunger:F1})");
         searchTimer = 0f;
         
         // 즉시 음식 탐색 시작
         if (!feedingController.TryStartFeedingSequence())
         {
-            Debug.Log($"[EatActivity] {pet.petName}: 주변에 음식이 없습니다. 광역 탐색을 시작합니다.");
+            // Debug.Log($"[EatActivity] {pet.petName}: 주변에 음식이 없습니다. 광역 탐색을 시작합니다.");
         }
     }
     
@@ -96,7 +99,7 @@ public class EatActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 종료");
+        // Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 종료");
         // 먹이 찾기 중단
         feedingController.CancelFeeding();
     }
@@ -116,7 +119,7 @@ public class EatActivity : PetActivityAdapter
         if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out UnityEngine.AI.NavMeshHit hit, FOOD_SEARCH_RADIUS, UnityEngine.AI.NavMesh.AllAreas))
         {
             pet.agent.SetDestination(hit.position);
-            Debug.Log($"[EatActivity] {pet.petName}: 음식을 찾기 위해 새로운 위치로 이동합니다.");
+            // Debug.Log($"[EatActivity] {pet.petName}: 음식을 찾기 위해 새로운 위치로 이동합니다.");
         }
     }
 }

@@ -198,7 +198,7 @@ public class PetInputController : PetControllerBase
         // 애니메이션이 잠겨있거나 특수 애니메이션 처리 중이면 터치 처리하지 않음
         if (petController.State.IsAnimationLocked || isProcessingSpecialAnimation)
         {
-            Debug.Log($"{petController.petName}: 애니메이션 재생 중 터치 무시됨");
+            // Debug.Log($"{petController.petName}: 애니메이션 재생 중 터치 무시됨");
             return;
         }
 
@@ -449,7 +449,7 @@ public class PetInputController : PetControllerBase
         if (nameTextObject != null)
             nameTextObject.SetActive(false);
 
-        Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
+        // Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
     }
 
     private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
@@ -617,7 +617,7 @@ private void Select()
         // 나무 위에 있으면 추가적인 이동 중지나 행동 중단을 하지 않음
         if (petController.State.IsClimbingTree)
         {
-            Debug.Log($"{petController.petName}이(가) 나무 위에서 선택되었습니다.");
+            // Debug.Log($"{petController.petName}이(가) 나무 위에서 선택되었습니다.");
         }
     }
 }
@@ -680,7 +680,7 @@ private void Select()
                 }
             }
             
-            Debug.Log($"{petController.petName}의 상호작용이 터치로 인해 강제 중단되었습니다.");
+            // Debug.Log($"{petController.petName}의 상호작용이 터치로 인해 강제 중단되었습니다.");
         }
     }
     // 5번 터치 시 공격 애니메이션을 위한 새로운 코루틴

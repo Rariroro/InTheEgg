@@ -85,7 +85,7 @@ public class PetProfileUpdater : EditorWindow
         AssetDatabase.Refresh();
         
         updateLog.Add($"새 데이터베이스 생성됨: {path}");
-        Debug.Log($"PetDataDatabase가 생성되었습니다: {path}");
+        //Debug.Log($"PetDataDatabase가 생성되었습니다: {path}");
     }
     
     private void UpdateAllPetPrefabs()

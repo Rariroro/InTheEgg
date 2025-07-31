@@ -73,7 +73,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) 벌 공격으로부터 도망가기 시작!");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) 벌 공격으로부터 도망가기 시작!");
         
         hasShowedEmotion = false;
         isEscaping = true;
@@ -131,7 +131,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[BeeEscapeActivity] {pet.petName}의 벌 도망 행동 종료");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}의 벌 도망 행동 종료");
         
         // 속도 원래대로
         if (pet.agent != null)
@@ -175,7 +175,7 @@ public class BeeEscapeActivity : PetActivityAdapter
             escapeDestination = hit.position;
             pet.agent.SetDestination(escapeDestination);
             
-            Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) {escapeDestination} 방향으로 도망!");
+            // Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) {escapeDestination} 방향으로 도망!");
         }
         else
         {

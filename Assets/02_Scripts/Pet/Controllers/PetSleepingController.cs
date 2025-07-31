@@ -116,7 +116,7 @@ public class PetSleepingController : PetControllerBase
         float personalityThreshold = GetPersonalityForceSleepThreshold();
         if (petController.Needs.Sleepiness >= personalityThreshold && !petController.State.IsClimbingTree && !isSeekingTreeToSleep)
         {
-            Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
+            // Debug.Log($"{petController.petName}이(가) 나무를 찾지 못해 땅에서 잠듭니다.");
             StartCoroutine(ForceSleepAtCurrentLocation());
             return true; // 행동 시작
         }
@@ -154,7 +154,7 @@ public class PetSleepingController : PetControllerBase
 
         try
         {
-            Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
+            // Debug.Log($"{petController.petName}이(가) 나무 위에서 잠을 잡니다.");
   // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
             petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
 
@@ -173,7 +173,7 @@ public class PetSleepingController : PetControllerBase
             }
             petController.ShowEmotion(EmotionType.Happy, 3f);
 
-            Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
+            // Debug.Log($"{petController.petName}이(가) 나무 위에서 상쾌하게 일어났습니다.");
         }
         finally
         {
@@ -323,7 +323,7 @@ public class PetSleepingController : PetControllerBase
             yield break;
         }
 
-        Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
+        // Debug.Log($"{petController.petName}이(가) 너무 졸려서 현재 위치에서 불편하게 잠듭니다.");
 
         // ▼▼▼ [수정] 잠드는 즉시 'Sleep' 감정 표시 ▼▼▼
         petController.ShowEmotion(EmotionType.Sleep, sleepDuration);
@@ -386,7 +386,7 @@ public class PetSleepingController : PetControllerBase
             petController.ShowEmotion(EmotionType.Angry, 3f);
             petController.ResumeMovement();
             petController.GetComponent<PetMovementController>().SetRandomDestination();
-            Debug.Log($"{petController.petName}의 잠을 깨웠습니다!");
+            // Debug.Log($"{petController.petName}의 잠을 깨웠습니다!");
         }
     }
 

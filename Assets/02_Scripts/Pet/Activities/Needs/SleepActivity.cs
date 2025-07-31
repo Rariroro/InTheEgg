@@ -59,7 +59,7 @@ public class SleepActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.Needs.Sleepiness:F1})");
+        // Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.Needs.Sleepiness:F1})");
         isPreparingToSleep = sleepingController.TryStartSleepingSequence();
         searchTimer = 0f;
     }
@@ -76,7 +76,7 @@ public class SleepActivity : PetActivityAdapter
             searchTimer += Time.deltaTime;
             if (searchTimer >= WIDE_WANDER_INTERVAL)
             {
-                Debug.Log($"[SleepActivity] {pet.petName}: 잠잘 곳을 찾기 위해 주변을 넓게 탐색합니다.");
+                // Debug.Log($"[SleepActivity] {pet.petName}: 잠잘 곳을 찾기 위해 주변을 넓게 탐색합니다.");
                 searchTimer = 0f;
                 
                 // PetMovementController를 통해 더 넓은 반경으로 목적지를 설정
@@ -101,7 +101,7 @@ public class SleepActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 종료");
+        // Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 종료");
         sleepingController.InterruptSleep();
     }
 }

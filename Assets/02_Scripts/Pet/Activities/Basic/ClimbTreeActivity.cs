@@ -62,7 +62,7 @@ public class ClimbTreeActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 시작");
+        // Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 시작");
         
         // 이미 나무 위에 있는 상태에서 이 액션이 다시 시작될 수 있으므로,
         // isClimbingTree가 false일 때만 새로 나무를 찾도록 함
@@ -112,7 +112,7 @@ public class ClimbTreeActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 중단");
+        // Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 중단");
         
         // 다른 고순위 행동에 의해 중단될 경우, 나무타기 상태를 강제로 취소
         climbingController.ForceCancelClimbing();

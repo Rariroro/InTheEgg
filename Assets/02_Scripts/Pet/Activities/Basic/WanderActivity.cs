@@ -71,7 +71,7 @@ public class WanderActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 시작");
+        // Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 시작");
         DecideNextBehavior();
     }
     
@@ -103,7 +103,7 @@ public class WanderActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 종료");
+        // Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 종료");
         ForceStopCurrentBehavior();
     }
     

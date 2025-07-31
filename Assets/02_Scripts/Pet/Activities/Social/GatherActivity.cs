@@ -48,7 +48,7 @@ public class GatherActivity : PetActivityAdapter
     
     private IEnumerator EnterSequence()
     {
-        Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 시작");
+        // Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 시작");
         hasArrived = false;
         pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
         
@@ -107,7 +107,7 @@ public class GatherActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 종료");
+        // Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 종료");
         pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트 
         
         if (agent != null && agent.enabled)

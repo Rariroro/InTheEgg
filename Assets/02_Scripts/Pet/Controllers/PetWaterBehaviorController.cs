@@ -59,12 +59,12 @@ public class PetWaterBehaviorController : PetControllerBase
 
                     if (isInWater)
                     {
-                        Debug.Log($"{petController.petName}: 물에 들어감");
+                        // Debug.Log($"{petController.petName}: 물에 들어감");
                         OnEnterWater();
                     }
                     else
                     {
-                        Debug.Log($"{petController.petName}: 물에서 나옴");
+                        // Debug.Log($"{petController.petName}: 물에서 나옴");
                         OnExitWater();
                     }
                 }

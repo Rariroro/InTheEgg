@@ -168,7 +168,7 @@ public class PetMovementController : PetControllerBase
         {
             petController.AI.UpdateAI();
         }
-        Debug.Log($"[PetMovementController] {petController.petName}: 다음 행동 결정 요청 → PetAI에 위임");
+        // Debug.Log($"[PetMovementController] {petController.petName}: 다음 행동 결정 요청 → PetAI에 위임");
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ public class PetMovementController : PetControllerBase
                 
                 if (stuckTimer >= STUCK_THRESHOLD)
                 {
-                    Debug.Log($"[PetMovementController] {petController.petName}: 막힘 감지! 새로운 경로 찾기");
+                    // Debug.Log($"[PetMovementController] {petController.petName}: 막힘 감지! 새로운 경로 찾기");
                     ResolveStuck();
                     stuckTimer = 0f;
                 }
@@ -281,7 +281,7 @@ public class PetMovementController : PetControllerBase
         // 방법 3: 새로운 랜덤 목적지 설정 (짧은 거리)
         SetRandomDestination(10f);
         
-        Debug.Log($"[PetMovementController] {petController.petName}: 막힌 상태 해결 시도");
+        // Debug.Log($"[PetMovementController] {petController.petName}: 막힌 상태 해결 시도");
     }
     
 }

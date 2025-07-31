@@ -100,7 +100,7 @@ public class PetInteractionManagerEditor : Editor
         AddChameleonCamouflageInteraction();
         AddSkunkDefenseInteraction();
         
-        Debug.Log("모든 상호작용이 추가되었습니다.");
+        //Debug.Log("모든 상호작용이 추가되었습니다.");
     }
     
     // 재사용 가능한 컴포넌트 추가 메서드
@@ -114,11 +114,11 @@ public class PetInteractionManagerEditor : Editor
             if (manager.GetComponent<T>() == null)
             {
                 manager.gameObject.AddComponent<T>();
-                Debug.Log($"{interactionName} 상호작용이 추가되었습니다.");
+                //Debug.Log($"{interactionName} 상호작용이 추가되었습니다.");
             }
             else
             {
-                Debug.Log($"{interactionName} 상호작용이 이미 존재합니다.");
+                //Debug.Log($"{interactionName} 상호작용이 이미 존재합니다.");
             }
         }
         else

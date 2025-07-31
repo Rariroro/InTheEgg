@@ -115,7 +115,7 @@ public class EnvironmentPetAttractor : MonoBehaviour
    // 환경으로 펫들을 유인하는 로직
 private IEnumerator AttractPetsToEnvironment(List<PetController> pets, Vector3 centerPosition, string environmentId)
 {
-    Debug.Log($"{environmentId} 환경에 {pets.Count}마리의 펫이 반응합니다!");
+    // Debug.Log($"{environmentId} 환경에 {pets.Count}마리의 펫이 반응합니다!");
 
     foreach (PetController pet in pets)
     {

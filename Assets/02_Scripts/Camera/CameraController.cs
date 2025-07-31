@@ -33,7 +33,7 @@ public class CameraController : MonoBehaviour
             childCamera.orthographic = false;
             initialCameraPosition = childCamera.transform.localPosition;
             childCamera.fieldOfView = minZoom; // 시작할 때 FOV를 50으로 설정 (가장 축소된 상태)
-            Debug.Log($"Initial FOV set to: {childCamera.fieldOfView}");
+            // Debug.Log($"Initial FOV set to: {childCamera.fieldOfView}");
 
         }
     }

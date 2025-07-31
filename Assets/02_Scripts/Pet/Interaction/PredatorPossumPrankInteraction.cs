@@ -66,7 +66,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 장난 상호작용 시작!");
+        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 장난 상호작용 시작!");
 
         // 역할 식별
         PetController possum = (pet1.PetType == PetType.Possum) ? pet1 : pet2;
@@ -97,14 +97,14 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
             yield return StartCoroutine(PredatorLeavePhase(predator, possum));
             yield return StartCoroutine(PossumCelebratePhase(possum, predator));
 
-            Debug.Log($"[{InteractionName}] {possum.petName}의 장난이 성공적으로 끝났습니다!");
+            // Debug.Log($"[{InteractionName}] {possum.petName}의 장난이 성공적으로 끝났습니다!");
         }
         finally
         {
             // 상호작용 종료 시 정리 작업
-            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
             EndInteraction(possum, predator); // BasePetInteraction의 정리 메서드 호출
-            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -118,7 +118,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PredatorSleepPhase(PetController predator, PetController possum)
     {
-        Debug.Log($"[{InteractionName}] 1단계: {predator.petName}이(가) 잠들 준비를 합니다.");
+        // Debug.Log($"[{InteractionName}] 1단계: {predator.petName}이(가) 잠들 준비를 합니다.");
         Vector3 sleepSpot = FindInteractionSpot(predator, possum, sleepSpotRadius);
 
         // 잠들 위치로 이동 (포식자만 이동)
@@ -132,7 +132,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         // ★★★ 수정: 잠자는 애니메이션을 다음 행동 전까지 '계속' 재생하도록 변경 ★★★
         predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
 
-        Debug.Log($"[{InteractionName}] {predator.petName}이(가) 잠들었습니다.");
+        // Debug.Log($"[{InteractionName}] {predator.petName}이(가) 잠들었습니다.");
         // 애니메이션이 끝날 때까지 기다리지 않고 다음 단계로 바로 진행합니다.
     }
 
@@ -141,7 +141,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PossumApproachAndPrankPhase(PetController possum, PetController predator)
     {
-        Debug.Log($"[{InteractionName}] 2단계: {possum.petName}이(가) 살금살금 접근합니다.");
+        // Debug.Log($"[{InteractionName}] 2단계: {possum.petName}이(가) 살금살금 접근합니다.");
 
         // 포식자 앞으로 이동
         Vector3 prankPosition = predator.transform.position + predator.transform.forward * prankApproachDistance;
@@ -153,7 +153,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         possum.GetComponent<PetAnimationController>().StopContinuousAnimation();
         
         // 장난치기
-        Debug.Log($"[{InteractionName}] {possum.petName}이(가) {predator.petName}에게 장난을 칩니다.");
+        // Debug.Log($"[{InteractionName}] {possum.petName}이(가) {predator.petName}에게 장난을 칩니다.");
         yield return StartCoroutine(SmoothlyLookAt(possum, predator.transform.position, 0.5f));
 
         possum.ShowEmotion(EmotionType.Joke, prankAnimationDuration);
@@ -166,7 +166,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PredatorWakeAndReactPhase(PetController predator)
     {
-        Debug.Log($"[{InteractionName}] 3단계: {predator.petName}이(가) 깜짝 놀라 깨어납니다!");
+        // Debug.Log($"[{InteractionName}] 3단계: {predator.petName}이(가) 깜짝 놀라 깨어납니다!");
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
         // ★★★ 추가: 계속 재생 중이던 '잠자기' 애니메이션을 먼저 중지합니다. ★★★
@@ -175,7 +175,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         predator.ShowEmotion(EmotionType.Surprised, wakeUpAnimationDuration);
         yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, wakeUpAnimationDuration, true, false));
 
-        Debug.Log($"[{InteractionName}] {predator.petName}이(가) 화를 냅니다!");
+        // Debug.Log($"[{InteractionName}] {predator.petName}이(가) 화를 냅니다!");
         predator.ShowEmotion(EmotionType.Angry, angryAnimationDuration);
         yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, angryAnimationDuration, true, false));
     }
@@ -185,7 +185,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PossumPlayDeadPhase(PetController possum, PetController predator)
     {
-        Debug.Log($"[{InteractionName}] 4단계: {possum.petName}이(가) 재빨리 죽은 척을 합니다!");
+        // Debug.Log($"[{InteractionName}] 4단계: {possum.petName}이(가) 재빨리 죽은 척을 합니다!");
         // possum.ShowEmotion(EmotionType.Scared, playDeadDuration + 5f); // 감정 표현 시간 연장
 
         // ★★★ 수정: '죽은 척' 애니메이션을 중단 명령이 있을 때까지 계속 재생합니다.
@@ -200,7 +200,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PredatorLeavePhase(PetController predator, PetController possum)
     {
-        Debug.Log($"[{InteractionName}] 5단계: {predator.petName}이(가) 주머니쥐를 살펴보다가 흥미를 잃습니다.");
+        // Debug.Log($"[{InteractionName}] 5단계: {predator.petName}이(가) 주머니쥐를 살펴보다가 흥미를 잃습니다.");
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
         // 1. 죽은 척 하는 주머니쥐 쪽으로 시선 돌리기
@@ -219,12 +219,12 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
 
         // 건드려보는 애니메이션 (Attack 애니메이션 활용)
-        Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 툭 쳐보며 반응을 살핍니다.");
+        // Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 툭 쳐보며 반응을 살핍니다.");
         yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.5f, true, false));
         // ★★★ 여기까지 추가 ★★★
 
         // 반응이 없자 슬퍼하며 떠나기
-        Debug.Log($"[{InteractionName}] {predator.petName}이(가) 자리를 떠납니다.");
+        // Debug.Log($"[{InteractionName}] {predator.petName}이(가) 자리를 떠납니다.");
         predator.ShowEmotion(EmotionType.Sad, 5f);
         yield return new WaitForSeconds(1.0f); // 슬픈 감정 표현 시간
 
@@ -245,7 +245,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PossumCelebratePhase(PetController possum, PetController predator)
     {
-        Debug.Log($"[{InteractionName}] 6단계: {possum.petName}이(가) 일어나서 장난 성공을 자축합니다!");
+        // Debug.Log($"[{InteractionName}] 6단계: {possum.petName}이(가) 일어나서 장난 성공을 자축합니다!");
         var possumAnim = possum.GetComponent<PetAnimationController>();
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -259,7 +259,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         yield return new WaitForSeconds(0.3f);
         
         // ★★★ 수정: 축하하기 전에 서로 마주보도록 변경합니다. ★★★
-        Debug.Log($"[{InteractionName}] {possum.petName}과(와) {predator.petName}이(가) 서로 마주봅니다.");
+        // Debug.Log($"[{InteractionName}] {possum.petName}과(와) {predator.petName}이(가) 서로 마주봅니다.");
         yield return StartCoroutine(SmoothlyLookAtEachOther(possum, predator, 1.0f));
 
         // 두 펫이 동시에 기뻐합니다.

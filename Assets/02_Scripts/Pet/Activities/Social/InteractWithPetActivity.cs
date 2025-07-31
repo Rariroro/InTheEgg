@@ -36,7 +36,7 @@ public class InteractWithPetActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 상태 유지 중");
+        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 상태 유지 중");
         // BasePetInteraction이 이미 이동을 제어하므로 여기서는 움직임만 중지
         if (pet.movementController != null)
         {
@@ -52,7 +52,7 @@ public class InteractWithPetActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 종료");
+        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 종료");
         // BasePetInteraction의 finally 블록에서 모든 정리를 수행하므로
         // 여기서는 특별한 정리 작업 없음
         // isInteracting 플래그는 BasePetInteraction에서 해제됨

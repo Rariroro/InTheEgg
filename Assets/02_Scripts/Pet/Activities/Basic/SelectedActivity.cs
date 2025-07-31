@@ -35,7 +35,7 @@ public class SelectedActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 시작");
+        // Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 시작");
         
         // 현재 진행 중인 모든 움직임 관련 코루틴을 중지
         var moveController = pet.GetComponent<PetMovementController>();
@@ -75,13 +75,13 @@ public class SelectedActivity : PetActivityAdapter
         }
         else if (pet.State.IsClimbingTree)
         {
-            Debug.Log($"[SelectedActivity] {pet.petName}: 나무 위에 있어서 회전하지 않음");
+            // Debug.Log($"[SelectedActivity] {pet.petName}: 나무 위에 있어서 회전하지 않음");
         }
     }
     
     public override void Stop()
     {
-        Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 종료");
+        // Debug.Log($"[SelectedActivity] {pet.petName}: 선택된 상태 종료");
         // 특별한 정리 작업 없음
         // 다음 활동이 필요한 설정을 수행할 것임
     }

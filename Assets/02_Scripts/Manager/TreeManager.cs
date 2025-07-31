@@ -88,7 +88,7 @@ public class TreeManager : MonoBehaviour
             return false;
 
         treeOccupancy[tree] = pet;
-        Debug.Log($"{pet.petName}이(가) {tree.name}에 올라갔습니다.");
+        // Debug.Log($"{pet.petName}이(가) {tree.name}에 올라갔습니다.");
         return true;
     }
 
@@ -102,7 +102,7 @@ public class TreeManager : MonoBehaviour
             var pet = treeOccupancy[tree];
             treeOccupancy.Remove(tree);
             if (pet != null)
-                Debug.Log($"{pet.petName}이(가) {tree.name}에서 내려왔습니다.");
+                // Debug.Log($"{pet.petName}이(가) {tree.name}에서 내려왔습니다.");
         }
     }
 
@@ -127,7 +127,7 @@ public class TreeManager : MonoBehaviour
             RegisterTree(tree.transform);
         }
 
-        Debug.Log($"[TreeManager] 그리드 재생성 완료. {trees.Length}개의 나무를 등록했습니다.");
+        // Debug.Log($"[TreeManager] 그리드 재생성 완료. {trees.Length}개의 나무를 등록했습니다.");
     }
 
     /// <summary>

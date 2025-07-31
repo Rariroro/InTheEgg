@@ -119,19 +119,19 @@ public class PetInteractionManager : MonoBehaviour
 
     private IEnumerator EnableInteractionsAfterDelay()
     {
-        Debug.Log("[PetInteractionManager] 상호작용 체크 지연 중...");
+        // Debug.Log("[PetInteractionManager] 상호작용 체크 지연 중...");
         yield return new WaitForSeconds(startDelay);
         canStartInteractions = true;
 
         // 최적화된 상호작용 체크 시작
         StartCoroutine(OptimizedSpatialInteractionCheck());
-        Debug.Log("[PetInteractionManager] 상호작용 체크 활성화!");
+        // Debug.Log("[PetInteractionManager] 상호작용 체크 활성화!");
     }
 
     private void RegisterInteractions()
     {
         registeredInteractions.AddRange(GetComponents<BasePetInteraction>());
-        Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
+        // Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
     }
 
     public void RefreshPetList()
@@ -155,7 +155,7 @@ public class PetInteractionManager : MonoBehaviour
         // 그리드 업데이트
         UpdateSpatialGrid();
 
-        Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
+        // Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
     }
 
     public void RegisterPet(PetController pet)
@@ -422,7 +422,7 @@ public class PetInteractionManager : MonoBehaviour
         if (suitableInteraction == null)
             return;
 
-        Debug.Log($"[PetInteractionManager] {pet1.petName}와(과) {pet2.petName} 사이에 {suitableInteraction.InteractionName} 상호작용 시작!");
+        // Debug.Log($"[PetInteractionManager] {pet1.petName}와(과) {pet2.petName} 사이에 {suitableInteraction.InteractionName} 상호작용 시작!");
 
         // 상호작용 시작
  // ★★★ 핵심 변경: 상호작용 로직 실행을 BasePetInteraction에 완전히 위임 ★★★
@@ -480,7 +480,7 @@ public class PetInteractionManager : MonoBehaviour
             pet2.State.EndInteraction();
         }
 
-        Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
+        // Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
     }
 
     private bool IsInteracting(PetController pet)
@@ -509,13 +509,13 @@ public class PetInteractionManager : MonoBehaviour
     [ContextMenu("현재 상태 출력")]
     public void PrintCurrentStatus()
     {
-        Debug.Log($"[PetInteractionManager] 현재 상태:");
-        Debug.Log($"  - 총 펫 수: {allPets.Count}");
-        Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
-        Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
-        Debug.Log($"  - 그리드 셀 수: {spatialGrid.Count}");
-        Debug.Log($"  - 체크 간격: {interactionCheckInterval}초");
-        Debug.Log($"  - 프레임당 최대 체크: {maxChecksPerFrame}");
+        // Debug.Log($"[PetInteractionManager] 현재 상태:");
+        // Debug.Log($"  - 총 펫 수: {allPets.Count}");
+        // Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
+        // Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
+        // Debug.Log($"  - 그리드 셀 수: {spatialGrid.Count}");
+        // Debug.Log($"  - 체크 간격: {interactionCheckInterval}초");
+        // Debug.Log($"  - 프레임당 최대 체크: {maxChecksPerFrame}");
     }
 
     private void OnDestroy()

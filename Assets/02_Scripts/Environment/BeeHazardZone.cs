@@ -43,7 +43,7 @@ public class BeeHazardZone : MonoBehaviour
     
     private void Awake()
     {
-        Debug.Log($"[BeeHazardZone] Awake 호출됨 - {gameObject.name}");
+        //Debug.Log($"[BeeHazardZone] Awake 호출됨 - {gameObject.name}");
         
         // FeedingArea 컴포넌트 확인
         feedingArea = GetComponent<FeedingArea>();
@@ -53,7 +53,7 @@ public class BeeHazardZone : MonoBehaviour
             return;
         }
         
-        Debug.Log($"[BeeHazardZone] FeedingArea 발견. foodType: {feedingArea.foodType}");
+        //Debug.Log($"[BeeHazardZone] FeedingArea 발견. foodType: {feedingArea.foodType}");
         
         // 꿀 타입인지 확인
         if ((feedingArea.foodType & PetAIProperties.DietaryFlags.Honey) == 0)
@@ -64,7 +64,7 @@ public class BeeHazardZone : MonoBehaviour
         }
         else
         {
-            Debug.Log($"[BeeHazardZone] Honey 타입 확인됨!");
+            //Debug.Log($"[BeeHazardZone] Honey 타입 확인됨!");
         }
         
         // AudioSource 설정
@@ -86,23 +86,23 @@ public class BeeHazardZone : MonoBehaviour
         
         if (!col.isTrigger)
         {
-            Debug.Log($"[BeeHazardZone] Collider를 Trigger로 설정합니다.");
+            //Debug.Log($"[BeeHazardZone] Collider를 Trigger로 설정합니다.");
             col.isTrigger = true;
         }
         
-        Debug.Log($"[BeeHazardZone] 초기화 완료! Collider 타입: {col.GetType().Name}, Bounds: {col.bounds.size}");
+        //Debug.Log($"[BeeHazardZone] 초기화 완료! Collider 타입: {col.GetType().Name}, Bounds: {col.bounds.size}");
     }
     
     private void Start()
     {
-        Debug.Log($"[BeeHazardZone] Start 호출됨 - {gameObject.name}, 활성화 상태: {enabled}");
-        Debug.Log($"[BeeHazardZone] 내 Layer: {LayerMask.LayerToName(gameObject.layer)}, Tag: {gameObject.tag}");
+        //Debug.Log($"[BeeHazardZone] Start 호출됨 - {gameObject.name}, 활성화 상태: {enabled}");
+        //Debug.Log($"[BeeHazardZone] 내 Layer: {LayerMask.LayerToName(gameObject.layer)}, Tag: {gameObject.tag}");
         
         // Collider 정보 출력
         Collider col = GetComponent<Collider>();
         if (col != null)
         {
-            Debug.Log($"[BeeHazardZone] Collider 정보 - Type: {col.GetType().Name}, IsTrigger: {col.isTrigger}, Enabled: {col.enabled}");
+            //Debug.Log($"[BeeHazardZone] Collider 정보 - Type: {col.GetType().Name}, IsTrigger: {col.isTrigger}, Enabled: {col.enabled}");
         }
     }
     
@@ -112,7 +112,7 @@ public class BeeHazardZone : MonoBehaviour
         if (!other.TryGetComponent<PetController>(out var pet))
             return;
             
-        Debug.Log($"[BeeHazardZone] 펫 감지: {pet.petName}");
+        //Debug.Log($"[BeeHazardZone] 펫 감지: {pet.petName}");
         
         // 이미 벌 공격을 받고 있거나 처리 중이면 무시
         if (pet.State.IsBeingAttackedByBees || petsBeingAttacked.Contains(pet))
@@ -130,7 +130,7 @@ public class BeeHazardZone : MonoBehaviour
         if (pet == null || pet.State.IsBeingAttackedByBees || petsBeingAttacked.Contains(pet))
             return;
             
-        Debug.Log($"[BeeHazardZone] {pet.petName}이(가) 꿀을 먹기 시작함! 즉시 벌 공격!");
+        //Debug.Log($"[BeeHazardZone] {pet.petName}이(가) 꿀을 먹기 시작함! 즉시 벌 공격!");
         
         // 중복 방지 체크 후 즉시 벌 공격 시작
         if (!petsBeingAttacked.Contains(pet))
@@ -149,7 +149,7 @@ public class BeeHazardZone : MonoBehaviour
         {
             if (feedingController != null && feedingController.IsEatingOrSeeking())
             {
-                Debug.Log($"[BeeHazardZone] {pet.petName}이(가) 꿀을 먹기 시작함! 벌들이 화났다!");
+                //Debug.Log($"[BeeHazardZone] {pet.petName}이(가) 꿀을 먹기 시작함! 벌들이 화났다!");
                 
                 // 중복 방지 체크 후 벌 공격 시작
                 if (!petsBeingAttacked.Contains(pet))
@@ -174,7 +174,7 @@ public class BeeHazardZone : MonoBehaviour
         if (pet == null || Vector3.Distance(transform.position, pet.transform.position) > 10f)
             yield break;
             
-        Debug.Log($"[BeeHazardZone] {pet.petName}에게 벌 공격 시작!");
+        //Debug.Log($"[BeeHazardZone] {pet.petName}에게 벌 공격 시작!");
         
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.SetBeeAttackState(true, transform.position);
@@ -184,7 +184,7 @@ public class BeeHazardZone : MonoBehaviour
         if (beeSwarmParticlePrefab != null)
         {
             beeSwarm = Instantiate(beeSwarmParticlePrefab, pet.transform.position + swarmOffset, Quaternion.identity);
-            Debug.Log($"[BeeHazardZone] 벌떼 파티클 생성됨: {beeSwarm.name} at {beeSwarm.transform.position}");
+            //Debug.Log($"[BeeHazardZone] 벌떼 파티클 생성됨: {beeSwarm.name} at {beeSwarm.transform.position}");
         }
         else
         {
@@ -215,7 +215,7 @@ public class BeeHazardZone : MonoBehaviour
                 // 디버그: 5초마다 상태 로그
                 if (Mathf.FloorToInt(elapsedTime / 5f) != Mathf.FloorToInt((elapsedTime - Time.deltaTime) / 5f))
                 {
-                    Debug.Log($"[BeeHazardZone] 벌 공격 진행중 - 경과시간: {elapsedTime:F1}초, 거리: {distanceFromHive:F1}m");
+                    //Debug.Log($"[BeeHazardZone] 벌 공격 진행중 - 경과시간: {elapsedTime:F1}초, 거리: {distanceFromHive:F1}m");
                 }
             }
             else if (elapsedTime < 0.1f) // 처음에만 경고
@@ -226,20 +226,20 @@ public class BeeHazardZone : MonoBehaviour
             // 종료 조건 체크
             if (elapsedTime >= attackDuration) // 시간 초과
             {
-                Debug.Log($"[BeeHazardZone] 시간 초과로 벌 공격 종료 (지속시간: {elapsedTime:F1}초)");
+                //Debug.Log($"[BeeHazardZone] 시간 초과로 벌 공격 종료 (지속시간: {elapsedTime:F1}초)");
                 break;
             }
             
             if (distanceFromHive > giveUpDistance) // 너무 멀리 갔음
             {
-                Debug.Log($"[BeeHazardZone] 펫이 너무 멀리 도망감. 벌이 포기 (거리: {distanceFromHive:F1}m)");
+                //Debug.Log($"[BeeHazardZone] 펫이 너무 멀리 도망감. 벌이 포기 (거리: {distanceFromHive:F1}m)");
                 break;
             }
             
             // 펫이 멈추고 충분히 멀리 있을 때만 종료
             if (pet.agent != null && pet.agent.velocity.magnitude < 0.1f && distanceFromHive > maxChaseDistance)
             {
-                Debug.Log($"[BeeHazardZone] 펫이 충분히 멀리서 멈춤. 벌 공격 종료 (거리: {distanceFromHive:F1}m)");
+                //Debug.Log($"[BeeHazardZone] 펫이 충분히 멀리서 멈춤. 벌 공격 종료 (거리: {distanceFromHive:F1}m)");
                 break;
             }
             
@@ -254,13 +254,13 @@ public class BeeHazardZone : MonoBehaviour
             pet.State.SetBeeAttackState(false);
             // beeAttackSource는 아직 유지 (도망 방향 계산용)
             petsBeingAttacked.Remove(pet);  // 중복 방지 리스트에서 제거
-            Debug.Log($"[BeeHazardZone] {pet.petName}의 벌 공격 종료");
+            //Debug.Log($"[BeeHazardZone] {pet.petName}의 벌 공격 종료");
         }
         
         // 벌떼가 벌집으로 돌아가는 애니메이션과 동시에 펫 도망 타이머 시작
         if (beeSwarm != null)
         {
-            Debug.Log($"[BeeHazardZone] 벌떼가 벌집으로 돌아갑니다");
+            //Debug.Log($"[BeeHazardZone] 벌떼가 벌집으로 돌아갑니다");
             StartCoroutine(ReturnBeesToHive(beeSwarm, hivePosition));
         }
         
@@ -270,7 +270,7 @@ public class BeeHazardZone : MonoBehaviour
         {
             // ★ [Phase 4] 벌 공격 소스 초기화
             pet.State.SetBeeAttackState(false, Vector3.zero);
-            Debug.Log($"[BeeHazardZone] {pet.petName}의 도망 시간 종료");
+            //Debug.Log($"[BeeHazardZone] {pet.petName}의 도망 시간 종료");
         }
     }
     

@@ -103,7 +103,7 @@ public class ExhaustedActivity : PetActivityAdapter
         pet.State.SetEmergencyState(exhausted: false);
         isTryingToEat = false;
         
-        Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 회복됩니다.");
+        // Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 회복됩니다.");
         
         // 식사 시도를 하고 있었다면 완전히 취소
         feedingController?.CancelFeeding();
@@ -138,7 +138,7 @@ public class ExhaustedActivity : PetActivityAdapter
         {
             pet.emotionController.HideEmotion();
         } // 배고픔 이모티콘 숨기기
-            Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 음식을 발견하여 이동을 시작합니다.");
+            // Debug.Log($"[ExhaustedActivity] {pet.petName}: 탈진 상태에서 음식을 발견하여 이동을 시작합니다.");
         }
         else
         {

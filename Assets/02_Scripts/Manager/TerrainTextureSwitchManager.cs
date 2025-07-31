@@ -381,7 +381,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         {
             PlaneGroup group = planeGroups[i];
             CalculateGroupAffectedTerrainArea(i);
-            Debug.Log($"그룹 '{group.groupName}': {group.affectedAlphamapPoints.Count} 알파맵 좌표에 영향");
+            // Debug.Log($"그룹 '{group.groupName}': {group.affectedAlphamapPoints.Count} 알파맵 좌표에 영향");
         }
     }
 
@@ -444,7 +444,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         {
             if (kvp.Value.Count > 1) overlappingCount++;
         }
-        Debug.Log($"발견된 중첩 영역: {overlappingCount} 알파맵 좌표");
+        // Debug.Log($"발견된 중첩 영역: {overlappingCount} 알파맵 좌표");
     }
 
     // 유틸리티 메서드들
@@ -525,20 +525,20 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         }
 
         ApplyAllGroupChanges();
-        Debug.Log("모든 지형 텍스처가 원본으로 복원되었습니다.");
+        // Debug.Log("모든 지형 텍스처가 원본으로 복원되었습니다.");
     }
 
     // 외부에서 호출하는 인터페이스 메서드들
     public void ResetAllTogglesToOff()
     {
-        Debug.Log("모든 환경 토글을 끕니다.");
+        // Debug.Log("모든 환경 토글을 끕니다.");
 
         for (int i = 0; i < planeGroups.Count; i++)
         {
             SetGroupToggle(i, false);
         }
 
-        Debug.Log("모든 환경이 원본 상태로 복원되었습니다.");
+        // Debug.Log("모든 환경이 원본 상태로 복원되었습니다.");
     }
 
     public void DisableGroupByEnvironmentId(string environmentId)
@@ -550,7 +550,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
             if (planeGroups[i].groupName == groupName)
             {
                 SetGroupToggle(i, false);
-                Debug.Log($"환경 {environmentId}에 해당하는 그룹 '{groupName}' 토글을 껐습니다.");
+                // Debug.Log($"환경 {environmentId}에 해당하는 그룹 '{groupName}' 토글을 껐습니다.");
                 break;
             }
         }
