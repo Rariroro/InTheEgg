@@ -149,7 +149,7 @@ private IEnumerator RestOnTree()
     var animController = petController.GetComponent<PetAnimationController>();
     animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest); // 휴식 애니메이션
 
-    float waitTime = UnityEngine.Random.Range(5f, 10f);
+    float waitTime = UnityEngine.Random.Range(20f, 40f);
     float waited = 0f;
 
     while (waited < waitTime)
