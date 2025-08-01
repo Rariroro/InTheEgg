@@ -110,6 +110,10 @@ MonoBehaviour:
   maxPets: 60
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
+  giftPrefab: {fileID: 0}
+  celebrationEffectPrefab: {fileID: 0}
+  giftSpawnDelay: 0.5
+  fireworkPrefabs: []
   navMeshWaitTime: 3
 --- !u!114 &70163287224398247
 MonoBehaviour:
@@ -149,3 +153,4 @@ MonoBehaviour:
   - {fileID: 165244, guid: 6d25c67d2d1334c26aa29e48eeb63bc0, type: 3}
   navMeshSurface: {fileID: 0}
   navMeshBakeDelay: 0.5
+  waterSplashParticlePrefab: {fileID: 1922285782511704, guid: 9648ad880b48b414d95d8161f75e35e9, type: 3}

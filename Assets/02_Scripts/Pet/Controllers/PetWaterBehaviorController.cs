@@ -11,6 +11,7 @@ public class PetWaterBehaviorController : PetControllerBase
     private bool isInWater = false;
     private float currentDepth = 0f;
     private float depthTransitionSpeed = 2f;
+    private bool wasHolding = false;  // 펫이 들려있었는지 추적
 
     protected override void OnInitialize()
     {
@@ -33,6 +34,12 @@ public class PetWaterBehaviorController : PetControllerBase
     // Unity Update - 매 프레임 물 영역 체크
     private void Update()
     {
+        // 들기 상태 추적
+        if (petController.State.IsHolding && !wasHolding)
+        {
+            wasHolding = true;
+        }
+        
         CheckWaterArea();
     }
 
@@ -80,6 +87,33 @@ public class PetWaterBehaviorController : PetControllerBase
 
     private void OnEnterWater()
     {
+        // 펫이 들려있다가 물에 놓아질 때만 파티클 생성
+        if (wasHolding && EnvironmentManager.Instance != null && 
+            EnvironmentManager.Instance.waterSplashParticlePrefab != null)
+        {
+            // 물튀김 파티클 생성
+            GameObject splash = Instantiate(
+                EnvironmentManager.Instance.waterSplashParticlePrefab,
+                transform.position, 
+                Quaternion.identity
+            );
+            
+            // 파티클 크기를 펫 크기에 맞게 조정
+            if (petController.petModelTransform != null)
+            {
+                float scale = petController.petModelTransform.localScale.x;
+                splash.transform.localScale = Vector3.one * scale;
+            }
+            
+            // 3초 후 파티클 제거
+            Destroy(splash, 3f);
+            
+            // Debug.Log($"{petController.petName}: 물에 놓아져서 물튀김 효과 생성!");
+        }
+        
+        // wasHolding 플래그 리셋
+        wasHolding = false;
+        
         // MovementSettings를 통해 물 속 속도 계산
         bool isAquatic = petController.habitat == PetAIProperties.Habitat.Water;
         

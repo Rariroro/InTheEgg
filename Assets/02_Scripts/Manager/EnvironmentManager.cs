@@ -5,6 +5,9 @@ using Unity.AI.Navigation;
 
 public class EnvironmentManager : MonoBehaviour
 {
+    // 싱글톤 인스턴스
+    public static EnvironmentManager Instance { get; private set; }
+    
     [Header("환경 프리팹")]
     public GameObject foodstoreEnvironment;     // 음식가게
     public GameObject orchardEnvironment;       // 과수원
@@ -35,6 +38,10 @@ public class EnvironmentManager : MonoBehaviour
     [Header("NavMesh 설정")]
     public NavMeshSurface navMeshSurface;     // NavMesh Surface 참조
     public float navMeshBakeDelay = 0.5f;      // NavMesh 베이크 전 추가 대기 시간
+    
+    [Header("Water Effects")]
+    [Tooltip("펫을 물에 놓을 때 생성될 물튀김 파티클 프리팹")]
+    public GameObject waterSplashParticlePrefab;  // 물튀김 파티클 프리팹
 
     // 환경 ID와 프리팹 연결을 위한 딕셔너리
     private Dictionary<string, GameObject> environmentPrefabs = new Dictionary<string, GameObject>();
@@ -73,6 +80,17 @@ public class EnvironmentManager : MonoBehaviour
 
     private void Awake()
     {
+        // 싱글톤 설정
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        
         // 딕셔너리 초기화
         InitializeEnvironmentPrefabs();
 
