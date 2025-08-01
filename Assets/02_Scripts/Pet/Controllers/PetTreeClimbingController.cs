@@ -272,7 +272,7 @@ private void ShowTreeEmotionByPersonality()
     switch (petController.personality)
     {
         case PetAIProperties.Personality.Lazy:
-            petController.ShowEmotion(EmotionType.Sleep, 3f);
+            petController.ShowEmotion(EmotionType.Sleepy, 3f);
             break;
         case PetAIProperties.Personality.Playful:
             petController.ShowEmotion(EmotionType.Happy, 3f);
@@ -456,6 +456,20 @@ private void ShowTreeEmotionByPersonality()
             {
                 petController.agent.enabled = true;
                 petController.agent.Warp(transform.position);
+            }
+
+            // NavMeshAgent가 완전히 준비될 때까지 대기
+            float waitTime = 0f;
+            while (waitTime < 2f && petController.agent != null)
+            {
+                if (petController.agent.enabled && petController.agent.isOnNavMesh)
+                {
+                    // 한 프레임 더 대기하여 안정화
+                    yield return null;
+                    break;
+                }
+                waitTime += Time.deltaTime;
+                yield return null;
             }
 
             petController.GetComponent<PetAnimationController>()?.StopContinuousAnimation();

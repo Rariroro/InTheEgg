@@ -416,8 +416,10 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet2.agent.stoppingDistance = originalStop2;
 
         // 이동 정지
-        pet1.agent.isStopped = true;
-        pet2.agent.isStopped = true;
+        if (pet1.agent != null && pet1.agent.enabled && pet1.agent.isOnNavMesh)
+            pet1.agent.isStopped = true;
+        if (pet2.agent != null && pet2.agent.enabled && pet2.agent.isOnNavMesh)
+            pet2.agent.isStopped = true;
 
         // 애니메이션 정지
         pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
@@ -653,6 +655,9 @@ public abstract class BasePetInteraction : MonoBehaviour
     protected IEnumerator WaitUntilAgentIsReady(PetController pet, float timeout = 2.0f)
     {
         float timer = 0f;
+        int retryCount = 0;
+        const int maxRetries = 2;
+        
         while (timer < timeout)
         {
             // NavMeshAgent가 유효하고, 활성화되어 있으며, NavMesh 위에 있는지 확인
@@ -661,6 +666,24 @@ public abstract class BasePetInteraction : MonoBehaviour
                 // 안정성을 위해 한 프레임 더 대기 후 종료
                 yield return null;
                 yield break; // 코루틴 정상 종료
+            }
+            
+            // 일정 시간마다 agent 재활성화 시도
+            if (timer > timeout / 2 && retryCount < maxRetries && pet.agent != null)
+            {
+                retryCount++;
+                Debug.LogWarning($"[{InteractionName}] {pet.petName}의 NavMeshAgent 재활성화 시도 {retryCount}/{maxRetries}");
+                
+                // Agent 재활성화
+                pet.agent.enabled = false;
+                yield return new WaitForSeconds(0.1f);
+                pet.agent.enabled = true;
+                
+                // 위치 재설정
+                if (pet.agent.enabled)
+                {
+                    pet.agent.Warp(pet.transform.position);
+                }
             }
 
             timer += Time.deltaTime;

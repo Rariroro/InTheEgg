@@ -62,7 +62,7 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
 
     [Header("안전 설정")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
-    public float agentSafetyTimeout = 3f;
+    public float agentSafetyTimeout = 5f;
 
     // 큰 동물 목록 (클래스 레벨 변수로 저장)
     private static readonly PetType[] LargeAnimals = new PetType[]
@@ -122,13 +122,50 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
         string actionName = isSleepMode ? "잠자기" : "휴식";
         // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 {actionName} 시작!");
 
-        // NavMeshAgent 준비 확인
+        // NavMeshAgent 준비 확인 (재시도 로직 포함)
+        bool pet1Ready = false;
+        bool pet2Ready = false;
+        
+        // 첫 번째 시도
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
         yield return StartCoroutine(WaitUntilAgentIsReady(pet2, agentSafetyTimeout));
-
-        if (!IsAgentSafelyReady(pet1) || !IsAgentSafelyReady(pet2))
+        
+        pet1Ready = IsAgentSafelyReady(pet1);
+        pet2Ready = IsAgentSafelyReady(pet2);
+        
+        // 첫 번째 시도 실패 시 agent 재활성화 후 재시도
+        if (!pet1Ready || !pet2Ready)
         {
-            Debug.LogError($"[{InteractionName}] NavMeshAgent 준비 실패로 상호작용을 중단합니다.");
+            Debug.LogWarning($"[{InteractionName}] NavMeshAgent 준비 실패. 재시도합니다. (pet1: {pet1Ready}, pet2: {pet2Ready})");
+            
+            // Agent 재활성화 시도
+            if (!pet1Ready && pet1.agent != null)
+            {
+                pet1.agent.enabled = false;
+                yield return new WaitForSeconds(0.2f);
+                pet1.agent.enabled = true;
+                pet1.agent.Warp(pet1.transform.position);
+            }
+            
+            if (!pet2Ready && pet2.agent != null)
+            {
+                pet2.agent.enabled = false;
+                yield return new WaitForSeconds(0.2f);
+                pet2.agent.enabled = true;
+                pet2.agent.Warp(pet2.transform.position);
+            }
+            
+            // 두 번째 시도
+            yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
+            yield return StartCoroutine(WaitUntilAgentIsReady(pet2, agentSafetyTimeout));
+            
+            pet1Ready = IsAgentSafelyReady(pet1);
+            pet2Ready = IsAgentSafelyReady(pet2);
+        }
+
+        if (!pet1Ready || !pet2Ready)
+        {
+            Debug.LogError($"[{InteractionName}] NavMeshAgent 준비 실패로 상호작용을 중단합니다. (pet1: {pet1.petName} ready: {pet1Ready}, pet2: {pet2.petName} ready: {pet2Ready})");
             EndInteraction(pet1, pet2);
             yield break;
         }
