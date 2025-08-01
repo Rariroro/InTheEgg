@@ -41,13 +41,13 @@ public class EnvironmentManager : MonoBehaviour
 
     // 대기 중인 선물들과 해당 환경 정보를 저장하는 딕셔너리
     private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
-    
+
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
-    
+
     // 선물 개수 반환
     public int GetPendingGiftCount() => pendingGifts.Count;
-    
+
     // 선물 리스트 반환
     public List<GameObject> GetPendingGiftList()
     {
@@ -146,7 +146,7 @@ public class EnvironmentManager : MonoBehaviour
         string[] defaultEnvironments = {
         "env_forest",
         "env_pond",
-        "env_flowers"
+        "env_flowers","env_fence","env_honeypot","env_orchard","env_foodstore"
     };
 
 
@@ -289,7 +289,7 @@ public class EnvironmentManager : MonoBehaviour
 
             // NavMeshIgnore 레이어도 포함하여 Raycast
             int layerMask = ~0; // 모든 레이어
-            
+
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {
                 GameObject hitObject = hit.collider.gameObject;
@@ -321,7 +321,7 @@ public class EnvironmentManager : MonoBehaviour
             // 5초 후 축하 효과 제거
             Destroy(celebration, 5f);
         }
-          // ▼▼▼ [수정] 이 부분을 추가합니다. ▼▼▼
+        // ▼▼▼ [수정] 이 부분을 추가합니다. ▼▼▼
         // 불꽃놀이 효과 실행
         if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
         {
@@ -336,7 +336,7 @@ public class EnvironmentManager : MonoBehaviour
 
         // 환경 스폰 (코루틴으로 실행하고 완료 대기)
         yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
-      
+
         // ★ 선물로 나온 환경도 펫 유인
         GameObject spawnedEnv = spawnedEnvironments[spawnedEnvironments.Count - 1];
         if (EnvironmentPetAttractor.Instance != null && spawnedEnv != null)
@@ -360,40 +360,40 @@ public class EnvironmentManager : MonoBehaviour
 
     }
     /// <summary>
-/// 지정된 위치에서 여러 개의 불꽃놀이를 '순서대로' 발사하는 코루틴입니다.
-/// </summary>
-/// <param name="spawnCenter">불꽃놀이가 생성될 중심 위치</param>
-private IEnumerator LaunchFireworks(Vector3 spawnCenter)
-{
-    // 리스트가 비어있거나 null이면 실행하지 않습니다.
-    if (fireworkPrefabs == null || fireworkPrefabs.Count == 0)
+    /// 지정된 위치에서 여러 개의 불꽃놀이를 '순서대로' 발사하는 코루틴입니다.
+    /// </summary>
+    /// <param name="spawnCenter">불꽃놀이가 생성될 중심 위치</param>
+    private IEnumerator LaunchFireworks(Vector3 spawnCenter)
     {
-        yield break; // 코루틴 즉시 종료
-    }
-
-    // foreach 대신 for 루프를 사용하여 리스트의 순서대로 프리팹을 생성합니다.
-    for (int i = 0; i < fireworkPrefabs.Count; i++)
-    {
-        GameObject fireworkPrefab = fireworkPrefabs[i];
-
-        if (fireworkPrefab != null)
+        // 리스트가 비어있거나 null이면 실행하지 않습니다.
+        if (fireworkPrefabs == null || fireworkPrefabs.Count == 0)
         {
-            // 불꽃놀이가 약간 다른 위치에서 터지도록 랜덤 오프셋을 추가합니다.
-            Vector3 randomOffset = new Vector3(Random.Range(-2f, 2f), 0, Random.Range(-2f, 2f));
-            Vector3 spawnPosition = spawnCenter + randomOffset;
+            yield break; // 코루틴 즉시 종료
+        }
 
-            // 불꽃놀이 프리팹을 생성합니다.
-            GameObject fireworkInstance = Instantiate(fireworkPrefab, spawnPosition, Quaternion.identity);
-            
-            // 생성된 불꽃놀이가 일정 시간(예: 5초) 후에 자동으로 파괴되도록 설정합니다.
-            Destroy(fireworkInstance, 5f);
+        // foreach 대신 for 루프를 사용하여 리스트의 순서대로 프리팹을 생성합니다.
+        for (int i = 0; i < fireworkPrefabs.Count; i++)
+        {
+            GameObject fireworkPrefab = fireworkPrefabs[i];
 
-            // 다음 불꽃놀이까지 '고정된' 시간 간격을 둡니다. (예: 0.4초)
-            // 이 시간을 조절하여 순차적인 느낌을 제어할 수 있습니다.
-            yield return new WaitForSeconds(1.0f);
+            if (fireworkPrefab != null)
+            {
+                // 불꽃놀이가 약간 다른 위치에서 터지도록 랜덤 오프셋을 추가합니다.
+                Vector3 randomOffset = new Vector3(Random.Range(-2f, 2f), 0, Random.Range(-2f, 2f));
+                Vector3 spawnPosition = spawnCenter + randomOffset;
+
+                // 불꽃놀이 프리팹을 생성합니다.
+                GameObject fireworkInstance = Instantiate(fireworkPrefab, spawnPosition, Quaternion.identity);
+
+                // 생성된 불꽃놀이가 일정 시간(예: 5초) 후에 자동으로 파괴되도록 설정합니다.
+                Destroy(fireworkInstance, 5f);
+
+                // 다음 불꽃놀이까지 '고정된' 시간 간격을 둡니다. (예: 0.4초)
+                // 이 시간을 조절하여 순차적인 느낌을 제어할 수 있습니다.
+                yield return new WaitForSeconds(1.0f);
+            }
         }
     }
-}
     private IEnumerator RemoveGiftWithAnimation(GameObject gift)
     {
         Vector3 originalScale = gift.transform.localScale;
