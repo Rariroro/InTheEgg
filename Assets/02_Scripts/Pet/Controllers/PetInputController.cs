@@ -339,12 +339,6 @@ public class PetInputController : PetControllerBase
             petController.agent.enabled = false;
         }
 
-        CameraController camController = FindObjectOfType<CameraController>();
-        if (camController != null)
-        {
-            camController.enabled = false;
-        }
-
         NavMeshHit hit;
         if (NavMesh.SamplePosition(petController.transform.position, out hit, 10f, NavMesh.AllAreas))
         {
@@ -432,13 +426,6 @@ public class PetInputController : PetControllerBase
             petController.agent.enabled = true;
         }
 
-        // CameraController 재활성화
-        CameraController camController = FindObjectOfType<CameraController>();
-        if (camController != null)
-        {
-            camController.enabled = true;
-        }
-
         // 펫을 지면에 즉시 배치
         NavMeshHit navHit;
         if (NavMesh.SamplePosition(petController.transform.position, out navHit, 10f, NavMesh.AllAreas))
@@ -524,13 +511,6 @@ public class PetInputController : PetControllerBase
             petController.agent.enabled = true;
             petController.agent.Warp(groundPoint); // ★ SetDestination 대신 Warp 사용
             petController.agent.updateRotation = true;
-        }
-
-        // CameraController 재활성화
-        CameraController camController = FindObjectOfType<CameraController>();
-        if (camController != null)
-        {
-            camController.enabled = true;
         }
 
         CompletePetPlacement();
