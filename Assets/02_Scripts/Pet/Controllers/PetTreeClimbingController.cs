@@ -147,10 +147,17 @@ public class PetTreeClimbingController : PetControllerBase
 private IEnumerator RestOnTree()
 {
     var animController = petController.GetComponent<PetAnimationController>();
-    animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest); // 휴식 애니메이션
-
-    float waitTime = UnityEngine.Random.Range(20f, 40f);
+    
+    // 성격별 휴식 시간 설정
+    float waitTime = GetPersonalityRestTime();
     float waited = 0f;
+    
+    // 행동 전환을 위한 변수
+    float behaviorChangeInterval = UnityEngine.Random.Range(5f, 10f);
+    float behaviorTimer = 0f;
+    
+    // 초기 감정 표현
+    ShowTreeEmotionByPersonality();
 
     while (waited < waitTime)
     {
@@ -162,10 +169,14 @@ private IEnumerator RestOnTree()
             yield return null;
             continue; // 아래 로직(시간 증가, 휴식 중단 조건 체크)을 건너뜁니다.
         }
-        else
+        
+        // 일정 시간마다 행동 변경
+        behaviorTimer += Time.deltaTime;
+        if (behaviorTimer >= behaviorChangeInterval)
         {
-            // 선택이 해제되면 다시 휴식 애니메이션으로 돌아가도록 보장합니다.
-            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+            behaviorTimer = 0f;
+            behaviorChangeInterval = UnityEngine.Random.Range(5f, 10f);
+            PerformTreeBehavior(animController);
         }
 
         // 다른 긴급한 행동이 필요한지 체크
@@ -177,6 +188,104 @@ private IEnumerator RestOnTree()
 
         yield return null;
         waited += Time.deltaTime;
+    }
+}
+
+/// <summary>
+/// 성격별 나무 위 휴식 시간 반환
+/// </summary>
+private float GetPersonalityRestTime()
+{
+    switch (petController.personality)
+    {
+        case PetAIProperties.Personality.Lazy:
+            return UnityEngine.Random.Range(30f, 50f); // 더 오래 쉼
+        case PetAIProperties.Personality.Playful:
+            return UnityEngine.Random.Range(10f, 20f); // 빨리 지루해함
+        case PetAIProperties.Personality.Brave:
+            return UnityEngine.Random.Range(15f, 30f); // 주변 탐색
+        case PetAIProperties.Personality.Shy:
+            return UnityEngine.Random.Range(20f, 35f); // 조용히 쉼
+        default:
+            return UnityEngine.Random.Range(20f, 40f);
+    }
+}
+
+/// <summary>
+/// 나무 위에서 다양한 행동 수행
+/// </summary>
+private void PerformTreeBehavior(PetAnimationController animController)
+{
+    if (animController == null) return;
+    
+    int behavior = UnityEngine.Random.Range(0, 4);
+    
+    switch (behavior)
+    {
+        case 0: // 휴식
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+            break;
+        case 1: // 주변 관찰
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            // 주변을 둘러보는 회전
+            petController.StartCoroutine(LookAroundOnTree());
+            break;
+        case 2: // 놀기
+            if (petController.personality == PetAIProperties.Personality.Playful)
+            {
+                petController.StartCoroutine(animController.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1f, false, false));
+                petController.ShowEmotion(EmotionType.Happy, 2f);
+            }
+            else
+            {
+                animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+            }
+            break;
+        case 3: // 털 고르기 또는 기지개
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            break;
+    }
+}
+
+/// <summary>
+/// 나무 위에서 주변을 둘러보는 코루틴
+/// </summary>
+private IEnumerator LookAroundOnTree()
+{
+    float lookDuration = 3f;
+    float elapsed = 0f;
+    float rotationSpeed = 30f; // 초당 30도 회전
+    
+    while (elapsed < lookDuration)
+    {
+        petController.transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
+        elapsed += Time.deltaTime;
+        yield return null;
+    }
+}
+
+/// <summary>
+/// 성격별 나무 위 감정 표현
+/// </summary>
+private void ShowTreeEmotionByPersonality()
+{
+    switch (petController.personality)
+    {
+        case PetAIProperties.Personality.Lazy:
+            petController.ShowEmotion(EmotionType.Sleep, 3f);
+            break;
+        case PetAIProperties.Personality.Playful:
+            petController.ShowEmotion(EmotionType.Happy, 3f);
+            break;
+        case PetAIProperties.Personality.Brave:
+            petController.ShowEmotion(EmotionType.Happy, 2f);
+            break;
+        case PetAIProperties.Personality.Shy:
+            // 수줍은 성격은 조용히 있음
+            break;
+        default:
+            petController.ShowEmotion(EmotionType.Happy, 2f);
+            break;
     }
 }
 
