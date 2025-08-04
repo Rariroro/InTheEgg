@@ -190,6 +190,24 @@ public class PetInputController : PetControllerBase
             {
                 Deselect();
             }
+            
+            // 선택된 상태에서 카메라를 바라봄 (나무 위에 있을 때는 제외)
+            if (Camera.main != null && !petController.State.IsClimbingTree)
+            {
+                Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
+                directionToCamera.y = 0; // Y축 고정
+                
+                if (directionToCamera != Vector3.zero)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                    // 부드러운 회전
+                    petController.transform.rotation = Quaternion.Slerp(
+                        petController.transform.rotation,
+                        targetRotation,
+                        petController.Movement.rotationSmoothness * 2f * Time.deltaTime // 조금 더 빠른 회전
+                    );
+                }
+            }
         }
     }
 
@@ -564,29 +582,47 @@ private void Select()
 
     // ★ [Phase 4] PetState를 통한 상태 업데이트
     petController.State.SetPlayerControl(holding: false, selected: true);
-    // isSelected = true; // PetState가 관리 // 내부 상태 추적용 플래그는 유지
     selectionTimer = 0f;
     
-    // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
+    // 현재 활동을 즉시 중단하고 AI를 재평가
+    if (petController.AI != null)
+    {
+        petController.AI.InterruptAndResetAI();
+    }
     
-    // ★★★ SelectedActivity가 높은 우선순위를 가지므로 자동으로 활성화됨 ★★★
+    // 현재 진행 중인 모든 움직임 관련 동작 중지
+    var moveController = petController.GetComponent<PetMovementController>();
+    moveController?.ForceStopCurrentBehavior();
+    
+    // 나무에 오르지 않았을 때만 움직임을 멈춤
+    if (!petController.State.IsClimbingTree)
+    {
+        if (petController.movementController != null)
+        {
+            petController.movementController.StopMovement();
+        }
+    }
+    
+    // 애니메이션을 즉시 Idle 상태로 전환
+    var animController = petController.GetComponent<PetAnimationController>();
+    animController?.SetContinuousAnimation((int)PetAnimationController.PetAnimationType.Idle);
 
     // 터치 횟수 관련 로직은 유지 - 애니메이션 잠금 체크 이후에만 증가
     touchCount++;
     lastTouchTime = Time.time;
 
-    var animController = petController.GetComponent<PetAnimationController>();
-
     // 터치 횟수에 따른 특수 애니메이션 재생
     if (touchCount >= maxTouchCount) // 10번 이상 터치
-    {
+    { if (nameTextObject != null)
+            nameTextObject.SetActive(true);
         // 특수 애니메이션 처리 플래그 설정
         isProcessingSpecialAnimation = true;
         // 나무 위에 있어도 Die 애니메이션은 재생
         StartCoroutine(PlayDieAnimationAndReset(animController));
     }
     else if (touchCount >= 5) // 5번 이상 터치
-    {
+    { if (nameTextObject != null)
+            nameTextObject.SetActive(true);
         StartCoroutine(AttackAfterDelay());
     }
     else // 일반 터치
@@ -607,10 +643,7 @@ private void Select()
     {
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         petController.State.UpdateSelectedState(false);
-        // isSelected = false; // PetState가 관리 // 내부 상태 추적용 플래그
         
-        // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
-
         if (!petController.State.IsHolding)
         {
             if (nameTextObject != null)
@@ -629,6 +662,11 @@ private void Select()
             {
                 var animController = petController.GetComponent<PetAnimationController>();
                 animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+            }
+            else
+            {
+                // 일반 상태로 돌아갈 때 AI가 다시 활동을 선택하도록 함
+                petController.ResumeMovement();
             }
         }
     }
@@ -669,7 +707,7 @@ private void Select()
         // 특수 애니메이션 처리 시작
         isProcessingSpecialAnimation = true;
         
-        // SelectedAction이 활성화되어 카메라를 어느정도 바라볼 시간을 줍니다.
+        // 카메라를 어느정도 바라볼 시간을 줍니다.
         yield return new WaitForSeconds(0.5f);
 
         // isSelected 상태가 여전히 유효할 때만 공격을 실행합니다.

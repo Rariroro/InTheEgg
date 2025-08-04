@@ -46,7 +46,6 @@ public class PetAI : MonoBehaviour
         
         // Basic Activities
         availableActivities.Add(new WanderActivity(petController, movementController));
-        availableActivities.Add(new SelectedActivity(petController));
         availableActivities.Add(new ClimbTreeActivity(petController, climbingController));
         
         // Needs Activities
@@ -85,8 +84,8 @@ public class PetAI : MonoBehaviour
     /// </summary>
     public void UpdateAI()
     {
-        // 플레이어가 직접 제어 중이면 AI 중단 (단, 들고 있을 때만)
-        if (petState?.CurrentStatus == PetStatus.PlayerControl && petState.IsHolding)
+        // 플레이어가 펫을 들고 있을 때만 AI 중단
+        if (petState?.IsHolding == true)
             return;
             
         // 가장 우선순위가 높은 활동 찾기

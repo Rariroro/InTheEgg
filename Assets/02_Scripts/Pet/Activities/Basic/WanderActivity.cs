@@ -79,6 +79,12 @@ public class WanderActivity : PetActivityAdapter
     {
         if (!IsAgentReady()) return;
         
+        // 선택 상태가 되면 즉시 중단
+        if (pet.State.IsSelected)
+        {
+            return;
+        }
+        
         behaviorTimer += Time.deltaTime;
         
         // 현재 이동 중이라면 목표 지점 도착 여부 체크
