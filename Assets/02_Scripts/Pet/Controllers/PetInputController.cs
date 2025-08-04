@@ -192,7 +192,8 @@ public class PetInputController : PetControllerBase
             }
             
             // 선택된 상태에서 카메라를 바라봄 (나무 위에 있을 때는 제외)
-            if (Camera.main != null && !petController.State.IsClimbingTree)
+            // 특수 애니메이션 처리 중(도망가기 포함)일 때도 제외
+            if (Camera.main != null && !petController.State.IsClimbingTree && !isProcessingSpecialAnimation)
             {
                 Vector3 directionToCamera = Camera.main.transform.position - petController.transform.position;
                 directionToCamera.y = 0; // Y축 고정
@@ -744,9 +745,6 @@ private void Select()
         // 특수 동작 중 플래그 설정 (AI 개입 방지)
         isProcessingSpecialAnimation = true;
         
-        // 0.5초 동안 놀란 표정 유지
-        yield return new WaitForSeconds(0.5f);
-        
         // 터치 위치의 반대 방향 계산
         Vector3 touchWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f));
         touchWorldPos.y = petController.transform.position.y; // Y축은 유지
@@ -762,8 +760,42 @@ private void Select()
         }
         
         // 도망가는 방향을 바라보고 달리기
-        if (petController.agent != null && petController.agent.enabled)
+        if (petController.agent != null && petController.agent.enabled && runDirection != Vector3.zero)
         {
+            // 목표 회전 계산
+            Quaternion targetRotation = Quaternion.LookRotation(runDirection);
+            Quaternion startRotation = petController.transform.rotation;
+            
+            // 부드럽게 회전하면서 놀란 표정 유지
+            float rotationDuration = 0.5f;
+            float rotationElapsed = 0f;
+            
+            while (rotationElapsed < rotationDuration)
+            {
+                rotationElapsed += Time.deltaTime;
+                float t = rotationElapsed / rotationDuration;
+                
+                // 부드러운 회전 적용
+                petController.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                
+                // 펫 모델도 같이 회전
+                if (petController.petModelTransform != null)
+                {
+                    petController.petModelTransform.rotation = petController.transform.rotation;
+                }
+                
+                yield return null;
+            }
+            
+            // 최종 회전 확실히 적용
+            petController.transform.rotation = targetRotation;
+            if (petController.petModelTransform != null)
+            {
+                petController.petModelTransform.rotation = targetRotation;
+            }
+            
+            // agent가 이동 방향을 자동으로 바라보도록 설정
+            petController.agent.updateRotation = true;
             petController.agent.speed = petController.baseSpeed * 2f; // 빠르게 달리기
             petController.agent.SetDestination(runTarget);
             
