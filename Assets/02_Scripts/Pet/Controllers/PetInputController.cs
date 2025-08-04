@@ -745,6 +745,12 @@ private void Select()
         // 특수 동작 중 플래그 설정 (AI 개입 방지)
         isProcessingSpecialAnimation = true;
         
+        // 애니메이션 속도 정상화
+        if (petController.animator != null)
+        {
+            petController.animator.speed = 1.0f;
+        }
+        
         // 터치 위치의 반대 방향 계산
         Vector3 touchWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f));
         touchWorldPos.y = petController.transform.position.y; // Y축은 유지
@@ -814,6 +820,12 @@ private void Select()
             // 도착 후 정지
             petController.agent.speed = petController.baseSpeed;
             animController?.StopContinuousAnimation();
+            
+            // 애니메이션 속도 확실히 정상화
+            if (petController.animator != null)
+            {
+                petController.animator.speed = 1.0f;
+            }
         }
         
         // 도망 완료 후 선택 해제
