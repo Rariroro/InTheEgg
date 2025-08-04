@@ -607,34 +607,40 @@ private void Select()
     var animController = petController.GetComponent<PetAnimationController>();
     animController?.SetContinuousAnimation((int)PetAnimationController.PetAnimationType.Idle);
 
-    // 터치 횟수 관련 로직은 유지 - 애니메이션 잠금 체크 이후에만 증가
-    touchCount++;
-    lastTouchTime = Time.time;
+    // 이름 표시는 모든 친밀도에서 기본적으로 표시
+    if (nameTextObject != null)
+        nameTextObject.SetActive(true);
 
-    // 터치 횟수에 따른 특수 애니메이션 재생
-    if (touchCount >= maxTouchCount) // 10번 이상 터치
-    { if (nameTextObject != null)
-            nameTextObject.SetActive(true);
-        // 특수 애니메이션 처리 플래그 설정
-        isProcessingSpecialAnimation = true;
-        // 나무 위에 있어도 Die 애니메이션은 재생
-        StartCoroutine(PlayDieAnimationAndReset(animController));
-    }
-    else if (touchCount >= 5) // 5번 이상 터치
-    { if (nameTextObject != null)
-            nameTextObject.SetActive(true);
-        StartCoroutine(AttackAfterDelay());
-    }
-    else // 일반 터치
+    // 친밀도에 따른 반응 분기
+    float affection = petController.Needs.Affection;
+    
+    if (affection <= petController.Needs.LowAffectionThreshold) // 낮은 친밀도 (0-30)
     {
-        if (nameTextObject != null)
-            nameTextObject.SetActive(true);
-            
-        // 나무 위에 있으면 추가적인 이동 중지나 행동 중단을 하지 않음
-        if (petController.State.IsClimbingTree)
+        // 놀란 표정 보이고 도망가기
+        petController.ShowEmotion(EmotionType.Surprised, 2f);
+        StartCoroutine(RunAwayAfterSelect());
+    }
+    else if (affection >= petController.Needs.HighAffectionThreshold) // 높은 친밀도 (80-100)
+    {
+        // 사랑 표현과 점프
+        StartCoroutine(ShowLoveAndJump());
+    }
+    else // 중간 친밀도 (30-80)
+    {
+        // 기존 로직 유지 - 터치 횟수에 따른 특수 애니메이션
+        touchCount++;
+        lastTouchTime = Time.time;
+
+        if (touchCount >= maxTouchCount) // 10번 이상 터치
         {
-            // Debug.Log($"{petController.petName}이(가) 나무 위에서 선택되었습니다.");
+            isProcessingSpecialAnimation = true;
+            StartCoroutine(PlayDieAnimationAndReset(animController));
         }
+        else if (touchCount >= 5) // 5번 이상 터치
+        {
+            StartCoroutine(AttackAfterDelay());
+        }
+        // 일반 터치는 그대로 유지 (카메라 바라보기)
     }
 }
 
@@ -730,5 +736,82 @@ private void Select()
         yield return StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die, true));
         touchCount = 0;
         isProcessingSpecialAnimation = false;
+    }
+    
+    // 낮은 친밀도일 때 도망가는 행동
+    private IEnumerator RunAwayAfterSelect()
+    {
+        // 특수 동작 중 플래그 설정 (AI 개입 방지)
+        isProcessingSpecialAnimation = true;
+        
+        // 0.5초 동안 놀란 표정 유지
+        yield return new WaitForSeconds(0.5f);
+        
+        // 터치 위치의 반대 방향 계산
+        Vector3 touchWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f));
+        touchWorldPos.y = petController.transform.position.y; // Y축은 유지
+        
+        Vector3 runDirection = (petController.transform.position - touchWorldPos).normalized;
+        Vector3 runTarget = petController.transform.position + runDirection * 10f; // 10유닛 떨어진 곳으로
+        
+        // NavMesh 상의 유효한 위치 찾기
+        UnityEngine.AI.NavMeshHit hit;
+        if (UnityEngine.AI.NavMesh.SamplePosition(runTarget, out hit, 10f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            runTarget = hit.position;
+        }
+        
+        // 도망가는 방향을 바라보고 달리기
+        if (petController.agent != null && petController.agent.enabled)
+        {
+            petController.agent.speed = petController.baseSpeed * 2f; // 빠르게 달리기
+            petController.agent.SetDestination(runTarget);
+            
+            var animController = petController.GetComponent<PetAnimationController>();
+            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            
+            // 도착할 때까지 대기 (최대 3초)
+            float elapsedTime = 0f;
+            while (petController.agent.pathPending || petController.agent.remainingDistance > 1f)
+            {
+                elapsedTime += Time.deltaTime;
+                if (elapsedTime > 3f) break; // 3초 후 강제 종료
+                yield return null;
+            }
+            
+            // 도착 후 정지
+            petController.agent.speed = petController.baseSpeed;
+            animController?.StopContinuousAnimation();
+        }
+        
+        // 도망 완료 후 선택 해제
+        Deselect();
+        
+        // 특수 동작 완료
+        isProcessingSpecialAnimation = false;
+    }
+    
+    // 높은 친밀도일 때 사랑 표현과 점프
+    private IEnumerator ShowLoveAndJump()
+    {
+        // Love 감정 표현
+        petController.ShowEmotion(EmotionType.Love, 3f);
+        
+        // 0.3초 후 점프 시작
+        yield return new WaitForSeconds(0.3f);
+        
+        var animController = petController.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            // 점프 2번 반복
+            for (int i = 0; i < 2; i++)
+            {
+                yield return StartCoroutine(animController.PlayAnimationWithCustomDuration(
+                    PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+        
+        // 점프 후에도 계속 카메라를 바라봄 (선택 상태 유지)
     }
 }
