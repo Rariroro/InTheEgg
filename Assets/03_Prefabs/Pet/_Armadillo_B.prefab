@@ -53,7 +53,7 @@ MonoBehaviour:
     name: Buddy
     type: 56
     personality: 0
-    diet: 16
+    diet: 2
     habitat: 2
     treeClimbChance: 0.1
     waterSinkDepth: 1
