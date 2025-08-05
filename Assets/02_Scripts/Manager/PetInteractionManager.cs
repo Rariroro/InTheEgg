@@ -394,6 +394,12 @@ public class PetInteractionManager : MonoBehaviour
         if (pet1.State.IsHolding || pet2.State.IsHolding) return; // 간단한 bool 체크를 먼저
         if (IsInteracting(pet1) || IsInteracting(pet2)) return;
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2)) return;
+        
+        // 모이기 중이거나 모인 상태에서는 새로운 상호작용 시작 방지
+        if (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            pet1.State.CurrentStatus == PetStatus.GatheredWaiting ||
+            pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            pet2.State.CurrentStatus == PetStatus.GatheredWaiting) return;
 
         // =================================================================
         // ★★★★★ [요청 사항 반영] ★★★★★

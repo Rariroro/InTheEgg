@@ -91,10 +91,40 @@ public class PetGatheringButton : MonoBehaviour
 
                     if (pet == null) continue;
 
+                    // 상호작용 중이라면 즉시 중단
+                    if (pet.State.IsInteracting && pet.State.InteractionLogic != null)
+                    {
+                        var interactionLogic = pet.State.InteractionLogic;
+                        interactionLogic.StopAllCoroutines();
+                        
+                        // 상호작용 파트너가 있다면 그 쪽도 중단
+                        if (pet.State.InteractionPartner != null)
+                        {
+                            var partner = pet.State.InteractionPartner;
+                            
+                            // 파트너의 상호작용 로직도 중단
+                            if (partner.State.InteractionLogic != null)
+                            {
+                                partner.State.InteractionLogic.StopAllCoroutines();
+                            }
+                            
+                            // 매니저에 종료 알림
+                            if (PetInteractionManager.Instance != null)
+                            {
+                                PetInteractionManager.Instance.NotifyInteractionEnded(pet, partner);
+                            }
+                        }
+                    }
+
                     // ★★★ 역할 축소: 이제 버튼은 상태와 목표만 설정합니다. ★★★
-                    // 실제 이동 로직(속도 변경, 애니메이션)은 GatherAction이 책임집니다.
-                    // ★ [Phase 4] PetState를 통한 상태 업데이트
+                    // 실제 이동 로직(속도 변경, 애니메이션)은 GatherActivity가 책임집니다.
                     pet.State.SetGatheringState(targetPoint);
+                    
+                    // AI를 즉시 업데이트하여 GatherActivity를 시작하도록 함
+                    if (pet.AI != null)
+                    {
+                        pet.AI.InterruptAndResetAI();
+                    }
                 }
 
                 // Debug.Log($"모이기 명령 완료: {pets.Length}마리에게 명령 전달.");
@@ -118,12 +148,10 @@ public class PetGatheringButton : MonoBehaviour
             PetController[] pets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
             foreach (PetController pet in pets)
             {
-                // isGathering 플래그만 false로 만들면, AI가 자동으로 GatherAction을 빠져나와
-                // OnExit 로직을 수행하고 다른 행동으로 전환합니다.
+                // 모이기 상태를 해제하여 Idle 상태로 전환
                 if (pet != null)
                 {
-                    // ★ [Phase 4] PetState를 통한 상태 업데이트
-                    pet.State.TrySetStatus(PetStatus.Idle); // Gathering 상태를 해제
+                    pet.State.TrySetStatus(PetStatus.Idle); // GatheringInProgress/GatheredWaiting 상태를 해제
                 }
             }
             isGatheringActive = false;

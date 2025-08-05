@@ -98,7 +98,8 @@ public class PetInputController : PetControllerBase
     }
     // ★★★ 여기까지 수정 ★★★
         // 모이기 중이거나 이미 모였을 때는 일반적인 상호작용을 제한
-        if (petController.State.IsGathering || petController.State.IsGathered)
+        if (petController.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            petController.State.CurrentStatus == PetStatus.GatheredWaiting)
         {
             // 펫을 들고 있었다면 강제로 놓기
             if (petController.State.IsHolding)

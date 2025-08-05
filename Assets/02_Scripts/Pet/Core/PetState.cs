@@ -7,12 +7,13 @@ using UnityEngine;
 /// </summary>
 public enum PetStatus
 {
-    Idle,           // 기본 상태 (아무것도 하지 않음)
-    PlayerControl,  // 플레이어가 직접 제어 중 (들기, 선택 등)
-    Interacting,    // 다른 펫과 상호작용 중
-    Environmental,  // 환경과 상호작용 중 (나무 오르기, 물 속 등)
-    Emergency,      // 긴급 상태 (탈진, 벌 공격 등)
-    Gathering       // 모이기 명령 수행 중
+    Idle,                  // 기본 상태 (아무것도 하지 않음)
+    PlayerControl,         // 플레이어가 직접 제어 중 (들기, 선택 등)
+    Interacting,           // 다른 펫과 상호작용 중
+    Environmental,         // 환경과 상호작용 중 (나무 오르기, 물 속 등)
+    Emergency,             // 긴급 상태 (탈진, 벌 공격 등)
+    GatheringInProgress,   // 모이기 명령 수행 중 (이동 중)
+    GatheredWaiting        // 모인 후 대기 중
 }
 
 /// <summary>
@@ -33,8 +34,6 @@ public class PetState
     [SerializeField] private bool isBeingAttacked;    // Emergency 상태의 세부 정보
     
     // 추가 플래그들
-    [SerializeField] private bool isGathering;         // 모이기 명령 수행 중
-    [SerializeField] private bool isGathered;          // 모이기 완료 상태
     [SerializeField] private bool isAnimationLocked;   // 특별 애니메이션 재생 중
     [SerializeField] private bool isActionLocked;      // 행동이 잠긴 상태
     [SerializeField] private bool isAttractedToEnvironment; // 환경 오브젝트에 끌림
@@ -85,8 +84,8 @@ public class PetState
     public bool IsInWater => isInWater;
     public bool IsExhausted => isExhausted;
     public bool IsBeingAttacked => isBeingAttacked;
-    public bool IsGathering => isGathering;
-    public bool IsGathered => isGathered;
+    public bool IsGathering => currentStatus == PetStatus.GatheringInProgress;
+    public bool IsGathered => currentStatus == PetStatus.GatheredWaiting;
     public bool IsAnimationLocked => isAnimationLocked;
     public bool IsActionLocked => isActionLocked;
     public bool IsAttractedToEnvironment => isAttractedToEnvironment;
@@ -151,10 +150,22 @@ public class PetState
             return from == PetStatus.Idle || from == PetStatus.Environmental;
         }
         
-        // Gathering 상태는 Idle, Environmental, Interacting에서 진입 가능
-        if (to == PetStatus.Gathering)
+        // GatheringInProgress 상태는 Idle, Environmental, Interacting에서 진입 가능
+        if (to == PetStatus.GatheringInProgress)
         {
             return from == PetStatus.Idle || from == PetStatus.Environmental || from == PetStatus.Interacting;
+        }
+        
+        // GatheredWaiting 상태는 GatheringInProgress에서만 진입 가능
+        if (to == PetStatus.GatheredWaiting)
+        {
+            return from == PetStatus.GatheringInProgress;
+        }
+        
+        // GatheringInProgress와 GatheredWaiting에서는 Idle로만 전환 가능
+        if (from == PetStatus.GatheringInProgress || from == PetStatus.GatheredWaiting)
+        {
+            return to == PetStatus.Idle;
         }
         
         // Environmental 상태는 Idle, Interacting에서 진입 가능
@@ -188,8 +199,6 @@ public class PetState
         isInWater = false;
         isExhausted = false;
         isBeingAttacked = false;
-        isGathering = false;
-        isGathered = false;
         isAnimationLocked = false;
         isActionLocked = false;
         isAttractedToEnvironment = false;
@@ -304,27 +313,21 @@ public class PetState
     /// </summary>
     public void SetGatheringState(Vector3 targetPosition, int commandVersion = 0)
     {
-        if (TrySetStatus(PetStatus.Gathering))
+        if (TrySetStatus(PetStatus.GatheringInProgress))
         {
             gatherTargetPosition = targetPosition;
             gatherCommandVersion = commandVersion;
-            isGathering = true;
-            isGathered = false;
         }
     }
     
     /// <summary>
     /// 모이기 완료 상태 설정
     /// </summary>
-    public void SetGatheredState(bool gathered)
+    public void SetGatheredState()
     {
-        if (currentStatus == PetStatus.Gathering)
+        if (currentStatus == PetStatus.GatheringInProgress)
         {
-            isGathered = gathered;
-            if (gathered)
-            {
-                isGathering = false;
-            }
+            TrySetStatus(PetStatus.GatheredWaiting);
         }
     }
     

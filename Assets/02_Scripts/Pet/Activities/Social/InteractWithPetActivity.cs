@@ -19,6 +19,11 @@ public class InteractWithPetActivity : PetActivityAdapter
         if (pet.State.IsHolding || pet.State.IsSelected)
             return false;
             
+        // 모이기 중이거나 모인 상태에서는 상호작용 불가
+        if (pet.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            pet.State.CurrentStatus == PetStatus.GatheredWaiting)
+            return false;
+            
         // 상호작용 중일 때만 시작 가능
         return pet.State.IsInteracting;
     }

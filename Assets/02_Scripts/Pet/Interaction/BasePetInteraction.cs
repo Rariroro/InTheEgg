@@ -18,6 +18,16 @@ public abstract class BasePetInteraction : MonoBehaviour
     // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
     public void StartInteraction(PetController pet1, PetController pet2)
     {
+        // 모이기 상태 체크 - 모이기 중이면 상호작용 시작하지 않음
+        if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                              pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
+            (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                              pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+        {
+            // Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
+            return;
+        }
+        
         // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
         StartCoroutine(InteractionLifecycle(pet1, pet2));
     }
@@ -101,6 +111,16 @@ public abstract class BasePetInteraction : MonoBehaviour
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
                 // Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
+                yield break;
+            }
+            
+            // 둘 중 하나라도 모이기 명령을 받으면 즉시 중단
+            if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                                  pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
+                (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                                  pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+            {
+                // Debug.Log($"[{InteractionName}] 모이기 명령으로 인해 상호작용이 중단됨");
                 yield break;
             }
             
@@ -364,6 +384,19 @@ public abstract class BasePetInteraction : MonoBehaviour
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
                 // Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
+                // 애니메이션 정지
+                pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                yield break;
+            }
+            
+            // 모이기 체크 - 이동 중에도 즉시 중단
+            if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                                  pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
+                (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
+                                  pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+            {
+                // Debug.Log($"[{InteractionName}] 이동 중 모이기 명령으로 인해 상호작용 중단");
                 // 애니메이션 정지
                 pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();

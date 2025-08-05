@@ -59,7 +59,8 @@ public class WanderActivity : PetActivityAdapter
                !state.IsInteracting && 
                !state.IsSelected && 
                !state.IsHolding && 
-               !state.IsGathering;
+               state.CurrentStatus != PetStatus.GatheringInProgress &&
+               state.CurrentStatus != PetStatus.GatheredWaiting;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -290,7 +291,9 @@ public class WanderActivity : PetActivityAdapter
     
     private void SafeSetAgentMovement(float speed, bool isStopped)
     {
-        if (!IsAgentReady() || pet.State.IsGathering) return;
+        if (!IsAgentReady() || 
+            pet.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            pet.State.CurrentStatus == PetStatus.GatheredWaiting) return;
         
         try
         {

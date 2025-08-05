@@ -1,6 +1,7 @@
 // RaceInteraction.cs (수정된 버전 - 주석 추가)
 
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -91,6 +92,12 @@ public class RaceInteraction : BasePetInteraction
 
     // ★★★ 추가: 토끼의 원래 회피 우선순위를 저장할 변수 ★★★
     private int rabbitOriginalPriority;
+    
+    // ★★★ 추가: 모든 활성 화살표를 추적하는 static 리스트 ★★★
+    private static List<GameObject> activeArrows = new List<GameObject>();
+    
+    // ★★★ 추가: 현재 인스턴스의 결승선 화살표 참조 ★★★
+    private GameObject finishArrowInstance;
     /// <summary>
     /// 이 상호작용의 타입을 InteractionType.Race로 결정합니다.
     /// </summary>
@@ -113,6 +120,13 @@ public class RaceInteraction : BasePetInteraction
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         // Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
+        
+        // ★★★ 추가: 이전 경주의 남은 화살표 정리 ★★★
+        foreach (var arrow in activeArrows)
+        {
+            if (arrow != null) Destroy(arrow);
+        }
+        activeArrows.Clear();
 
         // 펫 식별 및 NavMeshAgent 준비 상태 확인 (기존과 동일)
         PetController rabbit = (pet1.PetType == PetType.Rabbit) ? pet1 : pet2;
@@ -132,8 +146,8 @@ public class RaceInteraction : BasePetInteraction
         // 상태 저장 및 변수 초기화
         PetOriginalState rabbitState = new PetOriginalState(rabbit);
         PetOriginalState turtleState = new PetOriginalState(turtle);
-        // ★★★ 인스턴스 참조 변수 추가 ★★★
-        GameObject finishArrowInstance = null;
+        // ★★★ 인스턴스 참조 변수 초기화 ★★★
+        finishArrowInstance = null;
         // ▼▼▼ [추가] 화살표 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
         Coroutine arrowBobbingCoroutine = null;
         bool isArrowDisappearing = false;
@@ -180,6 +194,9 @@ public class RaceInteraction : BasePetInteraction
 
                 // 화살표 인스턴스 생성
                 finishArrowInstance = Instantiate(finishArrowPrefab, arrowPosition, arrowRotation);
+                
+                // ★★★ 추가: 활성 화살표 리스트에 추가 ★★★
+                activeArrows.Add(finishArrowInstance);
 
 
                 // ▼▼▼ [수정] 코루틴을 변수에 저장하여 나중에 중지할 수 있도록 합니다. ▼▼▼
@@ -365,6 +382,7 @@ public class RaceInteraction : BasePetInteraction
             if (finishArrowInstance != null)
             {
                 Destroy(finishArrowInstance);
+                activeArrows.Remove(finishArrowInstance);
             }
             if (IsAgentSafelyReady(rabbit))
             {
@@ -428,6 +446,7 @@ public class RaceInteraction : BasePetInteraction
 
         // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
         Destroy(arrow);
+        activeArrows.Remove(arrow);
     }
     // ... (다른 헬퍼 메서드들) ...
     /// <summary>
@@ -737,6 +756,18 @@ public class RaceInteraction : BasePetInteraction
         pet2Pos.y = avgY;
 
         // Debug.Log($"[Race] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
+    }
+    
+    /// <summary>
+    /// 컴포넌트가 파괴될 때 남아있는 화살표 정리
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (finishArrowInstance != null)
+        {
+            Destroy(finishArrowInstance);
+            activeArrows.Remove(finishArrowInstance);
+        }
     }
 
 

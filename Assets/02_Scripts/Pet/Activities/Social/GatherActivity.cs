@@ -26,8 +26,9 @@ public class GatherActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 모이기 명령이 활성화되어 있을 때만 시작 가능
-        return pet.State.IsGathering;
+        // 모이기 명령이 활성화되어 있을 때 시작 가능 (GatheringInProgress 또는 GatheredWaiting 상태)
+        return state.CurrentStatus == PetStatus.GatheringInProgress || 
+               state.CurrentStatus == PetStatus.GatheredWaiting;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -42,6 +43,33 @@ public class GatherActivity : PetActivityAdapter
     
     public override void Start()
     {
+        // 상호작용 중이라면 강제로 중단
+        if (pet.State.IsInteracting && pet.State.InteractionLogic != null)
+        {
+            var interactionLogic = pet.State.InteractionLogic;
+            interactionLogic.StopAllCoroutines();
+            
+            // 상호작용 파트너가 있다면 그 쪽도 중단
+            if (pet.State.InteractionPartner != null)
+            {
+                var partner = pet.State.InteractionPartner;
+                
+                // 파트너의 상호작용 로직도 중단
+                if (partner.State.InteractionLogic != null)
+                {
+                    partner.State.InteractionLogic.StopAllCoroutines();
+                }
+                
+                // 매니저에 종료 알림
+                if (PetInteractionManager.Instance != null)
+                {
+                    PetInteractionManager.Instance.NotifyInteractionEnded(pet, partner);
+                }
+            }
+            
+            // Debug.Log($"{pet.petName}의 상호작용이 모이기 명령으로 인해 강제 중단되었습니다.");
+        }
+        
         // 코루틴 시작
         pet.StartCoroutine(EnterSequence());
     }
@@ -50,7 +78,6 @@ public class GatherActivity : PetActivityAdapter
     {
         // Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 시작");
         hasArrived = false;
-        pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
         
         // 나무에 올라가고 있었다면, 강제로 내려오게 함
         if (pet.State.IsClimbingTree)
@@ -62,8 +89,38 @@ public class GatherActivity : PetActivityAdapter
             yield return null; 
         }
         
-        if (agent != null && agent.enabled)
+        // NavMeshAgent 안전성 검사 및 복구
+        if (agent != null)
         {
+            // 1. Agent가 비활성화되어 있다면 활성화
+            if (!agent.enabled)
+            {
+                agent.enabled = true;
+                yield return null; // 활성화 후 한 프레임 대기
+            }
+            
+            // 2. Agent가 NavMesh 위에 없다면 가장 가까운 유효한 위치로 이동
+            if (!agent.isOnNavMesh)
+            {
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(pet.transform.position, out hit, 5f, NavMesh.AllAreas))
+                {
+                    agent.Warp(hit.position);
+                    // Debug.Log($"{pet.petName}: NavMesh 위로 재배치됨");
+                }
+                else
+                {
+                    // Debug.LogWarning($"{pet.petName}: NavMesh 위치를 찾을 수 없음");
+                    yield break;
+                }
+            }
+            
+            // 3. Agent가 정지 상태라면 해제
+            if (agent.isStopped)
+            {
+                agent.isStopped = false;
+            }
+            
             // 모이기 속도 설정
             agent.speed = pet.Movement.walkSpeed * SPEED_MULTIPLIER;
             agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
@@ -93,7 +150,7 @@ public class GatherActivity : PetActivityAdapter
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             hasArrived = true;
-            pet.State.SetGatheredState(true); // ★ [Phase 4] PetState를 통한 상태 업데이트
+            pet.State.SetGatheredState(); // 상태를 GatheredWaiting으로 전환
             agent.isStopped = true;
             
             // 정지 애니메이션
@@ -108,7 +165,6 @@ public class GatherActivity : PetActivityAdapter
     public override void Stop()
     {
         // Debug.Log($"[GatherActivity] {pet.petName}: 모이기 활동 종료");
-        pet.State.SetGatheredState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트 
         
         if (agent != null && agent.enabled)
         {
@@ -141,8 +197,8 @@ public class GatherActivity : PetActivityAdapter
         directionToCamera.y = 0;
         Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
         
-        // 펫이 여전히 모이기 상태일 때만 카메라를 바라봄
-        while (pet.State.IsGathering && Quaternion.Angle(pet.transform.rotation, targetRotation) > 1.0f)
+        // 펫이 모인 상태(GatheredWaiting)일 때만 카메라를 바라봄
+        while (pet.State.CurrentStatus == PetStatus.GatheredWaiting && Quaternion.Angle(pet.transform.rotation, targetRotation) > 1.0f)
         {
             pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, pet.Movement.rotationSmoothness * Time.deltaTime);
             yield return null;
