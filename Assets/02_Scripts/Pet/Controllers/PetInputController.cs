@@ -292,6 +292,8 @@ public class PetInputController : PetControllerBase
                             targetRotation,
                             Time.deltaTime * petController.Movement.rotationSmoothness
                         );
+                        // ★ 추가: transform도 같은 방향으로 회전시켜 동기화
+                        petController.transform.rotation = petController.petModelTransform.rotation;
                     }
                 }
             }
@@ -393,7 +395,7 @@ public class PetInputController : PetControllerBase
 
         // isHolding = false; // PetState가 관리
 
-        // 현재 회전값 저장
+        // 현재 회전값 저장 - petModelTransform의 회전을 사용 (카메라를 보고 있는 방향 유지)
         Quaternion currentRotation = petController.petModelTransform != null
             ? petController.petModelTransform.rotation
             : petController.transform.rotation;
@@ -549,13 +551,15 @@ public class PetInputController : PetControllerBase
     if (petController.petModelTransform != null)
     {
         petController.petModelTransform.localPosition = Vector3.zero;
-        petController.petModelTransform.localRotation = Quaternion.identity;
+        // ★ 수정: localRotation 초기화 제거 - 회전값 유지
+        // petController.petModelTransform.localRotation = Quaternion.identity;
     }
 
-    if (petController.agent != null && petController.agent.enabled)
-    {
-        petController.agent.Warp(petController.transform.position);
-    }
+    // ★ 수정: 중복된 Warp 호출 제거 - SmoothlyPlacePet에서 이미 처리됨
+    // if (petController.agent != null && petController.agent.enabled)
+    // {
+    //     petController.agent.Warp(petController.transform.position);
+    // }
 
     // ★ 수정: PetTreeClimbingController를 통해 나무 오르기 취소
     var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
