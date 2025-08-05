@@ -292,8 +292,12 @@ public class PetInputController : PetControllerBase
                             targetRotation,
                             Time.deltaTime * petController.Movement.rotationSmoothness
                         );
-                        // ★ 추가: transform도 같은 방향으로 회전시켜 동기화
-                        petController.transform.rotation = petController.petModelTransform.rotation;
+                        // ★ 수정: transform도 부드럽게 회전시켜 흔들림 방지
+                        petController.transform.rotation = Quaternion.Lerp(
+                            petController.transform.rotation,
+                            targetRotation,
+                            Time.deltaTime * petController.Movement.rotationSmoothness
+                        );
                     }
                 }
             }
