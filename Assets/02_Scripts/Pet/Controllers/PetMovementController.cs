@@ -54,6 +54,13 @@ public class PetMovementController : PetControllerBase
         // 선택된 상태나 모인 상태에서는 수동 회전 제어
         if (petState.IsSelected || petState.IsGathered)
         {
+            // 특수 애니메이션 처리 중(도망가기 등)일 때는 회전 설정을 변경하지 않음
+            var inputController = petController.GetComponent<PetInputController>();
+            if (inputController != null && inputController.IsProcessingSpecialAnimation)
+            {
+                return;
+            }
+            
             // NavMeshAgent의 자동 회전 비활성화
             if (agent.updateRotation)
             {

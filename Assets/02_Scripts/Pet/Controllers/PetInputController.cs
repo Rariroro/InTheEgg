@@ -19,6 +19,7 @@ public class PetInputController : PetControllerBase
     private float touchResetTime = 10f;  // 터치 횟수를 초기화하기 위한 시간 간격 (10초로 증가)
     private int maxTouchCount = 10;    // 특별한 애니메이션을 트리거하기 위한 최대 터치 횟수
     private bool isProcessingSpecialAnimation = false; // 특수 애니메이션 처리 중 플래그
+    public bool IsProcessingSpecialAnimation => isProcessingSpecialAnimation; // 외부에서 읽기 전용 접근
 
     // 펫 들기 관련 변수
     // isHolding은 PetController.isHolding 사용
@@ -765,48 +766,40 @@ private void Select()
             runTarget = hit.position;
         }
         
+        // 짧은 놀란 반응 후 즉시 도망
+        yield return new WaitForSeconds(0.2f);
+        
         // 도망가는 방향을 바라보고 달리기
         if (petController.agent != null && petController.agent.enabled && runDirection != Vector3.zero)
         {
-            // 목표 회전 계산
-            Quaternion targetRotation = Quaternion.LookRotation(runDirection);
-            Quaternion startRotation = petController.transform.rotation;
+            // agent가 이동 방향을 자동으로 바라보도록 설정
+            petController.agent.updateRotation = true;
             
-            // 부드럽게 회전하면서 놀란 표정 유지
-            float rotationDuration = 0.5f;
-            float rotationElapsed = 0f;
+            // 애니메이션 즉시 시작
+            var animController = petController.GetComponent<PetAnimationController>();
+            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
             
-            while (rotationElapsed < rotationDuration)
+            // 천천히 시작해서 점점 빨라지는 가속
+            float accelerationTime = 0.5f;
+            float accelerationElapsed = 0f;
+            
+            // 목표 지점으로 이동 시작
+            petController.agent.SetDestination(runTarget);
+            
+            // 가속하면서 이동
+            while (accelerationElapsed < accelerationTime)
             {
-                rotationElapsed += Time.deltaTime;
-                float t = rotationElapsed / rotationDuration;
+                accelerationElapsed += Time.deltaTime;
+                float t = accelerationElapsed / accelerationTime;
                 
-                // 부드러운 회전 적용
-                petController.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
-                
-                // 펫 모델도 같이 회전
-                if (petController.petModelTransform != null)
-                {
-                    petController.petModelTransform.rotation = petController.transform.rotation;
-                }
+                // 속도 점진적 증가 (처음엔 기본속도, 나중엔 2배속)
+                petController.agent.speed = Mathf.Lerp(petController.baseSpeed, petController.baseSpeed * 2f, t);
                 
                 yield return null;
             }
             
-            // 최종 회전 확실히 적용
-            petController.transform.rotation = targetRotation;
-            if (petController.petModelTransform != null)
-            {
-                petController.petModelTransform.rotation = targetRotation;
-            }
-            
-            // agent가 이동 방향을 자동으로 바라보도록 설정
-            petController.agent.updateRotation = true;
-            petController.agent.speed = petController.baseSpeed * 2f; // 빠르게 달리기
-            petController.agent.SetDestination(runTarget);
-            
-            var animController = petController.GetComponent<PetAnimationController>();
-            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            // 최대 속도 유지
+            petController.agent.speed = petController.baseSpeed * 2f;
             
             // 도착할 때까지 대기 (최대 3초)
             float elapsedTime = 0f;
