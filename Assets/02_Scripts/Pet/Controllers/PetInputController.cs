@@ -838,6 +838,12 @@ private void Select()
     // 높은 친밀도일 때 사랑 표현과 점프
     private IEnumerator ShowLoveAndJump()
     {
+        // 애니메이션 속도 정상화
+        if (petController.animator != null)
+        {
+            petController.animator.speed = 1.0f;
+        }
+        
         // Love 감정 표현
         petController.ShowEmotion(EmotionType.Love, 3f);
         
