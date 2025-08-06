@@ -487,6 +487,21 @@ public class PetInputController : PetControllerBase
         {
             petController.petModelTransform.rotation = originalRotation;
         }
+        
+        // 물 영역 체크를 위한 변수
+        bool waterSplashCreated = false;
+        NavMeshHit waterHit;
+        bool isWaterArea = false;
+        
+        // 목표 지점이 물 영역인지 미리 체크
+        if (NavMesh.SamplePosition(groundPoint, out waterHit, 1f, NavMesh.AllAreas))
+        {
+            int waterArea = NavMesh.GetAreaFromName("Water");
+            if (waterArea != -1 && (1 << waterArea) == waterHit.mask)
+            {
+                isWaterArea = true;
+            }
+        }
 
         while (elapsed < duration)
         {
@@ -512,6 +527,45 @@ public class PetInputController : PetControllerBase
             if (petController.petModelTransform != null)
             {
                 petController.petModelTransform.rotation = originalRotation;
+            }
+            
+            // 물 영역이고 물 표면에 가까워지면 물보라 생성 (70% 지점에서 생성)
+            if (isWaterArea && !waterSplashCreated && t >= 0.7f)
+            {
+                waterSplashCreated = true;
+                
+                // 물보라 효과 생성
+                if (EnvironmentManager.Instance != null && 
+                    EnvironmentManager.Instance.waterSplashParticlePrefab != null)
+                {
+                    GameObject splash = Instantiate(
+                        EnvironmentManager.Instance.waterSplashParticlePrefab,
+                        newPosition,  // 현재 위치에 생성
+                        Quaternion.identity
+                    );
+                    
+                    // 파티클 크기 조정
+                    Renderer renderer = petController.GetComponentInChildren<Renderer>();
+                    if (renderer != null)
+                    {
+                        float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
+                        splash.transform.localScale = Vector3.one * scale;
+                    }
+                    else if (petController.agent != null)
+                    {
+                        float scale = petController.agent.radius * 3f;
+                        splash.transform.localScale = Vector3.one * scale;
+                    }
+                    
+                    Destroy(splash, 3f);
+                    
+                    // PetWaterBehaviorController에 물보라 생성 시간 기록
+                    var waterController = petController.GetComponent<PetWaterBehaviorController>();
+                    if (waterController != null)
+                    {
+                        waterController.RecordSplashTime();
+                    }
+                }
             }
 
             yield return null;
