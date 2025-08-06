@@ -247,6 +247,10 @@ public class PetWaterBehaviorController : PetControllerBase
             isInWater = true;
             petController.State.UpdateWaterState(true);
             
+            // 다이빙 착수 시 약간 깊은 깊이에서 시작 (천천히 일반 깊이로 복귀)
+            currentDepth = -petController.waterSinkDepth * 1.5f; // 일반 깊이의 1.5배로 시작
+            petController.State.SetWaterDepthOffset(currentDepth);
+            
             Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
         }
     }

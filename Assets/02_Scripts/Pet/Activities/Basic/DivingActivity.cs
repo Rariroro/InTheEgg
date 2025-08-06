@@ -179,8 +179,26 @@ public class DivingActivity : PetActivityAdapter
         pet.agent.SetDestination(divingSpot.position);
         Debug.Log($"[DivingActivity] {pet.petName}: 목적지 설정 완료 - {divingSpot.position}");
         
+        // 경로 유효성 체크
+        yield return null; // 한 프레임 대기
+        if (!pet.agent.hasPath && !pet.agent.pathPending)
+        {
+            Debug.LogWarning($"[DivingActivity] {pet.petName}: 다이빙 스팟까지 경로를 찾을 수 없음!");
+            failedAttemptTime = Time.time;
+            isMovingToSpot = false;
+            isDiving = false;
+            if (currentDiver == pet)
+            {
+                currentDiver = null;
+            }
+            yield break;
+        }
+        
         // 스팟에 도착할 때까지 대기
         float timeoutCounter = 0f;
+        int retryCount = 0;
+        const int MAX_RETRIES = 3;
+        
         while (isMovingToSpot && Vector3.Distance(pet.transform.position, divingSpot.position) > SPOT_ARRIVAL_DISTANCE)
         {
             // 타임아웃 체크 (30초)
@@ -188,14 +206,13 @@ public class DivingActivity : PetActivityAdapter
             if (timeoutCounter > 30f)
             {
                 Debug.LogWarning($"[DivingActivity] {pet.petName}: 이동 타임아웃!");
-                failedAttemptTime = Time.time; // 실패 시간 기록
+                failedAttemptTime = Time.time;
                 isMovingToSpot = false;
                 isDiving = false;
                 if (currentDiver == pet)
                 {
                     currentDiver = null;
                 }
-                // NavMeshAgent 재활성화
                 if (pet.agent != null && !pet.agent.enabled)
                 {
                     pet.agent.enabled = true;
@@ -204,11 +221,31 @@ public class DivingActivity : PetActivityAdapter
                 yield break;
             }
             
-            // agent가 멈춰있는지 체크
+            // agent가 멈춰있고 경로가 없는 경우 체크
             if (pet.agent.velocity.magnitude < 0.1f && timeoutCounter > 1f)
             {
-                Debug.Log($"[DivingActivity] {pet.petName}: 재이동 시도");
-                pet.agent.SetDestination(divingSpot.position);
+                // 경로 상태 확인
+                if (!pet.agent.hasPath || pet.agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
+                {
+                    retryCount++;
+                    if (retryCount >= MAX_RETRIES)
+                    {
+                        Debug.LogWarning($"[DivingActivity] {pet.petName}: 경로 찾기 실패 ({retryCount}회 시도)");
+                        failedAttemptTime = Time.time;
+                        isMovingToSpot = false;
+                        isDiving = false;
+                        if (currentDiver == pet)
+                        {
+                            currentDiver = null;
+                        }
+                        yield break;
+                    }
+                    
+                    Debug.Log($"[DivingActivity] {pet.petName}: 재이동 시도 ({retryCount}/{MAX_RETRIES})");
+                    pet.agent.ResetPath();
+                    yield return new WaitForSeconds(0.5f);
+                    pet.agent.SetDestination(divingSpot.position);
+                }
             }
             
             yield return new WaitForSeconds(0.1f);
@@ -229,11 +266,20 @@ public class DivingActivity : PetActivityAdapter
         // 3. 점프 시작 위치와 목표 위치 설정
         jumpStartPosition = pet.transform.position;
         
+        // 디버그: 높이 정보 출력
+        Debug.Log($"[DivingActivity] 다이빙 스팟 높이: Y={divingSpot.position.y:F1}");
+        Debug.Log($"[DivingActivity] 펫 현재 높이: Y={pet.transform.position.y:F1}");
+        
         // 다이빙 스팟이 향하는 방향(forward)으로 점프
         // Unity 씬에서 DivingSpot의 Z축(파란 화살표)이 물을 향하도록 설정해야 함
         Vector3 toWater = divingSpot.forward;
         jumpTargetPosition = divingSpot.position + toWater * 6f; // 6유닛 앞으로
-        jumpTargetPosition.y = 4f; // 물 속으로 깊이 다이빙 (물 표면보다 1.5 유닛 아래)
+        
+        // 물 표면이 Y=5~6 정도이므로 그 근처로 착수
+        // 다이빙 스팟이 Y=7이므로 물 표면은 약 Y=5 정도
+        jumpTargetPosition.y = 5f; // 물 표면 근처 착수
+        
+        Debug.Log($"[DivingActivity] 착수 목표 높이: Y={jumpTargetPosition.y:F1}");
         
         // 4. Happy 감정 표현
         pet.ShowEmotion(EmotionType.Happy);
@@ -276,7 +322,27 @@ public class DivingActivity : PetActivityAdapter
             waterController.CreateDivingSplash();
         }
         
-        // 8. NavMeshAgent 재활성화
+        // 8. 부상 애니메이션 (깊은 곳에서 천천히 올라오기)
+        float resurfaceTime = 0f;
+        float resurfaceDuration = 2f; // 2초간 천천히 부상
+        Vector3 deepPosition = pet.transform.position; // 현재 깊은 위치 (Y=4f)
+        Vector3 surfacePosition = new Vector3(deepPosition.x, 0f, deepPosition.z); // 물 표면
+        
+        while (resurfaceTime < resurfaceDuration)
+        {
+            resurfaceTime += Time.deltaTime;
+            float t = resurfaceTime / resurfaceDuration;
+            
+            // Ease-out 커브로 자연스럽게 부상
+            t = 1f - Mathf.Pow(1f - t, 2f);
+            
+            Vector3 currentPos = Vector3.Lerp(deepPosition, surfacePosition, t);
+            pet.transform.position = currentPos;
+            
+            yield return null;
+        }
+        
+        // 9. NavMeshAgent 재활성화 (부상 완료 후)
         if (pet.agent != null)
         {
             pet.agent.enabled = true;
