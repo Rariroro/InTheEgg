@@ -15,7 +15,9 @@ public class DivingActivity : PetActivityAdapter
     private bool isMovingToSpot = false;
     private bool isDiving = false;
     private float lastDivingTime = -60f; // 마지막 다이빙 시간 (쿨다운용)
+    private float failedAttemptTime = -60f; // 실패한 시도 시간 기록
     private const float DIVING_COOLDOWN = 30f; // 개별 펫 다이빙 쿨다운
+    private const float FAILED_ATTEMPT_COOLDOWN = 60f; // 실패 후 재시도 쿨다운
     private const float SPOT_ARRIVAL_DISTANCE = 2f; // 스팟 도착 판정 거리
     private const float MAX_DISTANCE_TO_WATER = 50f; // 물에서 최대 거리
     
@@ -56,6 +58,10 @@ public class DivingActivity : PetActivityAdapter
             
         // 쿨다운 체크
         if (Time.time - lastDivingTime < DIVING_COOLDOWN)
+            return false;
+            
+        // 실패 후 쿨다운 체크
+        if (Time.time - failedAttemptTime < FAILED_ATTEMPT_COOLDOWN)
             return false;
             
         // 다른 펫이 사용 중이면 불가
@@ -177,12 +183,24 @@ public class DivingActivity : PetActivityAdapter
         float timeoutCounter = 0f;
         while (isMovingToSpot && Vector3.Distance(pet.transform.position, divingSpot.position) > SPOT_ARRIVAL_DISTANCE)
         {
-            // 타임아웃 체크 (10초)
+            // 타임아웃 체크 (30초)
             timeoutCounter += 0.1f;
-            if (timeoutCounter > 10f)
+            if (timeoutCounter > 30f)
             {
                 Debug.LogWarning($"[DivingActivity] {pet.petName}: 이동 타임아웃!");
-                Stop();
+                failedAttemptTime = Time.time; // 실패 시간 기록
+                isMovingToSpot = false;
+                isDiving = false;
+                if (currentDiver == pet)
+                {
+                    currentDiver = null;
+                }
+                // NavMeshAgent 재활성화
+                if (pet.agent != null && !pet.agent.enabled)
+                {
+                    pet.agent.enabled = true;
+                    pet.agent.Warp(pet.transform.position);
+                }
                 yield break;
             }
             
@@ -215,7 +233,7 @@ public class DivingActivity : PetActivityAdapter
         // Unity 씬에서 DivingSpot의 Z축(파란 화살표)이 물을 향하도록 설정해야 함
         Vector3 toWater = divingSpot.forward;
         jumpTargetPosition = divingSpot.position + toWater * 6f; // 6유닛 앞으로
-        jumpTargetPosition.y = 0; // 물 높이로 조정
+        jumpTargetPosition.y = 4f; // 물 속으로 깊이 다이빙 (물 표면보다 1.5 유닛 아래)
         
         // 4. Happy 감정 표현
         pet.ShowEmotion(EmotionType.Happy);
@@ -286,9 +304,6 @@ public class DivingActivity : PetActivityAdapter
     public override void Stop()
     {
         Debug.Log($"[DivingActivity] {pet.petName}: 다이빙 활동 중단");
-        
-        // 코루틴 중지
-        pet.StopAllCoroutines();
         
         // 상태 초기화
         isMovingToSpot = false;
