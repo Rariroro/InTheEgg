@@ -205,4 +205,49 @@ public class PetWaterBehaviorController : PetControllerBase
     {
         lastSplashTime = Time.time;
     }
+    
+    /// <summary>
+    /// 다이빙으로 인한 큰 물보라 효과 생성
+    /// </summary>
+    public void CreateDivingSplash()
+    {
+        if (EnvironmentManager.Instance != null && 
+            EnvironmentManager.Instance.waterSplashParticlePrefab != null)
+        {
+            // 큰 물튀김 파티클 생성
+            GameObject splash = Instantiate(
+                EnvironmentManager.Instance.waterSplashParticlePrefab,
+                transform.position, 
+                Quaternion.identity
+            );
+            
+            // 다이빙 물보라는 일반 물보라보다 2배 크게
+            Renderer renderer = petController.GetComponentInChildren<Renderer>();
+            if (renderer != null)
+            {
+                float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
+                splash.transform.localScale = Vector3.one * scale * 2f; // 2배 크기
+            }
+            else if (petController.agent != null)
+            {
+                float scale = petController.agent.radius * 6f; // 2배 크기
+                splash.transform.localScale = Vector3.one * scale;
+            }
+            
+            // 4초 후 파티클 제거 (더 오래 지속)
+            Destroy(splash, 4f);
+            
+            // 물보라 생성 시간 기록
+            lastSplashTime = Time.time;
+            
+            // 물 속도 적용
+            ApplyWaterSpeed();
+            
+            // 물 상태 업데이트
+            isInWater = true;
+            petController.State.UpdateWaterState(true);
+            
+            Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
+        }
+    }
 }

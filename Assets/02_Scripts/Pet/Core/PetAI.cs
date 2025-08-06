@@ -47,6 +47,7 @@ public class PetAI : MonoBehaviour
         // Basic Activities
         availableActivities.Add(new WanderActivity(petController, movementController));
         availableActivities.Add(new ClimbTreeActivity(petController, climbingController));
+        availableActivities.Add(new DivingActivity(petController));
         
         // Needs Activities
         availableActivities.Add(new EatActivity(petController, feedingController));

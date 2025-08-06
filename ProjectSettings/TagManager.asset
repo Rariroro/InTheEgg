@@ -12,6 +12,7 @@ TagManager:
   - FeedingArea
   - Food
   - Tree
+  - DivingSpot
   layers:
   - Default
   - TransparentFX
