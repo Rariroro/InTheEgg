@@ -98,10 +98,19 @@ public class PetWaterBehaviorController : PetControllerBase
                 Quaternion.identity
             );
             
-            // 파티클 크기를 펫 크기에 맞게 조정
-            if (petController.petModelTransform != null)
+            // 파티클 크기를 펫의 실제 3D 모델 크기에 맞게 조정
+            Renderer renderer = petController.GetComponentInChildren<Renderer>();
+            if (renderer != null)
             {
-                float scale = petController.petModelTransform.localScale.x;
+                // 렌더러의 bounds를 사용하여 실제 모델 크기 측정
+                // x와 z축의 평균을 사용 (y축은 높이이므로 제외)
+                float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
+                splash.transform.localScale = Vector3.one * scale;
+            }
+            else if (petController.agent != null)
+            {
+                // 렌더러가 없으면 NavMeshAgent radius를 폴백으로 사용
+                float scale = petController.agent.radius * 3f;
                 splash.transform.localScale = Vector3.one * scale;
             }
             
