@@ -16,6 +16,7 @@ public class DivingActivity : PetActivityAdapter
     private bool isDiving = false;
     private float lastDivingTime = -60f; // 마지막 다이빙 시간 (쿨다운용)
     private float failedAttemptTime = -60f; // 실패한 시도 시간 기록
+    private Coroutine divingCoroutine = null; // 코루틴 참조 저장
     private const float DIVING_COOLDOWN = 30f; // 개별 펫 다이빙 쿨다운
     private const float FAILED_ATTEMPT_COOLDOWN = 60f; // 실패 후 재시도 쿨다운
     private const float SPOT_ARRIVAL_DISTANCE = 2f; // 스팟 도착 판정 거리
@@ -29,7 +30,7 @@ public class DivingActivity : PetActivityAdapter
     private float jumpDuration = 1.5f; // 점프 지속 시간
     
     public override string Name => "Diving";
-    public override bool IsInterruptible => false; // 다이빙 중에는 중단 불가
+    public override bool IsInterruptible => !isDiving; // 실제 다이빙 중일 때만 중단 불가, 이동 중에는 중단 가능
     
     public DivingActivity(PetController petController) : base(petController)
     {
@@ -164,7 +165,7 @@ public class DivingActivity : PetActivityAdapter
         }
         
         // 다이빙 스팟으로 이동 시작
-        pet.StartCoroutine(MoveToSpotAndDive());
+        divingCoroutine = pet.StartCoroutine(MoveToSpotAndDive());
     }
     
     private IEnumerator MoveToSpotAndDive()
@@ -198,6 +199,7 @@ public class DivingActivity : PetActivityAdapter
             Debug.LogWarning($"[DivingActivity] {pet.petName}: NavMesh에 위치시킴");
             pet.agent.Warp(pet.transform.position);
         }
+        
         
         
         
@@ -477,6 +479,14 @@ public class DivingActivity : PetActivityAdapter
     public override void Stop()
     {
         Debug.Log($"[DivingActivity] {pet.petName}: 다이빙 활동 중단");
+        
+        // 코루틴 중단
+        if (divingCoroutine != null)
+        {
+            pet.StopCoroutine(divingCoroutine);
+            divingCoroutine = null;
+            Debug.Log($"[DivingActivity] {pet.petName}: 다이빙 코루틴 중단됨");
+        }
         
         // 상태 초기화
         isMovingToSpot = false;
