@@ -127,6 +127,12 @@ public class DivingActivity : PetActivityAdapter
             }
         }
         
+        // 다른 이동 관련 컴포넌트 중지
+        if (pet.movementController != null)
+        {
+            pet.movementController.StopMovement();
+        }
+        
         // NavMeshAgent 상태 확인 및 활성화
         if (pet.agent != null)
         {
@@ -140,6 +146,15 @@ public class DivingActivity : PetActivityAdapter
                 Debug.LogWarning($"[DivingActivity] {pet.petName}: NavMesh 위에 없음!");
                 pet.agent.Warp(pet.transform.position);
             }
+            
+            // agent 설정 초기화 - 중요!
+            pet.agent.isStopped = false;  // 멈춤 상태 해제
+            pet.agent.speed = pet.baseSpeed;  // 속도 설정
+            pet.agent.acceleration = 8f;  // 가속도 설정
+            pet.agent.updateRotation = true;  // 회전 업데이트 활성화
+            pet.agent.ResetPath();  // 이전 경로 클리어
+            
+            Debug.Log($"[DivingActivity] {pet.petName}: Agent 상태 - isStopped: {pet.agent.isStopped}, speed: {pet.agent.speed}, acceleration: {pet.agent.acceleration}");
         }
         else
         {
@@ -184,11 +199,22 @@ public class DivingActivity : PetActivityAdapter
             pet.agent.Warp(pet.transform.position);
         }
         
+        
+        // agent가 멈춰있지 않은지 다시 한번 확인
+        if (pet.agent.isStopped)
+        {
+            Debug.LogWarning($"[DivingActivity] {pet.petName}: agent가 멈춰있어서 재시작");
+            pet.agent.isStopped = false;
+        }
+        
         pet.agent.SetDestination(divingSpot.position);
         Debug.Log($"[DivingActivity] {pet.petName}: 목적지 설정 완료 - {divingSpot.position}");
         
         // 경로 유효성 체크
         yield return null; // 한 프레임 대기
+        
+        // agent 이동 상태 디버그
+        Debug.Log($"[DivingActivity] {pet.petName}: SetDestination 후 - hasPath: {pet.agent.hasPath}, pathPending: {pet.agent.pathPending}, velocity: {pet.agent.velocity.magnitude}, isStopped: {pet.agent.isStopped}");
         if (!pet.agent.hasPath && !pet.agent.pathPending)
         {
             Debug.LogWarning($"[DivingActivity] {pet.petName}: 다이빙 스팟까지 경로를 찾을 수 없음!");
@@ -206,6 +232,7 @@ public class DivingActivity : PetActivityAdapter
         float timeoutCounter = 0f;
         int retryCount = 0;
         const int MAX_RETRIES = 3;
+        float lastDebugTime = 0f;
         
         while (isMovingToSpot && Vector3.Distance(pet.transform.position, divingSpot.position) > SPOT_ARRIVAL_DISTANCE)
         {
@@ -215,6 +242,21 @@ public class DivingActivity : PetActivityAdapter
                 Debug.Log($"[DivingActivity] {pet.petName}: 이동 중 펫이 들려서 다이빙 중단");
                 Stop();
                 yield break;
+            }
+            
+            // 펫이 선택되었는지 체크 (유저가 터치한 경우)
+            if (pet.State.IsSelected)
+            {
+                Debug.Log($"[DivingActivity] {pet.petName}: 이동 중 펫이 선택되어 다이빙 중단");
+                Stop();
+                yield break;
+            }
+            
+            // 1초마다 agent 상태 디버그 출력
+            if (Time.time - lastDebugTime > 1f)
+            {
+                lastDebugTime = Time.time;
+                Debug.Log($"[DivingActivity] {pet.petName}: 이동 중 - 거리: {Vector3.Distance(pet.transform.position, divingSpot.position):F1}, velocity: {pet.agent.velocity.magnitude:F2}, isStopped: {pet.agent.isStopped}");
             }
             
             // 타임아웃 체크 (30초)
@@ -266,7 +308,7 @@ public class DivingActivity : PetActivityAdapter
                         yield return new WaitForSeconds(0.5f);
                         
                         // 다시 체크 (대기 후 상태가 변경될 수 있음)
-                        if (pet.State.IsHolding)
+                        if (pet.State.IsHolding || pet.State.IsSelected)
                         {
                             Debug.Log($"[DivingActivity] {pet.petName}: 재이동 시도 중 펫이 들려서 중단");
                             Stop();
@@ -275,7 +317,11 @@ public class DivingActivity : PetActivityAdapter
                         
                         if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
                         {
+                            // agent 재설정
+                            pet.agent.isStopped = false;
+                            pet.agent.speed = pet.baseSpeed;
                             pet.agent.SetDestination(divingSpot.position);
+                            Debug.Log($"[DivingActivity] {pet.petName}: 재이동 명령 - speed: {pet.agent.speed}, isStopped: {pet.agent.isStopped}");
                         }
                         else
                         {
@@ -339,11 +385,12 @@ public class DivingActivity : PetActivityAdapter
         // 4. Happy 감정 표현
         pet.ShowEmotion(EmotionType.Happy);
         
-        // 5. 점프 애니메이션 시작
+        // 5. 점프 애니메이션 시작 (한 번만 재생)
         var animController = pet.GetComponent<PetAnimationController>();
         if (animController != null)
         {
-            pet.StartCoroutine(animController.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Jump, false));
+            // 점프 애니메이션을 연속 애니메이션으로 설정 (반복 없이)
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Jump);
         }
         
         // 6. 점프 실행
@@ -394,6 +441,12 @@ public class DivingActivity : PetActivityAdapter
         // 8. 부상 대기 (PetWaterBehaviorController가 자동으로 처리)
         // 3초 정도 대기하여 자연스러운 부상 시간 확보
         yield return new WaitForSeconds(3f);
+        
+        // 점프 애니메이션 중지
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
         
         // 9. NavMeshAgent 재활성화
         // 펫이 들려있지 않을 때만 재활성화
