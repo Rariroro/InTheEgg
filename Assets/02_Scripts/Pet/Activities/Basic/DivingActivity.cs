@@ -156,6 +156,14 @@ public class DivingActivity : PetActivityAdapter
     {
         Debug.Log($"[DivingActivity] {pet.petName}: 코루틴 시작, 스팟으로 이동 중...");
         
+        // 펫이 들렸는지 체크
+        if (pet.State.IsHolding)
+        {
+            Debug.Log($"[DivingActivity] {pet.petName}: 펫이 들려있어 다이빙 중단");
+            Stop();
+            yield break;
+        }
+        
         // 1. 다이빙 스팟으로 이동
         if (pet.agent == null)
         {
@@ -201,6 +209,14 @@ public class DivingActivity : PetActivityAdapter
         
         while (isMovingToSpot && Vector3.Distance(pet.transform.position, divingSpot.position) > SPOT_ARRIVAL_DISTANCE)
         {
+            // 펫이 들렸는지 체크
+            if (pet.State.IsHolding)
+            {
+                Debug.Log($"[DivingActivity] {pet.petName}: 이동 중 펫이 들려서 다이빙 중단");
+                Stop();
+                yield break;
+            }
+            
             // 타임아웃 체크 (30초)
             timeoutCounter += 0.1f;
             if (timeoutCounter > 30f)
@@ -242,9 +258,40 @@ public class DivingActivity : PetActivityAdapter
                     }
                     
                     Debug.Log($"[DivingActivity] {pet.petName}: 재이동 시도 ({retryCount}/{MAX_RETRIES})");
-                    pet.agent.ResetPath();
-                    yield return new WaitForSeconds(0.5f);
-                    pet.agent.SetDestination(divingSpot.position);
+                    
+                    // NavMeshAgent 안전 체크
+                    if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+                    {
+                        pet.agent.ResetPath();
+                        yield return new WaitForSeconds(0.5f);
+                        
+                        // 다시 체크 (대기 후 상태가 변경될 수 있음)
+                        if (pet.State.IsHolding)
+                        {
+                            Debug.Log($"[DivingActivity] {pet.petName}: 재이동 시도 중 펫이 들려서 중단");
+                            Stop();
+                            yield break;
+                        }
+                        
+                        if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+                        {
+                            pet.agent.SetDestination(divingSpot.position);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[DivingActivity] {pet.petName}: NavMeshAgent가 유효하지 않아 이동 중단");
+                            failedAttemptTime = Time.time;
+                            Stop();
+                            yield break;
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[DivingActivity] {pet.petName}: NavMeshAgent가 유효하지 않아 재이동 불가");
+                        failedAttemptTime = Time.time;
+                        Stop();
+                        yield break;
+                    }
                 }
             }
             
@@ -254,11 +301,19 @@ public class DivingActivity : PetActivityAdapter
         Debug.Log($"[DivingActivity] {pet.petName}: 스팟 도착!");
         
         // 2. 도착 후 점프 준비
+        // 도착 직전에 다시 체크
+        if (pet.State.IsHolding)
+        {
+            Debug.Log($"[DivingActivity] {pet.petName}: 점프 직전 펫이 들려서 다이빙 중단");
+            Stop();
+            yield break;
+        }
+        
         isMovingToSpot = false;
         isDiving = true;
         
         // NavMeshAgent 비활성화 (점프 중에는 직접 제어)
-        if (pet.agent != null)
+        if (pet.agent != null && pet.agent.enabled)
         {
             pet.agent.enabled = false;
         }
@@ -295,6 +350,20 @@ public class DivingActivity : PetActivityAdapter
         jumpProgress = 0f;
         while (jumpProgress < 1f)
         {
+            // 점프 중에도 펫이 들렸는지 체크
+            if (pet.State.IsHolding)
+            {
+                Debug.Log($"[DivingActivity] {pet.petName}: 점프 중 펫이 들려서 다이빙 중단");
+                // NavMeshAgent 재활성화 시도
+                if (pet.agent != null && !pet.agent.enabled)
+                {
+                    pet.agent.enabled = true;
+                    pet.agent.Warp(pet.transform.position);
+                }
+                Stop();
+                yield break;
+            }
+            
             jumpProgress += Time.deltaTime / jumpDuration;
             
             // 포물선 궤적 계산
@@ -327,7 +396,8 @@ public class DivingActivity : PetActivityAdapter
         yield return new WaitForSeconds(3f);
         
         // 9. NavMeshAgent 재활성화
-        if (pet.agent != null)
+        // 펫이 들려있지 않을 때만 재활성화
+        if (!pet.State.IsHolding && pet.agent != null && !pet.agent.enabled)
         {
             pet.agent.enabled = true;
             pet.agent.Warp(pet.transform.position);
@@ -359,11 +429,20 @@ public class DivingActivity : PetActivityAdapter
         isMovingToSpot = false;
         isDiving = false;
         
-        // NavMeshAgent 재활성화 (혹시 비활성화되어 있을 경우)
-        if (pet.agent != null && !pet.agent.enabled)
+        // NavMeshAgent 재활성화 (펫이 들려있지 않고 비활성화되어 있을 경우)
+        if (!pet.State.IsHolding && pet.agent != null && !pet.agent.enabled)
         {
-            pet.agent.enabled = true;
-            pet.agent.Warp(pet.transform.position);
+            // NavMesh 위에 있는지 확인 후 재활성화
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 2f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                pet.agent.enabled = true;
+                pet.agent.Warp(hit.position);
+            }
+            else
+            {
+                Debug.LogWarning($"[DivingActivity] {pet.petName}: NavMesh 위치를 찾을 수 없어 agent 재활성화 실패");
+            }
         }
         
         // 점유 해제
