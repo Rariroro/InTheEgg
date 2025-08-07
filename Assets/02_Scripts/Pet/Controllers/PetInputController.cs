@@ -538,9 +538,13 @@ public class PetInputController : PetControllerBase
                 if (EnvironmentManager.Instance != null && 
                     EnvironmentManager.Instance.waterSplashParticlePrefab != null)
                 {
+                    // 파티클 위치 Y값 보정하여 물 표면 위에 생성
+                    Vector3 splashPosition = newPosition;
+                    splashPosition.y += 0.7f;  // 물 표면 위로 보정
+                    
                     GameObject splash = Instantiate(
                         EnvironmentManager.Instance.waterSplashParticlePrefab,
-                        newPosition,  // 현재 위치에 생성
+                        splashPosition,
                         Quaternion.identity
                     );
                     

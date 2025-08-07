@@ -125,10 +125,13 @@ public class PetWaterBehaviorController : PetControllerBase
         if (wasHolding && EnvironmentManager.Instance != null && 
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
-            // 물튀김 파티클 생성
+            // 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
+            Vector3 splashPosition = transform.position;
+            splashPosition.y += 0.7f;  // 물 표면 위로 보정
+            
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
-                transform.position, 
+                splashPosition, 
                 Quaternion.identity
             );
             
@@ -285,10 +288,13 @@ public class PetWaterBehaviorController : PetControllerBase
         if (EnvironmentManager.Instance != null && 
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
-            // 큰 물튀김 파티클 생성
+            // 큰 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
+            Vector3 splashPosition = transform.position;
+            splashPosition.y += 0.7f;  // 물 표면 위로 보정
+            
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
-                transform.position, 
+                splashPosition, 
                 Quaternion.identity
             );
             
