@@ -14,6 +14,12 @@ public class PetWaterBehaviorController : PetControllerBase
     private bool wasHolding = false;  // 펫이 들려있었는지 추적
     private float lastSplashTime = -10f;  // 마지막 물보라 생성 시간
     private const float splashCooldown = 1f;  // 물보라 생성 쿨다운 (1초)
+    
+    // 다이빙 관련
+    private bool isDiving = false;  // 다이빙 중인지 여부
+    private float divingStartTime = 0f;  // 다이빙 시작 시간
+    private float divingDepth = 0f;  // 다이빙 최대 깊이
+    private const float DIVING_DURATION = 3f;  // 다이빙 전체 지속 시간
 
     protected override void OnInitialize()
     {
@@ -88,9 +94,18 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
 
-        // 부드러운 깊이 전환
-        float targetDepth = isInWater ? -petController.waterSinkDepth : 0f;
-        currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
+        // 다이빙 중일 때 특별 처리
+        if (isDiving)
+        {
+            UpdateDivingDepth();
+        }
+        else
+        {
+            // 일반적인 부드러운 깊이 전환
+            float targetDepth = isInWater ? -petController.waterSinkDepth : 0f;
+            currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
+        }
+        
         // ★ [Phase 4] PetState를 통한 오프셋 업데이트
         petController.State.SetWaterDepthOffset(currentDepth);
     }
@@ -207,9 +222,65 @@ public class PetWaterBehaviorController : PetControllerBase
     }
     
     /// <summary>
+    /// 다이빙 시퀀스 시작 (입수 → 잠수 → 부상)
+    /// </summary>
+    public void StartDivingSequence()
+    {
+        // 다이빙 상태 시작
+        isDiving = true;
+        divingStartTime = Time.time;
+        divingDepth = petController.waterSinkDepth * 2.5f; // 일반 깊이의 2.5배 깊이로 다이빙
+        
+        // 큰 물보라 효과 생성
+        CreateDivingSplash();
+        
+        // 물 상태 업데이트
+        isInWater = true;
+        petController.State.UpdateWaterState(true);
+        
+        // 초기 깊이 설정 (즉시 깊은 곳으로)
+        currentDepth = -divingDepth;
+        petController.State.SetWaterDepthOffset(currentDepth);
+        
+        Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}");
+    }
+    
+    /// <summary>
+    /// 다이빙 중 깊이 업데이트 (잠수 → 부상)
+    /// </summary>
+    private void UpdateDivingDepth()
+    {
+        float elapsed = Time.time - divingStartTime;
+        
+        if (elapsed >= DIVING_DURATION)
+        {
+            // 다이빙 종료
+            isDiving = false;
+            currentDepth = -petController.waterSinkDepth; // 일반 수심으로 복귀
+            Debug.Log($"{petController.petName}: 다이빙 완료, 일반 수심으로 복귀");
+        }
+        else
+        {
+            // 다이빙 진행 중: 처음 1초는 깊이 유지, 나머지 2초는 천천히 부상
+            if (elapsed < 1f)
+            {
+                // 깊은 곳 유지
+                currentDepth = -divingDepth;
+            }
+            else
+            {
+                // 천천히 부상 (Ease-out 커브)
+                float t = (elapsed - 1f) / 2f; // 0 ~ 1로 정규화
+                t = 1f - Mathf.Pow(1f - t, 2f); // Ease-out
+                currentDepth = Mathf.Lerp(-divingDepth, -petController.waterSinkDepth, t);
+            }
+        }
+    }
+    
+    /// <summary>
     /// 다이빙으로 인한 큰 물보라 효과 생성
     /// </summary>
-    public void CreateDivingSplash()
+    private void CreateDivingSplash()
     {
         if (EnvironmentManager.Instance != null && 
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
@@ -242,14 +313,6 @@ public class PetWaterBehaviorController : PetControllerBase
             
             // 물 속도 적용
             ApplyWaterSpeed();
-            
-            // 물 상태 업데이트
-            isInWater = true;
-            petController.State.UpdateWaterState(true);
-            
-            // 다이빙 착수 시 약간 깊은 깊이에서 시작 (천천히 일반 깊이로 복귀)
-            currentDepth = -petController.waterSinkDepth * 1.5f; // 일반 깊이의 1.5배로 시작
-            petController.State.SetWaterDepthOffset(currentDepth);
             
             Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
         }

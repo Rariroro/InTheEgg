@@ -315,45 +315,29 @@ public class DivingActivity : PetActivityAdapter
             yield return null;
         }
         
-        // 7. 착수 - 큰 물보라 효과
+        // 7. 착수 - 큰 물보라 효과 및 다이빙 모드 시작
         var waterController = pet.GetComponent<PetWaterBehaviorController>();
         if (waterController != null)
         {
-            waterController.CreateDivingSplash();
+            waterController.StartDivingSequence();
         }
         
-        // 8. 부상 애니메이션 (깊은 곳에서 천천히 올라오기)
-        float resurfaceTime = 0f;
-        float resurfaceDuration = 2f; // 2초간 천천히 부상
-        Vector3 deepPosition = pet.transform.position; // 현재 깊은 위치 (Y=4f)
-        Vector3 surfacePosition = new Vector3(deepPosition.x, 0f, deepPosition.z); // 물 표면
+        // 8. 부상 대기 (PetWaterBehaviorController가 자동으로 처리)
+        // 3초 정도 대기하여 자연스러운 부상 시간 확보
+        yield return new WaitForSeconds(3f);
         
-        while (resurfaceTime < resurfaceDuration)
-        {
-            resurfaceTime += Time.deltaTime;
-            float t = resurfaceTime / resurfaceDuration;
-            
-            // Ease-out 커브로 자연스럽게 부상
-            t = 1f - Mathf.Pow(1f - t, 2f);
-            
-            Vector3 currentPos = Vector3.Lerp(deepPosition, surfacePosition, t);
-            pet.transform.position = currentPos;
-            
-            yield return null;
-        }
-        
-        // 9. NavMeshAgent 재활성화 (부상 완료 후)
+        // 9. NavMeshAgent 재활성화
         if (pet.agent != null)
         {
             pet.agent.enabled = true;
             pet.agent.Warp(pet.transform.position);
         }
         
-        // 9. 다이빙 완료
+        // 10. 다이빙 완료
         isDiving = false;
         lastDivingTime = Time.time;
         
-        // 10. 점유 해제
+        // 11. 점유 해제
         if (currentDiver == pet)
         {
             currentDiver = null;
