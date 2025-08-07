@@ -200,6 +200,7 @@ public class DivingActivity : PetActivityAdapter
         }
         
         
+        
         // agent가 멈춰있지 않은지 다시 한번 확인
         if (pet.agent.isStopped)
         {
@@ -385,12 +386,11 @@ public class DivingActivity : PetActivityAdapter
         // 4. Happy 감정 표현
         pet.ShowEmotion(EmotionType.Happy);
         
-        // 5. 점프 애니메이션 시작 (한 번만 재생)
-        var animController = pet.GetComponent<PetAnimationController>();
-        if (animController != null)
+        // 5. 점프 애니메이션은 제거 (포물선 움직임만으로 충분)
+        // 애니메이터에서 직접 점프 애니메이션 트리거 (한 번만)
+        if (pet.animator != null)
         {
-            // 점프 애니메이션을 연속 애니메이션으로 설정 (반복 없이)
-            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Jump);
+            pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
         }
         
         // 6. 점프 실행
@@ -442,10 +442,10 @@ public class DivingActivity : PetActivityAdapter
         // 3초 정도 대기하여 자연스러운 부상 시간 확보
         yield return new WaitForSeconds(3f);
         
-        // 점프 애니메이션 중지
-        if (animController != null)
+        // 애니메이션을 기본 상태로 리셋
+        if (pet.animator != null)
         {
-            animController.StopContinuousAnimation();
+            pet.animator.SetInteger("animation", 0);
         }
         
         // 9. NavMeshAgent 재활성화
