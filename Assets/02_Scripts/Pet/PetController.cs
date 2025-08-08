@@ -253,15 +253,26 @@ public partial class PetController : MonoBehaviour
     {
         string name = gameObject.name.ToLower();
         bool typeFound = false;
-        foreach (PetType type in Enum.GetValues(typeof(PetType)))
+        
+        // RedPanda를 Panda보다 먼저 체크 (더 구체적인 이름을 먼저 확인)
+        if (name.Contains("redpanda"))
         {
-            string typeName = type.ToString().ToLower();
-            if (name.Contains(typeName))
+            profile.type = PetType.RedPanda;
+            profile.name = "RedPanda";
+            typeFound = true;
+        }
+        else
+        {
+            foreach (PetType type in Enum.GetValues(typeof(PetType)))
             {
-                profile.type = type;
-                profile.name = type.ToString();  // 펫 이름도 타입명으로 설정
-                typeFound = true;
-                break;
+                string typeName = type.ToString().ToLower();
+                if (name.Contains(typeName))
+                {
+                    profile.type = type;
+                    profile.name = type.ToString();  // 펫 이름도 타입명으로 설정
+                    typeFound = true;
+                    break;
+                }
             }
         }
 

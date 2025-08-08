@@ -31,13 +31,15 @@ public class PetWaterBehaviorController : PetControllerBase
             {
                 // 물 속성 펫은 물 영역 비용 낮게, 비물 속성은 높게 설정
                 // Unity는 1보다 작은 cost 값에 대해 경고를 표시하므로 최소값을 1로 설정
+                // 비물속성 펫은 30으로 설정하여 더 적극적으로 물을 회피하도록 함
                 petController.agent.SetAreaCost(
                     waterArea,
-                    petController.habitat == PetAIProperties.Habitat.Water ? 1f : 10f
+                    petController.habitat == PetAIProperties.Habitat.Water ? 1f : 30f
                 );
             }
         }
     }
+    
     
     // Unity Update - 매 프레임 물 영역 체크
     private void Update()
@@ -46,7 +48,7 @@ public class PetWaterBehaviorController : PetControllerBase
         if (petController.State.IsHolding && !wasHolding)
         {
             wasHolding = true;
-            
+
             // 펫이 들릴 때 물 상태를 리셋하여
             // 다시 놓을 때 물 진입으로 인식되도록 함
             if (isInWater)
@@ -55,7 +57,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 petController.State.UpdateWaterState(false);
             }
         }
-        
+
         CheckWaterArea();
     }
 

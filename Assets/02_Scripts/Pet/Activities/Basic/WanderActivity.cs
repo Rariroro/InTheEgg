@@ -176,6 +176,36 @@ public class WanderActivity : PetActivityAdapter
         if (!IsAgentReady()) return;
         
         behaviorTimer = 0f;
+        
+        // 물속성이 아닌 펫이 물속에 있을 때 특별 처리
+        bool isNonAquaticInWater = pet.State.IsInWater && 
+                                   pet.habitat != PetAIProperties.Habitat.Water;
+        
+        if (isNonAquaticInWater)
+        {
+            // 물속에서는 이동 행동만 선택 (빠르게 나가도록)
+            // 게으른 펫도 물속에서는 적극적으로 이동하도록
+            float walkWeight = 3f;
+            float runWeight = pet.personality == PetAIProperties.Personality.Lazy ? 2f : 5f;
+            
+            float waterTotal = walkWeight + runWeight;
+            float waterRandom = Random.Range(0, waterTotal);
+            
+            if (waterRandom < walkWeight)
+            {
+                SetBehavior(BehaviorState.Walking);
+            }
+            else
+            {
+                SetBehavior(BehaviorState.Running);
+            }
+            
+            // 다음 행동 변경까지 시간을 짧게 설정 (빠른 재평가)
+            nextBehaviorChange = Random.Range(1f, 2f);
+            return;
+        }
+        
+        // 일반적인 행동 선택 (기존 로직)
         float total = personalityBehavior.idleWeight + personalityBehavior.walkWeight + personalityBehavior.runWeight +
                       personalityBehavior.jumpWeight + personalityBehavior.restWeight + personalityBehavior.lookWeight + 
                       personalityBehavior.playWeight;
@@ -306,7 +336,23 @@ public class WanderActivity : PetActivityAdapter
     private void SetRandomDestination()
     {
         if (!IsAgentReady()) return;
-        moveController?.SetRandomDestination();
+        
+        // 물속성이 아닌 펫이 물속에 있을 때 특별 처리
+        if (pet.State.IsInWater && pet.habitat != PetAIProperties.Habitat.Water)
+        {
+            // 물 밖으로 나가는 방향으로 목적지 설정 시도
+            // PetMovementController의 SetRandomDestination을 여러 번 시도하여
+            // 더 좋은 위치를 찾도록 함
+            for (int i = 0; i < 3; i++)
+            {
+                moveController?.SetRandomDestination();
+                // NavMesh의 Area Cost 설정으로 인해 자동으로 물을 피하는 경로를 선택하게 됨
+            }
+        }
+        else
+        {
+            moveController?.SetRandomDestination();
+        }
     }
     
     // === 코루틴들 ===
