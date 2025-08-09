@@ -91,8 +91,6 @@ MonoBehaviour:
     isInWater: 0
     isExhausted: 0
     isBeingAttacked: 0
-    isGathering: 0
-    isGathered: 0
     isAnimationLocked: 0
     isActionLocked: 0
     isAttractedToEnvironment: 0
@@ -130,7 +128,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1156562360387213801}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.47
+  m_Radius: 0.72
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 41
@@ -162,7 +160,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.47
+  m_Radius: 0.72
   m_Height: 1.3
   m_Direction: 1
   m_Center: {x: 0, y: 0.7, z: 0}

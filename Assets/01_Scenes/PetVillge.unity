@@ -47954,6 +47954,68 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8454420542440214735, guid: bfd5dc30a3f09d44d9e555968583225c, type: 3}
   m_PrefabInstance: {fileID: 1028365876}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1030082192
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1361253149}
+    m_Modifications:
+    - target: {fileID: 3728352694618391287, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_Name
+      value: EmotionManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+--- !u!4 &1030082193 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+  m_PrefabInstance: {fileID: 1030082192}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1035351817
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -64529,7 +64591,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1635548155}
+  - {fileID: 1030082193}
   - {fileID: 1155089255}
   - {fileID: 2124033966}
   - {fileID: 1436794329}
@@ -74925,200 +74987,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 33455954887993797, guid: a9c5fde4f3e673e469b3a66492d24619, type: 3}
   m_PrefabInstance: {fileID: 1630234845}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1635548154
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1361253149}
-    m_Modifications:
-    - target: {fileID: 3728352694618391287, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_Name
-      value: EmotionManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 135.83842
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -13.402157
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 8.50943
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.size
-      value: 16
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[0].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 6395a398a36984cef9712b7437beddf9, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[1].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 1d1aff7e092c34631a679dd998c344d6, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[2].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: abd17adbbcf46440da2002bd9cc6a99c, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[3].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: c6103bc6104b041a5b53e38f41838c6a, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[4].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: e018a683662214f13a2f4515e109a030, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[5].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: c3d949782225944f9b41ae3c1828ecf7, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[6].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: a5a7f56cc2840440da6e95896807e05b, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[7].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 99508b3fff280443da264ee7d2c585c5, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[8].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 80222e593714d44ad81f43c74cc494c9, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[9].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 9422429a3b82e4ccd961fb6e710ca3f1, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[0].emotionType
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[10].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: eeae2e421561248b6a387d2fca909a89, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[11].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 210e58ce1b61f4041bc4f206967b1cdc, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[12].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 0ee994e69c280458797c168c09a2b993, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[13].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: b99a7fe793e184e81a759606f137862e, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[14].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 8d739a67fa8f246f4aea079b3df84650, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[15].iconSprite
-      value: 
-      objectReference: {fileID: 21300000, guid: 481440ba47cbd4712a2aebc59dfa6477, type: 3}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[1].emotionType
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[2].emotionType
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[3].emotionType
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[4].emotionType
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[5].emotionType
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[6].emotionType
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[7].emotionType
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[8].emotionType
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[9].emotionType
-      value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[10].emotionType
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[11].emotionType
-      value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[12].emotionType
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[13].emotionType
-      value: 13
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[14].emotionType
-      value: 14
-      objectReference: {fileID: 0}
-    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-      propertyPath: emotionIcons.Array.data[15].emotionType
-      value: 15
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
---- !u!4 &1635548155 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4983457385294655980, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
-  m_PrefabInstance: {fileID: 1635548154}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &1636222923 stripped
 Transform:

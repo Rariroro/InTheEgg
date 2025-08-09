@@ -73,7 +73,7 @@ public class ExhaustedActivity : PetActivityAdapter
             animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
             if (pet.emotionController != null)
             {
-                pet.emotionController.ShowEmotion(EmotionType.Hungry, 2f);
+                pet.emotionController.ShowEmotion(EmotionType.Hungry, 5f);
             }
         }
     }

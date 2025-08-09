@@ -74,7 +74,7 @@ MonoBehaviour:
     particlePrefab: {fileID: 1978455369297776, guid: 5b8bfafc2fc9a438cb058b5ce27e8688, type: 3}
   - emotionType: 9
     iconSprite: {fileID: 0}
-    particlePrefab: {fileID: 120732, guid: 8afc8ba0345254887ae950f3bf5d8245, type: 3}
+    particlePrefab: {fileID: 118748, guid: c3dffc81817da4922a43b49c97aa6543, type: 3}
   - emotionType: 10
     iconSprite: {fileID: 0}
     particlePrefab: {fileID: 1240120653875528, guid: cfd21bab7191548fb9329c59f0ff209f, type: 3}
