@@ -19,6 +19,11 @@ public class WanderActivity : PetActivityAdapter
     // 성향별 행동 가중치 저장
     private PersonalityBehavior personalityBehavior;
     
+    // 선호 구역 관련 변수들
+    private PreferredZone[] preferredZones;
+    private PreferredZone currentPreferredZone;
+    private float baseNextBehaviorChange; // 원래 행동 변경 시간 저장
+    
     private enum BehaviorState
     {
         Idle,    // 가만히 대기
@@ -73,6 +78,16 @@ public class WanderActivity : PetActivityAdapter
     public override void Start()
     {
         // Debug.Log($"[WanderActivity] {pet.petName}: 배회 활동 시작");
+        
+        // 선호 구역들을 처음 시작할 때 찾아서 캐싱
+        if (preferredZones == null)
+        {
+            preferredZones = GameObject.FindObjectsOfType<PreferredZone>();
+        }
+        
+        // 현재 위치에서 가장 가까운 선호 구역 찾기
+        UpdateCurrentPreferredZone();
+        
         DecideNextBehavior();
     }
     
@@ -205,6 +220,9 @@ public class WanderActivity : PetActivityAdapter
             return;
         }
         
+        // 선호 구역 업데이트
+        UpdateCurrentPreferredZone();
+        
         // 일반적인 행동 선택 (기존 로직)
         float total = personalityBehavior.idleWeight + personalityBehavior.walkWeight + personalityBehavior.runWeight +
                       personalityBehavior.jumpWeight + personalityBehavior.restWeight + personalityBehavior.lookWeight + 
@@ -232,7 +250,18 @@ public class WanderActivity : PetActivityAdapter
         if (!IsAgentReady()) return;
         
         currentBehaviorState = state;
-        nextBehaviorChange = personalityBehavior.behaviorDuration + Random.Range(-1f, 1f);
+        baseNextBehaviorChange = personalityBehavior.behaviorDuration + Random.Range(-1f, 1f);
+        
+        // 선호 구역 안에 있으면 행동 지속 시간 증가
+        if (IsInPreferredZone())
+        {
+            nextBehaviorChange = baseNextBehaviorChange * currentPreferredZone.behaviorDurationMultiplier;
+            // Debug.Log($"{pet.petName}: 선호 구역 내 - 행동 시간 {currentPreferredZone.behaviorDurationMultiplier}배 증가");
+        }
+        else
+        {
+            nextBehaviorChange = baseNextBehaviorChange;
+        }
         
         try { pet.agent.isStopped = true; }
         catch { /* 예외 무시 */ }
@@ -351,6 +380,35 @@ public class WanderActivity : PetActivityAdapter
         }
         else
         {
+            // 선호 구역이 있고 70% 확률로 선호 구역 방향으로 이동
+            if (currentPreferredZone != null && Random.value < 0.7f)
+            {
+                Vector3 targetPosition;
+                
+                if (IsInPreferredZone())
+                {
+                    // 이미 구역 안에 있으면 구역 내 랜덤 위치로
+                    targetPosition = currentPreferredZone.GetRandomPositionInZone();
+                }
+                else
+                {
+                    // 구역 밖에 있으면 구역 방향으로 이동
+                    Vector3 directionToZone = (currentPreferredZone.transform.position - pet.transform.position).normalized;
+                    float distance = Random.Range(5f, 10f);
+                    targetPosition = pet.transform.position + directionToZone * distance;
+                }
+                
+                // NavMesh 상의 유효한 위치 찾기
+                UnityEngine.AI.NavMeshHit hit;
+                if (UnityEngine.AI.NavMesh.SamplePosition(targetPosition, out hit, 10f, UnityEngine.AI.NavMesh.AllAreas))
+                {
+                    pet.agent.SetDestination(hit.position);
+                    // Debug.Log($"{pet.petName}: 선호 구역({currentPreferredZone.habitatType}) 방향으로 이동");
+                    return;
+                }
+            }
+            
+            // 기본 랜덤 이동
             moveController?.SetRandomDestination();
         }
     }
@@ -431,5 +489,57 @@ public class WanderActivity : PetActivityAdapter
             yield return new WaitForSeconds(0.5f);
         }
         SafeSetAgentMovement(pet.baseSpeed * personalityBehavior.speedMultiplier, false);
+    }
+    
+    // === 선호 구역 관련 메서드들 ===
+    
+    /// <summary>
+    /// 현재 위치에서 가장 가까운 선호 구역 업데이트
+    /// </summary>
+    private void UpdateCurrentPreferredZone()
+    {
+        if (preferredZones == null || preferredZones.Length == 0)
+        {
+            currentPreferredZone = null;
+            return;
+        }
+        
+        PreferredZone closestZone = null;
+        float closestDistance = float.MaxValue;
+        
+        foreach (var zone in preferredZones)
+        {
+            if (zone == null) continue;
+            
+            // 이 펫이 선호하는 구역인지 확인
+            if (zone.IsPetPreferred(pet))
+            {
+                float distance = zone.GetDistanceFrom(pet.transform.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestZone = zone;
+                }
+            }
+        }
+        
+        // 가장 가까운 선호 구역이 변경되었을 때만 로그
+        if (currentPreferredZone != closestZone)
+        {
+            currentPreferredZone = closestZone;
+            if (currentPreferredZone != null)
+            {
+                // Debug.Log($"{pet.petName}: 가장 가까운 선호 구역 - {currentPreferredZone.habitatType} (거리: {closestDistance:F1}m)");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 현재 선호 구역 내에 있는지 확인
+    /// </summary>
+    private bool IsInPreferredZone()
+    {
+        if (currentPreferredZone == null) return false;
+        return currentPreferredZone.IsInZone(pet.transform.position);
     }
 }

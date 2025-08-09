@@ -139,7 +139,7 @@ MonoBehaviour:
   forestEnvironment: {fileID: 140405508120249600, guid: 70262d9b2f21c40c99ab7549259e1384, type: 3}
   pondEnvironment: {fileID: 6306803358171753992, guid: 80b956d96c3fc49d1b60bf819388e97a, type: 3}
   flowersEnvironment: {fileID: 7859483331827145523, guid: d35852a5e87dd49eb938ff855550b260, type: 3}
-  fenceEnvironment: {fileID: 7467834007745664855, guid: 6ff7590aa122f4206bf632d3a78eed34, type: 3}
+  fenceEnvironment: {fileID: 729742082580697336, guid: 69edd0dae34f4468a89012c4e2a9376b, type: 3}
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 1
   giftPrefab: {fileID: 1211024218602698, guid: 7822e05165af741eda015de9fbc07faa, type: 3}
