@@ -11,7 +11,6 @@ public class PetEmotionController : MonoBehaviour
     [SerializeField] private Transform emotionOrigin;
     
     // 현재 활성화된 감정 표현
-    private EmotionBubble activeBubble;
     private GameObject activeParticle;
     
     // 배고픔 감정 관련
@@ -132,18 +131,9 @@ public class PetEmotionController : MonoBehaviour
             
             if (emotionObject != null)
             {
-                // 반환된 오브젝트가 EmotionBubble 타입인지 확인하고, activeBubble에 할당합니다.
-                if (emotionObject.TryGetComponent<EmotionBubble>(out EmotionBubble bubble))
-                {
-                    activeBubble = bubble;
-                    // Debug.Log($"[PetEmotionController] {petController.petName}: 말풍선 생성됨. 초기 위치: {bubble.transform.position}");
-                }
-                else
-                {
-                    // 파티클 시스템인 경우 activeParticle에 저장합니다.
-                    activeParticle = emotionObject;
-                    // Debug.Log($"[PetEmotionController] {petController.petName}: 파티클 생성됨. 위치: {emotionObject.transform.position}");
-                }
+                // 파티클 시스템을 activeParticle에 저장합니다.
+                activeParticle = emotionObject;
+                // Debug.Log($"[PetEmotionController] {petController.petName}: 파티클 생성됨. 위치: {emotionObject.transform.position}");
                 
                 // 음식 감정이 아닌 경우에만 타이머 설정
                 if (!IsFoodEmotion(emotion) && duration > 0)
@@ -159,16 +149,6 @@ public class PetEmotionController : MonoBehaviour
     /// </summary>
     public void HideEmotion()
     {
-        // 활성화된 말풍선이 있다면 풀에 반환합니다.
-        if (activeBubble != null)
-        {
-            if (EmotionManager.Instance != null)
-            {
-                EmotionManager.Instance.ReturnBubbleToPool(activeBubble);
-            }
-            activeBubble = null;
-        }
-
         // 활성화된 파티클이 있다면 제거합니다.
         if (activeParticle != null)
         {
@@ -230,7 +210,7 @@ public class PetEmotionController : MonoBehaviour
     // 디버깅용
     public bool HasActiveEmotion()
     {
-        return activeBubble != null || activeParticle != null;
+        return activeParticle != null;
     }
     
     public Transform GetEmotionOrigin()
