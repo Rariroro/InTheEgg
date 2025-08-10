@@ -144,6 +144,7 @@ public class EmotionManager : MonoBehaviour
 
         StartCoroutine(PlayEmotionSequence(pet, emotions, durations));
     }
+    
 
     // 감정 시퀀스 코루틴
     private System.Collections.IEnumerator PlayEmotionSequence(PetController pet, EmotionType[] emotions, float[] durations)
@@ -155,7 +156,7 @@ public class EmotionManager : MonoBehaviour
 
             // 감정 표현이 지속 시간만큼 표시되도록 기다립니다.
             yield return new WaitForSeconds(durations[i]);
-            
+
             // 파티클은 ShowPetEmotion 내부에서 자동으로 Destroy됩니다.
         }
     }

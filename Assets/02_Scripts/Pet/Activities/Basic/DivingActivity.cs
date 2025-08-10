@@ -374,9 +374,11 @@ public class DivingActivity : PetActivityAdapter
         Debug.Log($"[DivingActivity] 다이빙 스팟 높이: Y={divingSpot.position.y:F1}");
         Debug.Log($"[DivingActivity] 펫 현재 높이: Y={pet.transform.position.y:F1}");
         
-        // 다이빙 스팟이 향하는 방향(forward)으로 점프
+        // 다이빙 스팟이 향하는 방향(forward)을 기준으로 4시~8시 방향 랜덤 점프
         // Unity 씬에서 DivingSpot의 Z축(파란 화살표)이 물을 향하도록 설정해야 함
-        Vector3 toWater = divingSpot.forward;
+        // 4시(-60도)에서 8시(+60도) 사이의 랜덤 각도 생성
+        float randomAngle = Random.Range(-60f, 60f);
+        Vector3 toWater = Quaternion.AngleAxis(randomAngle, Vector3.up) * divingSpot.forward;
         jumpTargetPosition = divingSpot.position + toWater * 6f; // 6유닛 앞으로
         
         // 물 표면이 Y=5~6 정도이므로 그 근처로 착수
