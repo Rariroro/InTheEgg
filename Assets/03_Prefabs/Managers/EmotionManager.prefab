@@ -96,10 +96,25 @@ MonoBehaviour:
   - emotionType: 16
     iconSprite: {fileID: 0}
     particlePrefab: {fileID: 1534639363344604, guid: ae34dec330b5b4b1391eb0bf82afc069, type: 3}
-  - emotionType: 19
-    iconSprite: {fileID: 0}
-    particlePrefab: {fileID: 1238154324082714, guid: 889d8e4bbe65848bda194c7e0078ddb6, type: 3}
   - emotionType: 17
     iconSprite: {fileID: 0}
     particlePrefab: {fileID: 1238154324082714, guid: 889d8e4bbe65848bda194c7e0078ddb6, type: 3}
+  - emotionType: 19
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: 1850acfe37c844b99bbc12c7a1888e70, type: 3}
+  - emotionType: 20
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: 6c13ccb25e2e841cfa73085ca2e838b2, type: 3}
+  - emotionType: 21
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: c3dffc81817da4922a43b49c97aa6543, type: 3}
+  - emotionType: 22
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: ccf930a975f724af3b17b96a4febaeb7, type: 3}
+  - emotionType: 23
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: e4a26d692e12a409693851e33fc53ee1, type: 3}
+  - emotionType: 24
+    iconSprite: {fileID: 0}
+    particlePrefab: {fileID: 118748, guid: 66386918a99124e59b5b07fb1dd76ab9, type: 3}
   emotionBubblePrefab: {fileID: 468145788195757376, guid: 48005c7e051e64415ab263fd39b63ed5, type: 3}

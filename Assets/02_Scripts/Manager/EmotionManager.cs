@@ -24,7 +24,13 @@ public enum EmotionType
     Sleep,       // 잠자기
     Dizzy,      // 어지러움/스컹크 방구 맞음
     Disgusted,   // 역겨움
-    Thought_Food_Meat
+    Thought_Food_Meat,
+    Thought_Food_Fish,
+    Thought_Food_Grass,
+    Thought_Food_Grain,
+    Thought_Food_Fruit,
+    Thought_Food_Vegetable
+
 
 }
 
