@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 19810282}
   - component: {fileID: 19932450}
   m_Layer: 0
-  m_Name: Thought_Food
+  m_Name: Thought_Food_Vegetable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4913,7 +4913,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 870e6f4325c7f4a00a53147f064eb503, type: 2}
+  - {fileID: 2100000, guid: ac8fc0725875e442e9383f1840465a6f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

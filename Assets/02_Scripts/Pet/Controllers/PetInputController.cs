@@ -193,6 +193,12 @@ public class PetInputController : PetControllerBase
                 Deselect();
             }
             
+            // 선택된 상태에서 실시간으로 이름 색상 업데이트 (부드러운 전환)
+            if (nameTextObject != null && nameTextObject.activeSelf)
+            {
+                UpdateNameColor();
+            }
+            
             // 선택된 상태에서 카메라를 바라봄 (나무 위에 있을 때는 제외)
             // 특수 애니메이션 처리 중(도망가기 포함)일 때도 제외
             if (Camera.main != null && !petController.State.IsClimbingTree && !isProcessingSpecialAnimation)
@@ -601,6 +607,38 @@ public class PetInputController : PetControllerBase
         CompletePetPlacement();
     }
 
+    // 친밀도에 따른 이름 색상 업데이트
+    private void UpdateNameColor()
+    {
+        if (nameText == null) return;
+        
+        float affection = petController.Needs.Affection;
+        Color nameColor;
+        
+        if (affection <= petController.Needs.LowAffectionThreshold) // 0-30
+        {
+            // 낮은 친밀도: 흰색 (무관심)
+            nameColor = Color.white;
+        }
+        else if (affection <= 50f) // 30-50
+        {
+            // 보통 친밀도: 노란색 (관심)
+            nameColor = Color.yellow;
+        }
+        else if (affection <= petController.Needs.HighAffectionThreshold) // 50-80
+        {
+            // 좋은 친밀도: 주황색 (친근함)
+            nameColor = new Color(1f, 0.5f, 0f);
+        }
+        else // 80-100
+        {
+            // 높은 친밀도: 핑크색 (사랑)
+            nameColor = new Color(1f, 0.4f, 0.7f);
+        }
+        
+        nameText.color = nameColor;
+    }
+
     // PetInputController.cs
 
    private void CompletePetPlacement()
@@ -678,7 +716,10 @@ private void Select()
 
     // 이름 표시는 모든 친밀도에서 기본적으로 표시
     if (nameTextObject != null)
+    {
         nameTextObject.SetActive(true);
+        UpdateNameColor(); // 친밀도에 따른 이름 색상 업데이트
+    }
 
     // 친밀도에 따른 반응 분기
     float affection = petController.Needs.Affection;
@@ -819,11 +860,18 @@ private void Select()
             petController.animator.speed = 1.0f;
         }
         
-        // 터치 위치의 반대 방향 계산
-        Vector3 touchWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10f));
-        touchWorldPos.y = petController.transform.position.y; // Y축은 유지
+        // 카메라 반대 방향을 기준으로 랜덤 방향 계산
+        Vector3 cameraPosition = Camera.main.transform.position;
+        cameraPosition.y = petController.transform.position.y; // Y축은 유지
         
-        Vector3 runDirection = (petController.transform.position - touchWorldPos).normalized;
+        // 카메라에서 펫으로의 방향 (카메라 반대 방향)
+        Vector3 awayFromCamera = (petController.transform.position - cameraPosition).normalized;
+        
+        // 카메라 반대 방향을 기준으로 좌우 90도씩 (총 180도) 범위에서 랜덤 각도 생성
+        float randomAngle = UnityEngine.Random.Range(-90f, 90f);
+        
+        // 랜덤 각도만큼 회전시킨 방향 계산
+        Vector3 runDirection = Quaternion.Euler(0, randomAngle, 0) * awayFromCamera;
         Vector3 runTarget = petController.transform.position + runDirection * 10f; // 10유닛 떨어진 곳으로
         
         // NavMesh 상의 유효한 위치 찾기
