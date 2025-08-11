@@ -536,7 +536,7 @@ public class PetInputController : PetControllerBase
             }
             
             // 물 영역이고 물 표면에 가까워지면 물보라 생성 (70% 지점에서 생성)
-            if (isWaterArea && !waterSplashCreated && t >= 0.7f)
+            if (isWaterArea && !waterSplashCreated && t >= 1.2f)
             {
                 waterSplashCreated = true;
                 

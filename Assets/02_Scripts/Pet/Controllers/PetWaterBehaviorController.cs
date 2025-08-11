@@ -129,7 +129,7 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 1.2f;  // 물 표면 위로 보정
+            splashPosition.y += 0.7f;  // 물 표면 위로 보정
             
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
@@ -292,7 +292,7 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 큰 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 1.2f;  // 물 표면 위로 보정
+            splashPosition.y += 0.7f;  // 물 표면 위로 보정
             
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
