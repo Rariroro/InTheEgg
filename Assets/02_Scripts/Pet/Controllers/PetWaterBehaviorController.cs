@@ -4,13 +4,27 @@ using PetAIProperties = PetTraits;
 
 /// <summary>
 /// 펫의 물 속 행동을 전담하는 컨트롤러
+/// 
+/// 두 가지 물 진입 케이스 처리:
+/// 1. 드롭(Drop): 유저가 펫을 들고 물 위에서 놓는 경우
+///    - 문제: 물리 이동 → 물 감지 → 상태 업데이트 (지연 발생)
+///    - 결과: 렉, 튀는 현상, 물보라 생성 실패 가능성
+/// 
+/// 2. 다이빙(Diving): 펫이 자발적으로 물로 점프하는 경우
+///    - 정상: 상태 업데이트 → 물리 이동 (즉시 적용)
+///    - 결과: 부드러운 진입, 큰 물보라, 즉시 잠수
 /// </summary>
 public class PetWaterBehaviorController : PetControllerBase
 {
-    // 물 상태 관련
+    // ====================================================================================
+    // [물 상태 관련 필드]
+    // isInWater: 현재 물 속에 있는지 여부
+    // currentDepth: 현재 물 깊이 오프셋 (음수값으로 표현)
+    // wasHolding: 펫이 들려있었는지 추적 (드롭 감지용) - 프레임 지연으로 인해 놓칠 가능성 있음
+    // ====================================================================================
     private bool isInWater = false;
     private float currentDepth = 0f;
-    private float depthTransitionSpeed = 2f;
+    private float depthTransitionSpeed = 2f;  // Lerp 속도 - 드롭 시 렉의 원인
     private bool wasHolding = false;  // 펫이 들려있었는지 추적
     private float lastSplashTime = -10f;  // 마지막 물보라 생성 시간
     private const float splashCooldown = 1f;  // 물보라 생성 쿨다운 (1초)
@@ -44,7 +58,11 @@ public class PetWaterBehaviorController : PetControllerBase
     // Unity Update - 매 프레임 물 영역 체크
     private void Update()
     {
-        // 들기 상태 추적
+        // ====================================================================================
+        // [들기 상태 추적]
+        // 펫이 들려있다가 놀아질 때 wasHolding=true로 드롭 감지
+        // 문제: Update는 프레임 단위로 실행되므로 드롭 시 타이밍 차이 발생 가능
+        // ====================================================================================
         if (petController.State.IsHolding && !wasHolding)
         {
             wasHolding = true;
@@ -96,14 +114,19 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
 
-        // 다이빙 중일 때 특별 처리
+        // ====================================================================================
+        // [깊이 업데이트 처리]
+        // 드롭 vs 다이빙의 핵심 차이점:
+        // - 드롭: Lerp로 부드럽게 전환 (렉/튀는 현상의 원인)
+        // - 다이빙: 즉시 깊이 적용 (isDiving=true일 때)
+        // ====================================================================================
         if (isDiving)
         {
             UpdateDivingDepth();
         }
         else
         {
-            // 일반적인 부드러운 깊이 전환
+            // 일반적인 부드러운 깊이 전환 (드롭 시 렉 원인)
             float targetDepth = isInWater ? -petController.waterSinkDepth : 0f;
             currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
         }
@@ -112,6 +135,10 @@ public class PetWaterBehaviorController : PetControllerBase
         petController.State.SetWaterDepthOffset(currentDepth);
     }
 
+    /// <summary>
+    /// 물에 진입할 때 호출되는 메서드
+    /// 문제: wasHolding 플래그 의존성으로 인해 드롭 시 물보라 생성 실패 가능성
+    /// </summary>
     private void OnEnterWater()
     {
         // 쿨다운 체크 - 최근에 물보라를 생성했으면 스킵
@@ -123,6 +150,12 @@ public class PetWaterBehaviorController : PetControllerBase
             return;
         }
         
+        // ====================================================================================
+        // [드롭 감지 문제]
+        // wasHolding이 true일 때만 물보라 생성
+        // 문제: Update()와 CheckWaterArea()의 프레임 차이로 wasHolding이 false가 될 수 있음
+        // 결과: 드롭했는데도 물보라가 생성되지 않는 경우 발생
+        // ====================================================================================
         // 펫이 들려있다가 물에 놓아질 때만 파티클 생성
         if (wasHolding && EnvironmentManager.Instance != null && 
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
@@ -144,7 +177,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 // 렌더러의 bounds를 사용하여 실제 모델 크기 측정
                 // x와 z축의 평균을 사용 (y축은 높이이므로 제외)
                 float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale;
+                splash.transform.localScale = Vector3.one * scale;  // 드롭: 일반 크기 (scale x1)
             }
             else if (petController.agent != null)
             {
@@ -228,6 +261,12 @@ public class PetWaterBehaviorController : PetControllerBase
     
     /// <summary>
     /// 다이빙 시퀀스 시작 (입수 → 잠수 → 부상)
+    /// DivingActivity에서 호출되며, 드롭과 다른 처리를 수행
+    /// 
+    /// 드롭과의 핵심 차이점:
+    /// 1. 즉시 깊이 적용 (currentDepth = -divingDepth) - Lerp 없음
+    /// 2. 더 큰 물보라 (CreateDivingSplash로 2배 크기)
+    /// 3. 더 깊은 잠수 (waterSinkDepth * 2.5배)
     /// </summary>
     public void StartDivingSequence()
     {
@@ -243,8 +282,12 @@ public class PetWaterBehaviorController : PetControllerBase
         isInWater = true;
         petController.State.UpdateWaterState(true);
         
-        // 초기 깊이 설정 (즉시 깊은 곳으로)
-        currentDepth = -divingDepth;
+        // ====================================================================================
+        // [핵심 차이점: 즉시 깊이 적용]
+        // 드롭: Lerp로 부드럽게 전환 (렉 발생)
+        // 다이빙: 즉시 깊은 곳으로 이동 (렉 없음)
+        // ====================================================================================
+        currentDepth = -divingDepth;  // 즉시 적용
         petController.State.SetWaterDepthOffset(currentDepth);
         
         Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}");
@@ -300,12 +343,16 @@ public class PetWaterBehaviorController : PetControllerBase
                 Quaternion.identity
             );
             
-            // 다이빙 물보라는 일반 물보라보다 2배 크게
+            // ====================================================================================
+            // [다이빙 물보라 크기]
+            // 드롭: scale x1 (일반 크기)
+            // 다이빙: scale x2 (2배 크기) - 더 큰 물보라로 다이빙 강조
+            // ====================================================================================
             Renderer renderer = petController.GetComponentInChildren<Renderer>();
             if (renderer != null)
             {
                 float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale * 2f; // 2배 크기
+                splash.transform.localScale = Vector3.one * scale * 2f; // 다이빙: 2배 크기
             }
             else if (petController.agent != null)
             {

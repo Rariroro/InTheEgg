@@ -385,44 +385,88 @@ public class PetInputController : PetControllerBase
     }
 
 
-    // StopHolding() 메서드 수정
+    // ====================================================================================
+    // [StopHolding 메서드]
+    // 유저가 마우스/터치를 떼어 펫을 놓을 때 호출되는 메서드
+    // 
+    // 실행 순서:
+    // 1. 홀딩 상태 해제 (IsHolding = false)
+    // 2. 애니메이션 정상화 (속도 1.0f로 복구, Run 애니메이션 중단)
+    // 3. 현재 회전값 저장 (카메라를 보고 있던 방향 유지)
+    // 4. 놓을 위치 계산 (마우스 위치로 레이캐스트)
+    // 5. SmoothlyPlacePet 코루틴 실행 (부드러운 하강)
+    // 
+    // 물 영역 드롭 시 문제점:
+    // - 이 시점에서는 물 영역 여부를 알 수 없음
+    // - SmoothlyPlacePet에서 물 영역을 체크하지만 프레임 지연 발생
+    // - 결과적으로 물 진입 감지가 늦어져 렉/튀는 현상 발생
+    // ====================================================================================
     private void StopHolding()
     {
+        // ================================================================================
+        // [1. 홀딩 상태 해제]
+        // PetState를 통해 IsHolding = false 설정
+        // ================================================================================
         petController.State.UpdateHoldingState(false); // ★ [Phase 4] PetState를 통한 상태 업데이트
 
+        // ================================================================================
+        // [2. 애니메이션 정상화]
+        // 들고 있을 때 3배속으로 재생되던 Run 애니메이션을 중단하고
+        // 속도를 1.0f로 복구하여 정상 속도로 전환
+        // ================================================================================
         // ★ 애니메이션 속도 원래대로 복구
         if (petController.animator != null)
         {
-            petController.animator.speed = 1.0f;
-            petController.animator.SetInteger("animation", 0);
+            petController.animator.speed = 1.0f;  // 3.0f → 1.0f로 복구
+            petController.animator.SetInteger("animation", 0);  // Idle 상태로 전환
         }
 
         // ★ 연속 애니메이션 해제
         var animController = petController.GetComponent<PetAnimationController>();
         if (animController != null)
         {
-            animController.StopContinuousAnimation();
+            animController.StopContinuousAnimation();  // Run 애니메이션 루프 중단
         }
 
         // isHolding = false; // PetState가 관리
 
+        // ================================================================================
+        // [3. 현재 회전값 저장]
+        // 펫이 들려있는 동안 카메라를 바라보고 있던 방향을 저장
+        // 놓은 후에도 이 방향을 유지하여 자연스러운 전환
+        // ================================================================================
         // 현재 회전값 저장 - petModelTransform의 회전을 사용 (카메라를 보고 있는 방향 유지)
         Quaternion currentRotation = petController.petModelTransform != null
-            ? petController.petModelTransform.rotation
-            : petController.transform.rotation;
+            ? petController.petModelTransform.rotation  // 3D 모델의 회전값 우선 사용
+            : petController.transform.rotation;         // 없으면 GameObject 회전값 사용
 
+        // ================================================================================
+        // [4. 놓을 위치 계산]
+        // 마우스/터치 위치에서 Terrain으로 레이캐스트하여 놓을 위치 결정
+        // Terrain 레이어에 충돌하면 그 위치에, 없으면 현재 X,Z 위치 유지
+        // ================================================================================
         // 화면 터치 위치 기준으로 Terrain에 레이캐스트하여 펫 놓기
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, terrainLayer))
         {
+            // ============================================================================
+            // [5-A. Terrain 충돌 시]
+            // hit.point = 레이캐스트가 충돌한 지면 위치
+            // 이 위치가 물 영역일 수 있지만 여기서는 알 수 없음
+            // ============================================================================
             StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
         }
         else
         {
+            // ============================================================================
+            // [5-B. Terrain 충돌 실패 시]
+            // 현재 펫의 X,Z 위치를 유지하고 Y는 0으로 설정
+            // 주로 화면 밖을 클릭했거나 Terrain이 없는 경우
+            // ============================================================================
             Vector3 groundPoint = new Vector3(
                 petController.transform.position.x,
-                0,
+                0,  // Y = 0 (기본 지면 높이)
                 petController.transform.position.z
             );
             StartCoroutine(SmoothlyPlacePet(groundPoint, currentRotation));
@@ -472,6 +516,19 @@ public class PetInputController : PetControllerBase
         // Debug.Log($"{petController.petName}의 들기가 모이기 명령으로 인해 중단되었습니다.");
     }
 
+    // ====================================================================================
+    // [드롭 시퀀스]
+    // 유저가 펫을 들고 있다가 놓을 때 실행되는 코루틴
+    // 
+    // 문제점:
+    // 1. 물리적 이동이 먼저 일어나고 물 상태 감지가 나중에 발생 (프레임 지연)
+    // 2. 부드러운 하강(Lerp) 중 물 진입 시 깊이 적용 지연으로 인한 렉/튀는 현상
+    // 3. wasHolding 플래그 의존성으로 인한 물보라 생성 실패 가능성
+    // 
+    // 다이빙과의 차이점:
+    // - 드롭: 물리 이동 → 물 감지 → 상태 업데이트 (지연 발생)
+    // - 다이빙: 상태 업데이트 → 물리 이동 (즉시 적용)
+    // ====================================================================================
     private IEnumerator SmoothlyPlacePet(Vector3 groundPoint, Quaternion originalRotation)
     {
         // ★ [Phase 4] PetState를 통한 환경 상태 클리어
@@ -494,7 +551,12 @@ public class PetInputController : PetControllerBase
             petController.petModelTransform.rotation = originalRotation;
         }
         
-        // 물 영역 체크를 위한 변수
+        // ====================================================================================
+        // [물 영역 사전 체크]
+        // 목표 지점이 물 영역인지 미리 확인하여 물보라 생성 준비
+        // 하지만 실제 물 진입은 PetWaterBehaviorController.CheckWaterArea()에서 
+        // 프레임 단위로 체크되므로 타이밍 차이 발생
+        // ====================================================================================
         bool waterSplashCreated = false;
         NavMeshHit waterHit;
         bool isWaterArea = false;
@@ -535,8 +597,14 @@ public class PetInputController : PetControllerBase
                 petController.petModelTransform.rotation = originalRotation;
             }
             
+            // ====================================================================================
+            // [물보라 생성 타이밍 문제]
+            // 버그: t >= 1.2f 조건은 절대 만족할 수 없음 (t는 0~1 범위)
+            // 의도: 70% 지점(t >= 0.7f)에서 생성하려 했으나 오타로 인해 생성 안됨
+            // 결과: 드롭 시 물보라가 생성되지 않거나 너무 늦게 생성됨
+            // ====================================================================================
             // 물 영역이고 물 표면에 가까워지면 물보라 생성 (70% 지점에서 생성)
-            if (isWaterArea && !waterSplashCreated && t >= 1.2f)
+            if (isWaterArea && !waterSplashCreated && t >= 1.2f)  // 버그: 1.2f는 도달 불가능
             {
                 waterSplashCreated = true;
                 
@@ -554,12 +622,12 @@ public class PetInputController : PetControllerBase
                         Quaternion.identity
                     );
                     
-                    // 파티클 크기 조정
+                    // 파티클 크기 조정 (드롭: 일반 크기, 다이빙: 2배 크기)
                     Renderer renderer = petController.GetComponentInChildren<Renderer>();
                     if (renderer != null)
                     {
                         float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                        splash.transform.localScale = Vector3.one * scale;
+                        splash.transform.localScale = Vector3.one * scale;  // 드롭: scale x1
                     }
                     else if (petController.agent != null)
                     {
@@ -569,6 +637,11 @@ public class PetInputController : PetControllerBase
                     
                     Destroy(splash, 3f);
                     
+                    // ====================================================================================
+                    // [물 진입 처리 지연 문제]
+                    // 여기서 물보라만 생성하고 실제 물 상태 업데이트는 하지 않음
+                    // PetWaterBehaviorController.OnEnterWater()가 나중에 호출되어 상태 불일치 발생
+                    // ====================================================================================
                     // PetWaterBehaviorController에 물보라 생성 시간 기록
                     var waterController = petController.GetComponent<PetWaterBehaviorController>();
                     if (waterController != null)

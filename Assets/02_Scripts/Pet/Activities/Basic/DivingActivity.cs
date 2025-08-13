@@ -4,6 +4,17 @@ using PetAIProperties = PetTraits;
 
 /// <summary>
 /// Playful 성격의 펫이 다이빙 스팟에서 물로 점프하는 활동
+/// 
+/// 다이빙 프로세스:
+/// 1. 다이빙 스팟으로 이동 (NavMeshAgent 사용)
+/// 2. 점프 시작 (포물선 궤적, Happy 감정)
+/// 3. 착수 및 잠수 (StartDivingSequence 호출)
+/// 4. 자동 부상 (3초 후)
+/// 5. NavMeshAgent 재활성화 및 종료
+/// 
+/// 드롭과의 차이점:
+/// - 다이빙: 자발적 점프, 큰 물보라(2배), 즉시 깊이 적용, 깊은 잠수(2.5배)
+/// - 드롭: 강제 드롭, 작은 물보라(1배), Lerp 깊이 적용, 일반 잠수(1배)
 /// </summary>
 public class DivingActivity : PetActivityAdapter
 {
@@ -168,11 +179,17 @@ public class DivingActivity : PetActivityAdapter
         divingCoroutine = pet.StartCoroutine(MoveToSpotAndDive());
     }
     
+    /// <summary>
+    /// 다이빙 전체 시퀀스를 처리하는 코루틴
+    /// </summary>
     private IEnumerator MoveToSpotAndDive()
     {
         Debug.Log($"[DivingActivity] {pet.petName}: 코루틴 시작, 스팟으로 이동 중...");
         
-        // 펫이 들렸는지 체크
+        // ====================================================================================
+        // [사전 체크]
+        // 펫이 들려있으면 다이빙 불가 (드롭과 충돌 방지)
+        // ====================================================================================
         if (pet.State.IsHolding)
         {
             Debug.Log($"[DivingActivity] {pet.petName}: 펫이 들려있어 다이빙 중단");
@@ -180,7 +197,10 @@ public class DivingActivity : PetActivityAdapter
             yield break;
         }
         
-        // 1. 다이빙 스팟으로 이동
+        // ====================================================================================
+        // [1. 다이빙 스팟으로 이동]
+        // NavMeshAgent를 사용하여 스팟까지 이동
+        // ====================================================================================
         if (pet.agent == null)
         {
             Debug.LogError($"[DivingActivity] {pet.petName}: agent가 null!");
@@ -349,7 +369,10 @@ public class DivingActivity : PetActivityAdapter
         
         Debug.Log($"[DivingActivity] {pet.petName}: 스팟 도착!");
         
-        // 2. 도착 후 점프 준비
+        // ====================================================================================
+        // [2. 도착 후 점프 준비]
+        // 이 시점부터 다이빙과 드롭의 차이가 나타남
+        // ====================================================================================
         // 도착 직전에 다시 체크
         if (pet.State.IsHolding)
         {
@@ -367,7 +390,10 @@ public class DivingActivity : PetActivityAdapter
             pet.agent.enabled = false;
         }
         
-        // 3. 점프 시작 위치와 목표 위치 설정
+        // ====================================================================================
+        // [3. 점프 시작 위치와 목표 위치 설정]
+        // 다이빙 스팟에서 물로 포물선 점프
+        // ====================================================================================
         jumpStartPosition = pet.transform.position;
         
         // 디버그: 높이 정보 출력
@@ -387,17 +413,23 @@ public class DivingActivity : PetActivityAdapter
         
         Debug.Log($"[DivingActivity] 착수 목표 높이: Y={jumpTargetPosition.y:F1}");
         
-        // 4. Happy 감정 표현
+        // ====================================================================================
+        // [4. Happy 감정 표현]
+        // ====================================================================================
         pet.ShowEmotion(EmotionType.Happy);
         
-        // 5. 점프 애니메이션은 제거 (포물선 움직임만으로 충분)
-        // 애니메이터에서 직접 점프 애니메이션 트리거 (한 번만)
+        // ====================================================================================
+        // [5. 점프 애니메이션 트리거]
+        // ====================================================================================
         if (pet.animator != null)
         {
             pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
         }
         
-        // 6. 점프 실행
+        // ====================================================================================
+        // [6. 점프 실행 - 포물선 궤적]
+        // 드롭과 다른 점: 자발적 점프, 포물선 궤적, 목표 지점 명확
+        // ====================================================================================
         jumpProgress = 0f;
         while (jumpProgress < 1f)
         {
@@ -435,15 +467,25 @@ public class DivingActivity : PetActivityAdapter
             yield return null;
         }
         
-        // 7. 착수 - 큰 물보라 효과 및 다이빙 모드 시작
+        // ====================================================================================
+        // [7. 착수 - 다이빙 효과 및 잠수]
+        // 다이빙의 핵심: StartDivingSequence() 호출
+        // - 큰 물보라 효과 (2배 크기)
+        // - 즉시 깊이 적용 (드롭과의 핵심 차이점)
+        // - 깊은 잠수 (waterSinkDepth * 2.5배)
+        // ====================================================================================
         var waterController = pet.GetComponent<PetWaterBehaviorController>();
         if (waterController != null)
         {
             waterController.StartDivingSequence();
+            Debug.Log($"[DivingActivity] {pet.petName}: StartDivingSequence 호출 - 큰 물보라, 즉시 잠수");
         }
         
-        // 8. 부상 대기 (PetWaterBehaviorController가 자동으로 처리)
-        // 3초 정도 대기하여 자연스러운 부상 시간 확보
+        // ====================================================================================
+        // [8. 부상 대기]
+        // PetWaterBehaviorController.UpdateDivingDepth()에서 자동 처리
+        // 3초 후 자동으로 일반 수심으로 부상
+        // ====================================================================================
         yield return new WaitForSeconds(3f);
         
         // 애니메이션을 기본 상태로 리셋
@@ -452,7 +494,11 @@ public class DivingActivity : PetActivityAdapter
             pet.animator.SetInteger("animation", 0);
         }
         
-        // 9. NavMeshAgent 재활성화
+        // ====================================================================================
+        // [9. NavMeshAgent 재활성화]
+        // 드롭의 경우 PetInputController에서 처리
+        // 다이빙의 경우 여기서 직접 처리
+        // ====================================================================================
         // 펫이 들려있지 않을 때만 재활성화
         if (!pet.State.IsHolding && pet.agent != null && !pet.agent.enabled)
         {
@@ -460,7 +506,9 @@ public class DivingActivity : PetActivityAdapter
             pet.agent.Warp(pet.transform.position);
         }
         
-        // 10. 다이빙 완료
+        // ====================================================================================
+        // [10. 다이빙 완료]
+        // ====================================================================================
         isDiving = false;
         lastDivingTime = Time.time;
         
