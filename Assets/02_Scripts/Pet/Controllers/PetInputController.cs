@@ -533,7 +533,7 @@ public class PetInputController : PetControllerBase
     {
         // ★ [Phase 4] PetState를 통한 환경 상태 클리어
         petController.State.UpdateTreeClimbingState(false);
-        petController.State.SetWaterDepthOffset(0f);
+        // petController.State.SetWaterDepthOffset(0f);
 
         Vector3 startPosition = petController.transform.position;
         float startY = startPosition.y;
@@ -720,7 +720,7 @@ public class PetInputController : PetControllerBase
     // ★ [Phase 4] PetState를 통한 상태 업데이트
     petController.State.UpdateHoldingState(false);
     petController.State.UpdateTreeClimbingState(false);
-    petController.State.SetWaterDepthOffset(0f);
+    // petController.State.SetWaterDepthOffset(0f);
 
     if (petController.petModelTransform != null)
     {
