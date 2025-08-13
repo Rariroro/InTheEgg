@@ -55,20 +55,15 @@ public class PetWaterBehaviorController : PetControllerBase
     }
     
     
-    // Unity Update - 매 프레임 물 영역 체크
+    // Unity Update - 깊이 애니메이션 처리만
     private void Update()
     {
-        // ====================================================================================
-        // [들기 상태 추적]
-        // 펫이 들려있다가 놀아질 때 wasHolding=true로 드롭 감지
-        // 문제: Update는 프레임 단위로 실행되므로 드롭 시 타이밍 차이 발생 가능
-        // ====================================================================================
+        // 들기 상태 추적 (드롭 감지용)
         if (petController.State.IsHolding && !wasHolding)
         {
             wasHolding = true;
 
-            // 펫이 들릴 때 물 상태를 리셋하여
-            // 다시 놓을 때 물 진입으로 인식되도록 함
+            // 펫이 들릴 때 물 상태를 리셋
             if (isInWater)
             {
                 isInWater = false;
@@ -76,63 +71,63 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
 
-        CheckWaterArea();
+        // 깊이 애니메이션 업데이트 (부드러운 전환)
+        UpdateDepthAnimation();
     }
 
-    public void CheckWaterArea()
+    /// <summary>
+    /// 깊이 애니메이션 업데이트 (매 프레임 호출)
+    /// </summary>
+    private void UpdateDepthAnimation()
     {
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
-            return;
-
-        // 현재 NavMesh 영역 확인
-        NavMeshHit hit;
-        if (NavMesh.SamplePosition(transform.position, out hit, 1f, NavMesh.AllAreas))
-        {
-            int waterArea = NavMesh.GetAreaFromName("Water");
-            if (waterArea != -1)
-            {
-                // 현재 위치가 물 영역인지 확인
-                bool currentlyInWater = (1 << waterArea) == hit.mask;
-
-                if (currentlyInWater != isInWater)
-                {
-                    isInWater = currentlyInWater;
-                    // ★ [Phase 4] PetState를 통한 상태 업데이트
-                    petController.State.UpdateWaterState(isInWater);
-
-                    if (isInWater)
-                    {
-                        // Debug.Log($"{petController.petName}: 물에 들어감");
-                        OnEnterWater();
-                    }
-                    else
-                    {
-                        // Debug.Log($"{petController.petName}: 물에서 나옴");
-                        OnExitWater();
-                    }
-                }
-            }
-        }
-
-        // ====================================================================================
-        // [깊이 업데이트 처리]
-        // 드롭 vs 다이빙의 핵심 차이점:
-        // - 드롭: Lerp로 부드럽게 전환 (렉/튀는 현상의 원인)
-        // - 다이빙: 즉시 깊이 적용 (isDiving=true일 때)
-        // ====================================================================================
         if (isDiving)
         {
             UpdateDivingDepth();
         }
-        else
+        else if (isInWater)
         {
-            // 일반적인 부드러운 깊이 전환 (드롭 시 렉 원인)
-            float targetDepth = isInWater ? -petController.waterSinkDepth : 0f;
+            // 부드러운 깊이 전환
+            float targetDepth = -petController.waterSinkDepth;
             currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
         }
+        else
+        {
+            // 물 밖에서는 0으로 복귀
+            currentDepth = Mathf.Lerp(currentDepth, 0f, Time.deltaTime * depthTransitionSpeed);
+        }
         
-        // ★ [Phase 4] PetState를 통한 오프셋 업데이트
+        // PetState를 통한 오프셋 업데이트
         petController.State.SetWaterDepthOffset(currentDepth);
+    }
+    
+    /// <summary>
+    /// Trigger 방식: 물 영역 진입 시 호출
+    /// WaterZoneTrigger에서 호출됨
+    /// </summary>
+    public void OnWaterEnter()
+    {
+        if (!isInWater)
+        {
+            isInWater = true;
+            petController.State.UpdateWaterState(true);
+            OnEnterWater();
+            Debug.Log($"{petController.petName}: 물에 들어감 (Trigger)");
+        }
+    }
+    
+    /// <summary>
+    /// Trigger 방식: 물 영역 탈출 시 호출
+    /// WaterZoneTrigger에서 호출됨
+    /// </summary>
+    public void OnWaterExit()
+    {
+        if (isInWater && !isDiving) // 다이빙 중에는 무시
+        {
+            isInWater = false;
+            petController.State.UpdateWaterState(false);
+            OnExitWater();
+            Debug.Log($"{petController.petName}: 물에서 나옴 (Trigger)");
+        }
     }
 
     /// <summary>
@@ -304,7 +299,7 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 다이빙 종료
             isDiving = false;
-            currentDepth = -petController.waterSinkDepth; // 일반 수심으로 복귀
+            // currentDepth는 UpdateDepthAnimation()의 Lerp가 자연스럽게 처리
             Debug.Log($"{petController.petName}: 다이빙 완료, 일반 수심으로 복귀");
         }
         else
