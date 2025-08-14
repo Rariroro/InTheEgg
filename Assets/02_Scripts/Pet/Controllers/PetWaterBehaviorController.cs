@@ -28,7 +28,7 @@ public class PetWaterBehaviorController : PetControllerBase
     private bool wasHolding = false;  // 펫이 들려있었는지 추적
     private float lastSplashTime = -10f;  // 마지막 물보라 생성 시간
     private const float splashCooldown = 1f;  // 물보라 생성 쿨다운 (1초)
-    
+
     // 다이빙 관련
     private bool isDiving = false;  // 다이빙 중인지 여부
     private float divingStartTime = 0f;  // 다이빙 시작 시간
@@ -53,8 +53,8 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
     }
-    
-    
+
+
     // Unity Update - 깊이 애니메이션 처리만
     private void Update()
     {
@@ -77,29 +77,37 @@ public class PetWaterBehaviorController : PetControllerBase
 
     /// <summary>
     /// 깊이 애니메이션 업데이트 (매 프레임 호출)
+    /// Y축 오프셋을 부드럽게 전환하여 물 속 잠수 효과 구현
+    /// 
+    /// [Lerp 사용 이유]
+    /// - 즉시 이동 시 시각적으로 부자연스러움
+    /// - 부드러운 전환으로 자연스러운 잠수/부상 표현
+    /// - 단점: 드롭 시 물리 이동과 시각 전환의 지연 발생
     /// </summary>
     private void UpdateDepthAnimation()
     {
         if (isDiving)
         {
+            // 다이빙 중: 특별한 3단계 시퀀스 실행
             UpdateDivingDepth();
         }
         else if (isInWater)
         {
-            // 부드러운 깊이 전환
+            // 일반 물 속: 설정된 깊이로 부드럽게 전환
+            // targetDepth는 음수값 (아래로 내려감)
             float targetDepth = -petController.waterSinkDepth;
             currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
         }
         else
         {
-            // 물 밖에서는 0으로 복귀
+            // 물 밖: 원래 높이(0)로 부드럽게 복귀
             currentDepth = Mathf.Lerp(currentDepth, 0f, Time.deltaTime * depthTransitionSpeed);
         }
-        
-        // PetState를 통한 오프셋 업데이트
+
+        // 계산된 깊이를 PetState에 적용 (시각적 표현용)
         petController.State.SetWaterDepthOffset(currentDepth);
     }
-    
+
     /// <summary>
     /// Trigger 방식: 물 영역 진입 시 호출
     /// WaterZoneTrigger에서 호출됨
@@ -114,7 +122,7 @@ public class PetWaterBehaviorController : PetControllerBase
             Debug.Log($"{petController.petName}: 물에 들어감 (Trigger)");
         }
     }
-    
+
     /// <summary>
     /// Trigger 방식: 물 영역 탈출 시 호출
     /// WaterZoneTrigger에서 호출됨
@@ -144,7 +152,7 @@ public class PetWaterBehaviorController : PetControllerBase
             ApplyWaterSpeed();
             return;
         }
-        
+
         // ====================================================================================
         // [드롭 감지 문제]
         // wasHolding이 true일 때만 물보라 생성
@@ -152,19 +160,19 @@ public class PetWaterBehaviorController : PetControllerBase
         // 결과: 드롭했는데도 물보라가 생성되지 않는 경우 발생
         // ====================================================================================
         // 펫이 들려있다가 물에 놓아질 때만 파티클 생성
-        if (wasHolding && EnvironmentManager.Instance != null && 
+        if (wasHolding && EnvironmentManager.Instance != null &&
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
             // 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
             Vector3 splashPosition = transform.position;
             splashPosition.y += 0.7f;  // 물 표면 위로 보정
-            
+
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
-                splashPosition, 
+                splashPosition,
                 Quaternion.identity
             );
-            
+
             // 파티클 크기를 펫의 실제 3D 모델 크기에 맞게 조정
             Renderer renderer = petController.GetComponentInChildren<Renderer>();
             if (renderer != null)
@@ -180,33 +188,33 @@ public class PetWaterBehaviorController : PetControllerBase
                 float scale = petController.agent.radius * 3f;
                 splash.transform.localScale = Vector3.one * scale;
             }
-            
+
             // 3초 후 파티클 제거
             Destroy(splash, 3f);
-            
+
             // 마지막 물보라 생성 시간 기록
             lastSplashTime = Time.time;
-            
+
             // Debug.Log($"{petController.petName}: 물에 놓아져서 물튀김 효과 생성!");
         }
-        
+
         // wasHolding 플래그 리셋
         wasHolding = false;
-        
+
         // 물 속도 적용
         ApplyWaterSpeed();
     }
-    
+
     private void ApplyWaterSpeed()
     {
         // MovementSettings를 통해 물 속 속도 계산
         bool isAquatic = petController.habitat == PetAIProperties.Habitat.Water;
-        
+
         // 속도 감소
         if (petController.agent != null && !petController.State.IsGathering)
         {
             petController.agent.speed = petController.Movement.GetWaterSpeed(isAquatic, petController.personality);
-            petController.agent.acceleration = petController.Movement.acceleration * 
+            petController.agent.acceleration = petController.Movement.acceleration *
                 (isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier);
         }
 
@@ -247,13 +255,13 @@ public class PetWaterBehaviorController : PetControllerBase
 
     // 현재 물 속에 있는지 확인하는 프로퍼티
     public bool IsInWater => isInWater;
-    
+
     // 외부에서 물보라 생성 시간을 기록할 수 있는 메서드
     public void RecordSplashTime()
     {
         lastSplashTime = Time.time;
     }
-    
+
     /// <summary>
     /// 다이빙 시퀀스 시작 (입수 → 잠수 → 부상)
     /// DivingActivity에서 호출되며, 드롭과 다른 처리를 수행
@@ -269,14 +277,14 @@ public class PetWaterBehaviorController : PetControllerBase
         isDiving = true;
         divingStartTime = Time.time;
         divingDepth = petController.waterSinkDepth * 2.5f; // 일반 깊이의 2.5배 깊이로 다이빙
-        
+
         // 큰 물보라 효과 생성
         CreateDivingSplash();
-        
+
         // 물 상태 업데이트
         isInWater = true;
         petController.State.UpdateWaterState(true);
-        
+
         // ====================================================================================
         // [핵심 차이점: 즉시 깊이 적용]
         // 드롭: Lerp로 부드럽게 전환 (렉 발생)
@@ -284,17 +292,20 @@ public class PetWaterBehaviorController : PetControllerBase
         // ====================================================================================
         currentDepth = -divingDepth;  // 즉시 적용
         petController.State.SetWaterDepthOffset(currentDepth);
-        
+
         Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}");
     }
-    
+
     /// <summary>
     /// 다이빙 중 깊이 업데이트 (잠수 → 부상)
     /// </summary>
     private void UpdateDivingDepth()
     {
-        float elapsed = Time.time - divingStartTime;
+
+        Debug.Log("UpdateDivingDepth()");
         
+        float elapsed = Time.time - divingStartTime;
+
         if (elapsed >= DIVING_DURATION)
         {
             // 다이빙 종료
@@ -319,25 +330,25 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
     }
-    
+
     /// <summary>
     /// 다이빙으로 인한 큰 물보라 효과 생성
     /// </summary>
     private void CreateDivingSplash()
     {
-        if (EnvironmentManager.Instance != null && 
+        if (EnvironmentManager.Instance != null &&
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
             // 큰 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
             Vector3 splashPosition = transform.position;
             splashPosition.y += 0.7f;  // 물 표면 위로 보정
-            
+
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
-                splashPosition, 
+                splashPosition,
                 Quaternion.identity
             );
-            
+
             // ====================================================================================
             // [다이빙 물보라 크기]
             // 드롭: scale x1 (일반 크기)
@@ -354,16 +365,16 @@ public class PetWaterBehaviorController : PetControllerBase
                 float scale = petController.agent.radius * 6f; // 2배 크기
                 splash.transform.localScale = Vector3.one * scale;
             }
-            
+
             // 4초 후 파티클 제거 (더 오래 지속)
             Destroy(splash, 4f);
-            
+
             // 물보라 생성 시간 기록
             lastSplashTime = Time.time;
-            
+
             // 물 속도 적용
             ApplyWaterSpeed();
-            
+
             Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
         }
     }
