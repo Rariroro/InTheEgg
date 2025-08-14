@@ -259,6 +259,17 @@ public class PetWaterBehaviorController : PetControllerBase
     }
 
     /// <summary>
+    /// 드롭 준비 메서드
+    /// PetInputController에서 펫을 물에 떨어뜨리기 전에 호출
+    /// wasHolding 플래그를 설정하여 물튀김 효과가 나타나도록 준비
+    /// </summary>
+    public void PrepareForDrop()
+    {
+        wasHolding = true;
+        Debug.Log($"{petController.petName}: 물 드롭 준비 완료");
+    }
+
+    /// <summary>
     /// 다이빙 시퀀스 시작
     /// DivingActivity에서 호출하여 펫이 깊이 잠수하는 효과를 연출
     /// </summary>

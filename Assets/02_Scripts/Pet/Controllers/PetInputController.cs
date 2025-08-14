@@ -57,7 +57,7 @@ public class PetInputController : PetControllerBase
         {
             // 이름 텍스트 오브젝트 생성
             nameTextObject = new GameObject("NameText");
-            
+
             // 펫의 자식으로 설정하고 머리 위 3유닛 위치에 배치
             nameTextObject.transform.SetParent(petController.transform);
             nameTextObject.transform.localPosition = Vector3.up * 3f;
@@ -184,6 +184,7 @@ public class PetInputController : PetControllerBase
             // 들고 있던 펫을 놓기
             if (petController.State.IsHolding)
             {
+                Debug.Log("HandleInput() / StopHolding()");
                 StopHolding();
             }
             // 짧은 터치였다면 선택/특수 동작 처리
@@ -342,7 +343,7 @@ public class PetInputController : PetControllerBase
             cameraMovement.x = -1;  // 왼쪽으로 이동
         else if (screenPosition.x > Screen.width - edgeScrollThreshold)
             cameraMovement.x = 1;   // 오른쪽으로 이동
-            
+
         // 상하 가장자리 체크
         if (screenPosition.y < edgeScrollThreshold)
             cameraMovement.z = -1;  // 아래쪽으로 이동
@@ -367,7 +368,7 @@ public class PetInputController : PetControllerBase
     private void StartHolding()
     {
         // ===== 진행 중인 활동 강제 중단 =====
-        
+
         // 다른 펫과 상호작용 중이면 강제 중단
         if (petController.State.IsInteracting && petController.State.InteractionLogic != null)
         {
@@ -438,22 +439,9 @@ public class PetInputController : PetControllerBase
             animController.StopContinuousAnimation();
         }
 
-
-
-
-
-
-
-
-
         Quaternion currentRotation = petController.petModelTransform != null
             ? petController.petModelTransform.rotation
             : petController.transform.rotation;
-
-
-
-
-
 
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -464,6 +452,28 @@ public class PetInputController : PetControllerBase
 
 
 
+
+            // 물 영역 체크
+            NavMeshHit navHit;
+            if (NavMesh.SamplePosition(hit.point, out navHit, 1f, NavMesh.AllAreas))
+            {
+                int waterArea = NavMesh.GetAreaFromName("Water");
+                if (waterArea != -1 && (1 << waterArea) == navHit.mask)
+                {
+                    // 물 영역이면 드롭 다이빙 시퀀스 실행
+                    Debug.Log($"StopHolding() - 물 영역 감지! 다이빙 시퀀스 시작");
+
+                    // PetWaterBehaviorController에 드롭 준비 알림
+                    var waterController = petController.GetComponent<PetWaterBehaviorController>();
+                    if (waterController != null)
+                    {
+                        waterController.PrepareForDrop();
+                    }
+
+                    StartCoroutine(DropDivingSequence(hit.point, currentRotation));
+                    return;
+                }
+            }
 
             StartCoroutine(SmoothlyPlacePet(hit.point, currentRotation));
         }
@@ -558,12 +568,6 @@ public class PetInputController : PetControllerBase
             petController.petModelTransform.rotation = originalRotation;
         }
 
-
-
-
-
-
-
         bool waterSplashCreated = false;
         NavMeshHit waterHit;
         bool isWaterArea = false;
@@ -650,6 +654,8 @@ public class PetInputController : PetControllerBase
 
 
 
+
+
                     var waterController = petController.GetComponent<PetWaterBehaviorController>();
                     if (waterController != null)
                     {
@@ -685,6 +691,116 @@ public class PetInputController : PetControllerBase
         }
 
         CompletePetPlacement();
+    }
+
+    /// <summary>
+    /// 드롭 다이빙 시퀀스 코루틴
+    /// 펫을 물에 떨어뜨렸을 때 다이빙 효과를 연출합니다
+    /// </summary>
+    private IEnumerator DropDivingSequence(Vector3 dropPoint, Quaternion originalRotation)
+    {
+        // 홀드 상태 해제
+        petController.State.UpdateHoldingState(false);
+
+        // NavMesh 에이전트 비활성화 (점프 중에는 직접 제어)
+        if (petController.agent != null && petController.agent.enabled)
+        {
+            petController.agent.enabled = false;
+        }
+
+        // 카메라 초점 해제 (펫 카메라 모드가 활성화된 경우 메인 카메라로 복귀)
+        if (PetCameraSwitcherButton.Instance != null &&
+            PetCameraSwitcherButton.Instance.petCameraModeActivated)
+        {
+            PetCameraSwitcherButton.Instance.SwitchBackToMainCamera();
+        }
+
+        // 점프 시작 위치와 목표 위치 설정
+        Vector3 jumpStartPosition = petController.transform.position;
+        Vector3 jumpTargetPosition = dropPoint;
+
+        // 수면 높이 설정 (dropPoint의 y값)
+        float waterSurfaceY = dropPoint.y;
+
+        // 자유낙하 시뮬레이션 (포물선 운동)
+        float fallDuration = 0.8f;  // 낙하 시간
+        float fallProgress = 0f;
+        float gravity = -9.8f * 2f;  // 중력 가속도 (2배속)
+        float initialVelocityY = 0f;  // 초기 수직 속도
+
+        // 점프 애니메이션 시작
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
+        }
+
+        // 자유낙하 애니메이션
+        while (fallProgress < 1f)
+        {
+            fallProgress += Time.deltaTime / fallDuration;
+
+            // 수평 이동 (선형 보간)
+            Vector3 currentPos = Vector3.Lerp(jumpStartPosition, jumpTargetPosition, fallProgress);
+
+            // 수직 이동 (중력 가속도 적용)
+            float t = fallProgress * fallDuration;
+            currentPos.y = jumpStartPosition.y + initialVelocityY * t + 0.5f * gravity * t * t;
+
+            // 수면에 도달했는지 체크
+            if (currentPos.y <= waterSurfaceY)
+            {
+                currentPos.y = waterSurfaceY;
+                petController.transform.position = currentPos;
+                break;
+            }
+
+            petController.transform.position = currentPos;
+
+            // 낙하 방향으로 회전
+            Vector3 direction = jumpTargetPosition - jumpStartPosition;
+            direction.y = 0;
+            if (direction != Vector3.zero)
+            {
+                petController.transform.rotation = Quaternion.LookRotation(direction);
+            }
+
+            yield return null;
+        }
+
+        // ===== 물 착수 =====
+        Debug.Log($"{petController.petName}: 물에 착수!");
+
+        // 물 입수 시작 이벤트
+        var waterController = petController.GetComponent<PetWaterBehaviorController>();
+        if (waterController != null)
+        {
+            // 다이빙 시퀀스 시작 (물튀김 효과, 잠수 깊이 설정)
+            waterController.StartDivingSequence();
+        }
+
+        // 펫 감정 표현 (행복)
+        petController.ShowEmotion(EmotionType.Happy);
+
+        // 3초간 물속에서 다이빙
+        yield return new WaitForSeconds(3f);
+
+        // 애니메이션 초기화
+        if (petController.animator != null)
+        {
+            petController.animator.SetInteger("animation", 0);
+        }
+
+        // NavMesh 에이전트 재활성화
+        if (!petController.State.IsHolding && petController.agent != null && !petController.agent.enabled)
+        {
+            petController.agent.enabled = true;
+            petController.agent.Warp(petController.transform.position);
+        }
+
+        // 펫 배치 완료 처리
+        CompletePetPlacement();
+
+        Debug.Log($"{petController.petName}: 드롭 다이빙 시퀀스 완료!");
     }
 
     /// <summary>
