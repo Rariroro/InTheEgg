@@ -13,6 +13,7 @@ TagManager:
   - Food
   - Tree
   - DivingSpot
+  - Water
   layers:
   - Default
   - TransparentFX
