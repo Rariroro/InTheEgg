@@ -87,7 +87,7 @@ MonoBehaviour:
     diet: 16
     habitat: 2
     treeClimbChance: 0.1
-    waterSinkDepth: 0.2
+    waterSinkDepth: 0.5
   movement:
     walkSpeed: 3.5
     runMultiplier: 2
