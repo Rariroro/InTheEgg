@@ -541,7 +541,7 @@ public class PetInputController : PetControllerBase
 
     /// <summary>
     /// 펫을 부드럽게 지면에 내려놓는 코루틴
-    /// 0.8초에 걸쳐 현재 위치에서 목표 지점으로 부드럽게 이동
+    /// 0.8초에 걸쳐 현재 위치에서 목표 지점으로 중력을 적용하여 낙하
     /// 물 지역에 놓을 경우 물 튀김 효과 생성
     /// </summary>
     /// <param name="groundPoint">펫을 놓을 지면 위치</param>
@@ -553,14 +553,13 @@ public class PetInputController : PetControllerBase
 
         // 시작 위치와 목표 위치 설정
         Vector3 startPosition = petController.transform.position;
-        float startY = startPosition.y;
-        float targetY = groundPoint.y;
+        Vector3 targetPosition = groundPoint;
 
-        float duration = 0.8f;
-        float elapsed = 0f;
-
-        Vector3 horizontalStart = new Vector3(startPosition.x, startY, startPosition.z);
-        Vector3 horizontalEnd = new Vector3(groundPoint.x, startY, groundPoint.z);
+        // 자유낙하 시뮬레이션 설정
+        float fallDuration = 0.8f;  // 낙하 시간
+        float fallProgress = 0f;
+        float gravity = -9.8f * 2f;  // 중력 가속도 (2배속)
+        float initialVelocityY = 0f;  // 초기 수직 속도
 
 
         if (petController.petModelTransform != null)
@@ -582,25 +581,27 @@ public class PetInputController : PetControllerBase
             }
         }
 
-        while (elapsed < duration)
+        // 자유낙하 애니메이션
+        while (fallProgress < 1f)
         {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-
-
-            float easeT = 1f - Mathf.Pow(1f - t, 3f);
-
-
-            Vector3 horizontalPosition = Vector3.Lerp(horizontalStart, horizontalEnd, easeT);
-            float currentY = Mathf.Lerp(startY, targetY, easeT);
-
-            Vector3 newPosition = new Vector3(
-                horizontalPosition.x,
-                currentY,
-                horizontalPosition.z
-            );
-
-            petController.transform.position = newPosition;
+            fallProgress += Time.deltaTime / fallDuration;
+            
+            // 수평 이동 (선형 보간)
+            Vector3 currentPos = Vector3.Lerp(startPosition, targetPosition, fallProgress);
+            
+            // 수직 이동 (중력 가속도 적용)
+            float t = fallProgress * fallDuration;
+            currentPos.y = startPosition.y + initialVelocityY * t + 0.5f * gravity * t * t;
+            
+            // 지면에 도달했는지 체크
+            if (currentPos.y <= groundPoint.y)
+            {
+                currentPos.y = groundPoint.y;
+                petController.transform.position = currentPos;
+                break;
+            }
+            
+            petController.transform.position = currentPos;
 
 
             if (petController.petModelTransform != null)
@@ -615,7 +616,8 @@ public class PetInputController : PetControllerBase
 
 
 
-            if (isWaterArea && !waterSplashCreated && t >= 1.2f)
+            // 물 영역에 착지 직전 물튀김 효과 생성
+            if (isWaterArea && !waterSplashCreated && currentPos.y - groundPoint.y < 1f)
             {
                 waterSplashCreated = true;
 
@@ -624,7 +626,7 @@ public class PetInputController : PetControllerBase
                     EnvironmentManager.Instance.waterSplashParticlePrefab != null)
                 {
 
-                    Vector3 splashPosition = newPosition;
+                    Vector3 splashPosition = currentPos;
                     splashPosition.y += 0.7f;
 
                     GameObject splash = Instantiate(
@@ -728,12 +730,6 @@ public class PetInputController : PetControllerBase
         float gravity = -9.8f * 2f;  // 중력 가속도 (2배속)
         float initialVelocityY = 0f;  // 초기 수직 속도
 
-        // 점프 애니메이션 시작
-        if (petController.animator != null)
-        {
-            petController.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
-        }
-
         // 자유낙하 애니메이션
         while (fallProgress < 1f)
         {
@@ -783,12 +779,6 @@ public class PetInputController : PetControllerBase
 
         // 3초간 물속에서 다이빙
         yield return new WaitForSeconds(3f);
-
-        // 애니메이션 초기화
-        if (petController.animator != null)
-        {
-            petController.animator.SetInteger("animation", 0);
-        }
 
         // NavMesh 에이전트 재활성화
         if (!petController.State.IsHolding && petController.agent != null && !petController.agent.enabled)
