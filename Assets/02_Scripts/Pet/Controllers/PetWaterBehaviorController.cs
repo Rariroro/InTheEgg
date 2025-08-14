@@ -3,49 +3,39 @@ using UnityEngine.AI;
 using PetAIProperties = PetTraits;
 
 /// <summary>
-/// 펫의 물 속 행동을 전담하는 컨트롤러
-/// 
-/// 두 가지 물 진입 케이스 처리:
-/// 1. 드롭(Drop): 유저가 펫을 들고 물 위에서 놓는 경우
-///    - 문제: 물리 이동 → 물 감지 → 상태 업데이트 (지연 발생)
-///    - 결과: 렉, 튀는 현상, 물보라 생성 실패 가능성
-/// 
-/// 2. 다이빙(Diving): 펫이 자발적으로 물로 점프하는 경우
-///    - 정상: 상태 업데이트 → 물리 이동 (즉시 적용)
-///    - 결과: 부드러운 진입, 큰 물보라, 즉시 잠수
+/// 펫의 물 관련 행동을 처리하는 컨트롤러
+/// 물 영역 감지, 수심 애니메이션, 다이빙 기능 등을 관리합니다
 /// </summary>
 public class PetWaterBehaviorController : PetControllerBase
 {
-    // ====================================================================================
-    // [물 상태 관련 필드]
-    // isInWater: 현재 물 속에 있는지 여부
-    // currentDepth: 현재 물 깊이 오프셋 (음수값으로 표현)
-    // wasHolding: 펫이 들려있었는지 추적 (드롭 감지용) - 프레임 지연으로 인해 놓칠 가능성 있음
-    // ====================================================================================
-    private bool isInWater = false;
-    private float currentDepth = 0f;
-    private float depthTransitionSpeed = 2f;  // Lerp 속도 - 드롭 시 렉의 원인
-    private bool wasHolding = false;  // 펫이 들려있었는지 추적
-    private float lastSplashTime = -10f;  // 마지막 물보라 생성 시간
-    private const float splashCooldown = 1f;  // 물보라 생성 쿨다운 (1초)
+    // ===== 물 상태 관리 변수 =====
+    private bool isInWater = false;           // 현재 물 속에 있는지 여부
+    private float currentDepth = 0f;          // 현재 수심 (음수는 물 속을 의미)
+    private float depthTransitionSpeed = 2f;  // 수심 변화 속도 (부드러운 전환용)
+    private bool wasHolding = false;          // 이전 프레임에 들려있었는지 추적
+    private float lastSplashTime = -10f;      // 마지막 물튀김 효과 생성 시간
+    private const float splashCooldown = 1f;  // 물튀김 효과 재생성 쿨다운
 
-    // 다이빙 관련
-    private bool isDiving = false;  // 다이빙 중인지 여부
-    private float divingStartTime = 0f;  // 다이빙 시작 시간
-    private float divingDepth = 0f;  // 다이빙 최대 깊이
-    private const float DIVING_DURATION = 3f;  // 다이빙 전체 지속 시간
+    // ===== 다이빙 관련 변수 =====
+    private bool isDiving = false;            // 다이빙 중인지 여부
+    private float divingStartTime = 0f;       // 다이빙 시작 시간
+    private float divingDepth = 0f;           // 다이빙 깊이
+    private const float DIVING_DURATION = 3f; // 다이빙 지속 시간 (3초)
 
+    /// <summary>
+    /// 컨트롤러 초기화
+    /// 펫의 서식지에 따라 NavMesh의 물 영역 비용을 설정합니다
+    /// </summary>
     protected override void OnInitialize()
     {
-        // NavMeshAgent가 이미 활성화되어 NavMesh 위에 있을 때만 물 영역 비용을 설정
+        // NavMesh 에이전트가 활성화되어 있고 NavMesh 위에 있는 경우
         if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
         {
             int waterArea = NavMesh.GetAreaFromName("Water");
             if (waterArea != -1)
             {
-                // 물 속성 펫은 물 영역 비용 낮게, 비물 속성은 높게 설정
-                // Unity는 1보다 작은 cost 값에 대해 경고를 표시하므로 최소값을 1로 설정
-                // 비물속성 펫은 30으로 설정하여 더 적극적으로 물을 회피하도록 함
+                // 수생 펫은 물 영역을 쉽게 통과(1f), 
+                // 육상 펫은 회피하도록 높은 비용(30f) 설정
                 petController.agent.SetAreaCost(
                     waterArea,
                     petController.habitat == PetAIProperties.Habitat.Water ? 1f : 30f
@@ -54,16 +44,19 @@ public class PetWaterBehaviorController : PetControllerBase
         }
     }
 
-
-    // Unity Update - 깊이 애니메이션 처리만
+    /// <summary>
+    /// 매 프레임 호출되는 업데이트 메서드
+    /// 펫이 들려있는 상태를 감지하고 수심 애니메이션을 업데이트합니다
+    /// </summary>
     private void Update()
     {
-        // 들기 상태 추적 (드롭 감지용)
+        // 펫이 방금 들려진 경우 감지
         if (petController.State.IsHolding && !wasHolding)
         {
-            wasHolding = true;
+            wasHolding = true;  // 들려있는 상태로 표시
 
-            // 펫이 들릴 때 물 상태를 리셋
+            // 물 속에 있었다면 물 상태 해제
+            // (들려있는 동안은 물 속에 있지 않은 것으로 처리)
             if (isInWater)
             {
                 isInWater = false;
@@ -71,46 +64,41 @@ public class PetWaterBehaviorController : PetControllerBase
             }
         }
 
-        // 깊이 애니메이션 업데이트 (부드러운 전환)
+        // 수심 연출을 위한 애니메이션 업데이트
         UpdateDepthAnimation();
     }
 
     /// <summary>
-    /// 깊이 애니메이션 업데이트 (매 프레임 호출)
-    /// Y축 오프셋을 부드럽게 전환하여 물 속 잠수 효과 구현
-    /// 
-    /// [Lerp 사용 이유]
-    /// - 즉시 이동 시 시각적으로 부자연스러움
-    /// - 부드러운 전환으로 자연스러운 잠수/부상 표현
-    /// - 단점: 드롭 시 물리 이동과 시각 전환의 지연 발생
+    /// 수심 애니메이션 업데이트
+    /// 펫의 Y축 위치를 조정하여 물에 잠긴 효과를 연출합니다
     /// </summary>
     private void UpdateDepthAnimation()
     {
         if (isDiving)
         {
-            // 다이빙 중: 특별한 3단계 시퀀스 실행
+            // 다이빙 중일 때는 특별한 깊이 업데이트 로직 사용
             UpdateDivingDepth();
         }
         else if (isInWater)
         {
-            // 일반 물 속: 설정된 깊이로 부드럽게 전환
-            // targetDepth는 음수값 (아래로 내려감)
+            // 일반 물 속: 설정된 수심만큼 아래로
+            // 음수 값으로 설정하여 펫이 아래로 내려가는 효과
             float targetDepth = -petController.waterSinkDepth;
             currentDepth = Mathf.Lerp(currentDepth, targetDepth, Time.deltaTime * depthTransitionSpeed);
         }
         else
         {
-            // 물 밖: 원래 높이(0)로 부드럽게 복귀
+            // 물 밖: 원래 높이로 복귀
             currentDepth = Mathf.Lerp(currentDepth, 0f, Time.deltaTime * depthTransitionSpeed);
         }
 
-        // 계산된 깊이를 PetState에 적용 (시각적 표현용)
+        // 계산된 수심을 State에 저장
         petController.State.SetWaterDepthOffset(currentDepth);
     }
 
     /// <summary>
-    /// Trigger 방식: 물 영역 진입 시 호출
-    /// WaterZoneTrigger에서 호출됨
+    /// 물 영역 진입 시 호출
+    /// WaterTriggerDetector에서 OnTriggerEnter 시 호출합니다
     /// </summary>
     public void OnWaterEnter()
     {
@@ -118,54 +106,49 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             isInWater = true;
             petController.State.UpdateWaterState(true);
-            OnEnterWater();
+            OnEnterWater();  // 물 진입 처리
             Debug.Log($"{petController.petName}: 물에 들어감 (Trigger)");
         }
     }
 
     /// <summary>
-    /// Trigger 방식: 물 영역 탈출 시 호출
-    /// WaterZoneTrigger에서 호출됨
+    /// 물 영역 탈출 시 호출
+    /// WaterTriggerDetector에서 OnTriggerExit 시 호출합니다
     /// </summary>
     public void OnWaterExit()
     {
-        if (isInWater && !isDiving) // 다이빙 중에는 무시
+        // 다이빙 중에는 물에서 나간 것으로 처리하지 않음
+        if (isInWater && !isDiving)
         {
             isInWater = false;
             petController.State.UpdateWaterState(false);
-            OnExitWater();
+            OnExitWater();  // 물 탈출 처리
             Debug.Log($"{petController.petName}: 물에서 나옴 (Trigger)");
         }
     }
 
     /// <summary>
-    /// 물에 진입할 때 호출되는 메서드
-    /// 문제: wasHolding 플래그 의존성으로 인해 드롭 시 물보라 생성 실패 가능성
+    /// 물에 들어갈 때의 처리
+    /// 물튀김 효과를 생성하고 이동 속도를 조정합니다
     /// </summary>
     private void OnEnterWater()
     {
-        // 쿨다운 체크 - 최근에 물보라를 생성했으면 스킵
+        // 물튀김 효과 쿨다운 체크 (1초 이내 재진입 시 생략)
         if (Time.time - lastSplashTime < splashCooldown)
         {
             wasHolding = false;
-            // 물 속도만 적용하고 리턴
+            // 물튀김 효과 없이 속도만 적용
             ApplyWaterSpeed();
             return;
         }
 
-        // ====================================================================================
-        // [드롭 감지 문제]
-        // wasHolding이 true일 때만 물보라 생성
-        // 문제: Update()와 CheckWaterArea()의 프레임 차이로 wasHolding이 false가 될 수 있음
-        // 결과: 드롭했는데도 물보라가 생성되지 않는 경우 발생
-        // ====================================================================================
-        // 펫이 들려있다가 물에 놓아질 때만 파티클 생성
+        // 펫이 들려있다가 물에 놓인 경우 물튀김 효과 생성
         if (wasHolding && EnvironmentManager.Instance != null &&
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
-            // 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
+            // 물튀김 위치 설정 (펫 위치에서 약간 위)
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 0.7f;  // 물 표면 위로 보정
+            splashPosition.y += 0.7f;
 
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
@@ -173,18 +156,18 @@ public class PetWaterBehaviorController : PetControllerBase
                 Quaternion.identity
             );
 
-            // 파티클 크기를 펫의 실제 3D 모델 크기에 맞게 조정
+            // 펫 크기에 맞춰 물튀김 크기 조절
             Renderer renderer = petController.GetComponentInChildren<Renderer>();
             if (renderer != null)
             {
-                // 렌더러의 bounds를 사용하여 실제 모델 크기 측정
-                // x와 z축의 평균을 사용 (y축은 높이이므로 제외)
+                // 렌더러 바운드 크기를 기준으로 스케일 계산
+                // X와 Z 축 크기의 평균을 사용
                 float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale;  // 드롭: 일반 크기 (scale x1)
+                splash.transform.localScale = Vector3.one * scale;
             }
             else if (petController.agent != null)
             {
-                // 렌더러가 없으면 NavMeshAgent radius를 폴백으로 사용
+                // 렌더러가 없으면 NavMesh 에이전트 반경 사용
                 float scale = petController.agent.radius * 3f;
                 splash.transform.localScale = Vector3.one * scale;
             }
@@ -192,25 +175,26 @@ public class PetWaterBehaviorController : PetControllerBase
             // 3초 후 파티클 제거
             Destroy(splash, 3f);
 
-            // 마지막 물보라 생성 시간 기록
+            // 마지막 물튀김 시간 기록
             lastSplashTime = Time.time;
-
-            // Debug.Log($"{petController.petName}: 물에 놓아져서 물튀김 효과 생성!");
         }
-
-        // wasHolding 플래그 리셋
+        // 들려있던 상태 플래그 리셋
         wasHolding = false;
 
-        // 물 속도 적용
+        // 물 속 이동 속도 적용
         ApplyWaterSpeed();
     }
 
+    /// <summary>
+    /// 물 속 이동 속도 적용
+    /// 수생 펫은 빠르게, 육상 펫은 느리게 이동합니다
+    /// </summary>
     private void ApplyWaterSpeed()
     {
-        // MovementSettings를 통해 물 속 속도 계산
+        // 수생 펫인지 확인
         bool isAquatic = petController.habitat == PetAIProperties.Habitat.Water;
 
-        // 속도 감소
+        // NavMesh 에이전트 속도 조정 (모이기 명령 중에는 적용 안함)
         if (petController.agent != null && !petController.State.IsGathering)
         {
             petController.agent.speed = petController.Movement.GetWaterSpeed(isAquatic, petController.personality);
@@ -218,7 +202,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 (isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier);
         }
 
-        // 애니메이션 속도도 감소
+        // 애니메이션 속도 조정
         if (petController.animator != null)
         {
             float animSpeedMult = isAquatic ? petController.Movement.aquaticWaterSpeedMultiplier : petController.Movement.waterSpeedMultiplier;
@@ -226,23 +210,30 @@ public class PetWaterBehaviorController : PetControllerBase
         }
     }
 
+    /// <summary>
+    /// 물에서 나올 때의 처리
+    /// 이동 속도를 원래대로 복구합니다
+    /// </summary>
     private void OnExitWater()
     {
-        // 속도 복구 - 성격이 적용된 속도로
+        // NavMesh 에이전트 속도 원상 복구
         if (petController.agent != null && !petController.State.IsGathering)
         {
             petController.agent.speed = petController.Movement.GetAdjustedWalkSpeed(petController.personality);
             petController.agent.acceleration = petController.Movement.acceleration;
         }
 
-        // 애니메이션 속도 복구
+        // 애니메이션 속도 원상 복구
         if (petController.animator != null)
         {
             petController.animator.speed = 1f;
         }
     }
 
-    // PetMovementController에서 호출하는 메서드
+    /// <summary>
+    /// 현재 물 상태에 따라 속도 조정
+    /// 주로 다른 컨트롤러에서 호출하여 사용
+    /// </summary>
     public void AdjustSpeedForWater()
     {
         if (isInWater && petController.agent != null)
@@ -253,95 +244,94 @@ public class PetWaterBehaviorController : PetControllerBase
         }
     }
 
-    // 현재 물 속에 있는지 확인하는 프로퍼티
+    /// <summary>
+    /// 현재 물 속에 있는지 여부를 반환하는 프로퍼티
+    /// </summary>
     public bool IsInWater => isInWater;
 
-    // 외부에서 물보라 생성 시간을 기록할 수 있는 메서드
+    /// <summary>
+    /// 물튀김 시간 기록
+    /// PetInputController에서 펫을 물에 놓을 때 호출하여 중복 물튀김 방지
+    /// </summary>
     public void RecordSplashTime()
     {
         lastSplashTime = Time.time;
     }
 
     /// <summary>
-    /// 다이빙 시퀀스 시작 (입수 → 잠수 → 부상)
-    /// DivingActivity에서 호출되며, 드롭과 다른 처리를 수행
-    /// 
-    /// 드롭과의 핵심 차이점:
-    /// 1. 즉시 깊이 적용 (currentDepth = -divingDepth) - Lerp 없음
-    /// 2. 더 큰 물보라 (CreateDivingSplash로 2배 크기)
-    /// 3. 더 깊은 잠수 (waterSinkDepth * 2.5배)
+    /// 다이빙 시퀀스 시작
+    /// DivingActivity에서 호출하여 펫이 깊이 잠수하는 효과를 연출
     /// </summary>
     public void StartDivingSequence()
     {
-        // 다이빙 상태 시작
+        // 다이빙 상태 설정
         isDiving = true;
         divingStartTime = Time.time;
-        divingDepth = petController.waterSinkDepth * 2.5f; // 일반 깊이의 2.5배 깊이로 다이빙
+        divingDepth = petController.waterSinkDepth * 2.5f;  // 일반 수심의 2.5배 깊이로 다이빙
 
-        // 큰 물보라 효과 생성
+        // 다이빙 시작 시 큰 물튀김 효과
         CreateDivingSplash();
 
-        // 물 상태 업데이트
+        // 물 상태 강제 설정 (다이빙 중에는 항상 물 속)
         isInWater = true;
         petController.State.UpdateWaterState(true);
 
-        // ====================================================================================
-        // [핵심 차이점: 즉시 깊이 적용]
-        // 드롭: Lerp로 부드럽게 전환 (렉 발생)
-        // 다이빙: 즉시 깊은 곳으로 이동 (렉 없음)
-        // ====================================================================================
-        currentDepth = -divingDepth;  // 즉시 적용
+        // 즉시 목표 깊이로 설정 (부드러운 전환 없이)
+        // 빠르게 잠수하는 효과를 위해 즉시 깊이 적용
+        currentDepth = -divingDepth;
         petController.State.SetWaterDepthOffset(currentDepth);
 
         Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}");
     }
 
     /// <summary>
-    /// 다이빙 중 깊이 업데이트 (잠수 → 부상)
+    /// 다이빙 깊이 업데이트
+    /// 시간에 따라 잠수했다가 천천히 부상하는 효과 구현
     /// </summary>
     private void UpdateDivingDepth()
     {
-
-        Debug.Log("UpdateDivingDepth()");
-        
+        // 다이빙 시작 후 경과 시간
         float elapsed = Time.time - divingStartTime;
 
         if (elapsed >= DIVING_DURATION)
         {
-            // 다이빙 종료
+            // 3초 경과: 다이빙 종료
             isDiving = false;
-            // currentDepth는 UpdateDepthAnimation()의 Lerp가 자연스럽게 처리
+            // 이후 UpdateDepthAnimation()에서 일반 수심으로 부드럽게 전환
             Debug.Log($"{petController.petName}: 다이빙 완료, 일반 수심으로 복귀");
         }
         else
         {
-            // 다이빙 진행 중: 처음 1초는 깊이 유지, 나머지 2초는 천천히 부상
+            // 다이빙 중: 시간에 따른 깊이 변화
             if (elapsed < 1f)
             {
-                // 깊은 곳 유지
+                Debug.Log("UpdateDivingDepth():잠수");
+                // 0-1초: 최대 깊이 유지 (잠수 상태)
                 currentDepth = -divingDepth;
             }
             else
             {
-                // 천천히 부상 (Ease-out 커브)
-                float t = (elapsed - 1f) / 2f; // 0 ~ 1로 정규화
-                t = 1f - Mathf.Pow(1f - t, 2f); // Ease-out
+                Debug.Log("UpdateDivingDepth():부상");
+                // 1-3초: 천천히 부상
+                float t = (elapsed - 1f) / 2f;  // 0-1로 정규화
+                t = 1f - Mathf.Pow(1f - t, 2f);  // 부드러운 감속 커브
                 currentDepth = Mathf.Lerp(-divingDepth, -petController.waterSinkDepth, t);
             }
         }
     }
 
     /// <summary>
-    /// 다이빙으로 인한 큰 물보라 효과 생성
+    /// 다이빙 물튀김 효과 생성
+    /// 일반 물튀김보다 크고 화려한 효과를 생성합니다
     /// </summary>
     private void CreateDivingSplash()
     {
         if (EnvironmentManager.Instance != null &&
             EnvironmentManager.Instance.waterSplashParticlePrefab != null)
         {
-            // 큰 물튀김 파티클 생성 (Y값 보정하여 물 표면 위에 생성)
+            // 물튀김 위치 설정
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 0.7f;  // 물 표면 위로 보정
+            splashPosition.y += 0.7f;
 
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
@@ -349,30 +339,27 @@ public class PetWaterBehaviorController : PetControllerBase
                 Quaternion.identity
             );
 
-            // ====================================================================================
-            // [다이빙 물보라 크기]
-            // 드롭: scale x1 (일반 크기)
-            // 다이빙: scale x2 (2배 크기) - 더 큰 물보라로 다이빙 강조
-            // ====================================================================================
+            // 다이빙 물튀김은 일반 물튀김보다 2배 크게
+            // 더 강력한 입수 효과를 연출
             Renderer renderer = petController.GetComponentInChildren<Renderer>();
             if (renderer != null)
             {
                 float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale * 2f; // 다이빙: 2배 크기
+                splash.transform.localScale = Vector3.one * scale * 2f;  // 2배 크기
             }
             else if (petController.agent != null)
             {
-                float scale = petController.agent.radius * 6f; // 2배 크기
+                float scale = petController.agent.radius * 6f;  // 일반 3f의 2배
                 splash.transform.localScale = Vector3.one * scale;
             }
 
-            // 4초 후 파티클 제거 (더 오래 지속)
+            // 4초 후 제거 (일반보다 1초 더 오래 지속)
             Destroy(splash, 4f);
 
-            // 물보라 생성 시간 기록
+            // 물튀김 시간 기록
             lastSplashTime = Time.time;
 
-            // 물 속도 적용
+            // 물 속 이동 속도 적용
             ApplyWaterSpeed();
 
             Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
