@@ -561,24 +561,9 @@ public class PetInputController : PetControllerBase
         float gravity = -9.8f * 2f;  // 중력 가속도 (2배속)
         float initialVelocityY = 0f;  // 초기 수직 속도
 
-
         if (petController.petModelTransform != null)
         {
             petController.petModelTransform.rotation = originalRotation;
-        }
-
-        bool waterSplashCreated = false;
-        NavMeshHit waterHit;
-        bool isWaterArea = false;
-
-
-        if (NavMesh.SamplePosition(groundPoint, out waterHit, 1f, NavMesh.AllAreas))
-        {
-            int waterArea = NavMesh.GetAreaFromName("Water");
-            if (waterArea != -1 && (1 << waterArea) == waterHit.mask)
-            {
-                isWaterArea = true;
-            }
         }
 
         // 자유낙하 애니메이션
@@ -603,67 +588,9 @@ public class PetInputController : PetControllerBase
             
             petController.transform.position = currentPos;
 
-
             if (petController.petModelTransform != null)
             {
                 petController.petModelTransform.rotation = originalRotation;
-            }
-
-
-
-
-
-
-
-
-            // 물 영역에 착지 직전 물튀김 효과 생성
-            if (isWaterArea && !waterSplashCreated && currentPos.y - groundPoint.y < 1f)
-            {
-                waterSplashCreated = true;
-
-
-                if (EnvironmentManager.Instance != null &&
-                    EnvironmentManager.Instance.waterSplashParticlePrefab != null)
-                {
-
-                    Vector3 splashPosition = currentPos;
-                    splashPosition.y += 0.7f;
-
-                    GameObject splash = Instantiate(
-                        EnvironmentManager.Instance.waterSplashParticlePrefab,
-                        splashPosition,
-                        Quaternion.identity
-                    );
-
-
-                    Renderer renderer = petController.GetComponentInChildren<Renderer>();
-                    if (renderer != null)
-                    {
-                        float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                        splash.transform.localScale = Vector3.one * scale;
-                    }
-                    else if (petController.agent != null)
-                    {
-                        float scale = petController.agent.radius * 3f;
-                        splash.transform.localScale = Vector3.one * scale;
-                    }
-
-                    Destroy(splash, 3f);
-
-
-
-
-
-
-
-
-
-                    var waterController = petController.GetComponent<PetWaterBehaviorController>();
-                    if (waterController != null)
-                    {
-                        waterController.RecordSplashTime();
-                    }
-                }
             }
 
             yield return null;
