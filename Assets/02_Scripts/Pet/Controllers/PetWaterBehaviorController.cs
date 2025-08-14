@@ -13,8 +13,6 @@ public class PetWaterBehaviorController : PetControllerBase
     private float currentDepth = 0f;          // 현재 수심 (음수는 물 속을 의미)
     private float depthTransitionSpeed = 2f;  // 수심 변화 속도 (부드러운 전환용)
     private bool wasHolding = false;          // 이전 프레임에 들려있었는지 추적
-    private float lastSplashTime = -10f;      // 마지막 물튀김 효과 생성 시간
-    private const float splashCooldown = 1f;  // 물튀김 효과 재생성 쿨다운
 
     // ===== 다이빙 관련 변수 =====
     private bool isDiving = false;            // 다이빙 중인지 여부
@@ -129,55 +127,10 @@ public class PetWaterBehaviorController : PetControllerBase
 
     /// <summary>
     /// 물에 들어갈 때의 처리
-    /// 물튀김 효과를 생성하고 이동 속도를 조정합니다
+    /// 이동 속도를 조정합니다
     /// </summary>
     private void OnEnterWater()
     {
-        // 물튀김 효과 쿨다운 체크 (1초 이내 재진입 시 생략)
-        if (Time.time - lastSplashTime < splashCooldown)
-        {
-            wasHolding = false;
-            // 물튀김 효과 없이 속도만 적용
-            ApplyWaterSpeed();
-            return;
-        }
-
-        // 펫이 들려있다가 물에 놓인 경우 물튀김 효과 생성
-        if (wasHolding && EnvironmentManager.Instance != null &&
-            EnvironmentManager.Instance.waterSplashParticlePrefab != null)
-        {
-            // 물튀김 위치 설정 (펫 위치에서 약간 위)
-            Vector3 splashPosition = transform.position;
-            splashPosition.y += 0.7f;
-
-            GameObject splash = Instantiate(
-                EnvironmentManager.Instance.waterSplashParticlePrefab,
-                splashPosition,
-                Quaternion.identity
-            );
-
-            // 펫 크기에 맞춰 물튀김 크기 조절
-            Renderer renderer = petController.GetComponentInChildren<Renderer>();
-            if (renderer != null)
-            {
-                // 렌더러 바운드 크기를 기준으로 스케일 계산
-                // X와 Z 축 크기의 평균을 사용
-                float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale;
-            }
-            else if (petController.agent != null)
-            {
-                // 렌더러가 없으면 NavMesh 에이전트 반경 사용
-                float scale = petController.agent.radius * 3f;
-                splash.transform.localScale = Vector3.one * scale;
-            }
-
-            // 3초 후 파티클 제거
-            Destroy(splash, 3f);
-
-            // 마지막 물튀김 시간 기록
-            lastSplashTime = Time.time;
-        }
         // 들려있던 상태 플래그 리셋
         wasHolding = false;
 
@@ -248,15 +201,6 @@ public class PetWaterBehaviorController : PetControllerBase
     /// 현재 물 속에 있는지 여부를 반환하는 프로퍼티
     /// </summary>
     public bool IsInWater => isInWater;
-
-    /// <summary>
-    /// 물튀김 시간 기록
-    /// PetInputController에서 펫을 물에 놓을 때 호출하여 중복 물튀김 방지
-    /// </summary>
-    public void RecordSplashTime()
-    {
-        lastSplashTime = Time.time;
-    }
 
     /// <summary>
     /// 드롭 준비 메서드
@@ -342,7 +286,7 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 물튀김 위치 설정
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 0.7f;
+            splashPosition.y += 1f;
 
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
@@ -366,9 +310,6 @@ public class PetWaterBehaviorController : PetControllerBase
 
             // 4초 후 제거 (일반보다 1초 더 오래 지속)
             Destroy(splash, 4f);
-
-            // 물튀김 시간 기록
-            lastSplashTime = Time.time;
 
             // 물 속 이동 속도 적용
             ApplyWaterSpeed();
