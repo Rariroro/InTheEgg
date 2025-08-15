@@ -792,9 +792,11 @@ public class PetInputController : PetControllerBase
 
         if (petController.petModelTransform != null)
         {
-            petController.petModelTransform.localPosition = Vector3.zero;
-
-
+            // 물 속에 있지 않을 때만 위치 리셋
+            if (!petController.State.IsInWater)
+            {
+                petController.petModelTransform.localPosition = Vector3.zero;
+            }
         }
 
         var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
