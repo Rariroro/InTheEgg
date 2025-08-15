@@ -13,6 +13,9 @@ public class DivingActivity : PetActivityAdapter
     /// 현재 다이빙 중인 펫을 추적. 한 번에 한 펫만 다이빙 가능하도록 제한
     /// </summary>
     private static PetController currentDiver = null;
+    
+    // ===== 캐싱된 물 오브젝트 =====
+    private GameObject cachedWaterObject;
 
     // ===== 다이빙 상태 관리 변수들 =====
     /// <summary>다이빙 지점의 Transform (DivingSpot 태그를 가진 오브젝트)</summary>
@@ -138,6 +141,12 @@ public class DivingActivity : PetActivityAdapter
     /// </summary>
     public override void Start()
     {
+        // Water 오브젝트 캐싱 (한 번만)
+        if (cachedWaterObject == null)
+        {
+            cachedWaterObject = GameObject.FindWithTag("Water");
+        }
+        
         // 현재 펫을 다이빙 중인 펫으로 등록 (다른 펫의 다이빙 방지)
         currentDiver = pet;
         isMovingToSpot = true;
@@ -208,19 +217,18 @@ public class DivingActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator MoveToSpotAndDive()
     {
-        // 물 표면 높이 가져오기 (다이빙 시작 시점에 한 번만)
+        // 물 표면 높이 가져오기 (캐싱된 오브젝트 사용)
         float waterSurfaceY = 5.7f;  // 기본값
-        GameObject waterObj = GameObject.FindWithTag("Water");
-        if (waterObj != null)
+        if (cachedWaterObject != null)
         {
-            var waterTrigger = waterObj.GetComponent<WaterZoneTrigger>();
+            var waterTrigger = cachedWaterObject.GetComponent<WaterZoneTrigger>();
             if (waterTrigger != null)
             {
                 waterSurfaceY = waterTrigger.WaterSurfaceY;
             }
             else
             {
-                waterSurfaceY = waterObj.transform.position.y;
+                waterSurfaceY = cachedWaterObject.transform.position.y;
             }
         }
         // ===== Phase 1: 이동 준비 및 초기 상태 체크 =====

@@ -15,6 +15,7 @@ public class PetWaterBehaviorController : PetControllerBase
     private bool wasHolding = false;          // 이전 프레임에 들려있었는지 추적
     private float waterSurfaceY = 0f;         // 물 표면의 Y 좌표
     private Vector3 positionBeforeWater;      // 물 진입 전 위치 저장
+    private GameObject cachedWaterObject;     // 캐싱된 Water 오브젝트
 
     // ===== 다이빙 관련 변수 =====
     private bool isDiving = false;            // 다이빙 중인지 여부
@@ -28,6 +29,9 @@ public class PetWaterBehaviorController : PetControllerBase
     /// </summary>
     protected override void OnInitialize()
     {
+        // Water 오브젝트 캐싱 (한 번만 검색)
+        cachedWaterObject = GameObject.FindWithTag("Water");
+        
         // NavMesh 에이전트가 활성화되어 있고 NavMesh 위에 있는 경우
         if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
         {
@@ -50,7 +54,7 @@ public class PetWaterBehaviorController : PetControllerBase
     /// </summary>
     private void Update()
     {
-        // 펫이 방금 들려진 경우 감지
+        // 펫이 방금 들려진 경우 감지 (항상 체크 필요)
         if (petController.State.IsHolding && !wasHolding)
         {
             wasHolding = true;  // 들려있는 상태로 표시
@@ -65,7 +69,11 @@ public class PetWaterBehaviorController : PetControllerBase
         }
 
         // 수심 연출을 위한 애니메이션 업데이트
-        UpdateDepthAnimation();
+        // 물 속이거나 다이빙 중이거나 깊이가 0이 아닐 때만 업데이트
+        if (isInWater || isDiving || Mathf.Abs(currentDepth) > 0.01f)
+        {
+            UpdateDepthAnimation();
+        }
     }
 
     /// <summary>
@@ -115,11 +123,10 @@ public class PetWaterBehaviorController : PetControllerBase
     // 기존 메서드 오버로드 (호환성 유지)
     public void OnWaterEnter()
     {
-        // 물 오브젝트 찾아서 높이 가져오기
-        GameObject waterObj = GameObject.FindWithTag("Water");
-        if (waterObj != null)
+        // 캐싱된 물 오브젝트 사용
+        if (cachedWaterObject != null)
         {
-            OnWaterEnter(waterObj.transform.position.y);
+            OnWaterEnter(cachedWaterObject.transform.position.y);
         }
         else
         {
@@ -330,20 +337,20 @@ public class PetWaterBehaviorController : PetControllerBase
             // 3초 경과: 다이빙 종료
             isDiving = false;
             // 이후 UpdateDepthAnimation()에서 일반 수심으로 부드럽게 전환
-            Debug.Log($"{petController.petName}: 다이빙 완료, 일반 수심으로 복귀");
+            // Debug.Log($"{petController.petName}: 다이빙 완료, 일반 수심으로 복귀");
         }
         else
         {
             // 다이빙 중: 시간에 따른 깊이 변화
             if (elapsed < 1f)
             {
-                Debug.Log("UpdateDivingDepth():잠수");
+                // Debug.Log("UpdateDivingDepth():잠수");
                 // 0-1초: 최대 깊이 유지 (잠수 상태)
                 currentDepth = -divingDepth;
             }
             else
             {
-                Debug.Log("UpdateDivingDepth():부상");
+                // Debug.Log("UpdateDivingDepth():부상");
                 // 1-3초: 천천히 부상
                 float t = (elapsed - 1f) / 2f;  // 0-1로 정규화
                 t = 1f - Mathf.Pow(1f - t, 2f);  // 부드러운 감속 커브

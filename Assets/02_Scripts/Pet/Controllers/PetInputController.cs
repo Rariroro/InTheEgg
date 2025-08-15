@@ -184,7 +184,7 @@ public class PetInputController : PetControllerBase
             // 들고 있던 펫을 놓기
             if (petController.State.IsHolding)
             {
-                Debug.Log("HandleInput() / StopHolding()");
+                // Debug.Log("HandleInput() / StopHolding()");
                 StopHolding();
             }
             // 짧은 터치였다면 선택/특수 동작 처리
