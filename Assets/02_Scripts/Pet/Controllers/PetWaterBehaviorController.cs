@@ -162,11 +162,16 @@ public class PetWaterBehaviorController : PetControllerBase
             newPos.y = waterSurfaceY;
             petController.transform.position = newPos;
             
-            // NavMesh 에이전트 비활성화 (물 속에서는 직접 제어)
+            // NavMesh 에이전트는 활성 상태 유지 (물 속에서도 이동 가능하도록)
+            // 수생 펫과 육상 펫 모두 NavMesh를 사용하되 속도만 조정
             if (petController.agent != null && petController.agent.enabled)
             {
-                petController.agent.enabled = false;
-                Debug.Log($"{petController.petName}: NavMesh 비활성화, 물 표면으로 이동 Y={waterSurfaceY}");
+                // NavMesh 위치 동기화
+                if (petController.agent.isOnNavMesh)
+                {
+                    petController.agent.Warp(newPos);
+                    Debug.Log($"{petController.petName}: 물에 진입, NavMesh 활성 유지, 위치 Y={waterSurfaceY}");
+                }
             }
         }
 

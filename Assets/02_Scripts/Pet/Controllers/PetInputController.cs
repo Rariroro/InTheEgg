@@ -734,8 +734,9 @@ public class PetInputController : PetControllerBase
             petController.agent.Warp(petController.transform.position);
         }
 
-        // 펫 배치 완료 처리
-        CompletePetPlacement();
+        // AI 재시작 및 선택 해제
+        petController.ResumeMovement();
+        Deselect();
 
         Debug.Log($"{petController.petName}: 드롭 다이빙 시퀀스 완료!");
     }
