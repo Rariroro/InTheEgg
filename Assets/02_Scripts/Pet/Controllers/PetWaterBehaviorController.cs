@@ -358,7 +358,7 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 물튀김 위치 설정
             Vector3 splashPosition = transform.position;
-            splashPosition.y += 1f;
+            splashPosition.y += 0.5f;
 
             GameObject splash = Instantiate(
                 EnvironmentManager.Instance.waterSplashParticlePrefab,
@@ -372,7 +372,7 @@ public class PetWaterBehaviorController : PetControllerBase
             if (renderer != null)
             {
                 float scale = (renderer.bounds.size.x + renderer.bounds.size.z) / 2f;
-                splash.transform.localScale = Vector3.one * scale * 2f;  // 2배 크기
+                splash.transform.localScale = Vector3.one * scale * 1.5f;  // 2배 크기
             }
             else if (petController.agent != null)
             {
