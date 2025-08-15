@@ -159,7 +159,7 @@ public class DivingActivity : PetActivityAdapter
                 return;
             }
         }
-
+        
         // 기존 이동 중단
         if (pet.movementController != null)
         {
@@ -208,6 +208,21 @@ public class DivingActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator MoveToSpotAndDive()
     {
+        // 물 표면 높이 가져오기 (다이빙 시작 시점에 한 번만)
+        float waterSurfaceY = 5.7f;  // 기본값
+        GameObject waterObj = GameObject.FindWithTag("Water");
+        if (waterObj != null)
+        {
+            var waterTrigger = waterObj.GetComponent<WaterZoneTrigger>();
+            if (waterTrigger != null)
+            {
+                waterSurfaceY = waterTrigger.WaterSurfaceY;
+            }
+            else
+            {
+                waterSurfaceY = waterObj.transform.position.y;
+            }
+        }
         // ===== Phase 1: 이동 준비 및 초기 상태 체크 =====
         
         // 플레이어가 펫을 들고 있으면 즉시 중단
@@ -408,8 +423,8 @@ public class DivingActivity : PetActivityAdapter
         Vector3 toWater = Quaternion.AngleAxis(randomAngle, Vector3.up) * divingSpot.forward;
         jumpTargetPosition = divingSpot.position + toWater * 6f;
         
-        // 목표 높이는 물 표면 아래로 설정 (물 속으로 들어가기 위해)
-        jumpTargetPosition.y = 5f;
+        // 목표 높이는 실제 물 표면으로 설정 (물 속으로 들어가기 위해)
+        jumpTargetPosition.y = waterSurfaceY;
 
         // ===== Phase 5: 다이빙 시작 =====
         
@@ -468,7 +483,8 @@ public class DivingActivity : PetActivityAdapter
         var waterController = pet.GetComponent<PetWaterBehaviorController>();
         if (waterController != null)
         {
-            waterController.StartDivingSequence();
+            // 물 표면 높이를 전달하여 정확한 위치에서 다이빙
+            waterController.StartDivingSequence(waterSurfaceY);
             // 물 속 행동 시퀀스 시작 (수영, 물방울 효과 등)
         }
         

@@ -7,8 +7,19 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class WaterZoneTrigger : MonoBehaviour
 {
+    // 물 표면의 Y 위치를 저장
+    private float waterSurfaceY;
+    
+    /// <summary>
+    /// 물 표면의 월드 Y 좌표
+    /// </summary>
+    public float WaterSurfaceY => waterSurfaceY;
     private void Awake()
     {
+        // 물 표면 Y 위치 저장
+        waterSurfaceY = transform.position.y;
+        Debug.Log($"[WaterZoneTrigger] 물 표면 높이 설정: Y = {waterSurfaceY}");
+        
         // Collider가 Trigger로 설정되어 있는지 확인
         Collider col = GetComponent<Collider>();
         if (!col.isTrigger)
@@ -31,11 +42,11 @@ public class WaterZoneTrigger : MonoBehaviour
         PetController pet = other.GetComponent<PetController>();
         if (pet != null)
         {
-            // PetWaterBehaviorController에 진입 알림
+            // PetWaterBehaviorController에 진입 알림 (물 표면 높이 전달)
             PetWaterBehaviorController waterController = pet.GetComponent<PetWaterBehaviorController>();
             if (waterController != null)
             {
-                waterController.OnWaterEnter();
+                waterController.OnWaterEnter(waterSurfaceY);
             }
         }
     }

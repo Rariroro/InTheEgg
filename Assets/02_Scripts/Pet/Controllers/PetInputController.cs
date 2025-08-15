@@ -463,6 +463,22 @@ public class PetInputController : PetControllerBase
                     // 물 영역이면 드롭 다이빙 시퀀스 실행
                     Debug.Log($"StopHolding() - 물 영역 감지! 다이빙 시퀀스 시작");
 
+                    // 물 표면 높이 가져오기
+                    float waterSurfaceY = hit.point.y;  // 기본값
+                    GameObject waterObj = GameObject.FindWithTag("Water");
+                    if (waterObj != null)
+                    {
+                        var waterTrigger = waterObj.GetComponent<WaterZoneTrigger>();
+                        if (waterTrigger != null)
+                        {
+                            waterSurfaceY = waterTrigger.WaterSurfaceY;
+                        }
+                        else
+                        {
+                            waterSurfaceY = waterObj.transform.position.y;
+                        }
+                    }
+
                     // PetWaterBehaviorController에 드롭 준비 알림
                     var waterController = petController.GetComponent<PetWaterBehaviorController>();
                     if (waterController != null)
@@ -470,7 +486,10 @@ public class PetInputController : PetControllerBase
                         waterController.PrepareForDrop();
                     }
 
-                    StartCoroutine(DropDivingSequence(hit.point, currentRotation));
+                    // 물 표면 높이를 사용하여 드롭 다이빙
+                    Vector3 dropPoint = hit.point;
+                    dropPoint.y = waterSurfaceY;
+                    StartCoroutine(DropDivingSequence(dropPoint, currentRotation));
                     return;
                 }
             }
@@ -698,7 +717,8 @@ public class PetInputController : PetControllerBase
         if (waterController != null)
         {
             // 다이빙 시퀀스 시작 (물튀김 효과, 잠수 깊이 설정)
-            waterController.StartDivingSequence();
+            // 수면 높이를 전달하여 정확한 위치 설정
+            waterController.StartDivingSequence(waterSurfaceY);
         }
 
         // 펫 감정 표현 (행복)

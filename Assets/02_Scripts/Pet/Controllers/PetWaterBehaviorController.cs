@@ -13,6 +13,8 @@ public class PetWaterBehaviorController : PetControllerBase
     private float currentDepth = 0f;          // 현재 수심 (음수는 물 속을 의미)
     private float depthTransitionSpeed = 2f;  // 수심 변화 속도 (부드러운 전환용)
     private bool wasHolding = false;          // 이전 프레임에 들려있었는지 추적
+    private float waterSurfaceY = 0f;         // 물 표면의 Y 좌표
+    private Vector3 positionBeforeWater;      // 물 진입 전 위치 저장
 
     // ===== 다이빙 관련 변수 =====
     private bool isDiving = false;            // 다이빙 중인지 여부
@@ -98,14 +100,30 @@ public class PetWaterBehaviorController : PetControllerBase
     /// 물 영역 진입 시 호출
     /// WaterTriggerDetector에서 OnTriggerEnter 시 호출합니다
     /// </summary>
-    public void OnWaterEnter()
+    public void OnWaterEnter(float surfaceY)
     {
         if (!isInWater)
         {
+            waterSurfaceY = surfaceY;
             isInWater = true;
             petController.State.UpdateWaterState(true);
             OnEnterWater();  // 물 진입 처리
-            Debug.Log($"{petController.petName}: 물에 들어감 (Trigger)");
+            Debug.Log($"{petController.petName}: 물에 들어감 (Trigger) - 수면 높이: {waterSurfaceY}");
+        }
+    }
+    
+    // 기존 메서드 오버로드 (호환성 유지)
+    public void OnWaterEnter()
+    {
+        // 물 오브젝트 찾아서 높이 가져오기
+        GameObject waterObj = GameObject.FindWithTag("Water");
+        if (waterObj != null)
+        {
+            OnWaterEnter(waterObj.transform.position.y);
+        }
+        else
+        {
+            OnWaterEnter(5.7f);  // 기본값
         }
     }
 
@@ -127,12 +145,30 @@ public class PetWaterBehaviorController : PetControllerBase
 
     /// <summary>
     /// 물에 들어갈 때의 처리
-    /// 이동 속도를 조정합니다
+    /// 이동 속도를 조정하고 루트 위치를 물 표면으로 이동합니다
     /// </summary>
     private void OnEnterWater()
     {
         // 들려있던 상태 플래그 리셋
         wasHolding = false;
+
+        // 현재 위치 저장 (나중에 복구용)
+        positionBeforeWater = petController.transform.position;
+        
+        // 루트 오브젝트를 물 표면 높이로 조정
+        if (!petController.State.IsHolding)
+        {
+            Vector3 newPos = petController.transform.position;
+            newPos.y = waterSurfaceY;
+            petController.transform.position = newPos;
+            
+            // NavMesh 에이전트 비활성화 (물 속에서는 직접 제어)
+            if (petController.agent != null && petController.agent.enabled)
+            {
+                petController.agent.enabled = false;
+                Debug.Log($"{petController.petName}: NavMesh 비활성화, 물 표면으로 이동 Y={waterSurfaceY}");
+            }
+        }
 
         // 물 속 이동 속도 적용
         ApplyWaterSpeed();
@@ -165,10 +201,26 @@ public class PetWaterBehaviorController : PetControllerBase
 
     /// <summary>
     /// 물에서 나올 때의 처리
-    /// 이동 속도를 원래대로 복구합니다
+    /// 이동 속도를 원래대로 복구하고 NavMesh를 재활성화합니다
     /// </summary>
     private void OnExitWater()
     {
+        // NavMesh 에이전트 재활성화 및 위치 복구
+        if (petController.agent != null && !petController.agent.enabled && !petController.State.IsHolding)
+        {
+            // 지형에서 가장 가까운 NavMesh 위치 찾기
+            UnityEngine.AI.NavMeshHit hit;
+            Vector3 checkPos = petController.transform.position;
+            checkPos.y = positionBeforeWater.y;  // 원래 지형 높이 근처에서 검색
+            
+            if (UnityEngine.AI.NavMesh.SamplePosition(checkPos, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                petController.agent.enabled = true;
+                petController.agent.Warp(hit.position);
+                Debug.Log($"{petController.petName}: NavMesh 재활성화, 지형으로 복귀 Y={hit.position.y}");
+            }
+        }
+        
         // NavMesh 에이전트 속도 원상 복구
         if (petController.agent != null && !petController.State.IsGathering)
         {
@@ -217,12 +269,32 @@ public class PetWaterBehaviorController : PetControllerBase
     /// 다이빙 시퀀스 시작
     /// DivingActivity에서 호출하여 펫이 깊이 잠수하는 효과를 연출
     /// </summary>
-    public void StartDivingSequence()
+    public void StartDivingSequence(float surfaceY = -1f)
     {
         // 다이빙 상태 설정
         isDiving = true;
         divingStartTime = Time.time;
         divingDepth = petController.waterSinkDepth * 2.5f;  // 일반 수심의 2.5배 깊이로 다이빙
+
+        // 물 표면 높이 업데이트 (전달받은 경우)
+        if (surfaceY > -1f)
+        {
+            waterSurfaceY = surfaceY;
+        }
+        
+        // 루트를 물 표면으로 이동 (아직 물 속이 아닌 경우)
+        if (!isInWater && !petController.State.IsHolding)
+        {
+            Vector3 newPos = petController.transform.position;
+            newPos.y = waterSurfaceY;
+            petController.transform.position = newPos;
+            
+            // NavMesh 비활성화
+            if (petController.agent != null && petController.agent.enabled)
+            {
+                petController.agent.enabled = false;
+            }
+        }
 
         // 다이빙 시작 시 큰 물튀김 효과
         CreateDivingSplash();
@@ -236,7 +308,7 @@ public class PetWaterBehaviorController : PetControllerBase
         currentDepth = -divingDepth;
         petController.State.SetWaterDepthOffset(currentDepth);
 
-        Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}");
+        Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}, 수면: {waterSurfaceY}");
     }
 
     /// <summary>
