@@ -371,6 +371,18 @@ public class PetState
             beeAttackStartTime = Time.time;
             SetEmergencyState(beingAttacked: true);
         }
+        else
+        {
+            // 벌 공격이 끝났을 때
+            beeAttackSource = attackSource; // Vector3.zero로 설정될 수 있음
+            
+            // Emergency 상태에서 Idle로 전환 (탈진 상태가 아닌 경우에만)
+            if (currentStatus == PetStatus.Emergency && !isExhausted)
+            {
+                TrySetStatus(PetStatus.Idle);
+                PetDebug.Log($"벌 공격 종료 - Emergency → Idle 전환");
+            }
+        }
     }
     
     /// <summary>
