@@ -112,10 +112,34 @@ public class PetFeedingController : PetControllerBase
     // HandleMovementToTarget, EatFoodCoroutine 등은 그대로 유지합니다.
     private void DetectNearbyFeedingSources()
     {
-        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+        // NavMeshAgent 문제 해결 시도
+        if (petController.agent == null)
         {
-            Debug.LogWarning($"[Feeding] {petController.petName}: NavMeshAgent 문제로 먹이 탐색 불가");
+            Debug.LogWarning($"[Feeding] {petController.petName}: NavMeshAgent가 없어서 먹이 탐색 불가");
             return;
+        }
+        
+        // agent가 비활성화되어 있으면 활성화 시도
+        if (!petController.agent.enabled)
+        {
+            petController.agent.enabled = true;
+            Debug.Log($"[Feeding] {petController.petName}: NavMeshAgent 재활성화 시도");
+        }
+        
+        // NavMesh에 없으면 재배치 시도
+        if (!petController.agent.isOnNavMesh)
+        {
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(petController.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                petController.agent.Warp(hit.position);
+                Debug.Log($"[Feeding] {petController.petName}: NavMesh로 재배치 성공");
+            }
+            else
+            {
+                Debug.LogWarning($"[Feeding] {petController.petName}: NavMesh 재배치 실패 - 먹이 탐색 불가");
+                return;
+            }
         }
 
         Collider[] foodColliders = Physics.OverlapSphere(transform.position, detectionRadius, foodItemLayer);

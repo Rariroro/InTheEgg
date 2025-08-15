@@ -132,8 +132,8 @@ public class PetState
         // Emergency 상태는 항상 전환 가능 (최우선순위)
         if (to == PetStatus.Emergency) return true;
         
-        // Emergency 상태에서는 Idle로만 전환 가능
-        if (from == PetStatus.Emergency) return to == PetStatus.Idle;
+        // Emergency 상태에서는 Idle 또는 PlayerControl로 전환 가능
+        if (from == PetStatus.Emergency) return to == PetStatus.Idle || to == PetStatus.PlayerControl;
         
         // PlayerControl은 언제든 전환 가능 (플레이어 우선)
         if (to == PetStatus.PlayerControl) return true;

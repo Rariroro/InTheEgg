@@ -18,7 +18,7 @@ public class WaterZoneTrigger : MonoBehaviour
     {
         // 물 표면 Y 위치 저장
         waterSurfaceY = transform.position.y;
-        Debug.Log($"[WaterZoneTrigger] 물 표면 높이 설정: Y = {waterSurfaceY}");
+        // Debug.Log($"[WaterZoneTrigger] 물 표면 높이 설정: Y = {waterSurfaceY}");
         
         // Collider가 Trigger로 설정되어 있는지 확인
         Collider col = GetComponent<Collider>();

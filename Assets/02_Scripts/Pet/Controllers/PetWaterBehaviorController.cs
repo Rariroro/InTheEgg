@@ -116,7 +116,7 @@ public class PetWaterBehaviorController : PetControllerBase
             isInWater = true;
             petController.State.UpdateWaterState(true);
             OnEnterWater();  // 물 진입 처리
-            Debug.Log($"{petController.petName}: 물에 들어감 (Trigger) - 수면 높이: {waterSurfaceY}");
+            // Debug.Log($"{petController.petName}: 물에 들어감 (Trigger) - 수면 높이: {waterSurfaceY}");
         }
     }
     
@@ -146,7 +146,7 @@ public class PetWaterBehaviorController : PetControllerBase
             isInWater = false;
             petController.State.UpdateWaterState(false);
             OnExitWater();  // 물 탈출 처리
-            Debug.Log($"{petController.petName}: 물에서 나옴 (Trigger)");
+            // Debug.Log($"{petController.petName}: 물에서 나옴 (Trigger)");
         }
     }
 
@@ -177,7 +177,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 if (petController.agent.isOnNavMesh)
                 {
                     petController.agent.Warp(newPos);
-                    Debug.Log($"{petController.petName}: 물에 진입, NavMesh 활성 유지, 위치 Y={waterSurfaceY}");
+                    // Debug.Log($"{petController.petName}: 물에 진입, NavMesh 활성 유지, 위치 Y={waterSurfaceY}");
                 }
             }
         }
@@ -229,7 +229,7 @@ public class PetWaterBehaviorController : PetControllerBase
             {
                 petController.agent.enabled = true;
                 petController.agent.Warp(hit.position);
-                Debug.Log($"{petController.petName}: NavMesh 재활성화, 지형으로 복귀 Y={hit.position.y}");
+                // Debug.Log($"{petController.petName}: NavMesh 재활성화, 지형으로 복귀 Y={hit.position.y}");
             }
         }
         
@@ -274,7 +274,7 @@ public class PetWaterBehaviorController : PetControllerBase
     public void PrepareForDrop()
     {
         wasHolding = true;
-        Debug.Log($"{petController.petName}: 물 드롭 준비 완료");
+        // Debug.Log($"{petController.petName}: 물 드롭 준비 완료");
     }
 
     /// <summary>
@@ -320,7 +320,7 @@ public class PetWaterBehaviorController : PetControllerBase
         currentDepth = -divingDepth;
         petController.State.SetWaterDepthOffset(currentDepth);
 
-        Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}, 수면: {waterSurfaceY}");
+        // Debug.Log($"{petController.petName}: 다이빙 시퀀스 시작! 깊이: {divingDepth}, 수면: {waterSurfaceY}");
     }
 
     /// <summary>
@@ -398,7 +398,7 @@ public class PetWaterBehaviorController : PetControllerBase
             // 물 속 이동 속도 적용
             ApplyWaterSpeed();
 
-            Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
+            // Debug.Log($"{petController.petName}: 다이빙 물보라 효과 생성!");
         }
     }
 }
