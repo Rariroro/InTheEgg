@@ -225,21 +225,24 @@ public class PetFeedingController : PetControllerBase
 
     public void ValidateCurrentTargets()
     {
+        // 너무 멀리 있는 타겟만 검증 (300m 이상)
         if (targetFood != null)
         {
             float distance = Vector3.Distance(petController.transform.position, targetFood.transform.position);
-            if (distance > detectionRadius * 0.5f)
+            if (distance > 300f)
             {
                 targetFood = null;
+                // Debug.Log($"[Feeding] {petController.petName}: 타겟 음식이 너무 멀어서 검증 실패 (거리: {distance:F0}m)");
             }
         }
     
         if (targetFeedingArea != null)
         {
             float distance = Vector3.Distance(petController.transform.position, targetFeedingArea.transform.position);
-            if (distance > detectionRadius * 0.5f)
+            if (distance > 300f)
             {
                 targetFeedingArea = null;
+                // Debug.Log($"[Feeding] {petController.petName}: 타겟 피딩 에어리어가 너무 멀어서 검증 실패 (거리: {distance:F0}m)");
             }
         }
     }
@@ -256,10 +259,12 @@ public class PetFeedingController : PetControllerBase
             {
                 StartCoroutine(EatFoodCoroutine());
             }
-            else if (actualDistance > detectionRadius)
+            // 거리 체크 제거 - 탐색 시 이미 범위 내 음식만 찾으므로 불필요
+            // 너무 멀리 있는 경우만 체크 (300m 이상)
+            else if (actualDistance > 300f)
             {
                 targetFood = null;
-                DetectNearbyFeedingSources();
+                // Debug.Log($"[Feeding] {petController.petName}: 목표 음식이 너무 멀어서 취소 (거리: {actualDistance:F0}m)");
             }
         }
         else if (targetFeedingArea != null)
@@ -270,10 +275,12 @@ public class PetFeedingController : PetControllerBase
             {
                 StartCoroutine(EatAtAreaCoroutine());
             }
-            else if (actualDistance > detectionRadius)
+            // 거리 체크 제거 - 탐색 시 이미 범위 내 음식만 찾으므로 불필요
+            // 너무 멀리 있는 경우만 체크 (300m 이상)
+            else if (actualDistance > 300f)
             {
                 targetFeedingArea = null;
-                DetectNearbyFeedingSources();
+                // Debug.Log($"[Feeding] {petController.petName}: 목표 피딩 에어리어가 너무 멀어서 취소 (거리: {actualDistance:F0}m)");
             }
         }
     }
