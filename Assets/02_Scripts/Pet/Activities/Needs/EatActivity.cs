@@ -11,7 +11,18 @@ public class EatActivity : PetActivityAdapter
     // 음식을 찾지 못했을 때의 광역 배회 로직을 위한 변수
     private float searchTimer = 0f;
     private const float WIDE_WANDER_INTERVAL = 5.0f; // 5초마다 새로운 목적지 탐색
-    private const float FOOD_SEARCH_RADIUS = 150f;   // 음식 탐색 시 배회 반경
+    
+    // 점진적 탐색 범위 시스템
+    private int searchFailureCount = 0; // 탐색 실패 횟수
+    private const float BASE_SEARCH_RADIUS = 50f;    // 기본 탐색 반경
+    private const float RADIUS_INCREMENT = 25f;      // 실패 시 증가량
+    private const float MAX_SEARCH_RADIUS = 200f;    // 최대 탐색 반경
+    private const float HUNGRY_BONUS_RADIUS = 50f;   // 매우 배고플 때 추가 반경
+    
+    // 배회 상태 관리
+    private bool isWandering = false;
+    private Vector3 currentWanderTarget;
+    private const float ARRIVAL_DISTANCE = 3f; // 목적지 도착 판정 거리
     
     public override string Name => "Eat";
     public override bool IsInterruptible => false; // 식사 중에는 중단 불가
@@ -65,11 +76,22 @@ public class EatActivity : PetActivityAdapter
     {
         // Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 시작 (배고픔: {pet.Needs.Hunger:F1})");
         searchTimer = 0f;
+        isWandering = false;
+        searchFailureCount = 0; // 탐색 실패 횟수 초기화
         
-        // 즉시 음식 탐색 시작
-        if (!feedingController.TryStartFeedingSequence())
+        // 초기 탐색 범위로 음식 탐색 시작
+        float initialRadius = CalculateSearchRadius();
+        if (!feedingController.TryStartFeedingSequence(initialRadius))
         {
-            // Debug.Log($"[EatActivity] {pet.petName}: 주변에 음식이 없습니다. 광역 탐색을 시작합니다.");
+            // Debug.Log($"[EatActivity] {pet.petName}: 주변 {initialRadius:F0}m에 음식이 없습니다. 광역 탐색을 시작합니다.");
+            searchFailureCount++;
+            // 음식을 못 찾으면 즉시 배회 시작
+            WanderToFindFood();
+        }
+        else
+        {
+            // 음식을 찾으면 실패 횟수 리셋
+            searchFailureCount = 0;
         }
     }
     
@@ -79,7 +101,25 @@ public class EatActivity : PetActivityAdapter
         if (feedingController.IsEatingOrSeeking())
         {
             feedingController.UpdateMovementToFood();
+            isWandering = false; // 음식을 찾았으므로 배회 중단
             return;
+        }
+        
+        // 배회 중인 경우 목적지 도착 체크
+        if (isWandering)
+        {
+            // 목적지에 도착했는지 확인
+            if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+            {
+                float distanceToTarget = Vector3.Distance(pet.transform.position, currentWanderTarget);
+                
+                // 목적지 도착 또는 경로 없음
+                if (distanceToTarget < ARRIVAL_DISTANCE || !pet.agent.hasPath || pet.agent.remainingDistance < ARRIVAL_DISTANCE)
+                {
+                    // 새로운 목적지 설정
+                    WanderToFindFood();
+                }
+            }
         }
             
         // 광역 탐색 타이머 업데이트
@@ -90,10 +130,23 @@ public class EatActivity : PetActivityAdapter
         {
             searchTimer = 0f;
             
-            if (!feedingController.TryStartFeedingSequence())
+            // 점진적으로 늘어난 범위로 재탐색
+            float currentRadius = CalculateSearchRadius();
+            if (!feedingController.TryStartFeedingSequence(currentRadius))
             {
-                // 여전히 음식을 찾지 못했다면 광역 배회
-                WanderToFindFood();
+                searchFailureCount++; // 실패 횟수 증가
+                // Debug.Log($"[EatActivity] {pet.petName}: 탐색 실패 {searchFailureCount}회, 현재 범위: {currentRadius:F0}m");
+                
+                // 여전히 음식을 찾지 못했다면 계속 배회
+                if (!isWandering)
+                {
+                    WanderToFindFood();
+                }
+            }
+            else
+            {
+                // 음식을 찾으면 실패 횟수 리셋
+                searchFailureCount = 0;
             }
         }
     }
@@ -103,6 +156,7 @@ public class EatActivity : PetActivityAdapter
         // Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 종료");
         // 먹이 찾기 중단
         feedingController.CancelFeeding();
+        isWandering = false;
     }
     
     /// <summary>
@@ -113,14 +167,35 @@ public class EatActivity : PetActivityAdapter
         if (pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
             return;
             
-        // 더 넓은 범위로 랜덤 목적지 설정
-        Vector3 randomDirection = Random.insideUnitSphere * FOOD_SEARCH_RADIUS;
+        // 현재 탐색 범위에 맞춰 랜덤 목적지 설정
+        float currentRadius = CalculateSearchRadius();
+        Vector3 randomDirection = Random.insideUnitSphere * currentRadius;
         randomDirection += pet.transform.position;
         
-        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out UnityEngine.AI.NavMeshHit hit, FOOD_SEARCH_RADIUS, UnityEngine.AI.NavMesh.AllAreas))
+        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out UnityEngine.AI.NavMeshHit hit, currentRadius, UnityEngine.AI.NavMesh.AllAreas))
         {
-            pet.agent.SetDestination(hit.position);
-            // Debug.Log($"[EatActivity] {pet.petName}: 음식을 찾기 위해 새로운 위치로 이동합니다.");
+            currentWanderTarget = hit.position;
+            pet.agent.SetDestination(currentWanderTarget);
+            isWandering = true;
+            // Debug.Log($"[EatActivity] {pet.petName}: 음식을 찾기 위해 새로운 위치로 이동합니다. 범위: {currentRadius:F0}m");
         }
+    }
+    
+    /// <summary>
+    /// 현재 탐색 범위를 계산합니다.
+    /// </summary>
+    private float CalculateSearchRadius()
+    {
+        // 기본 범위 + (실패 횟수 * 증가량)
+        float radius = BASE_SEARCH_RADIUS + (searchFailureCount * RADIUS_INCREMENT);
+        
+        // 매우 배고플 때 추가 범위
+        if (pet.Needs.Hunger >= 80f)
+        {
+            radius += HUNGRY_BONUS_RADIUS;
+        }
+        
+        // 최대 범위 제한
+        return Mathf.Min(radius, MAX_SEARCH_RADIUS + (pet.Needs.Hunger >= 80f ? HUNGRY_BONUS_RADIUS : 0));
     }
 }

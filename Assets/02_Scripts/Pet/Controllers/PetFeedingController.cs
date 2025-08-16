@@ -42,7 +42,7 @@ public class PetFeedingController : PetControllerBase
     /// <summary>
     /// ★★★ 수정된 메서드: 먹을 것을 찾아 이동을 시작하고, 탐색 성공 여부를 반환합니다.
     /// </summary>
-    public bool TryStartFeedingSequence()
+    public bool TryStartFeedingSequence(float customRadius = -1f)
     {
         if (petController.State.IsInteracting || petController.State.IsGathering || isEating || petController.State.IsHolding ||
             petController.State.IsSelected || // 터치된 상태에서는 먹이 찾기 중단
@@ -57,7 +57,9 @@ public class PetFeedingController : PetControllerBase
             return true;
         }
         
-        DetectNearbyFeedingSources();
+        // 커스텀 반경이 제공되면 사용, 아니면 기본값 사용
+        float searchRadius = customRadius > 0 ? customRadius : detectionRadius;
+        DetectNearbyFeedingSources(searchRadius);
 
         // ★★★ 추가: 추적 관련 변수 초기화 ★★★
         if (targetFood != null)
@@ -110,7 +112,7 @@ public class PetFeedingController : PetControllerBase
     // ... (이하 다른 메서드들은 수정할 필요 없음) ...
     // DetectNearbyFeedingSources, FindClosestMatchingFood, ValidateCurrentTargets, 
     // HandleMovementToTarget, EatFoodCoroutine 등은 그대로 유지합니다.
-    private void DetectNearbyFeedingSources()
+    private void DetectNearbyFeedingSources(float searchRadius = -1f)
     {
         // NavMeshAgent 문제 해결 시도
         if (petController.agent == null)
@@ -142,8 +144,11 @@ public class PetFeedingController : PetControllerBase
             }
         }
 
-        Collider[] foodColliders = Physics.OverlapSphere(transform.position, detectionRadius, foodItemLayer);
-        Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {detectionRadius}m)");
+        // 탐색 반경 결정
+        float radius = searchRadius > 0 ? searchRadius : detectionRadius;
+        
+        Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, foodItemLayer);
+        Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {radius}m)");
         GameObject nearestFood = FindClosestMatchingFood(foodColliders);
 
         if (nearestFood != null)
@@ -156,8 +161,8 @@ public class PetFeedingController : PetControllerBase
             return;
         }
         
-        Collider[] areaColliders = Physics.OverlapSphere(transform.position, detectionRadius, feedingAreaLayer);
-        Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {detectionRadius}m)");
+        Collider[] areaColliders = Physics.OverlapSphere(transform.position, radius, feedingAreaLayer);
+        Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {radius}m)");
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
 
         if (nearestArea != null)

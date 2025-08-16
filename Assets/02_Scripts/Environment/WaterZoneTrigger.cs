@@ -35,7 +35,8 @@ public class WaterZoneTrigger : MonoBehaviour
             tag = "Water";
         }
     }
-    
+
+
     private void OnTriggerEnter(Collider other)
     {
         // 펫인지 확인
