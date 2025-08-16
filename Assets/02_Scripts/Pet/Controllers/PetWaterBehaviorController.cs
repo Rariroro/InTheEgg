@@ -175,8 +175,12 @@ public class PetWaterBehaviorController : PetControllerBase
         // 현재 위치 저장 (나중에 복구용)
         positionBeforeWater = petController.transform.position;
         
-        // 루트 오브젝트를 물 표면 높이로 조정
-        if (!petController.State.IsHolding)
+        // 먹이를 찾아가는 중이면 Y 위치 변경 스킵 (경로 유지를 위해)
+        var feedingController = petController.GetComponent<PetFeedingController>();
+        bool isSeekingFood = feedingController != null && feedingController.IsEatingOrSeeking();
+        
+        // 루트 오브젝트를 물 표면 높이로 조정 (먹이 찾기 중이 아닐 때만)
+        if (!petController.State.IsHolding && !isSeekingFood)
         {
             Vector3 newPos = petController.transform.position;
             newPos.y = waterSurfaceY;
@@ -193,6 +197,11 @@ public class PetWaterBehaviorController : PetControllerBase
                     // Debug.Log($"{petController.petName}: 물에 진입, NavMesh 활성 유지, 위치 Y={waterSurfaceY}");
                 }
             }
+        }
+        else if (isSeekingFood)
+        {
+            // 먹이 찾기 중일 때는 NavMesh 경로 유지, 속도만 조정
+            Debug.Log($"[WaterBehavior] {petController.petName}: 먹이 찾기 중 - Y 위치 변경 스킵, 경로 유지");
         }
 
         // 물 속 이동 속도 적용
