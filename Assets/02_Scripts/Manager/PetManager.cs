@@ -260,8 +260,9 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
             
-            // NavMeshIgnore 레이어도 포함하여 Raycast
-            int layerMask = ~0; // 모든 레이어
+            // Ignore Raycast 레이어를 제외한 모든 레이어와 충돌 검사
+            // (PreferredZone 등 무시해야 할 오브젝트 제외)
+            int layerMask = ~LayerMask.GetMask("Ignore Raycast");
             
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {

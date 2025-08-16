@@ -140,9 +140,9 @@ public class PetInputController : PetControllerBase
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // Water 레이어를 제외한 모든 레이어와 충돌 검사
-            // (물 속에서도 펫을 선택할 수 있도록)
-            int layerMask = ~LayerMask.GetMask("Water");
+            // Water와 Ignore Raycast 레이어를 제외한 모든 레이어와 충돌 검사
+            // (물 속에서도 펫을 선택할 수 있도록, PreferredZone 등은 무시)
+            int layerMask = ~(LayerMask.GetMask("Water") | LayerMask.GetMask("Ignore Raycast"));
 
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
             {

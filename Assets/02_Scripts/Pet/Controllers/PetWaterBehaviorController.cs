@@ -38,12 +38,25 @@ public class PetWaterBehaviorController : PetControllerBase
             int waterArea = NavMesh.GetAreaFromName("Water");
             if (waterArea != -1)
             {
-                // 수생 펫은 물 영역을 쉽게 통과(1f), 
-                // 육상 펫은 회피하도록 높은 비용(30f) 설정
-                petController.agent.SetAreaCost(
-                    waterArea,
-                    petController.habitat == PetAIProperties.Habitat.Water ? 1f : 30f
-                );
+                // 물 영역 비용 설정
+                float waterCost = 30f; // 기본값: 육지 펫은 물 회피
+                
+                if (petController.habitat == PetAIProperties.Habitat.Water)
+                {
+                    waterCost = 1f; // 물속성 펫: 물 선호
+                }
+                else if ((petController.diet & PetTraits.DietaryFlags.Fish) != 0)
+                {
+                    waterCost = 2f; // 생선 먹는 육지 펫: 육지와 동일한 비용
+                }
+                
+                petController.agent.SetAreaCost(waterArea, waterCost);
+                
+                // 디버그 로그로 설정된 비용 확인
+                Debug.Log($"[WaterBehavior] {petController.petName} - Water Area Cost: {waterCost}, " +
+                          $"Habitat: {petController.habitat}, " +
+                          $"Diet: {petController.diet}, " +
+                          $"Eats Fish: {(petController.diet & PetTraits.DietaryFlags.Fish) != 0}");
             }
         }
     }

@@ -40,6 +40,20 @@ public class PreferredZone : MonoBehaviour
     [Range(1f, 3f)]
     public float behaviorDurationMultiplier = 1.5f;
     
+    void Awake()
+    {
+        // PreferredZone 오브젝트를 자동으로 Ignore Raycast 레이어로 설정
+        // 이렇게 하면 펫 선택 등의 Raycast가 이 오브젝트에 막히지 않습니다
+        gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+        
+        // Box Collider가 있는 경우 Trigger로 설정
+        BoxCollider boxCollider = GetComponent<BoxCollider>();
+        if (boxCollider != null)
+        {
+            boxCollider.isTrigger = true;
+        }
+    }
+    
     /// <summary>
     /// 주어진 펫이 이 구역을 선호하는지 확인
     /// </summary>
