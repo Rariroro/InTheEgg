@@ -24,8 +24,11 @@ public class EatActivity : PetActivityAdapter
     private Vector3 currentWanderTarget;
     private const float ARRIVAL_DISTANCE = 3f; // 목적지 도착 판정 거리
     
+    // 꿀 먹기 관련 추가 변수
+    private bool isEatingHoney = false;
+    
     public override string Name => "Eat";
-    public override bool IsInterruptible => false; // 식사 중에는 중단 불가
+    public override bool IsInterruptible => !isEatingHoney; // 꿀을 먹는 중에만 중단 불가
     
     public EatActivity(PetController petController, PetFeedingController feeding) : base(petController)
     {
@@ -100,6 +103,21 @@ public class EatActivity : PetActivityAdapter
         // 이미 먹고 있거나 음식을 향해 이동 중이라면 업데이트
         if (feedingController.IsEatingOrSeeking())
         {
+            // 벌 공격을 받고 있고 꿀을 먹는 중인지 확인
+            if (pet.State.IsBeingAttacked && !isEatingHoney)
+            {
+                // 꿀을 먹기 시작했다면 중단 불가능 상태로 설정
+                isEatingHoney = true;
+                Debug.Log($"[EatActivity] {pet.petName}: 꿀을 먹는 중이므로 중단 불가능 상태로 설정");
+            }
+            
+            // 배고픔이 해소되었는지 확인 (꿀 먹기 완료)
+            if (isEatingHoney && pet.Needs.Hunger < 70f)
+            {
+                isEatingHoney = false;
+                Debug.Log($"[EatActivity] {pet.petName}: 꿀 먹기 완료, 이제 도망갈 수 있음");
+            }
+            
             feedingController.UpdateMovementToFood();
             isWandering = false; // 음식을 찾았으므로 배회 중단
             return;
@@ -157,6 +175,7 @@ public class EatActivity : PetActivityAdapter
         // 먹이 찾기 중단
         feedingController.CancelFeeding();
         isWandering = false;
+        isEatingHoney = false; // 꿀 먹기 상태 초기화
     }
     
     /// <summary>

@@ -109,6 +109,20 @@ public class PetAI : MonoBehaviour
         // 현재 활동과 다르면 전환
         if (bestActivity != currentActivity)
         {
+            // 현재 활동이 중단 불가능한 상태인지 확인
+            if (currentActivity != null && !currentActivity.IsInterruptible)
+            {
+                // 긴급 상황(우선순위 50 이상)이 아니면 전환하지 않음
+                if (highestPriority < 50f)
+                {
+                    // Debug.Log($"[PetAI] {petController.petName}: 현재 활동({currentActivity.Name})이 중단 불가능하여 전환 취소");
+                    return;
+                }
+                
+                // 긴급 상황이면 강제 전환 허용
+                Debug.Log($"[PetAI] {petController.petName}: 긴급 상황(우선순위 {highestPriority:F1})으로 {currentActivity.Name}에서 {bestActivity?.Name ?? "None"}으로 강제 전환");
+            }
+            
             // 현재 활동 중단
             if (currentActivity != null)
             {
