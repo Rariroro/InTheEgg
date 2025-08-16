@@ -63,6 +63,7 @@ public class PetAI : MonoBehaviour
         
         // Environment Activities
         availableActivities.Add(new EnvironmentGatherActivity(petController));
+        availableActivities.Add(new ButterflyPlayActivity(petController));
         
         // PetDebug.Log($"{petController.petName}: {availableActivities.Count}개의 활동 등록 완료", this);
     }
