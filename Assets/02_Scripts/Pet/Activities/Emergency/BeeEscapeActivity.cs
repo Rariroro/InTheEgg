@@ -19,6 +19,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     
     public override string Name => "BeeEscape";
     public override bool IsInterruptible => false; // 벌 도망은 중단 불가
+    public override bool IsComplete => !isEscaping; // 도망이 끝나면 완료
     
     public BeeEscapeActivity(PetController petController) : base(petController)
     {

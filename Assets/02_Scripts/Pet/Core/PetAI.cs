@@ -89,6 +89,14 @@ public class PetAI : MonoBehaviour
         if (petState?.IsHolding == true)
             return;
             
+        // 현재 활동이 완료되었는지 확인
+        if (currentActivity != null && currentActivity.IsComplete)
+        {
+            Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 활동이 완료되어 종료");
+            currentActivity.Stop();
+            currentActivity = null;
+        }
+            
         // 가장 우선순위가 높은 활동 찾기
         IPetActivity bestActivity = null;
         float highestPriority = 0f;
