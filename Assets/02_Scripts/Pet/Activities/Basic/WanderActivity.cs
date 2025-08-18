@@ -284,12 +284,26 @@ public class WanderActivity : PetActivityAdapter
                 break;
                 
             case BehaviorState.Walking:
-                SafeSetAgentMovement(pet.baseSpeed * personalityBehavior.speedMultiplier, false);
+                // 성향별 속도 조정
+                float walkSpeed = pet.baseSpeed * personalityBehavior.speedMultiplier;
+                if (pet.personality == PetAIProperties.Personality.Lazy)
+                    walkSpeed *= 0.8f; // 게으른 펫은 더 천천히
+                else if (pet.personality == PetAIProperties.Personality.Brave)
+                    walkSpeed *= 1.1f; // 용감한 펫은 더 빠르게
+                    
+                SafeSetAgentMovement(walkSpeed, false);
                 SetRandomDestination();
                 break;
                 
             case BehaviorState.Running:
-                SafeSetAgentMovement(pet.baseSpeed * personalityBehavior.speedMultiplier * 1.5f, false);
+                // 성향별 달리기 속도 조정
+                float runSpeed = pet.baseSpeed * personalityBehavior.speedMultiplier * 1.5f;
+                if (pet.personality == PetAIProperties.Personality.Shy)
+                    runSpeed *= 1.2f; // 수줍은 펫은 도망갈 때 더 빠르게
+                else if (pet.personality == PetAIProperties.Personality.Playful)
+                    runSpeed *= 1.3f; // 장난기 많은 펫은 뛸 때 더 신나게
+                    
+                SafeSetAgentMovement(runSpeed, false);
                 SetRandomDestination();
                 break;
                 
@@ -380,36 +394,167 @@ public class WanderActivity : PetActivityAdapter
         }
         else
         {
-            // 선호 구역이 있고 70% 확률로 선호 구역 방향으로 이동
-            if (currentPreferredZone != null && Random.value < 0.7f)
-            {
-                Vector3 targetPosition;
-                
-                if (IsInPreferredZone())
+            // 성향별 이동 패턴 적용
+            ApplyPersonalityMovementPattern();
+        }
+    }
+    
+    /// <summary>
+    /// 성향별로 차별화된 이동 패턴을 적용합니다.
+    /// </summary>
+    private void ApplyPersonalityMovementPattern()
+    {
+        float searchRadius = 50f; // 기본 탐색 반경
+        Vector3 targetPosition = Vector3.zero;
+        bool useSpecialPattern = false;
+        
+        switch (pet.personality)
+        {
+            case PetAIProperties.Personality.Lazy:
+                // 게으른 펫: 짧은 거리, 30% 확률로 제자리 멈춤
+                if (Random.value < 0.3f)
                 {
-                    // 이미 구역 안에 있으면 구역 내 랜덤 위치로
-                    targetPosition = currentPreferredZone.GetRandomPositionInZone();
+                    // 제자리에 멈춤
+                    pet.agent.ResetPath();
+                    pet.agent.isStopped = true;
+                    return;
+                }
+                searchRadius *= 0.5f; // 이동 거리 50% 감소
+                break;
+                
+            case PetAIProperties.Personality.Shy:
+                // 수줍은 펫: 다른 펫 회피, 구석 선호
+                PetController nearestPet = FindNearestOtherPet(15f);
+                if (nearestPet != null)
+                {
+                    // 가장 가까운 펫과 반대 방향으로 이동
+                    Vector3 awayDirection = (pet.transform.position - nearestPet.transform.position).normalized;
+                    targetPosition = pet.transform.position + awayDirection * searchRadius * 0.7f;
+                    useSpecialPattern = true;
                 }
                 else
                 {
-                    // 구역 밖에 있으면 구역 방향으로 이동
-                    Vector3 directionToZone = (currentPreferredZone.transform.position - pet.transform.position).normalized;
-                    float distance = Random.Range(5f, 10f);
-                    targetPosition = pet.transform.position + directionToZone * distance;
+                    searchRadius *= 0.7f; // 일반적으로 짧은 거리 이동
                 }
+                break;
                 
-                // NavMesh 상의 유효한 위치 찾기
-                UnityEngine.AI.NavMeshHit hit;
-                if (UnityEngine.AI.NavMesh.SamplePosition(targetPosition, out hit, 10f, UnityEngine.AI.NavMesh.AllAreas))
+            case PetAIProperties.Personality.Brave:
+                // 용감한 펫: 긴 거리, 직선 이동 선호
+                searchRadius *= 1.5f; // 이동 거리 150%
+                
+                // 현재 진행 방향으로 계속 직진 (50% 확률)
+                if (Random.value < 0.5f && pet.agent.hasPath)
                 {
-                    pet.agent.SetDestination(hit.position);
-                    // Debug.Log($"{pet.petName}: 선호 구역({currentPreferredZone.habitatType}) 방향으로 이동");
-                    return;
+                    Vector3 currentDirection = pet.agent.velocity.normalized;
+                    if (currentDirection.magnitude > 0.1f)
+                    {
+                        targetPosition = pet.transform.position + currentDirection * searchRadius;
+                        useSpecialPattern = true;
+                    }
                 }
+                break;
+                
+            case PetAIProperties.Personality.Playful:
+                // 장난기 많은 펫: 지그재그, 예측 불가능한 움직임
+                if (Random.value < 0.4f)
+                {
+                    // 지그재그 패턴 생성
+                    float angle = Random.Range(-60f, 60f);
+                    Vector3 forward = pet.transform.forward;
+                    Vector3 zigzagDirection = Quaternion.Euler(0, angle, 0) * forward;
+                    targetPosition = pet.transform.position + zigzagDirection * searchRadius * 0.8f;
+                    useSpecialPattern = true;
+                    
+                    // 20% 확률로 이동 중 점프 예약
+                    if (Random.value < 0.2f)
+                    {
+                        pet.StartCoroutine(DelayedJumpDuringMovement());
+                    }
+                }
+                break;
+        }
+        
+        // 특별한 패턴을 사용하는 경우
+        if (useSpecialPattern && targetPosition != Vector3.zero)
+        {
+            if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, searchRadius, NavMesh.AllAreas))
+            {
+                pet.agent.SetDestination(hit.position);
+                var anim = pet.GetComponent<PetAnimationController>();
+                anim?.SetContinuousAnimation(currentBehaviorState == BehaviorState.Running ? 
+                    PetAnimationController.PetAnimationType.Run : 
+                    PetAnimationController.PetAnimationType.Walk);
+                return;
+            }
+        }
+        
+        // 선호 구역 로직 (기존 코드 유지)
+        if (currentPreferredZone != null && Random.value < 0.7f)
+        {
+            if (IsInPreferredZone())
+            {
+                targetPosition = currentPreferredZone.GetRandomPositionInZone();
+            }
+            else
+            {
+                Vector3 directionToZone = (currentPreferredZone.transform.position - pet.transform.position).normalized;
+                float distance = Random.Range(5f, 10f);
+                targetPosition = pet.transform.position + directionToZone * distance;
             }
             
-            // 기본 랜덤 이동
-            moveController?.SetRandomDestination();
+            if (NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, 10f, NavMesh.AllAreas))
+            {
+                pet.agent.SetDestination(hit.position);
+                return;
+            }
+        }
+        
+        // 기본 랜덤 이동 (성향별 searchRadius 적용)
+        if (moveController != null)
+        {
+            moveController.SetRandomDestination(searchRadius);
+        }
+    }
+    
+    /// <summary>
+    /// 가장 가까운 다른 펫을 찾습니다.
+    /// </summary>
+    private PetController FindNearestOtherPet(float maxDistance)
+    {
+        PetController[] allPets = GameObject.FindObjectsOfType<PetController>();
+        PetController nearest = null;
+        float nearestDistance = maxDistance;
+        
+        foreach (var otherPet in allPets)
+        {
+            if (otherPet == pet) continue;
+            
+            float distance = Vector3.Distance(pet.transform.position, otherPet.transform.position);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = otherPet;
+            }
+        }
+        
+        return nearest;
+    }
+    
+    /// <summary>
+    /// 이동 중 점프를 수행합니다 (Playful 성향용).
+    /// </summary>
+    private IEnumerator DelayedJumpDuringMovement()
+    {
+        yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
+        
+        if (pet.agent != null && pet.agent.hasPath && !pet.agent.isStopped)
+        {
+            var anim = pet.GetComponent<PetAnimationController>();
+            if (anim != null)
+            {
+                yield return pet.StartCoroutine(anim.PlayAnimationWithCustomDuration(
+                    PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+            }
         }
     }
     

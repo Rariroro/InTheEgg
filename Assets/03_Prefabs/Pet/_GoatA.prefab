@@ -52,7 +52,7 @@ MonoBehaviour:
   profile:
     name: Buddy
     type: 22
-    personality: 1
+    personality: 0
     diet: 4
     habitat: 3
     treeClimbChance: 0.1
@@ -91,8 +91,6 @@ MonoBehaviour:
     isInWater: 0
     isExhausted: 0
     isBeingAttacked: 0
-    isGathering: 0
-    isGathered: 0
     isAnimationLocked: 0
     isActionLocked: 0
     isAttractedToEnvironment: 0
