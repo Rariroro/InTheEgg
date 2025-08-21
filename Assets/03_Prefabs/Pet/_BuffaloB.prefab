@@ -55,6 +55,7 @@ MonoBehaviour:
     personality: 1
     diet: 4
     habitat: 2
+    size: 1
     treeClimbChance: 0.1
     waterSinkDepth: 1
   movement:

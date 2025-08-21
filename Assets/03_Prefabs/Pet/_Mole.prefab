@@ -86,6 +86,7 @@ MonoBehaviour:
     personality: 0
     diet: 16
     habitat: 2
+    size: 0
     treeClimbChance: 0.1
     waterSinkDepth: 0.4
   movement:

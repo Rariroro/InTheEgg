@@ -58,13 +58,16 @@ public abstract class BasePetInteraction : MonoBehaviour
         // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
         // Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
+        // 펫 크기에 따른 거리 조정
+        float adjustedDistance = CalculateAdjustedDistance(pet1, pet2);
+        
         // 펫들이 서로 마주볼 위치 계산
         Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
         if (direction == Vector3.zero) direction = pet1.transform.forward; // 위치가 겹쳤을 경우를 대비
         Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
 
-        Vector3 pet1TargetPos = midpoint - direction * (interactionStartDistance / 2f);
-        Vector3 pet2TargetPos = midpoint + direction * (interactionStartDistance / 2f);
+        Vector3 pet1TargetPos = midpoint - direction * (adjustedDistance / 2f);
+        Vector3 pet2TargetPos = midpoint + direction * (adjustedDistance / 2f);
 
         pet1TargetPos = FindValidPositionOnNavMesh(pet1TargetPos);
         pet2TargetPos = FindValidPositionOnNavMesh(pet2TargetPos);
@@ -342,6 +345,26 @@ public abstract class BasePetInteraction : MonoBehaviour
             return navHit.position;
         }
         return targetPosition; // 유효한 위치를 찾지 못하면 원래 위치 반환
+    }
+    
+    /// <summary>
+    /// 두 펫의 크기를 고려하여 조정된 상호작용 거리를 계산
+    /// </summary>
+    private float CalculateAdjustedDistance(PetController pet1, PetController pet2)
+    {
+        // 각 펫의 크기 배율 가져오기
+        float multiplier1 = pet1.Profile.GetInteractionDistanceMultiplier();
+        float multiplier2 = pet2.Profile.GetInteractionDistanceMultiplier();
+        
+        // 두 펫의 평균 배율 계산
+        float averageMultiplier = (multiplier1 + multiplier2) / 2f;
+        
+        // 기본 거리에 평균 배율 적용
+        float adjustedDistance = interactionStartDistance * averageMultiplier;
+        
+        // Debug.Log($"[{InteractionName}] 크기 조정 거리: {pet1.petName}({pet1.Profile.size}) & {pet2.petName}({pet2.Profile.size}) = {adjustedDistance:F1}m (기본: {interactionStartDistance}m)");
+        
+        return adjustedDistance;
     }
 
     // ====== 추가된 공통 행동 메서드들 ======

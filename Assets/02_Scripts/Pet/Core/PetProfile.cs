@@ -28,6 +28,10 @@ public class PetProfile
     [Tooltip("펫의 주요 서식지")]
     public PetTraits.Habitat habitat = PetTraits.Habitat.Forest;
     
+    [Header("펫 크기")]
+    [Tooltip("펫의 크기 분류 (CapsuleCollider radius 기준)")]
+    public PetTraits.Size size = PetTraits.Size.Medium;
+    
     [Header("특수 행동 설정")]
     [Tooltip("서식지가 'Tree'인 펫이 평소에 나무에 오를 확률 (0.0 ~ 1.0)")]
     [Range(0f, 1f)]
@@ -62,6 +66,24 @@ public class PetProfile
     /// 나무 서식지 펫인지 확인
     /// </summary>
     public bool IsArboreal => habitat == PetTraits.Habitat.Tree;
+    
+    /// <summary>
+    /// 크기에 따른 상호작용 거리 배율 반환
+    /// </summary>
+    public float GetInteractionDistanceMultiplier()
+    {
+        switch (size)
+        {
+            case PetTraits.Size.Small:
+                return 0.6f;  // 기본 거리의 60%
+            case PetTraits.Size.Medium:
+                return 1.0f;  // 기본 거리 100%
+            case PetTraits.Size.Large:
+                return 1.5f;  // 기본 거리의 150%
+            default:
+                return 1.0f;
+        }
+    }
 }
 
 // PetType enum은 PetInteractionManager.cs에 이미 정의되어 있음

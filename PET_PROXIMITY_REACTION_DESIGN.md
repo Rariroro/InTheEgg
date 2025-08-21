@@ -123,7 +123,57 @@ Playful의 갑작스런 접근 → Shy 놀라서 숨음 → Playful이 찾기 �
 - **추격전 시도**: Run (2) + 타겟 추적
 - **신나는 움직임**: Jump (3) 연속 재생
 
+## 반응 우선순위 규칙
+
+### 반응 시작 우선순위
+1. **성격 기반 우선순위**
+   - Playful > Brave > Shy > Lazy
+   - 더 활발한 성격이 먼저 반응 시작
+
+2. **여러 펫 감지 시 선택 기준**
+   - 가장 가까운 펫 우선
+   - 같은 거리일 경우 성격 상성이 좋은 펫 선택
+   - 이미 반응 중인 펫은 제외
+
+3. **반응 중단 조건**
+   - 플레이어 터치/홀드 (즉시 중단)
+   - 중요 Activity 시작 (Eat, Sleep 등)
+   - 펫 간 거리가 8m 이상 벌어짐
+   - 반응 시간 초과 (5초)
+
+### 크기별 특수 처리
+```csharp
+// PetTraits.Size 기반 거리 조정
+Small + Small: 기본 거리 * 0.7
+Small + Large: 기본 거리 * 1.2  
+Large + Large: 기본 거리 * 1.5
+
+// 크기 차이별 반응 변화
+코끼리 + 쥐: 코끼리는 천천히 조심스럽게, 쥐는 더 빠르게
+기린 + 토끼: 기린은 고개 숙이기, 토끼는 올려다보기
+```
+
 ## 구현 상세
+
+### ReactionPattern 데이터 구조
+```csharp
+public class ReactionPattern
+{
+    public float approachSpeed;        // 접근 속도 배율
+    public float reactionDuration;     // 반응 지속 시간
+    public PetAnimationType[] animationSequence;  // 애니메이션 시퀀스
+    public MovementType movementType;  // 이동 패턴 (직선, 원형, 뒷걸음 등)
+}
+
+public enum MovementType
+{
+    Direct,      // 직선 이동
+    Circle,      // 원형 이동
+    Backward,    // 뒷걸음
+    Stop,        // 정지
+    Escape       // 도망
+}
+```
 
 ### ProximityReactionActivity 구조
 ```csharp
@@ -131,6 +181,7 @@ public class ProximityReactionActivity : PetActivityAdapter
 {
     // 감지된 근처 펫
     private PetController nearbyPet;
+    private PetProximityDetector detector;
     
     // 반응 패턴 캐시
     private static Dictionary<(Personality, Personality), ReactionPattern> patternCache;
@@ -140,9 +191,10 @@ public class ProximityReactionActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 1. 근처에 펫이 있는지
-        // 2. 쿨다운 체크
-        // 3. 다른 활동 중이 아닌지
+        // 1. detector.NearbyPets에서 가장 가까운 펫 선택
+        // 2. 쿨다운 체크 (pairCooldowns)
+        // 3. 다른 중요 활동 중이 아닌지 확인
+        return nearbyPet != null && !IsInCooldown(nearbyPet);
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -152,7 +204,11 @@ public class ProximityReactionActivity : PetActivityAdapter
     
     private IEnumerator PerformReaction(Personality myPersonality, Personality otherPersonality)
     {
-        // 16가지 패턴 중 선택 실행
+        // 캐시에서 패턴 가져오기
+        var pattern = GetReactionPattern(myPersonality, otherPersonality);
+        
+        // 패턴에 따라 애니메이션과 이동 실행
+        yield return ExecutePattern(pattern);
     }
 }
 ```
@@ -164,6 +220,10 @@ public class PetProximityDetector : MonoBehaviour
     private SphereCollider proximityCollider;
     private List<PetController> nearbyPets = new List<PetController>();
     
+    public IReadOnlyList<PetController> NearbyPets => nearbyPets;
+    public event System.Action<PetController> OnPetEntered;
+    public event System.Action<PetController> OnPetExited;
+    
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Pet"))
@@ -172,14 +232,22 @@ public class PetProximityDetector : MonoBehaviour
             if (pet != null && !nearbyPets.Contains(pet))
             {
                 nearbyPets.Add(pet);
-                // Activity 시스템에 알림
+                OnPetEntered?.Invoke(pet);  // Activity에 알림
             }
         }
     }
     
     void OnTriggerExit(Collider other)
     {
-        // 리스트에서 제거
+        if (other.CompareTag("Pet"))
+        {
+            PetController pet = other.GetComponent<PetController>();
+            if (pet != null && nearbyPets.Contains(pet))
+            {
+                nearbyPets.Remove(pet);
+                OnPetExited?.Invoke(pet);  // Activity에 알림
+            }
+        }
     }
 }
 ```
@@ -221,34 +289,27 @@ Vector3.Distance(Camera.main.transform.position, pet.position) < 30f
 
 ## 테스트 계획
 
-### 단위 테스트
-1. 각 성격 조합별 반응 테스트
-2. 쿨다운 시스템 검증
-3. 동시 다중 감지 처리
+### 플레이 테스트
+1. **성격 조합 테스트**
+   - 각 성격 조합별 반응 확인
+   - 애니메이션 전환 자연스러움
+   - 타이밍과 속도 조절
 
-### 통합 테스트
-1. 다른 Activity와의 우선순위 경쟁
-2. 기존 상호작용 시스템과 충돌 없음 확인
-3. 성능 프로파일링 (60FPS 유지)
+2. **시스템 통합 테스트**
+   - 다른 Activity와의 우선순위 경쟁
+   - 기존 상호작용 시스템과 충돌 없음 확인
+   - 쿨다운 시스템 동작 확인
+
+3. **성능 테스트**
+   - 20마리 이상 펫 동시 배치
+   - FPS 모니터링 (60FPS 유지)
+   - 메모리 사용량 체크
 
 ### 시나리오 테스트
 1. 3마리 이상 동시 접근
 2. 연속 반응 시도
-3. 다양한 환경에서 테스트
+3. 다양한 환경에서 테스트 (물가, 나무 근처 등)
 
-## 향후 확장 계획
-
-### Phase 1 (현재)
-- 기본 16가지 패턴 구현
-- 콜라이더 기반 감지
-
-### Phase 2
-- 종별 특수 반응 추가
-- 환경 요소 고려 (물속, 나무 위 등)
-
-### Phase 3
-- 그룹 반응 (3마리 이상)
-- 연쇄 반응 시스템
 
 ## 구현 시 주의사항
 

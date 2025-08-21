@@ -50,6 +50,17 @@ public static class PetTraits
         Tree     // 나무 위
     }
     
+    /// <summary>
+    /// 펫의 크기 분류
+    /// CapsuleCollider의 radius 값 기준
+    /// </summary>
+    public enum Size
+    {
+        Small,   // 소형 (radius < 1.5)
+        Medium,  // 중형 (1.5 <= radius < 3.0)
+        Large    // 대형 (radius >= 3.0)
+    }
+    
     
     /// <summary>
     /// 식성 타입을 읽기 쉬운 문자열로 변환
