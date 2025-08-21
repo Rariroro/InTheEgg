@@ -31,7 +31,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 517380095205800440}
   - {fileID: 103141505007049599}
@@ -91,8 +91,6 @@ MonoBehaviour:
     isInWater: 0
     isExhausted: 0
     isBeingAttacked: 0
-    isGathering: 0
-    isGathered: 0
     isAnimationLocked: 0
     isActionLocked: 0
     isAttractedToEnvironment: 0

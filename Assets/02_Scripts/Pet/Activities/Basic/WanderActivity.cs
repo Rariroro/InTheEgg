@@ -427,6 +427,7 @@ public class WanderActivity : PetActivityAdapter
                 PetController nearestPet = FindNearestOtherPet(15f);
                 if (nearestPet != null)
                 {
+                    // Debug.Log("가장 가까운 펫과 반대 방향으로 이동");
                     // 가장 가까운 펫과 반대 방향으로 이동
                     Vector3 awayDirection = (pet.transform.position - nearestPet.transform.position).normalized;
                     targetPosition = pet.transform.position + awayDirection * searchRadius * 0.7f;
