@@ -4,6 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # InTheEgg - AI 협업 가이드
 - 한글로 소통
+- **중요: 무조건 동의하지 말고, 실제 최적의 방법을 고려해서 대답하기**
+- **사용자 제안이 최선이 아니면 더 나은 대안 제시하기**
+- **기술적으로 잘못된 부분은 명확히 지적하기**
 
 ## 프로젝트 개요
 Unity 기반의 펫 시뮬레이션 게임으로, 다양한 동물 펫들이 AI를 통해 자율적으로 행동하고 상호작용하는 프로젝트입니다. Unity 6000.0 버전을 사용하며 Universal Render Pipeline(URP)로 구성되어 있습니다.
