@@ -45,6 +45,7 @@ Dictionary<(PetController, PetController), float> pairCooldowns;
 // 고양이A는 강아지C와는 즉시 반응 가능
 ```
 
+
 ## 성격별 반응 패턴 (16가지)
 
 ### 1. Lazy + Lazy
