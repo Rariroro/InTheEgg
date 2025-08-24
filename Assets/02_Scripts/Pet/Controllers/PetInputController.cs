@@ -144,12 +144,33 @@ public class PetInputController : PetControllerBase
             // (물 속에서도 펫을 선택할 수 있도록, PreferredZone 등은 무시)
             int layerMask = ~(LayerMask.GetMask("Water") | LayerMask.GetMask("Ignore Raycast"));
 
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+            // RaycastAll을 사용하여 모든 히트 수집
+            RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity, layerMask);
+            RaycastHit validHit = default;
+            bool foundValidHit = false;
+            
+            // 스피어 콜라이더가 아닌 첫 번째 히트 찾기
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance)); // 거리순 정렬
+            foreach (var currentHit in hits)
+            {
+                // 스피어 콜라이더이면서 트리거인 경우 스킵 (펫 간 상호작용용)
+                if (currentHit.collider is SphereCollider && currentHit.collider.isTrigger)
+                {
+                    // Debug.Log($"[PetInput] 스피어 콜라이더 스킵: {currentHit.collider.name}");
+                    continue;
+                }
+                
+                validHit = currentHit;
+                foundValidHit = true;
+                break;
+            }
+            
+            if (foundValidHit)
             {
                 // 터치한 오브젝트가 이 펫인지 확인
-                PetController hitPet = hit.collider.GetComponent<PetController>();
+                PetController hitPet = validHit.collider.GetComponent<PetController>();
                 if (hitPet == petController ||
-                    (hit.collider.transform.IsChildOf(petController.transform) && petController.State.IsInWater))
+                    (validHit.collider.transform.IsChildOf(petController.transform) && petController.State.IsInWater))
                 {
                     // 이 펫을 터치한 경우: 홀드 타이머 시작
                     isTouchingPet = true;

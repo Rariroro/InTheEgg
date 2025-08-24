@@ -39,6 +39,10 @@ public class WaterZoneTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // 쾔슐 콜라이더인 경우만 처리 (기본 물리 충돌용 콜라이더)
+        if (!(other is CapsuleCollider) || other.isTrigger)
+            return;
+            
         // 펫인지 확인
         PetController pet = other.GetComponent<PetController>();
         if (pet != null)
@@ -54,6 +58,10 @@ public class WaterZoneTrigger : MonoBehaviour
     
     private void OnTriggerExit(Collider other)
     {
+        // 콉슐 콜라이더인 경우만 처리 (기본 물리 충돌용 콜라이더)
+        if (!(other is CapsuleCollider) || other.isTrigger)
+            return;
+            
         // 펫인지 확인
         PetController pet = other.GetComponent<PetController>();
         if (pet != null)

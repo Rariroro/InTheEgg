@@ -115,6 +115,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0

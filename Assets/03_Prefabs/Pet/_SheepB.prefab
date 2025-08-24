@@ -55,7 +55,7 @@ MonoBehaviour:
     personality: 0
     diet: 4
     habitat: 3
-    size: 0
+    size: 1
     treeClimbChance: 0.1
     waterSinkDepth: 1
   movement:
@@ -165,7 +165,7 @@ CapsuleCollider:
   m_Radius: 1.64
   m_Height: 2.42
   m_Direction: 1
-  m_Center: {x: 0, y: 1.2, z: 0}
+  m_Center: {x: 0, y: 1.6, z: 0}
 --- !u!54 &-6918360592882453668
 Rigidbody:
   m_ObjectHideFlags: 0

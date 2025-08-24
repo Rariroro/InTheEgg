@@ -56,11 +56,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 535efcbe4da6549039d1fadad4e8be6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionDistance: 30
   interactionCooldown: 30
-  interactionCheckInterval: 0.5
-  maxChecksPerFrame: 10
-  gridCellSize: 20
   startDelay: 3
 --- !u!114 &2308513530626976719
 MonoBehaviour:
@@ -213,7 +209,7 @@ MonoBehaviour:
   hitParticlePrefab: {fileID: 1269060166065924, guid: 198e2a67507bd4f27a91a43fe8971ba5, type: 3}
   hitParticleOffset: {x: 0, y: 2, z: -1}
   particleDuration: 1
-  fightStartDustPrefab: {fileID: 0}
+  fightStartDustPrefab: {fileID: 187952, guid: 85bd1ea5abc8f4446b3bb5d8c0fc53f1, type: 3}
   attackSwingPrefab: {fileID: 0}
   victoryParticlePrefab: {fileID: 0}
   defeatStarsPrefab: {fileID: 1846532664448058, guid: 5466a5909dadd44ccabacb11fef6358f, type: 3}

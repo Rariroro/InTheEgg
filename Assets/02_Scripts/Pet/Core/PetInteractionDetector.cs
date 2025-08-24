@@ -53,13 +53,14 @@ public class PetInteractionDetector : MonoBehaviour
         detectionCollider.isTrigger = true;
         detectionCollider.radius = detectionRadius;
         detectionCollider.center = Vector3.zero;
-        
-        // 감지 레이어 설정 (옵션)
-        gameObject.layer = LayerMask.NameToLayer("Default");
     }
     
     private void OnTriggerEnter(Collider other)
     {
+        // 스피어 콜라이더인 경우만 처리 (펫 간 상호작용 전용)
+        if (!(other is SphereCollider) || !other.isTrigger)
+            return;
+            
         // 다른 펫이 감지 범위에 들어옴
         PetController otherPet = other.GetComponent<PetController>();
         if (otherPet != null && otherPet != myPet)
@@ -74,6 +75,10 @@ public class PetInteractionDetector : MonoBehaviour
     
     private void OnTriggerExit(Collider other)
     {
+        // 스피어 콜라이더인 경우만 처리 (펫 간 상호작용 전용)
+        if (!(other is SphereCollider) || !other.isTrigger)
+            return;
+            
         // 다른 펫이 감지 범위를 벗어남
         PetController otherPet = other.GetComponent<PetController>();
         if (otherPet != null)
@@ -85,6 +90,10 @@ public class PetInteractionDetector : MonoBehaviour
     
     private void OnTriggerStay(Collider other)
     {
+        // 스피어 콜라이더인 경우만 처리 (펫 간 상호작용 전용)
+        if (!(other is SphereCollider) || !other.isTrigger)
+            return;
+            
         // 주기적으로 상호작용 가능성 체크
         if (Time.time - lastInteractionCheckTime < interactionCheckInterval)
             return;
