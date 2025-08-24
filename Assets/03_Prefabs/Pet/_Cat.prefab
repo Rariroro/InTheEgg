@@ -84,6 +84,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0
@@ -161,10 +162,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.06
+  m_Radius: 1.24
   m_Height: 2.25
   m_Direction: 1
-  m_Center: {x: 0, y: 1.1, z: 0}
+  m_Center: {x: 0, y: 1.1, z: 0.14}
 --- !u!54 &162760880263205394
 Rigidbody:
   m_ObjectHideFlags: 0

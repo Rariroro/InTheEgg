@@ -180,9 +180,12 @@ public class FightInteraction : BasePetInteraction
         Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
         direction.y = 0;
 
+        // 펫 크기에 따른 싸움 거리 계산
+        float adjustedFightDistance = CalculateDistanceBySize(pet1, pet2);
+
         // 각 펫의 목표 위치 계산
-        Vector3 pet1Target = fightSpot - direction * (fightDistance / 2);
-        Vector3 pet2Target = fightSpot + direction * (fightDistance / 2);
+        Vector3 pet1Target = fightSpot - direction * (adjustedFightDistance / 2);
+        Vector3 pet2Target = fightSpot + direction * (adjustedFightDistance / 2);
 
         pet1Target = FindValidPositionOnNavMesh(pet1Target, fightDistance);
         pet2Target = FindValidPositionOnNavMesh(pet2Target, fightDistance);
@@ -355,5 +358,25 @@ public class FightInteraction : BasePetInteraction
             
             Destroy(dust, particleDuration * 2f);
         }
+    }
+
+    /// <summary>
+    /// 펫 크기에 따른 싸움 거리 계산
+    /// </summary>
+    private float CalculateDistanceBySize(PetController pet1, PetController pet2)
+    {
+        // 각 펫의 크기 배율 가져오기
+        float pet1Multiplier = pet1.Profile.GetInteractionDistanceMultiplier();
+        float pet2Multiplier = pet2.Profile.GetInteractionDistanceMultiplier();
+        
+        // 두 펫의 평균 배율 계산
+        float averageMultiplier = (pet1Multiplier + pet2Multiplier) / 2f;
+        
+        // 기본 거리에 평균 배율 적용
+        float adjustedDistance = fightDistance * averageMultiplier;
+        
+        // Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
+        
+        return adjustedDistance;
     }
 }

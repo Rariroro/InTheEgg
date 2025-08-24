@@ -84,6 +84,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0
@@ -129,7 +130,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1517795010378878529}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 1.03
+  m_Radius: 1.52
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 24
@@ -161,10 +162,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.03
-  m_Height: 7.2
+  m_Radius: 3.1
+  m_Height: 10.91
   m_Direction: 1
-  m_Center: {x: 0, y: 3.6, z: 0}
+  m_Center: {x: 0, y: 4.88, z: 0.21}
 --- !u!54 &2671824705801494245
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -307,15 +308,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4650501142220680, guid: 29ea63ea869ceed4fa1951ee013c517a, type: 3}
       propertyPath: m_LocalScale.x
-      value: 30
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4650501142220680, guid: 29ea63ea869ceed4fa1951ee013c517a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 30
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4650501142220680, guid: 29ea63ea869ceed4fa1951ee013c517a, type: 3}
       propertyPath: m_LocalScale.z
-      value: 30
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4650501142220680, guid: 29ea63ea869ceed4fa1951ee013c517a, type: 3}
       propertyPath: m_LocalPosition.x

@@ -115,6 +115,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0
@@ -192,8 +193,8 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.61
-  m_Height: 3.33
+  m_Radius: 1.69
+  m_Height: 3.62
   m_Direction: 1
   m_Center: {x: 0, y: 1.6, z: 0}
 --- !u!54 &-2997547236557450157
@@ -295,15 +296,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 632962627720005307, guid: de12c6a96169cf4499ac29721aa1199b, type: 3}
       propertyPath: m_LocalScale.x
-      value: 15
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 632962627720005307, guid: de12c6a96169cf4499ac29721aa1199b, type: 3}
       propertyPath: m_LocalScale.y
-      value: 15
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 632962627720005307, guid: de12c6a96169cf4499ac29721aa1199b, type: 3}
       propertyPath: m_LocalScale.z
-      value: 15
+      value: 14
       objectReference: {fileID: 0}
     - target: {fileID: 632962627720005307, guid: de12c6a96169cf4499ac29721aa1199b, type: 3}
       propertyPath: m_LocalPosition.x

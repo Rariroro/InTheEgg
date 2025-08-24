@@ -115,6 +115,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0
@@ -160,7 +161,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 4983068215517883485}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 1.4
+  m_Radius: 1.46
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 35
@@ -192,7 +193,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1.4
+  m_Radius: 2.56
   m_Height: 3.27
   m_Direction: 1
   m_Center: {x: 0, y: 1.7, z: 0}

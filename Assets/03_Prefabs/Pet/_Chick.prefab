@@ -115,6 +115,7 @@ MonoBehaviour:
   waterBehaviorController: {fileID: 0}
   treeClimbingController: {fileID: 0}
   emotionController: {fileID: 0}
+  interactionDetector: {fileID: 0}
   petState:
     currentStatus: 0
     isHolding: 0
@@ -299,15 +300,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4413126837679538, guid: 57e8a1aa2a00dec4ebae2f1c9f76f220, type: 3}
       propertyPath: m_LocalScale.x
-      value: 10
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4413126837679538, guid: 57e8a1aa2a00dec4ebae2f1c9f76f220, type: 3}
       propertyPath: m_LocalScale.y
-      value: 10
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4413126837679538, guid: 57e8a1aa2a00dec4ebae2f1c9f76f220, type: 3}
       propertyPath: m_LocalScale.z
-      value: 10
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4413126837679538, guid: 57e8a1aa2a00dec4ebae2f1c9f76f220, type: 3}
       propertyPath: m_LocalPosition.x
