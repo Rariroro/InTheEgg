@@ -49,6 +49,7 @@ public partial class PetController : MonoBehaviour
     public PetWaterBehaviorController waterBehaviorController;
     public PetTreeClimbingController treeClimbingController;
     public PetEmotionController emotionController;
+    public PetInteractionDetector interactionDetector;
     
     private PetAI petAI;
 
@@ -146,6 +147,8 @@ public partial class PetController : MonoBehaviour
         treeClimbingController.Init(this);
         emotionController = gameObject.AddComponent<PetEmotionController>();
         emotionController.Init(this);
+        interactionDetector = gameObject.AddComponent<PetInteractionDetector>();
+        interactionDetector.Init(this);
         
         // PetAI 초기화
         petAI = gameObject.AddComponent<PetAI>();

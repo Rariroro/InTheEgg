@@ -1,12 +1,6 @@
-
-
-
-// 수정된 PetInteractionManager
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.AI;
 
 // 펫 종류를 구분하는 열거형 - 총 60종류의 펫 타입 정의
 public enum PetType
@@ -19,70 +13,45 @@ public enum PetType
     Malayan, Chameleon, Buffalo, Hippo, Armadillo, Crocodile, Platypus, Otter
 }
 
-// 펫 간 상호작용 종류를 정의하는 열거형 - 6가지 상호작용 유형
+// 펫 간 상호작용 종류를 정의하는 열거형
 public enum InteractionType
 {
-    Fight,        // 싸우기 - 두 펫이 서로 공격하는 상호작용
-    WalkTogether, // 같이 걷기 - 두 펫이 함께 걷는 상호작용
-    RestTogether, // 같이 쉬기 - 두 펫이 함께 휴식하는 상호작용
-    Race,         // 달리기 시합 - 두 펫이 목표 지점까지 경주하는 상호작용
-    ChaseAndRun,  // 쫓고 쫓기기 - 한 펫이 다른 펫을 쫓고 도망가는 상호작용
-    SleepTogether, // 같이 자기 - 두 펫이 함께 자는 상호작용
-    RideAndWalk,   // 타고 걷기 - 미어켓이 멧돼지에 타고 함께 걷는 상호작용
-    SlothKoalaRace, // 나무늘보-코알라 달리기 - 느린 동물들의 달리기 시합
-    ChameleonCamouflage // 카멜레온 위장 - 카멜레온이 위험을 감지하고 위장하는 상호작용
-
+    Fight,        // 싸우기
+    WalkTogether, // 같이 걷기
+    RestTogether, // 같이 쉬기
+    Race,         // 달리기 시합
+    ChaseAndRun,  // 쫓고 쫓기기
+    SleepTogether, // 같이 자기
+    RideAndWalk,   // 타고 걷기
+    SlothKoalaRace, // 나무늘보-코알라 달리기
+    ChameleonCamouflage // 카멜레온 위장
 }
 
-
-
+/// <summary>
+/// 간소화된 펫 상호작용 매니저
+/// 콜라이더 기반 감지 시스템과 함께 작동
+/// </summary>
 public class PetInteractionManager : MonoBehaviour
 {
-    // 싱글톤 패턴 구현
+    // 싱글톤 패턴
     public static PetInteractionManager Instance { get; private set; }
 
     [Header("상호작용 설정")]
-    public float interactionDistance = 5f;
     public float interactionCooldown = 30f;
-
-    [Header("성능 최적화 설정")]
-    public float interactionCheckInterval = 0.5f;  // 0.1f -> 0.5f로 증가
-    public int maxChecksPerFrame = 10;  // 5 -> 10으로 증가
-
-    // 공간 분할 최적화를 위한 그리드 설정
-    [Header("공간 분할 최적화")]
-    public float gridCellSize = 20f;  // 그리드 셀 크기
-    private Dictionary<int, List<PetController>> spatialGrid = new Dictionary<int, List<PetController>>();
-    private float gridUpdateInterval = 1f;  // 그리드 업데이트 간격
-    private float lastGridUpdate = 0f;
     
-    // 성능 모니터링
-    private int interactionChecksLastFrame = 0;
-    private float performanceCheckInterval = 5f;
-    private float lastPerformanceCheck = 0f;
-
-    // 시작 지연 시간
+    [Header("시작 지연")]
     public float startDelay = 3.0f;
     private bool canStartInteractions = false;
 
-    // 캐싱된 펫 리스트
-    private List<PetController> allPets = new List<PetController>();
-    private Dictionary<PetController, int> petToIndexMap = new Dictionary<PetController, int>();
-    private Dictionary<PetController, int> petGridLocation = new Dictionary<PetController, int>(); // 펫의 현재 그리드 위치 추적
-
-    // 상호작용 중인 펫 쌍 추적
+    // 상호작용 관리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
     private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>();
-
+    
     // 등록된 상호작용 컴포넌트
     private List<BasePetInteraction> registeredInteractions = new List<BasePetInteraction>();
-
-    // 거리 계산 최적화
-    private float interactionDistanceSquared;
-
-    // LOD 시스템을 위한 카메라 참조
-    private Camera mainCamera;
-    private float lodDistance = 50f;  // 이 거리 이상의 펫은 체크 빈도 감소
+    
+    // 펫 목록 (선택적 - 디버그용)
+    private List<PetController> allPets = new List<PetController>();
 
     private void Awake()
     {
@@ -98,341 +67,66 @@ public class PetInteractionManager : MonoBehaviour
             return;
         }
 
-        // 거리 제곱값 미리 계산
-        interactionDistanceSquared = interactionDistance * interactionDistance;
-
-        // 카메라 참조 캐싱
-        mainCamera = Camera.main;
-
         // 상호작용 컴포넌트 등록
         RegisterInteractions();
     }
 
     private void Start()
     {
-        // 초기 펫 리스트 구축
+        // 초기 펫 리스트 구축 (선택적)
         RefreshPetList();
-
-        // 지정된 시간 후에 상호작용 체크 활성화
+        
+        // 지정된 시간 후에 상호작용 활성화
         StartCoroutine(EnableInteractionsAfterDelay());
     }
 
     private IEnumerator EnableInteractionsAfterDelay()
     {
-        // Debug.Log("[PetInteractionManager] 상호작용 체크 지연 중...");
         yield return new WaitForSeconds(startDelay);
         canStartInteractions = true;
-
-        // 최적화된 상호작용 체크 시작
-        StartCoroutine(OptimizedSpatialInteractionCheck());
-        // Debug.Log("[PetInteractionManager] 상호작용 체크 활성화!");
+        Debug.Log("[PetInteractionManager] 상호작용 시스템 활성화!");
     }
 
     private void RegisterInteractions()
     {
         registeredInteractions.AddRange(GetComponents<BasePetInteraction>());
-        // Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
+        Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
     }
 
-    public void RefreshPetList()
+    /// <summary>
+    /// 콜라이더 감지기로부터 상호작용 요청 처리
+    /// </summary>
+    public void RequestInteraction(PetController pet1, PetController pet2)
     {
-        allPets.Clear();
-        petToIndexMap.Clear();
-        petGridLocation.Clear();
-        spatialGrid.Clear();
-
-        PetController[] foundPets = FindObjectsOfType<PetController>();
-
-        for (int i = 0; i < foundPets.Length; i++)
-        {
-            if (foundPets[i] != null)
-            {
-                allPets.Add(foundPets[i]);
-                petToIndexMap[foundPets[i]] = i;
-            }
-        }
-
-        // 그리드 업데이트
-        UpdateSpatialGrid();
-
-        // Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
-    }
-
-    public void RegisterPet(PetController pet)
-    {
-        if (pet != null && !allPets.Contains(pet))
-        {
-            int index = allPets.Count;
-            allPets.Add(pet);
-            petToIndexMap[pet] = index;
-
-            // 그리드에 추가
-            AddPetToGrid(pet);
-
-            // Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
-        }
-    }
-
-    public void UnregisterPet(PetController pet)
-    {
-        if (pet != null && allPets.Contains(pet))
-        {
-            allPets.Remove(pet);
-            petToIndexMap.Remove(pet);
-            petGridLocation.Remove(pet);
-
-            // 그리드에서 제거
-            RemovePetFromGrid(pet);
-
-            // 상호작용 정리
-            if (interactingPets.ContainsKey(pet))
-            {
-                PetController partner = interactingPets[pet];
-                interactingPets.Remove(pet);
-                if (partner != null && interactingPets.ContainsKey(partner))
-                {
-                    interactingPets.Remove(partner);
-                }
-            }
-
-            lastInteractionTime.Remove(pet);
-
-            // Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
-        }
-    }
-
-    // 공간 분할 그리드 업데이트
-    private void UpdateSpatialGrid()
-    {
-        spatialGrid.Clear();
-
-        foreach (PetController pet in allPets)
-        {
-            if (pet != null)
-            {
-                AddPetToGrid(pet);
-            }
-        }
-
-        lastGridUpdate = Time.time;
-    }
-
-    // 그리드에 펫 추가
-    private void AddPetToGrid(PetController pet)
-    {
-        int gridKey = GetGridKey(pet.transform.position);
-
-        // 이전 위치에서 제거 (있다면)
-        if (petGridLocation.TryGetValue(pet, out int oldGridKey) && oldGridKey != gridKey)
-        {
-            if (spatialGrid.ContainsKey(oldGridKey))
-            {
-                spatialGrid[oldGridKey].Remove(pet);
-            }
-        }
-
-        if (!spatialGrid.ContainsKey(gridKey))
-        {
-            spatialGrid[gridKey] = new List<PetController>();
-        }
-
-        spatialGrid[gridKey].Add(pet);
-        petGridLocation[pet] = gridKey;
-    }
-
-    // 그리드에서 펫 제거
-    private void RemovePetFromGrid(PetController pet)
-    {
-        // 펫의 현재 그리드 위치를 알고 있으므로 효율적으로 제거
-        if (petGridLocation.TryGetValue(pet, out int gridKey))
-        {
-            if (spatialGrid.ContainsKey(gridKey))
-            {
-                spatialGrid[gridKey].Remove(pet);
-                
-                // 빈 그리드 셀은 제거하여 메모리 절약
-                if (spatialGrid[gridKey].Count == 0)
-                {
-                    spatialGrid.Remove(gridKey);
-                }
-            }
-            petGridLocation.Remove(pet);
-        }
-    }
-
-    // 위치를 그리드 키로 변환
-    private int GetGridKey(Vector3 position)
-    {
-        int x = Mathf.FloorToInt(position.x / gridCellSize);
-        int z = Mathf.FloorToInt(position.z / gridCellSize);
-        return x * 1000 + z;  // 간단한 해시 함수
-    }
-
-    // 인접한 그리드 셀 가져오기
-    private List<int> GetNeighborGridKeys(int gridKey)
-    {
-        List<int> neighbors = new();
-        int x = gridKey / 1000;
-        int z = gridKey % 1000;
-
-        // 9개의 인접 셀 (자신 포함)
-        for (int dx = -1; dx <= 1; dx++)
-        {
-            for (int dz = -1; dz <= 1; dz++)
-            {
-                neighbors.Add((x + dx) * 1000 + z + dz);
-            }
-        }
-
-        return neighbors;
-    }
-
-    // 최적화된 공간 분할 기반 상호작용 체크
-    private IEnumerator OptimizedSpatialInteractionCheck()
-    {
-        while (canStartInteractions)
-        {
-            // 그리드 주기적 업데이트
-            if (Time.time - lastGridUpdate > gridUpdateInterval)
-            {
-                UpdateSpatialGrid();
-            }
-
-            // 펫이 2마리 미만이면 체크 불필요
-            if (allPets.Count < 2)
-            {
-                yield return new WaitForSeconds(interactionCheckInterval);
-                continue;
-            }
-
-            int checksThisFrame = 0;
-
-            // 각 그리드 셀 검사 - Dictionary 복사본으로 순회하여 수정 중 오류 방지
-            foreach (var gridCell in spatialGrid.ToList())
-            {
-                if (gridCell.Value.Count == 0)
-                    continue;
-
-                List<PetController> petsInCell = gridCell.Value;
-                List<int> neighborKeys = GetNeighborGridKeys(gridCell.Key);
-
-                // 같은 셀 내의 펫들 체크
-                for (int i = 0; i < petsInCell.Count; i++)
-                {
-                    PetController pet1 = petsInCell[i];
-                    if (pet1 == null) continue;
-
-                    // LOD 체크 - 카메라에서 멀리 있는 펫은 체크 빈도 감소
-                    if (mainCamera != null)
-                    {
-                        float camDistSqr = (pet1.transform.position - mainCamera.transform.position).sqrMagnitude;
-                        if (camDistSqr > lodDistance * lodDistance)
-                        {
-                            // 거리에 따라 체크 확률 조정 (더 멀수록 낮은 확률)
-                            float checkProbability = lodDistance * lodDistance / camDistSqr * 0.5f;
-                            if (Random.value > checkProbability)
-                                continue;
-                        }
-                    }
-
-                    // 같은 셀 내의 다른 펫들과 체크
-                    for (int j = i + 1; j < petsInCell.Count; j++)
-                    {
-                        if (checksThisFrame >= maxChecksPerFrame)
-                        {
-                            yield return new WaitForSeconds(interactionCheckInterval);
-                            checksThisFrame = 0;
-                        }
-
-                        PetController pet2 = petsInCell[j];
-                        if (pet2 != null)
-                        {
-                            CheckPetPairInteraction(pet1, pet2);
-                            checksThisFrame++;
-                        }
-                    }
-
-                    // 인접 셀의 펫들과 체크
-                    foreach (int neighborKey in neighborKeys)
-                    {
-                        if (neighborKey == gridCell.Key) continue;  // 같은 셀은 이미 체크함
-
-                        if (spatialGrid.ContainsKey(neighborKey))
-                        {
-                            List<PetController> neighborsInCell = spatialGrid[neighborKey];
-
-                            foreach (PetController neighborPet in neighborsInCell)
-                            {
-                                if (checksThisFrame >= maxChecksPerFrame)
-                                {
-                                    yield return new WaitForSeconds(interactionCheckInterval);
-                                    checksThisFrame = 0;
-                                }
-
-                                if (neighborPet != null)
-                                {
-                                    CheckPetPairInteraction(pet1, neighborPet);
-                                    checksThisFrame++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 다음 체크까지 대기
-            yield return new WaitForSeconds(interactionCheckInterval);
-        }
-    }
-
-    // 두 펫 간의 상호작용 가능성 체크 (최적화됨)
-    private void CheckPetPairInteraction(PetController pet1, PetController pet2)
-    {
-        // 빠른 거부 조건들 - 가장 빠른 체크부터 순서대로
-        if (pet1 == pet2) return; // 같은 펫인지 먼저 체크
-        if (pet1 == null || pet2 == null) return;
-        if (pet1.State.IsHolding || pet2.State.IsHolding) return; // 간단한 bool 체크를 먼저
-        if (IsInteracting(pet1) || IsInteracting(pet2)) return;
-        if (IsOnCooldown(pet1) || IsOnCooldown(pet2)) return;
-        
-        // 모이기 중이거나 모인 상태에서는 새로운 상호작용 시작 방지
-        if (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
-            pet1.State.CurrentStatus == PetStatus.GatheredWaiting ||
-            pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
-            pet2.State.CurrentStatus == PetStatus.GatheredWaiting) return;
-
-        // =================================================================
-        // ★★★★★ [요청 사항 반영] ★★★★★
-        // 두 펫 중 하나라도 배고프거나(70 이상) 졸리면(70 이상) 상호작용을 시작하지 않습니다.
-        if (pet1.Needs.Hunger >= 70f || pet1.Needs.Sleepiness >= 70f ||
-            pet2.Needs.Hunger >= 70f || pet2.Needs.Sleepiness >= 70f)
-        {
-            return; // 상호작용 체크를 즉시 중단합니다.
-        }
-        // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-        // =================================================================
-
-        // 빠른 거리 체크 (Bounding Box 체크)
-        Vector3 diff = pet2.transform.position - pet1.transform.position;
-        if (Mathf.Abs(diff.x) > interactionDistance ||
-            Mathf.Abs(diff.z) > interactionDistance)
+        if (!canStartInteractions)
             return;
-
-        // 정확한 거리 체크 (제곱 거리 사용)
-        float distanceSquared = diff.sqrMagnitude;
-        if (distanceSquared > interactionDistanceSquared)
+            
+        // 빠른 거부 조건들
+        if (pet1 == null || pet2 == null)
             return;
-
+            
+        if (IsInteracting(pet1) || IsInteracting(pet2))
+            return;
+            
+        if (IsOnCooldown(pet1) || IsOnCooldown(pet2))
+            return;
+            
         // 적합한 상호작용 찾기
         BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
         if (suitableInteraction == null)
             return;
-
-        // Debug.Log($"[PetInteractionManager] {pet1.petName}와(과) {pet2.petName} 사이에 {suitableInteraction.InteractionName} 상호작용 시작!");
-
+            
         // 상호작용 시작
- // ★★★ 핵심 변경: 상호작용 로직 실행을 BasePetInteraction에 완전히 위임 ★★★
-    suitableInteraction.StartInteraction(pet1, pet2);
+        StartInteraction(pet1, pet2, suitableInteraction);
+    }
+    
+    private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
+    {
+        Debug.Log($"[PetInteractionManager] {pet1.petName}와 {pet2.petName} 사이에 {interaction.InteractionName} 시작!");
+        
+        // 상호작용 실행
+        interaction.StartInteraction(pet1, pet2);
+        
         // 상호작용 기록
         float currentTime = Time.time;
         lastInteractionTime[pet1] = currentTime;
@@ -441,10 +135,8 @@ public class PetInteractionManager : MonoBehaviour
         interactingPets[pet2] = pet1;
     }
 
-    // 적합한 상호작용 찾기 (캐싱 가능)
     private BasePetInteraction FindSuitableInteraction(PetController pet1, PetController pet2)
     {
-        // 상호작용 우선순위에 따라 정렬할 수 있음
         foreach (var interaction in registeredInteractions)
         {
             if (interaction.CanInteract(pet1, pet2))
@@ -455,38 +147,33 @@ public class PetInteractionManager : MonoBehaviour
         return null;
     }
 
-    // 상호작용 종료 시 상태를 안전하게 정리
+    /// <summary>
+    /// 상호작용 종료 시 호출
+    /// </summary>
     public void NotifyInteractionEnded(PetController pet1, PetController pet2)
     {
-        // 동시성 문제 방지를 위해 null 체크와 상태 정리를 명확히 분리
         bool pet1Valid = pet1 != null;
         bool pet2Valid = pet2 != null;
         
         if (pet1Valid)
         {
-            // Dictionary에서 안전하게 제거
             if (interactingPets.ContainsKey(pet1))
             {
                 interactingPets.Remove(pet1);
             }
-            
-            // ★ [Phase 4] PetState를 통한 상태 업데이트
             pet1.State.EndInteraction();
         }
         
         if (pet2Valid)
         {
-            // Dictionary에서 안전하게 제거
             if (interactingPets.ContainsKey(pet2))
             {
                 interactingPets.Remove(pet2);
             }
-            
-            // ★ [Phase 4] PetState를 통한 상태 업데이트
             pet2.State.EndInteraction();
         }
-
-        // Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
+        
+        Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
     }
 
     private bool IsInteracting(PetController pet)
@@ -503,9 +190,49 @@ public class PetInteractionManager : MonoBehaviour
         return false;
     }
 
+    // === 선택적 메서드들 (디버그/호환성용) ===
+    
+    public void RefreshPetList()
+    {
+        allPets.Clear();
+        PetController[] foundPets = FindObjectsOfType<PetController>();
+        allPets.AddRange(foundPets);
+        Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
+    }
 
+    public void RegisterPet(PetController pet)
+    {
+        if (pet != null && !allPets.Contains(pet))
+        {
+            allPets.Add(pet);
+            Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
+        }
+    }
 
-    // 디버그용 메서드들
+    public void UnregisterPet(PetController pet)
+    {
+        if (pet != null && allPets.Contains(pet))
+        {
+            allPets.Remove(pet);
+            
+            // 상호작용 정리
+            if (interactingPets.ContainsKey(pet))
+            {
+                PetController partner = interactingPets[pet];
+                interactingPets.Remove(pet);
+                if (partner != null && interactingPets.ContainsKey(partner))
+                {
+                    interactingPets.Remove(partner);
+                }
+            }
+            
+            lastInteractionTime.Remove(pet);
+            Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
+        }
+    }
+
+    // === 디버그 메서드들 ===
+    
     [ContextMenu("펫 리스트 새로고침")]
     public void ForceRefreshPetList()
     {
@@ -515,19 +242,17 @@ public class PetInteractionManager : MonoBehaviour
     [ContextMenu("현재 상태 출력")]
     public void PrintCurrentStatus()
     {
-        // Debug.Log($"[PetInteractionManager] 현재 상태:");
-        // Debug.Log($"  - 총 펫 수: {allPets.Count}");
-        // Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
-        // Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
-        // Debug.Log($"  - 그리드 셀 수: {spatialGrid.Count}");
-        // Debug.Log($"  - 체크 간격: {interactionCheckInterval}초");
-        // Debug.Log($"  - 프레임당 최대 체크: {maxChecksPerFrame}");
+        Debug.Log($"[PetInteractionManager] 현재 상태:");
+        Debug.Log($"  - 총 펫 수: {allPets.Count}");
+        Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
+        Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
+        Debug.Log($"  - 등록된 상호작용: {registeredInteractions.Count}개");
     }
 
     private void OnDestroy()
     {
         StopAllCoroutines();
-
+        
         if (Instance == this)
         {
             Instance = null;
