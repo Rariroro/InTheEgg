@@ -218,11 +218,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, 3f, false, false));
         
-        Debug.Log($"[LazyShy] 단계3: {shyPet.petName} 뒷걸음질");
-        // Shy는 뒷걸음질
-        Vector3 backStep = shyPet.transform.position - lazyPet.transform.forward * 2f;
-        shyPet.agent.SetDestination(backStep);
-        yield return new WaitForSeconds(1f);
+        Debug.Log($"[LazyShy] 단계3: {shyPet.petName} 돌아서 도망");
+        // Shy는 돌아서 도망
+        yield return StartCoroutine(QuickRetreat(shyPet, lazyPet.transform.position, 2f, 1f));
         
         Debug.Log($"[LazyShy] 단계4: {shyPet.petName} 조심스럽게 다시 접근");
         // Shy가 조심스럽게 다시 접근
@@ -335,20 +333,14 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 긴 정적
         yield return new WaitForSeconds(pauseDuration * 1.5f);
         
-        Debug.Log($"[ShyShy] 단계4: 동시에 뒷걸음");
-        // 동시에 뒷걸음
-        Vector3 pet1Flee = pet1.transform.position - (pet2.transform.position - pet1.transform.position).normalized * 3f;
-        Vector3 pet2Flee = pet2.transform.position - (pet1.transform.position - pet2.transform.position).normalized * 3f;
-        
+        Debug.Log($"[ShyShy] 단계4: 동시에 돌아서 도망");
+        // 동시에 돌아서 도망
         pet1.agent.isStopped = false;
         pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 0.8f;
-        pet2.agent.speed = pet2.baseSpeed * 0.8f;
         
-        pet1.agent.SetDestination(pet1Flee);
-        pet2.agent.SetDestination(pet2Flee);
-        
-        yield return new WaitForSeconds(1f);
+        // 두 펫이 동시에 서로 반대 방향으로 도망
+        StartCoroutine(QuickRetreat(pet1, pet2.transform.position, 3f, 1f));
+        yield return StartCoroutine(QuickRetreat(pet2, pet1.transform.position, 3f, 1f));
         
         Debug.Log($"[ShyShy] 단계5: 서로 다른 방향으로 도망");
         // 서로 다른 방향으로 도망
@@ -379,12 +371,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         yield return new WaitForSeconds(0.5f);
         
-        Debug.Log($"[ShyBrave] 단계2: Shy는 뒷걸음");
-        // Shy는 뒷걸음
-        Vector3 retreatPos = shyPet.transform.position - (bravePet.transform.position - shyPet.transform.position).normalized * 3f;
-        shyPet.agent.SetDestination(retreatPos);
-        
-        yield return new WaitForSeconds(1f);
+        Debug.Log($"[ShyBrave] 단계2: Shy는 돌아서 도망");
+        // Shy는 돌아서 도망
+        yield return StartCoroutine(QuickRetreat(shyPet, bravePet.transform.position, 3f, 1f));
         
         Debug.Log($"[ShyBrave] 단계3: Brave가 천천히 따라감");
         // Brave가 천천히 따라감
@@ -412,46 +401,87 @@ public class PersonalityReactionInteraction : BasePetInteraction
     // ===== 7. Shy + Playful =====
     private IEnumerator ShyPlayfulReaction(PetController pet1, PetController pet2)
     {
+        // 역할 구분
         PetController shyPet = pet1.personality == PetTraits.Personality.Shy ? pet1 : pet2;
         PetController playfulPet = pet1.personality == PetTraits.Personality.Playful ? pet1 : pet2;
         Debug.Log($"[ShyPlayful] Shy: {shyPet.petName}, Playful: {playfulPet.petName}");
         
-        Debug.Log($"[ShyPlayful] 단계1: Playful이 뛰어옴");
-        // Playful이 뛰어옴
-        playfulPet.agent.speed = playfulPet.baseSpeed * 2f;
-        playfulPet.agent.SetDestination(shyPet.transform.position);
+        // 거리 설정
+        float approachDistance = 5f;  // Shy가 놀라는 거리 (더 멀리서 반응)
+        float retreatDistance = 7f;   // 첫 번째 도망 거리
+        float secondRetreatDistance = 10f; // 두 번째 도망 거리
         
-        yield return new WaitForSeconds(0.5f);
-        
-        Debug.Log($"[ShyPlayful] 단계2: Shy 깜짝 놀라 뒷걸음");
-        // Shy 깜짝 놀라 뒷걸음
-        yield return StartCoroutine(shyPet.animationController.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false)); // 놀람 표현
-        
-        Vector3 stepBack = shyPet.transform.position - playfulPet.transform.forward * 2f;
-        shyPet.agent.SetDestination(stepBack);
-        
+        // 0단계: 서로 마주보기
+        Debug.Log($"[ShyPlayful] 단계0: 서로 마주보기");
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 1f));
         yield return new WaitForSeconds(1f);
         
-        Debug.Log($"[ShyPlayful] 단계3: Playful이 점프하며 놀자고 함 (2회)");
-        // Playful이 점프하며 놀자고 함
-        for (int i = 0; i < 2; i++)
+        // 1단계: Playful이 정확한 거리까지 접근
+        Debug.Log($"[ShyPlayful] 단계1: Playful이 Shy에게 접근 시작");
+        
+        // Shy의 위치 기준으로 접근 목표 설정 (정확한 거리)
+        Vector3 direction = (shyPet.transform.position - playfulPet.transform.position).normalized;
+        Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
+        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+        
+        playfulPet.agent.isStopped = false;  // 명시적으로 설정
+        playfulPet.agent.speed = playfulPet.baseSpeed * 1.5f;  // 천천히 접근
+        playfulPet.agent.SetDestination(targetPosition);
+        playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
+        
+        // 목표 위치 도달 대기
+        float waitTime = 0f;
+        float maxWaitTime = 5f;
+        while (waitTime < maxWaitTime)
         {
-            yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
+            // agent가 경로 계산 완료하고 남은 거리 체크
+            if (!playfulPet.agent.pathPending && playfulPet.agent.remainingDistance < 0.5f)
+            {
+                Debug.Log($"[ShyPlayful] Playful이 목표 위치에 도달!");
+                break;
+            }
+            waitTime += Time.deltaTime;
+            yield return null;
         }
         
-        Debug.Log($"[ShyPlayful] 단계4: Shy 계속 뒷걸음");
-        // Shy 계속 뒷걸음
-        Vector3 furtherBack = shyPet.transform.position - playfulPet.transform.forward * 3f;
-        shyPet.agent.SetDestination(furtherBack);
+        // 2단계: Shy가 놀라서 도망 후 돌아보기
+        Debug.Log($"[ShyPlayful] 단계2: Shy가 깜짝 놀라서 도망");
+        playfulPet.agent.isStopped = true;
+        playfulPet.animationController.StopContinuousAnimation();
         
-        yield return new WaitForSeconds(1f);
+        // Shy 놀람 표현
+        yield return StartCoroutine(shyPet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
         
-        Debug.Log($"[ShyPlayful] 단계5: Playful 혼자 놀다가 떠남");
-        // Playful 혼자 놀다가 떠남
+        // agent가 준비될 시간 제공
+        shyPet.agent.isStopped = false;  // 명시적 활성화
+        yield return new WaitForSeconds(0.1f);  // 짧은 대기
+        
+        // Shy 도망
+        yield return StartCoroutine(QuickRetreat(shyPet, playfulPet.transform.position, retreatDistance, 1f));
+        
+        // Shy가 멈춰서 돌아보기
+        Debug.Log($"[ShyPlayful] Shy가 멈춰서 Playful을 돌아봄");
+        shyPet.agent.isStopped = true;
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
+        yield return new WaitForSeconds(0.5f);
+        
+        // 3단계: Playful이 점프하며 놀자고 함
+        Debug.Log($"[ShyPlayful] 단계3: Playful이 점프하며 놀자고 신호");
+        playfulPet.agent.isStopped = false;
         yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 1f, true, false));
+        
+        // 4단계: Shy가 다시 놀라서 더 멀리 도망
+        Debug.Log($"[ShyPlayful] 단계4: Shy가 다시 놀라서 더 멀리 도망");
+        shyPet.agent.isStopped = false;
+        yield return StartCoroutine(QuickRetreat(shyPet, playfulPet.transform.position, secondRetreatDistance, 1.5f));
+        
+        // 5단계: Playful이 실망하며 고개 숙임
+        Debug.Log($"[ShyPlayful] 단계5: Playful이 실망하며 고개 숙임");
+        yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Eat, 2f, false, false));
+        
         Debug.Log($"<color=blue>[ShyPlayful] 반응 완료</color>");
     }
 
@@ -711,5 +741,46 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float avgMultiplier = (multiplier1 + multiplier2) / 2f;
         
         return approachDistance * avgMultiplier;
+    }
+    
+    /// <summary>
+    /// 빠르게 돌아서 도망가기 (뒷걸음질 대체)
+    /// </summary>
+    private IEnumerator QuickRetreat(PetController pet, Vector3 awayFrom, float distance, float duration = 1f)
+    {
+        Debug.Log($"[QuickRetreat] {pet.petName}이(가) 돌아서 도망 (거리: {distance}, 시간: {duration})");
+        
+        // agent 활성화 확인
+        pet.agent.isStopped = false;  // 명시적으로 설정
+        pet.agent.updateRotation = true;
+        
+        // 도망갈 방향 계산 (반대 방향)
+        Vector3 runDirection = (pet.transform.position - awayFrom).normalized;
+        if (runDirection == Vector3.zero) runDirection = -pet.transform.forward;
+        
+        // 빠르게 돌아서기
+        pet.transform.rotation = Quaternion.LookRotation(runDirection);
+        
+        // 도망갈 목표 위치
+        Vector3 retreatTarget = pet.transform.position + runDirection * distance;
+        retreatTarget = FindValidPositionOnNavMesh(retreatTarget, 10f);
+        
+        Debug.Log($"[QuickRetreat] 목표 위치: {retreatTarget}, 현재 위치: {pet.transform.position}");
+        
+        // 빠르게 도망
+        float originalSpeed = pet.agent.speed;
+        pet.agent.speed = pet.baseSpeed * 1.5f; // 도망 속도
+        pet.agent.SetDestination(retreatTarget);
+        
+        // Run 애니메이션 (SetContinuousAnimation 사용)
+        pet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        
+        yield return new WaitForSeconds(duration);
+        
+        // 애니메이션 정리
+        pet.animationController.StopContinuousAnimation();
+        
+        // 속도 복원
+        pet.agent.speed = originalSpeed;
     }
 }
