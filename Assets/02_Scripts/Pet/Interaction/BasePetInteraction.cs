@@ -276,7 +276,14 @@ public abstract class BasePetInteraction : MonoBehaviour
             animController.StopContinuousAnimation();
         }
         
-        // 약간의 지연 후 다음 행동 결정 (애니메이션과 NavMeshAgent 동기화를 위해)
+        // AI를 즉시 재평가하여 다음 행동 결정
+        if (pet.AI != null)
+        {
+            Debug.Log($"[BasePetInteraction] {pet.petName}: 상호작용 종료, AI 즉시 재평가");
+            pet.AI.InterruptAndResetAI();  // 현재 활동 중단하고 새로 평가
+        }
+        
+        // 추가 안전장치: 약간의 지연 후에도 다시 확인
         pet.StartCoroutine(DelayedBehaviorDecision(pet));
     }
 

@@ -90,6 +90,19 @@ public class PersonalityReactionInteraction : BasePetInteraction
             
             // 상호작용 종료
             EndInteraction(pet1, pet2);
+            
+            // 추가 보장: 각 펫의 AI를 명시적으로 재시작
+            if (pet1.AI != null)
+            {
+                Debug.Log($"[PersonalityReaction] {pet1.petName}: AI 강제 재시작");
+                pet1.AI.InterruptAndResetAI();
+            }
+            if (pet2.AI != null)
+            {
+                Debug.Log($"[PersonalityReaction] {pet2.petName}: AI 강제 재시작");
+                pet2.AI.InterruptAndResetAI();
+            }
+            
             Debug.Log($"<color=blue>[PersonalityReaction] ========== 상호작용 종료 ==========</color>");
         }
     }
