@@ -758,29 +758,31 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 runDirection = (pet.transform.position - awayFrom).normalized;
         if (runDirection == Vector3.zero) runDirection = -pet.transform.forward;
         
-        // 빠르게 돌아서기
-        pet.transform.rotation = Quaternion.LookRotation(runDirection);
-        
         // 도망갈 목표 위치
         Vector3 retreatTarget = pet.transform.position + runDirection * distance;
         retreatTarget = FindValidPositionOnNavMesh(retreatTarget, 10f);
         
         Debug.Log($"[QuickRetreat] 목표 위치: {retreatTarget}, 현재 위치: {pet.transform.position}");
         
-        // 빠르게 도망
+        // 부드럽게 돌아서면서 도망 시작
         float originalSpeed = pet.agent.speed;
+        float originalAngularSpeed = pet.agent.angularSpeed;
+        
+        pet.agent.angularSpeed = 720f;  // 빠른 회전 속도 (720도/초)
         pet.agent.speed = pet.baseSpeed * 1.5f; // 도망 속도
         pet.agent.SetDestination(retreatTarget);
         
         // Run 애니메이션 (SetContinuousAnimation 사용)
         pet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         
+        // 회전이 완료될 시간 포함하여 대기
         yield return new WaitForSeconds(duration);
         
         // 애니메이션 정리
         pet.animationController.StopContinuousAnimation();
         
-        // 속도 복원
+        // 속도 및 회전 속도 복원
         pet.agent.speed = originalSpeed;
+        pet.agent.angularSpeed = originalAngularSpeed;
     }
 }
