@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 8352962793379818008}
   - component: {fileID: 648644708604864693}
   - component: {fileID: -8314337667573088611}
+  - component: {fileID: -4962863032343489133}
   m_Layer: 0
   m_Name: PetInteractionManager
   m_TagString: Untagged
@@ -415,3 +416,24 @@ MonoBehaviour:
   firstWakeProbability: 0.5
   sleepPositionOffset: 0.3
   agentSafetyTimeout: 3
+--- !u!114 &-4962863032343489133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7108309724432713129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0955ce0a902394aa59faecf559daa3b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  reactionDuration: 8
+  approachDistance: 3
+  fleeDistance: 10
+  moveTimeout: 5
+  pauseDuration: 1.5
+  lookDuration: 1
+  jumpInterval: 0.8
+  chaseDuration: 3

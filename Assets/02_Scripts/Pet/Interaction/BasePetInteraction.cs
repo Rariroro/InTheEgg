@@ -350,7 +350,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// <summary>
     /// 두 펫의 크기를 고려하여 조정된 상호작용 거리를 계산
     /// </summary>
-    private float CalculateAdjustedDistance(PetController pet1, PetController pet2)
+    protected float CalculateAdjustedDistance(PetController pet1, PetController pet2)
     {
         // 각 펫의 크기 배율 가져오기
         float multiplier1 = pet1.Profile.GetInteractionDistanceMultiplier();
@@ -610,7 +610,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     }
 
     // 상호작용 실행 전 원래 상태 저장 헬퍼 클래스
-    protected class PetOriginalState
+    public class PetOriginalState
     {
         public bool agentWasStopped;
         public float originalSpeed;
