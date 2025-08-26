@@ -134,14 +134,28 @@ public abstract class BasePetInteraction : MonoBehaviour
     // EndInteraction은 private 또는 protected로 변경하여 외부 호출을 막습니다.
     protected void EndInteraction(PetController pet1, PetController pet2)
     {
-        if (pet1 != null) SafeResumePet(pet1);
-        if (pet2 != null) SafeResumePet(pet2);
+        Debug.Log($"[{InteractionName}] EndInteraction 호출: {pet1?.petName} & {pet2?.petName}");
+        
+        // 중복 호출 방지를 위한 체크
+        bool pet1AlreadyClean = (pet1 == null || !pet1.State.IsInteracting);
+        bool pet2AlreadyClean = (pet2 == null || !pet2.State.IsInteracting);
+        
+        if (pet1AlreadyClean && pet2AlreadyClean)
+        {
+            Debug.Log($"[{InteractionName}] 이미 상호작용이 종료된 상태, 중복 호출 무시");
+            return;
+        }
+        
+        if (pet1 != null && pet1.State.IsInteracting) SafeResumePet(pet1);
+        if (pet2 != null && pet2.State.IsInteracting) SafeResumePet(pet2);
 
         // 상호작용 매니저에 종료 알림
         if (PetInteractionManager.Instance != null)
         {
             PetInteractionManager.Instance.NotifyInteractionEnded(pet1, pet2);
         }
+        
+        Debug.Log($"[{InteractionName}] EndInteraction 완료");
     }
     // 상호작용 수행 코루틴
 
@@ -236,12 +250,24 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         if (pet == null) return;
 
+        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
+        
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.EndInteraction();
         pet.State.SetInteractionLogic(null);
 
         // 감정 말풍선 숨기기
         pet.HideEmotion();
+        
+        // 애니메이션 상태 초기화 (agent 체크 전에 수행)
+        var animController = pet.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopAllCoroutines();
+            animController.StopContinuousAnimation();
+            // Idle 상태로 명시적 전환
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
 
         if (pet.agent == null) return;
 
@@ -261,30 +287,57 @@ public abstract class BasePetInteraction : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"[BasePetInteraction] {pet.petName}의 NavMesh 위치를 찾지 못해 이동을 재개할 수 없습니다.");
+                Debug.LogError($"[SafeResumePet] {pet.petName}의 NavMesh 위치를 찾지 못해 이동을 재개할 수 없습니다.");
                 return;
             }
         }
 
-        // 3. 모든 준비가 완료되면 이동을 재개하고 새로운 목적지를 찾도록 합니다.
+        // 3. NavMeshAgent 상태 완전 초기화
+        pet.agent.isStopped = false;
+        pet.agent.ResetPath();
+        pet.agent.speed = pet.baseSpeed;
+        pet.agent.acceleration = pet.baseAcceleration;
+        pet.agent.angularSpeed = 120f; // 기본 회전 속도
+        pet.agent.updateRotation = true;
+        pet.agent.updatePosition = true;
+        
+        // 4. 이동 재개
         pet.ResumeMovement();
         
-        // 애니메이션 상태 초기화
-        var animController = pet.GetComponent<PetAnimationController>();
-        if (animController != null)
-        {
-            animController.StopContinuousAnimation();
-        }
-        
-        // AI를 즉시 재평가하여 다음 행동 결정
+        // 5. AI를 즉시 재평가하여 다음 행동 결정
         if (pet.AI != null)
         {
-            Debug.Log($"[BasePetInteraction] {pet.petName}: 상호작용 종료, AI 즉시 재평가");
+            Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
             pet.AI.InterruptAndResetAI();  // 현재 활동 중단하고 새로 평가
+            
+            // 0.1초 후 AI 활동 보장
+            pet.StartCoroutine(EnsureAIActivity(pet, 0.1f));
         }
         
         // 추가 안전장치: 약간의 지연 후에도 다시 확인
         pet.StartCoroutine(DelayedBehaviorDecision(pet));
+        
+        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
+    }
+    
+    /// <summary>
+    /// AI 활동이 없으면 강제로 Wander 시작
+    /// </summary>
+    private IEnumerator EnsureAIActivity(PetController pet, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (pet.AI != null && pet.AI.GetCurrentActivity() == null)
+        {
+            Debug.LogWarning($"[EnsureAIActivity] {pet.petName}: AI 활동이 없어서 강제로 배회 시작");
+            
+            // MovementController를 통해 배회 시작
+            var movementController = pet.GetComponent<PetMovementController>();
+            if (movementController != null)
+            {
+                movementController.DecideNextBehavior();
+            }
+        }
     }
 
     // 상호작용 유형 결정 메서드 (하위 클래스에서 구현)

@@ -17,7 +17,14 @@ public class InteractWithPetActivity : PetActivityAdapter
     {
         // 터치/홀드 상태에서는 펫 간 상호작용 중단
         if (pet.State.IsHolding || pet.State.IsSelected)
+        {
+            // 상호작용 중이었다면 즉시 false 반환하여 활동 전환 유도
+            if (pet.State.IsInteracting)
+            {
+                Debug.Log($"[InteractWithPetActivity] {pet.petName}: 터치/홀드로 인해 상호작용 불가");
+            }
             return false;
+        }
             
         // 모이기 중이거나 모인 상태에서는 상호작용 불가
         if (pet.State.CurrentStatus == PetStatus.GatheringInProgress || 
@@ -57,9 +64,39 @@ public class InteractWithPetActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 종료");
-        // BasePetInteraction의 finally 블록에서 모든 정리를 수행하므로
-        // 여기서는 특별한 정리 작업 없음
-        // isInteracting 플래그는 BasePetInteraction에서 해제됨
+        Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 활동 종료");
+        
+        // 상호작용이 아직 남아있다면 강제로 정리
+        if (pet.State.IsInteracting)
+        {
+            Debug.LogWarning($"[InteractWithPetActivity] {pet.petName}: 상호작용 상태가 남아있어 강제 정리");
+            pet.State.EndInteraction();
+            pet.State.SetInteractionLogic(null);
+        }
+        
+        // 애니메이션 정리
+        var animController = pet.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopContinuousAnimation();
+        }
+        
+        // AI 재평가 트리거
+        if (pet.AI != null)
+        {
+            Debug.Log($"[InteractWithPetActivity] {pet.petName}: AI 재평가 요청");
+            // 약간의 지연 후 AI 재평가 (즉시 하면 충돌 가능)
+            pet.StartCoroutine(TriggerAIRestart(0.1f));
+        }
+    }
+    
+    private System.Collections.IEnumerator TriggerAIRestart(float delay)
+    {
+        yield return new UnityEngine.WaitForSeconds(delay);
+        
+        if (pet.AI != null)
+        {
+            pet.AI.UpdateAI();
+        }
     }
 }

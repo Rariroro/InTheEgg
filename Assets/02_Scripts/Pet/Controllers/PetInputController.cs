@@ -958,31 +958,117 @@ public class PetInputController : PetControllerBase
     /// </summary>
     private void ForceStopInteraction()
     {
+        Debug.Log($"[ForceStopInteraction] {petController.petName}: 상호작용 강제 중단 시작");
+        
         if (petController.State.InteractionLogic != null)
         {
             // 상호작용 로직의 모든 코루틴 중단
             var interactionLogic = petController.State.InteractionLogic;
             interactionLogic.StopAllCoroutines();
 
-
+            // 상대 펫 처리
             if (petController.State.InteractionPartner != null)
             {
                 var partner = petController.State.InteractionPartner;
 
-
+                // 상대 펫의 상호작용 코루틴도 중단
                 if (partner.State.InteractionLogic != null)
                 {
                     partner.State.InteractionLogic.StopAllCoroutines();
                 }
 
+                // 두 펫 모두의 상태를 완전히 초기화
+                CleanupPetAfterInteraction(petController);
+                CleanupPetAfterInteraction(partner);
 
+                // PetInteractionManager에 알림
                 if (PetInteractionManager.Instance != null)
                 {
                     PetInteractionManager.Instance.NotifyInteractionEnded(petController, partner);
                 }
+                
+                Debug.Log($"[ForceStopInteraction] {petController.petName} & {partner.petName}: 상호작용 강제 중단 완료");
             }
-
-
+            else
+            {
+                // 파트너가 없는 경우에도 본인은 정리
+                CleanupPetAfterInteraction(petController);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 상호작용 중단 후 펫을 완전히 정리하는 헬퍼 메서드
+    /// </summary>
+    private void CleanupPetAfterInteraction(PetController pet)
+    {
+        if (pet == null) return;
+        
+        Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 시작");
+        
+        // 1. 상태 초기화
+        pet.State.EndInteraction();
+        pet.State.SetInteractionLogic(null);
+        
+        // 2. 감정 말풍선 숨기기
+        pet.HideEmotion();
+        
+        // 3. 애니메이션 초기화
+        var animController = pet.GetComponent<PetAnimationController>();
+        if (animController != null)
+        {
+            animController.StopAllCoroutines();
+            animController.StopContinuousAnimation();
+            // Idle 애니메이션으로 강제 전환
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+        
+        // 4. NavMeshAgent 초기화
+        if (pet.agent != null && pet.agent.enabled)
+        {
+            if (pet.agent.isOnNavMesh)
+            {
+                pet.agent.isStopped = false;
+                pet.agent.ResetPath();
+                pet.agent.speed = pet.baseSpeed;
+                pet.agent.acceleration = pet.baseAcceleration;
+                pet.agent.updateRotation = true;
+            }
+        }
+        
+        // 5. 이동 재개
+        pet.ResumeMovement();
+        
+        // 6. AI 강제 재시작 (즉시)
+        if (pet.AI != null)
+        {
+            Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: AI 강제 재시작");
+            pet.AI.InterruptAndResetAI();
+            
+            // 0.2초 후에도 AI가 활동이 없으면 Wander 강제 시작
+            pet.StartCoroutine(EnsureActivityAfterDelay(pet, 0.2f));
+        }
+        
+        Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 완료");
+    }
+    
+    /// <summary>
+    /// 지연 후 펫이 활동 중인지 확인하고 아니면 Wander 시작
+    /// </summary>
+    private IEnumerator EnsureActivityAfterDelay(PetController pet, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
+        if (pet.AI != null && pet.AI.GetCurrentActivity() == null)
+        {
+            Debug.LogWarning($"[EnsureActivityAfterDelay] {pet.petName}: AI 활동이 없어서 강제로 Wander 시작");
+            
+            // Wander 활동 찾아서 강제 시작
+            var movementController = pet.GetComponent<PetMovementController>();
+            if (movementController != null)
+            {
+                movementController.DecideNextBehavior();
+            }
         }
     }
 
