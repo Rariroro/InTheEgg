@@ -456,7 +456,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
             waitTime += Time.deltaTime;
             yield return null;
         }
-        
+                yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 1f));
+
         // 2단계: Shy가 놀라서 도망 후 돌아보기
         Debug.Log($"[ShyPlayful] 단계2: Shy가 깜짝 놀라서 도망");
         playfulPet.agent.isStopped = true;
