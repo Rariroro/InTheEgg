@@ -203,14 +203,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition2 = pet1.transform.position - direction2 * approachDistance;
         targetPosition2 = FindValidPositionOnNavMesh(targetPosition2, 10f);
         
-        pet1.agent.isStopped = false;
-        pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 0.3f; // 매우 천천히
-        pet2.agent.speed = pet2.baseSpeed * 0.3f;
-        pet1.agent.SetDestination(targetPosition1);
-        pet2.agent.SetDestination(targetPosition2);
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        // 부드러운 회전 후 이동 시작
+        StartCoroutine(SmoothMoveToPosition(pet1, targetPosition1, pet1.baseSpeed * 0.3f, PetAnimationController.PetAnimationType.Walk));
+        yield return StartCoroutine(SmoothMoveToPosition(pet2, targetPosition2, pet2.baseSpeed * 0.3f, PetAnimationController.PetAnimationType.Walk));
         
         // 목표 위치 도달 대기
         float waitTime = 0f;
@@ -304,10 +299,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
         
-        lazyPet.agent.isStopped = false;
-        lazyPet.agent.speed = lazyPet.baseSpeed * 0.4f;
-        lazyPet.agent.SetDestination(targetPosition);
-        lazyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        // 부드러운 회전 후 이동
+        yield return StartCoroutine(SmoothMoveToPosition(lazyPet, targetPosition, lazyPet.baseSpeed * 0.4f, PetAnimationController.PetAnimationType.Walk));
         
         // 접근 대기
         float waitTime = 0f;
@@ -383,10 +376,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition = lazyPet.transform.position - direction * approachDistance;
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
         
-        bravePet.agent.isStopped = false;
-        bravePet.agent.speed = bravePet.baseSpeed * 1.5f;
-        bravePet.agent.SetDestination(targetPosition);
-        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        // 부드러운 회전 후 이동
+        yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
         
         // 2단계: Lazy는 무반응으로 누움
         Debug.Log($"[LazyBrave] 단계2: {lazyPet.petName}은 귀찮아서 누움");
@@ -455,10 +446,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition = lazyPet.transform.position - direction * approachDistance;
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
         
-        playfulPet.agent.isStopped = false;
-        playfulPet.agent.speed = playfulPet.baseSpeed * 2f;
-        playfulPet.agent.SetDestination(targetPosition);
-        playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        // 부드러운 회전 후 이동
+        yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
         
         // 2단계: Lazy는 귀찮아서 누움
         Debug.Log($"[LazyPlayful] 단계2: {lazyPet.petName}은 귀찮아서 누움");
@@ -614,10 +603,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
         
-        bravePet.agent.isStopped = false;
-        bravePet.agent.speed = bravePet.baseSpeed * 1.3f;
-        bravePet.agent.SetDestination(targetPosition);
-        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        // 부드러운 회전 후 이동
+        yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.3f, PetAnimationController.PetAnimationType.Walk));
         
         // Shy가 불안해함
         yield return new WaitForSeconds(0.5f);
@@ -708,10 +695,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
         
-        playfulPet.agent.isStopped = false;  // 명시적으로 설정
-        playfulPet.agent.speed = playfulPet.baseSpeed * 1.5f;  // 천천히 접근
-        playfulPet.agent.SetDestination(targetPosition);
-        playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk); // 걷기 애니메이션
+        // 부드러운 회전 후 이동
+        yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Walk));
         
         // 목표 위치 도달 대기
         float waitTime = 0f;
@@ -790,14 +775,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 meetPoint = (pet1.transform.position + pet2.transform.position) / 2f;
         meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
         
-        pet1.agent.isStopped = false;
-        pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 1.5f;
-        pet2.agent.speed = pet2.baseSpeed * 1.5f;
-        pet1.agent.SetDestination(meetPoint);
-        pet2.agent.SetDestination(meetPoint);
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        // 부드러운 회전 후 이동 시작  
+        StartCoroutine(SmoothMoveToPosition(pet1, meetPoint, pet1.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
+        yield return StartCoroutine(SmoothMoveToPosition(pet2, meetPoint, pet2.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
         
         // 접근 대기
         float waitTime = 0f;
@@ -888,14 +868,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 meetPoint = (bravePet.transform.position + playfulPet.transform.position) / 2f;
         meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
         
-        bravePet.agent.isStopped = false;
-        playfulPet.agent.isStopped = false;
-        bravePet.agent.speed = bravePet.baseSpeed * 1.8f;
-        playfulPet.agent.speed = playfulPet.baseSpeed * 1.8f;
-        bravePet.agent.SetDestination(meetPoint);
-        playfulPet.agent.SetDestination(meetPoint);
-        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        // 부드러운 회전 후 이동 시작
+        StartCoroutine(SmoothMoveToPosition(bravePet, meetPoint, bravePet.baseSpeed * 1.8f, PetAnimationController.PetAnimationType.Run));
+        yield return StartCoroutine(SmoothMoveToPosition(playfulPet, meetPoint, playfulPet.baseSpeed * 1.8f, PetAnimationController.PetAnimationType.Run));
         
         // 접근 대기
         float waitTime = 0f;
@@ -991,14 +966,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 meetPoint = (pet1.transform.position + pet2.transform.position) / 2f;
         meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
         
-        pet1.agent.isStopped = false;
-        pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 2f;
-        pet2.agent.speed = pet2.baseSpeed * 2f;
-        pet1.agent.SetDestination(meetPoint);
-        pet2.agent.SetDestination(meetPoint);
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        // 부드러운 회전 후 이동 시작
+        StartCoroutine(SmoothMoveToPosition(pet1, meetPoint, pet1.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
+        yield return StartCoroutine(SmoothMoveToPosition(pet2, meetPoint, pet2.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
         
         // 접근 대기
         float waitTime = 0f;
@@ -1328,13 +1298,68 @@ public class PersonalityReactionInteraction : BasePetInteraction
     }
     
     /// <summary>
-    /// 상호작용이 중단되었는지 체크하는 헬퍼 메서드
+    /// 펫을 목표 위치로 부드럽게 회전 후 이동시키는 헬퍼 메서드
     /// </summary>
-    private bool CheckIfInterrupted(PetController pet1, PetController pet2)
+    private IEnumerator SmoothMoveToPosition(PetController pet, Vector3 targetPosition, float moveSpeed, PetAnimationController.PetAnimationType animType)
     {
-        return (pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
-               (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected));
+        // 목표 방향 계산
+        Vector3 direction = (targetPosition - pet.transform.position).normalized;
+        direction.y = 0; // Y축 회전만
+        
+        // 거리가 너무 가까우면 회전 생략
+        if (Vector3.Distance(pet.transform.position, targetPosition) < 0.5f)
+        {
+            pet.agent.isStopped = false;
+            pet.agent.speed = moveSpeed;
+            pet.agent.SetDestination(targetPosition);
+            pet.animationController.SetContinuousAnimation(animType);
+            yield break;
+        }
+        
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Quaternion startRotation = pet.transform.rotation;
+        
+        // 회전 각도 계산
+        float rotationAngle = Quaternion.Angle(startRotation, targetRotation);
+        
+        // 회전 각도가 작으면 즉시 이동
+        if (rotationAngle < 10f)
+        {
+            pet.agent.isStopped = false;
+            pet.agent.speed = moveSpeed;
+            pet.agent.SetDestination(targetPosition);
+            pet.animationController.SetContinuousAnimation(animType);
+            yield break;
+        }
+        
+        // 회전 시간 계산 (각도에 비례, 최대 0.5초)
+        float rotationTime = Mathf.Min(0.5f, rotationAngle / 180f * 0.5f);
+        float elapsed = 0f;
+        
+        // 1. agent의 자동 회전 비활성화
+        pet.agent.updateRotation = false;
+        
+        // 2. 부드러운 회전
+        while (elapsed < rotationTime)
+        {
+            float t = elapsed / rotationTime;
+            float smoothT = Mathf.SmoothStep(0, 1, t); // 더 부드러운 커브
+            pet.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 정확한 회전값 설정
+        pet.transform.rotation = targetRotation;
+        
+        // 3. 회전 완료 후 이동 시작
+        pet.agent.updateRotation = true;
+        pet.agent.isStopped = false;
+        pet.agent.speed = moveSpeed;
+        pet.agent.SetDestination(targetPosition);
+        pet.animationController.SetContinuousAnimation(animType);
     }
+    
     
     /// <summary>
     /// 빠르게 돌아서 도망가기 (뒷걸음질 대체)
@@ -1345,11 +1370,11 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // agent 활성화 확인
         pet.agent.isStopped = false;  // 명시적으로 설정
-        pet.agent.updateRotation = true;
         
         // 도망갈 방향 계산 (반대 방향)
         Vector3 runDirection = (pet.transform.position - awayFrom).normalized;
         if (runDirection == Vector3.zero) runDirection = -pet.transform.forward;
+        runDirection.y = 0; // Y축 회전만
         
         // 도망갈 목표 위치
         Vector3 retreatTarget = pet.transform.position + runDirection * distance;
@@ -1357,19 +1382,41 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         Debug.Log($"[QuickRetreat] 목표 위치: {retreatTarget}, 현재 위치: {pet.transform.position}");
         
-        // 부드럽게 돌아서면서 도망 시작
+        // 원래 속도 저장
         float originalSpeed = pet.agent.speed;
         float originalAngularSpeed = pet.agent.angularSpeed;
         
-        pet.agent.angularSpeed = 720f;  // 빠른 회전 속도 (720도/초)
+        // 1. 먼저 부드럽게 회전 (0.2초 동안)
+        Quaternion targetRotation = Quaternion.LookRotation(runDirection);
+        Quaternion startRotation = pet.transform.rotation;
+        float rotationTime = 0.2f;
+        float elapsed = 0f;
+        
+        // 회전 중에는 agent의 자동 회전 비활성화
+        pet.agent.updateRotation = false;
+        
+        while (elapsed < rotationTime)
+        {
+            float t = elapsed / rotationTime;
+            pet.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 정확한 회전값 설정
+        pet.transform.rotation = targetRotation;
+        
+        // 2. 회전 완료 후 도망 시작
+        pet.agent.updateRotation = true;
+        pet.agent.angularSpeed = 720f;  // 빠른 회전 속도 (이동 중 경로 변경 시)
         pet.agent.speed = pet.baseSpeed * 1.5f; // 도망 속도
         pet.agent.SetDestination(retreatTarget);
         
-        // Run 애니메이션 (SetContinuousAnimation 사용)
+        // Run 애니메이션
         pet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         
-        // 회전이 완료될 시간 포함하여 대기
-        yield return new WaitForSeconds(duration);
+        // 남은 시간 동안 도망
+        yield return new WaitForSeconds(duration - rotationTime);
         
         // 애니메이션 정리
         pet.animationController.StopContinuousAnimation();
