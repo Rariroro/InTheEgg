@@ -854,14 +854,19 @@ public class PetInputController : PetControllerBase
         selectionTimer = 0f;
 
 
-        if (petController.AI != null)
+        // 나무 위에 있을 때는 AI를 중단시키지 않음 (나무에서 떨어지는 문제 방지)
+        if (petController.AI != null && !petController.State.IsClimbingTree)
         {
             petController.AI.InterruptAndResetAI();
         }
 
 
-        var moveController = petController.GetComponent<PetMovementController>();
-        moveController?.ForceStopCurrentBehavior();
+        // 나무 위에 있을 때는 현재 행동을 중단시키지 않음
+        if (!petController.State.IsClimbingTree)
+        {
+            var moveController = petController.GetComponent<PetMovementController>();
+            moveController?.ForceStopCurrentBehavior();
+        }
 
 
         if (!petController.State.IsClimbingTree)
