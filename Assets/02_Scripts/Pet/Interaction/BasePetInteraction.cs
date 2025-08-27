@@ -75,8 +75,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 계산된 위치로 이동
         yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1TargetPos, pet2TargetPos, 10f));
 
-        // 서로 마주보게 회전
-        LookAtEachOther(pet1, pet2);
+        // 서로 마주보게 회전 - 각 상호작용이 자체적으로 처리하도록 제거
+        // LookAtEachOther(pet1, pet2);  // 즉시 회전 제거 - 각 상호작용에서 부드럽게 처리
         // ▲▲▲ [여기까지 수정] ▲▲▲
         // 2. 실제 상호작용 실행 (try-finally로 안정성 확보)
         try

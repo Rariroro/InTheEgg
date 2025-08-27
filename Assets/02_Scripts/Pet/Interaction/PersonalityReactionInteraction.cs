@@ -8,59 +8,64 @@ using UnityEngine.AI;
 /// </summary>
 public class PersonalityReactionInteraction : BasePetInteraction
 {
+    // 상호작용 이름을 "PersonalityReaction"으로 고정 반환
     public override string InteractionName => "PersonalityReaction";
     
-    // 중단 상태 추적
+    // 유저가 펫을 터치하거나 홀드해서 상호작용이 중단되었는지 추적하는 플래그
     private bool wasInterrupted = false;
 
     [Header("반응 설정")]
     [Tooltip("반응 지속 시간")]
-    public float reactionDuration = 8f;
+    public float reactionDuration = 8f;  // 전체 상호작용이 지속되는 시간
     
     [Tooltip("접근 거리")]
-    public float approachDistance = 3f;
+    public float approachDistance = 3f;  // 펫들이 서로 접근할 기본 거리
     
     [Tooltip("도망 거리")]
-    public float fleeDistance = 10f;
+    public float fleeDistance = 10f;  // 수줍은 펫이 도망갈 거리
     
     [Tooltip("움직임 타임아웃")]
-    public float moveTimeout = 5f;
+    public float moveTimeout = 5f;  // 이동 명령이 완료되기를 기다리는 최대 시간
 
     [Header("타이밍 설정")]
     [Tooltip("정적 대기 시간")]
-    public float pauseDuration = 1.5f;
+    public float pauseDuration = 1.5f;  // 동작 사이의 일시정지 시간
     
     [Tooltip("쳐다보기 시간")]
-    public float lookDuration = 1f;
+    public float lookDuration = 1f;  // 서로를 쳐다보는 지속 시간
     
     [Tooltip("점프 간격")]
-    public float jumpInterval = 0.8f;
+    public float jumpInterval = 0.8f;  // 점프 애니메이션 사이 간격
     
     [Tooltip("추격전 지속 시간")]
-    public float chaseDuration = 3f;
+    public float chaseDuration = 3f;  // 추격전이 지속되는 시간
 
     protected override InteractionType DetermineInteractionType()
     {
-        // 기본 타입 반환 (새로운 타입을 추가하거나 기존 타입 재사용)
+        // 상호작용 타입을 WalkTogether로 설정 (UI 표시용)
+        // 실제로는 성격 조합에 따라 다양한 패턴으로 동작함
         return InteractionType.WalkTogether;
     }
 
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        // 모든 성격 조합에서 상호작용 가능
-        // 단, 다른 조건들은 체크 (이미 상호작용 중, 홀딩 중 등은 상위에서 체크됨)
+        // PersonalityReactionInteraction은 모든 펫 조합에서 가능
+        // 이미 상호작용 중이거나 홀딩 중인지는 BasePetInteraction에서 체크함
+        // 따라서 여기서는 항상 true를 반환하여 성격 상호작용을 허용
         return true;
     }
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
+        // 상호작용 시작 로그 출력
         Debug.Log($"<color=green>[PersonalityReaction] ========== 상호작용 시작 ==========</color>");
         Debug.Log($"[PersonalityReaction] 참여 펫: {pet1.petName}({pet1.personality}) & {pet2.petName}({pet2.personality})");
         
-        // 중단 플래그 초기화
+        // 상호작용이 중단되었는지 추적하는 플래그를 false로 초기화
         wasInterrupted = false;
-        
-        // NavMeshAgent 준비 확인
+
+        // 펫들의 NavMeshAgent가 준비되었는지 확인 (최대 3초 대기)
+        // NavMeshAgent가 없거나 비활성화되어 있으면 상호작용 불가능
         Debug.Log($"[PersonalityReaction] NavMeshAgent 준비 확인 중...");
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, 3f));
         yield return StartCoroutine(WaitUntilAgentIsReady(pet2, 3f));
@@ -73,24 +78,28 @@ public class PersonalityReactionInteraction : BasePetInteraction
         }
         Debug.Log($"[PersonalityReaction] NavMeshAgent 준비 완료");
 
-        // 원래 상태 저장
+        // 상호작용 전 펫들의 원래 상태(속도, 회전속도 등)를 저장
+        // 나중에 상호작용이 끝나면 이 상태로 복원함
         PetOriginalState pet1State = new PetOriginalState(pet1);
         PetOriginalState pet2State = new PetOriginalState(pet2);
 
         try
-        {
-            // 성격 조합 확인
+        {                     
+            // 두 펫의 성격을 조합하여 어떤 패턴을 실행할지 결정
+            // 예: Lazy + Lazy = "Lazy_Lazy" 패턴
             string combination = GetPersonalityCombination(pet1.personality, pet2.personality);
             Debug.Log($"<color=yellow>[PersonalityReaction] 성격 조합: {combination}</color>");
 
-            // 성격 조합에 따른 반응 실행
+            // 결정된 성격 조합에 해당하는 반응 패턴 실행
+            // 10가지 조합별로 다른 동작 패턴이 있음
             Debug.Log($"[PersonalityReaction] {combination} 패턴 실행 시작");
             yield return StartCoroutine(ExecuteReactionPattern(combination, pet1, pet2));
             Debug.Log($"[PersonalityReaction] {combination} 패턴 실행 완료");
         }
         finally
         {
-            // 중단 여부 체크
+            // 유저가 펫을 터치하거나 홀드하여 상호작용이 중단되었는지 확인
+            // IsHolding: 펫을 잡고 있는 상태, IsSelected: 펫을 선택한 상태
             wasInterrupted = (pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
                            (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected));
             
@@ -129,7 +138,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
     /// </summary>
     private string GetPersonalityCombination(PetTraits.Personality p1, PetTraits.Personality p2)
     {
-        // 알파벳 순서로 정렬하여 일관된 조합 생성
+        // 두 성격을 알파벳 순서로 정렬하여 일관된 조합명 생성
+        // 예: Lazy + Brave → "Brave_Lazy" (항상 같은 순서)
+        // 이렇게 하면 (pet1=Lazy, pet2=Brave)와 (pet1=Brave, pet2=Lazy)가 같은 패턴 사용
         if (p1.ToString().CompareTo(p2.ToString()) <= 0)
             return $"{p1}_{p2}";
         else
@@ -141,6 +152,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator ExecuteReactionPattern(string combination, PetController pet1, PetController pet2)
     {
+        // 10가지 성격 조합별로 다른 반응 패턴 실행
+        // 각 패턴은 해당 성격들의 특성을 반영한 독특한 동작들로 구성됨
         switch (combination)
         {
             case "Lazy_Lazy":
@@ -180,7 +193,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         }
     }
 
-    // ===== 1. Lazy + Lazy =====
+    // ===== 1. Lazy + Lazy: 둘 다 게으른 펫들의 반응 =====
+    // 특징: 서로 천천히 접근하다가 함께 누워서 쉬는 패턴
     private IEnumerator LazyLazyReaction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[LazyLazy] Lazy: {pet1.petName}, Lazy: {pet2.petName}");
@@ -321,7 +335,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         lazyPet.agent.isStopped = true;
         lazyPet.animationController.StopContinuousAnimation();
         yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Rest, 3f, false, false));
+            PetAnimationController.PetAnimationType.Rest, 1f, false, false));
         
         // 3단계: Shy가 놀라서 도망
         Debug.Log($"[LazyShy] 단계3: {shyPet.petName}이 놀라서 도망");
