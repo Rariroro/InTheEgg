@@ -70,17 +70,30 @@ public class CameraController : MonoBehaviour
 
     void HandleEditorInput()
     {
+        // 펫이 들려있는지 확인
+        bool isPetHolding = CheckIfAnyPetIsHolding();
+        
         if (Input.GetMouseButtonDown(0))
         {
             // Debug.Log("HandleEditorInput :1");
-
-            isDragging = true;
-            lastMousePosition = Input.mousePosition;
+            
+            // 펫이 들려있으면 카메라 드래그 시작하지 않음
+            if (!isPetHolding)
+            {
+                isDragging = true;
+                lastMousePosition = Input.mousePosition;
+            }
         }
         else if (Input.GetMouseButtonUp(0))
         {
             // Debug.Log("HandleEditorInput :2");
 
+            isDragging = false;
+        }
+
+        // 펫이 들려있는 동안 isDragging을 false로 유지
+        if (isPetHolding && isDragging)
+        {
             isDragging = false;
         }
 
@@ -169,5 +182,21 @@ public class CameraController : MonoBehaviour
             childCamera.fieldOfView = fov;
             // Debug.Log($"Current FOV: {childCamera.fieldOfView}");
         }
+    }
+    
+    // 펫이 들려있는지 확인하는 헬퍼 메서드
+    bool CheckIfAnyPetIsHolding()
+    {
+        // 모든 펫 오브젝트 찾기
+        GameObject[] pets = GameObject.FindGameObjectsWithTag("Pet");
+        foreach (var pet in pets)
+        {
+            var petController = pet.GetComponent<PetController>();
+            if (petController != null && petController.State.IsHolding)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
