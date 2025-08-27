@@ -305,7 +305,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정
         float approachDistance = 4f;
         float retreatDistance = 5f;
-        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
+        float skipApproachThreshold = 5f;  // 5미터 이내면 접근 스킵
         
         // 현재 거리 체크
         float currentDistance = Vector3.Distance(lazyPet.transform.position, shyPet.transform.position);
