@@ -18,16 +18,18 @@ public abstract class BasePetInteraction : MonoBehaviour
     // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
     public void StartInteraction(PetController pet1, PetController pet2)
     {
+        Debug.Log("StartInteraction");
         // 모이기 상태 체크 - 모이기 중이면 상호작용 시작하지 않음
-        if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
+        if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
-            (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
+            (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
         {
             // Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
             return;
         }
-        
+                Debug.Log("StartInteraction2");
+
         // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
         StartCoroutine(InteractionLifecycle(pet1, pet2));
     }
@@ -37,6 +39,8 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// </summary>
     private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
     {
+                        Debug.Log("InteractionLifecycle");
+
         // 1. 사전 준비 단계
         // Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
 
@@ -45,9 +49,11 @@ public abstract class BasePetInteraction : MonoBehaviour
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet1.State.StartInteraction(pet2);
         pet1.State.SetInteractionLogic(this);
-        
+                                Debug.Log("InteractionLifecycle2");
+
         pet2.State.StartInteraction(pet1);
         pet2.State.SetInteractionLogic(this);
+                        Debug.Log("InteractionLifecycle3");
 
         // 이동 중지
         pet1.StopMovement();

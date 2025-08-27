@@ -113,6 +113,8 @@ public class PetEmotionController : MonoBehaviour
     /// </summary>
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
+
+        Debug.Log("감정 실행됨");
         // 음식 감정이 아닌 다른 감정이면 배고픔 감정 일시 중단
         if (!IsFoodEmotion(emotion) && isShowingHungerEmotion)
         {
@@ -168,11 +170,11 @@ public class PetEmotionController : MonoBehaviour
                 // 긴급 상태일 때 경고 이모티콘
                 ShowEmotion(EmotionType.Scared, 2f);
                 break;
-            case PetStatus.Interacting:
-                // 상호작용 시작 시 기쁨 이모티콘
-                if (Random.value < 0.5f)
-                    ShowEmotion(EmotionType.Happy, 2f);
-                break;
+            // case PetStatus.Interacting:
+            //     // 상호작용 시작 시 기쁨 이모티콘
+            //     if (Random.value < 0.5f)
+            //         ShowEmotion(EmotionType.Happy, 2f);
+            //     break;
         }
     }
     

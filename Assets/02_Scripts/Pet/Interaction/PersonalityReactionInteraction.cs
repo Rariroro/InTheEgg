@@ -305,37 +305,55 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정
         float approachDistance = 4f;
         float retreatDistance = 5f;
+        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
         
-        // 0단계: Lazy가 천천히 접근
-        Debug.Log($"[LazyShy] 단계0: Lazy가 천천히 접근");
-        
-        Vector3 direction = (shyPet.transform.position - lazyPet.transform.position).normalized;
-        Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
-        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-        
-        // 부드러운 회전 후 이동
-        yield return StartCoroutine(SmoothMoveToPosition(lazyPet, targetPosition, lazyPet.baseSpeed * 0.4f, PetAnimationController.PetAnimationType.Walk));
-        
-        // 접근 대기
-        float waitTime = 0f;
-        float maxWaitTime = 3f;
-        while (waitTime < maxWaitTime)
+        // 현재 거리 체크
+        float currentDistance = Vector3.Distance(lazyPet.transform.position, shyPet.transform.position);
+        Debug.Log($"[LazyShy] 현재 거리: {currentDistance:F2}미터");
+
+        if (currentDistance < skipApproachThreshold)
         {
-            if (!lazyPet.agent.pathPending && lazyPet.agent.remainingDistance < 0.5f)
-            {
-                Debug.Log($"[LazyShy] Lazy가 목표 위치 도달");
-                break;
-            }
-            waitTime += Time.deltaTime;
-            yield return null;
+            // 이미 가까이 있으면 바로 Shy가 놓라는 반응
+            Debug.Log($"[LazyShy] 이미 가까이 있음 - Shy가 바로 놓람!");
+
+            // 서로 마주보기
+            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, shyPet, 0.5f));
+            yield return new WaitForSeconds(0.3f);
         }
-        
-        // 2단계: Lazy가 누움
+        else
+        {
+            // 멀리 있으면 Lazy가 접근
+            Debug.Log($"[LazyShy] 단계0: Lazy가 천천히 접근");
+
+            Vector3 direction = (shyPet.transform.position - lazyPet.transform.position).normalized;
+            Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
+            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+
+            // 부드러운 회전 후 이동
+            yield return StartCoroutine(SmoothMoveToPosition(lazyPet, targetPosition, lazyPet.baseSpeed * 0.4f, PetAnimationController.PetAnimationType.Walk));
+
+            // 접근 대기
+            float waitTime = 0f;
+            float maxWaitTime = 3f;
+            while (waitTime < maxWaitTime)
+            {
+                if (!lazyPet.agent.pathPending && lazyPet.agent.remainingDistance < 0.5f)
+                {
+                    Debug.Log($"[LazyShy] Lazy가 목표 위치 도달");
+                    break;
+                }
+                waitTime += Time.deltaTime;
+                yield return null;
+            }
+             // 2단계: Lazy가 누움
         Debug.Log($"[LazyShy] 단계2: {lazyPet.petName}이 피곤해서 누움");
         lazyPet.agent.isStopped = true;
         lazyPet.animationController.StopContinuousAnimation();
         yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, 1f, false, false));
+        }
+        
+       
         
         // 3단계: Shy가 놀라서 도망
         Debug.Log($"[LazyShy] 단계3: {shyPet.petName}이 놀라서 도망");
@@ -527,20 +545,40 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정
         float retreatDistance = 5f;
         float finalFleeDistance = 8f;
+        float skipApproachThreshold = 5f;  // 5미터 이내면 바로 놓람
         
-        // ShyShy는 특별히 서로 발견 후 즐시 멈춤 (접근 없음)
+        // 현재 거리 체크
+        float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
+        Debug.Log($"[ShyShy] 현재 거리: {currentDistance:F2}미터");
+        
         // 0단계: 서로 발견하고 멈춤
         Debug.Log($"[ShyShy] 단계0: 서로 발견하고 멈춤");
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
+        
+        if (currentDistance < skipApproachThreshold)
+        {
+            // 이미 가까이 있으면 바로 놀라는 반응
+            Debug.Log($"[ShyShy] 이미 가까이 있음 - 둘 다 바로 놀람!");
+            
+            // 바로 3단계로: 둘 다 놀라서 점프
+            Debug.Log($"[ShyShy] 둘 다 깜짝 놀라서 점프!");
+            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+            
+            // 바로 도망
+            goto SkipToRetreat;
+        }
         
         // 1단계: 조심스럽게 서로 쳐다보기
         Debug.Log($"[ShyShy] 단계1: 조심스럽게 서로 쳐다보기");
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1f));
         
         // 2단계: 긴 정적
-        Debug.Log($"[ShyShy] 단계2: 긴 정적... (불안한 기다림)");
-        yield return new WaitForSeconds(pauseDuration * 2f);
+        // Debug.Log($"[ShyShy] 단계2: 긴 정적... (불안한 기다림)");
+        // yield return new WaitForSeconds(pauseDuration * 2f);
         
         // 3단계: 둘 다 놀라서 점프
         Debug.Log($"[ShyShy] 단계3: 둘 다 놀라서 점프");
@@ -549,6 +587,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
         
+        SkipToRetreat:
         // 4단계: 동시에 뒤로 물러남
         Debug.Log($"[ShyShy] 단계4: 동시에 뒤로 물러남");
         pet1.agent.isStopped = false;
@@ -609,26 +648,42 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float approachDistance = 4f;
         float firstRetreatDistance = 5f;
         float finalFleeDistance = 10f;
+        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
         
-        // 0단계: Brave가 당당히 접근
-        Debug.Log($"[ShyBrave] 단계0: Brave가 당당히 접근");
+        // 현재 거리 체크
+        float currentDistance = Vector3.Distance(shyPet.transform.position, bravePet.transform.position);
+        Debug.Log($"[ShyBrave] 현재 거리: {currentDistance:F2}미터");
         
-        Vector3 direction = (shyPet.transform.position - bravePet.transform.position).normalized;
-        Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
-        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-        
-        // 부드러운 회전 후 이동
-        yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.3f, PetAnimationController.PetAnimationType.Walk));
-        
-        // Shy가 불안해함
-        yield return new WaitForSeconds(0.5f);
-        
-        // 1단계: 서로 마주보기
-        Debug.Log($"[ShyBrave] 단계1: 서로 마주보기");
-        bravePet.agent.isStopped = true;
-        bravePet.animationController.StopContinuousAnimation();
-        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 1f));
-        yield return new WaitForSeconds(0.5f);
+        if (currentDistance < skipApproachThreshold)
+        {
+            // 이미 가까이 있으면 Shy가 바로 놀람
+            Debug.Log($"[ShyBrave] 이미 가까이 있음 - Shy가 바로 놀람!");
+            
+            // 서로 마주보기
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
+        }
+        else
+        {
+            // 멀리 있으면 Brave가 접근
+            Debug.Log($"[ShyBrave] 단계0: Brave가 당당히 접근");
+            
+            Vector3 direction = (shyPet.transform.position - bravePet.transform.position).normalized;
+            Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
+            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+            
+            // 부드러운 회전 후 이동
+            yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.3f, PetAnimationController.PetAnimationType.Walk));
+            
+            // Shy가 불안해함
+            yield return new WaitForSeconds(0.5f);
+            
+            // 1단계: 서로 마주보기
+            Debug.Log($"[ShyBrave] 단계1: 서로 마주보기");
+            bravePet.agent.isStopped = true;
+            bravePet.animationController.StopContinuousAnimation();
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 1f));
+            yield return new WaitForSeconds(0.5f);
+        }
         
         // 2단계: Shy가 놀라서 첫 번째 도망
         Debug.Log($"[ShyBrave] 단계2: {shyPet.petName}이 놀라서 도망");
@@ -700,37 +755,54 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float approachDistance = 5f;  // Shy가 놀라는 거리 (더 멀리서 반응)
         float retreatDistance = 7f;   // 첫 번째 도망 거리
         float secondRetreatDistance = 10f; // 두 번째 도망 거리
+        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
         
-        // 0단계: Playful이 정확한 거리까지 접근
-        Debug.Log($"[ShyPlayful] 단계0: Playful이 Shy에게 접근 시작");
+        // 현재 거리 체크
+        float currentDistance = Vector3.Distance(shyPet.transform.position, playfulPet.transform.position);
+        Debug.Log($"[ShyPlayful] 현재 거리: {currentDistance:F2}미터");
         
-        // Shy의 위치 기준으로 접근 목표 설정 (정확한 거리)
-        Vector3 direction = (shyPet.transform.position - playfulPet.transform.position).normalized;
-        Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
-        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-        
-        // 부드러운 회전 후 이동
-        yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Walk));
-        
-        // 목표 위치 도달 대기
-        float waitTime = 0f;
-        float maxWaitTime = 5f;
-        while (waitTime < maxWaitTime)
+        if (currentDistance < skipApproachThreshold)
         {
-            // agent가 경로 계산 완료하고 남은 거리 체크
-            if (!playfulPet.agent.pathPending && playfulPet.agent.remainingDistance < 0.5f)
-            {
-                Debug.Log($"[ShyPlayful] Playful이 목표 위치에 도달!");
-                break;
-            }
-            waitTime += Time.deltaTime;
-            yield return null;
+            // 이미 가까이 있으면 Shy가 바로 놀람
+            Debug.Log($"[ShyPlayful] 이미 가까이 있음 - Shy가 바로 놀람!");
+            
+            // 서로 마주보기
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
+            yield return new WaitForSeconds(0.3f);
         }
-        
-        // 1단계: 서로 마주보기
-        Debug.Log($"[ShyPlayful] 단계1: 서로 마주보기");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 1f));
-        yield return new WaitForSeconds(1f);
+        else
+        {
+            // 멀리 있으면 Playful이 접근
+            Debug.Log($"[ShyPlayful] 단계0: Playful이 Shy에게 접근 시작");
+            
+            // Shy의 위치 기준으로 접근 목표 설정 (정확한 거리)
+            Vector3 direction = (shyPet.transform.position - playfulPet.transform.position).normalized;
+            Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
+            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+            
+            // 부드러운 회전 후 이동
+            yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Walk));
+            
+            // 목표 위치 도달 대기
+            float waitTime = 0f;
+            float maxWaitTime = 5f;
+            while (waitTime < maxWaitTime)
+            {
+                // agent가 경로 계산 완료하고 남은 거리 체크
+                if (!playfulPet.agent.pathPending && playfulPet.agent.remainingDistance < 0.5f)
+                {
+                    Debug.Log($"[ShyPlayful] Playful이 목표 위치에 도달!");
+                    break;
+                }
+                waitTime += Time.deltaTime;
+                yield return null;
+            }
+            
+            // 1단계: 서로 마주보기
+            Debug.Log($"[ShyPlayful] 단계1: 서로 마주보기");
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 1f));
+            yield return new WaitForSeconds(1f);
+        }
 
         // 2단계: Shy가 놀라서 도망 후 돌아보기
         Debug.Log($"[ShyPlayful] 단계2: Shy가 깜짝 놀라서 도망");
