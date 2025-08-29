@@ -137,7 +137,7 @@ MonoBehaviour:
   watermelonEnvironment: {fileID: 4772535315918966, guid: 14021c338d73f4bed87f853b758a1abe, type: 3}
   cornfieldEnvironment: {fileID: 6726033946014636220, guid: a49ff0a2fa485491aae1fa8682bcddd5, type: 3}
   forestEnvironment: {fileID: 140405508120249600, guid: 70262d9b2f21c40c99ab7549259e1384, type: 3}
-  pondEnvironment: {fileID: 6306803358171753992, guid: 80b956d96c3fc49d1b60bf819388e97a, type: 3}
+  pondEnvironment: {fileID: 7941133391725072421, guid: 91c5f9094abec4afea7af443c5755e3f, type: 3}
   flowersEnvironment: {fileID: 7859483331827145523, guid: d35852a5e87dd49eb938ff855550b260, type: 3}
   fenceEnvironment: {fileID: 729742082580697336, guid: 69edd0dae34f4468a89012c4e2a9376b, type: 3}
   firstAppearanceEffectPrefab: {fileID: 0}
