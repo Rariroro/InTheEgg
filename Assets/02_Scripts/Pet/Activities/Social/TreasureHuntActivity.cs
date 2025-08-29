@@ -257,14 +257,14 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 carriedTreasure.transform.SetParent(mouthBone);
                 carriedTreasure.transform.localPosition = Vector3.forward * 0.3f;
-                carriedTreasure.transform.localScale = Vector3.one * 0.5f;
+                carriedTreasure.transform.localScale = Vector3.one * 0.8f;
             }
             else
             {
                 // 입 본이 없으면 펫 위에 띄우기
                 carriedTreasure.transform.SetParent(pet.transform);
                 carriedTreasure.transform.localPosition = Vector3.up * 1.5f;
-                carriedTreasure.transform.localScale = Vector3.one * 0.5f;
+                carriedTreasure.transform.localScale = Vector3.one * 0.8f;
             }
             
             // TreasureController의 StartCarrying 호출

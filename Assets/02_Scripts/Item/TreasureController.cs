@@ -137,6 +137,9 @@ public class TreasureController : MonoBehaviour
         isCollectable = true;
         isCarried = false;  // 펫이 더 이상 들고 있지 않음
         
+        // 내려놓은 위치를 새로운 시작 위치로 설정 (원래 스팟으로 돌아가지 않도록)
+        startPosition = transform.position;
+        
         Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}");
         
         // 빙글빙글 도는 효과 재시작
