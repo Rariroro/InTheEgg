@@ -72,7 +72,6 @@ public class TreasureSpot : MonoBehaviour
         // 보물 생성
         currentTreasure = Instantiate(treasurePrefab, transform.position, Quaternion.identity);
         currentTreasure.transform.SetParent(transform);
-        currentTreasure.transform.localScale = Vector3.one * 1.2f; // 초기 크기를 조금 더 크게
         hasTreasure = true;
         
         // 보물 컨트롤러에 이 스팟 연결

@@ -121,7 +121,7 @@ public class TreasureHuntActivity : PetActivityAdapter
                 // 이 지점에 보물이 있는지 확인
                 if (targetSpot.HasTreasure && targetSpot.TryOccupy(pet))
                 {
-                    OnTreasureFound();
+                    pet.StartCoroutine(PickupTreasureSequence());
                 }
                 else
                 {
@@ -239,6 +239,30 @@ public class TreasureHuntActivity : PetActivityAdapter
     }
     
     /// <summary>
+    /// 보물을 줍는 시퀀스 (먹는 애니메이션 포함)
+    /// </summary>
+    private IEnumerator PickupTreasureSequence()
+    {
+        // 일단 멈추기
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = true;
+        }
+        
+        // 먹는 애니메이션 재생
+        if (pet.animator)
+        {
+            pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Eat);
+        }
+        
+        // 애니메이션 대기
+        yield return new WaitForSeconds(0.5f);
+        
+        // 이제 보물 들기
+        OnTreasureFound();
+    }
+    
+    /// <summary>
     /// 보물 발견 처리
     /// </summary>
     private void OnTreasureFound()
@@ -257,14 +281,12 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 carriedTreasure.transform.SetParent(mouthBone);
                 carriedTreasure.transform.localPosition = Vector3.forward * 0.3f;
-                carriedTreasure.transform.localScale = Vector3.one * 0.8f;
             }
             else
             {
                 // 입 본이 없으면 펫 위에 띄우기
                 carriedTreasure.transform.SetParent(pet.transform);
                 carriedTreasure.transform.localPosition = Vector3.up * 1.5f;
-                carriedTreasure.transform.localScale = Vector3.one * 0.8f;
             }
             
             // TreasureController의 StartCarrying 호출
@@ -278,9 +300,9 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 대기 위치로 이동
         if (targetSpot != null && agent != null && agent.enabled)
         {
+            agent.isStopped = false; // 다시 이동 시작
             Vector3 waitingPos = targetSpot.WaitingPosition;
             agent.SetDestination(waitingPos);
-            agent.isStopped = false;
             
             // 달리기 애니메이션 유지
             if (pet.animator)
@@ -310,11 +332,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             // 보물을 아직 내려놓지 않았다면
             if (!hasDroppedTreasure && carriedTreasure != null)
             {
-                DropTreasure();
-                hasDroppedTreasure = true;
-                
-                // 점프 애니메이션 시작
-                pet.StartCoroutine(CelebrationJump());
+                // 내려놓기 시퀀스 시작
+                pet.StartCoroutine(DropTreasureSequence());
             }
             
             // 카메라 바라보기
@@ -330,6 +349,28 @@ public class TreasureHuntActivity : PetActivityAdapter
                 }
             }
         }
+    }
+    
+    /// <summary>
+    /// 보물을 내려놓는 시퀀스 (먹는 애니메이션 포함)
+    /// </summary>
+    private IEnumerator DropTreasureSequence()
+    {
+        // 먹는 애니메이션 재생 (내려놓기 전)
+        if (pet.animator)
+        {
+            pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Eat);
+        }
+        
+        // 애니메이션 대기
+        yield return new WaitForSeconds(0.5f);
+        
+        // 보물 내려놓기
+        DropTreasure();
+        hasDroppedTreasure = true;
+        
+        // 점프 애니메이션 시작
+        pet.StartCoroutine(CelebrationJump());
     }
     
     /// <summary>
@@ -377,7 +418,6 @@ public class TreasureHuntActivity : PetActivityAdapter
         
         carriedTreasure.transform.position = dropPosition;
         carriedTreasure.transform.rotation = Quaternion.identity;
-        carriedTreasure.transform.localScale = Vector3.one; // 원래 크기로 복원
         
         // TreasureController의 EnableCollection 호출
         TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
