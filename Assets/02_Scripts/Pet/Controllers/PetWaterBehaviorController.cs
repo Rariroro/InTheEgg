@@ -179,8 +179,11 @@ public class PetWaterBehaviorController : PetControllerBase
         var feedingController = petController.GetComponent<PetFeedingController>();
         bool isSeekingFood = feedingController != null && feedingController.IsEatingOrSeeking();
         
-        // 루트 오브젝트를 물 표면 높이로 조정 (먹이 찾기 중이 아닐 때만)
-        if (!petController.State.IsHolding && !isSeekingFood)
+        // 보물찾기 중이면 Y 위치 변경 스킵 (경로 유지를 위해)
+        bool isTreasureHunting = petController.State.CurrentStatus == PetStatus.TreasureHunting;
+        
+        // 루트 오브젝트를 물 표면 높이로 조정 (먹이 찾기나 보물찾기 중이 아닐 때만)
+        if (!petController.State.IsHolding && !isSeekingFood && !isTreasureHunting)
         {
             Vector3 newPos = petController.transform.position;
             newPos.y = waterSurfaceY;
@@ -202,6 +205,11 @@ public class PetWaterBehaviorController : PetControllerBase
         {
             // 먹이 찾기 중일 때는 NavMesh 경로 유지, 속도만 조정
             Debug.Log($"[WaterBehavior] {petController.petName}: 먹이 찾기 중 - Y 위치 변경 스킵, 경로 유지");
+        }
+        else if (isTreasureHunting)
+        {
+            // 보물찾기 중일 때는 NavMesh 경로 유지, 속도만 조정
+            Debug.Log($"[WaterBehavior] {petController.petName}: 보물찾기 중 - Y 위치 변경 스킵, 경로 유지");
         }
 
         // 물 속 이동 속도 적용
@@ -258,8 +266,19 @@ public class PetWaterBehaviorController : PetControllerBase
         // NavMesh 에이전트 속도 원상 복구
         if (petController.agent != null && !petController.State.IsGathering)
         {
-            petController.agent.speed = petController.Movement.GetAdjustedWalkSpeed(petController.personality);
-            petController.agent.acceleration = petController.Movement.acceleration;
+            // 보물찾기 중이면 달리기 속도 유지
+            if (petController.State.CurrentStatus == PetStatus.TreasureHunting)
+            {
+                const float SPEED_MULTIPLIER = 3f;
+                const float ACCELERATION_MULTIPLIER = 3f;
+                petController.agent.speed = petController.Movement.walkSpeed * SPEED_MULTIPLIER;
+                petController.agent.acceleration = petController.Movement.acceleration * ACCELERATION_MULTIPLIER;
+            }
+            else
+            {
+                petController.agent.speed = petController.Movement.GetAdjustedWalkSpeed(petController.personality);
+                petController.agent.acceleration = petController.Movement.acceleration;
+            }
         }
 
         // 애니메이션 속도 원상 복구
