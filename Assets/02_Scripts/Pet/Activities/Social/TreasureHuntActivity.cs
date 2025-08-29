@@ -383,10 +383,12 @@ public class TreasureHuntActivity : PetActivityAdapter
         TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
         if (treasureController != null)
         {
+            Debug.Log($"[TreasureHuntActivity] {pet.petName}: EnableCollection 호출 전");
             treasureController.EnableCollection();
+            Debug.Log($"[TreasureHuntActivity] {pet.petName}: EnableCollection 호출 후");
         }
         
-        Debug.Log($"{pet.petName}: 보물을 내려놓고 대기 중!");
+        Debug.Log($"[TreasureHuntActivity] {pet.petName}: 보물을 내려놓고 대기 중! 위치: {carriedTreasure.transform.position}");
     }
     
     /// <summary>

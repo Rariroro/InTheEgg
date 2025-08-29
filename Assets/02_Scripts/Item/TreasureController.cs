@@ -132,7 +132,15 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     public void EnableCollection()
     {
+        Debug.Log($"[TreasureController] EnableCollection - 이전 상태: isCollectable={isCollectable}, isCarried={isCarried}");
+        
         isCollectable = true;
+        isCarried = false;  // 펫이 더 이상 들고 있지 않음
+        
+        Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}");
+        
+        // 빙글빙글 도는 효과 재시작
+        StartCoroutine(SparkleEffect());
     }
     
     /// <summary>
@@ -140,8 +148,11 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     private void OnMouseDown()
     {
-        if (!isCollectable || !isCarried) return;
+        Debug.Log($"[TreasureController] OnMouseDown - isCollectable={isCollectable}, isCarried={isCarried}");
         
+        if (!isCollectable) return;
+        
+        Debug.Log($"[TreasureController] 클릭 감지! 수집 시도");
         TryCollect();
     }
     
@@ -151,10 +162,11 @@ public class TreasureController : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // 플레이어 태그나 특정 조건으로 수집 가능
-        if (!isCollectable || !isCarried) return;
+        if (!isCollectable) return;
         
         if (other.CompareTag("Player"))
         {
+            Debug.Log($"[TreasureController] Player 트리거 감지! 수집 시도");
             TryCollect();
         }
     }
@@ -164,7 +176,16 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     private void TryCollect()
     {
-        if (!isCollectable || carryingPet == null) return;
+        Debug.Log($"[TreasureController] TryCollect - isCollectable={isCollectable}, carryingPet={carryingPet?.petName}");
+        
+        if (!isCollectable) return;
+        
+        // carryingPet이 null이면 기본 펫으로 설정 (테스트용)
+        if (carryingPet == null)
+        {
+            Debug.LogWarning("[TreasureController] carryingPet이 null입니다. 수집 취소.");
+            return;
+        }
         
         // 매니저에 수집 알림
         if (TreasureHuntManager.Instance != null && parentSpot != null)
