@@ -13,7 +13,9 @@ public enum PetStatus
     Environmental,         // 환경과 상호작용 중 (나무 오르기, 물 속 등)
     Emergency,             // 긴급 상태 (탈진, 벌 공격 등)
     GatheringInProgress,   // 모이기 명령 수행 중 (이동 중)
-    GatheredWaiting        // 모인 후 대기 중
+    GatheredWaiting,       // 모인 후 대기 중
+    TreasureHunting,       // 보물 찾는 중
+    TreasureFound          // 보물 발견 후 대기
 }
 
 /// <summary>
@@ -48,6 +50,11 @@ public class PetState
     [SerializeField] private BasePetInteraction currentInteractionLogic;
     [SerializeField] private int gatherCommandVersion;
     [SerializeField] private float waterDepthOffset;
+    
+    // 보물찾기 관련
+    [SerializeField] private bool isTreasureHuntActive;
+    [SerializeField] private Vector3 treasureTargetPosition;
+    [SerializeField] private GameObject carriedTreasure;
     
     // 이벤트
     public event Action<PetStatus, PetStatus> OnStatusChanged; // (이전 상태, 새 상태)
@@ -89,6 +96,13 @@ public class PetState
     public bool IsAnimationLocked => isAnimationLocked;
     public bool IsActionLocked => isActionLocked;
     public bool IsAttractedToEnvironment => isAttractedToEnvironment;
+    
+    // 보물찾기 관련 접근자
+    public bool IsTreasureHuntActive => isTreasureHuntActive;
+    public bool IsTreasureHunting => currentStatus == PetStatus.TreasureHunting;
+    public bool HasFoundTreasure => currentStatus == PetStatus.TreasureFound;
+    public Vector3 TreasureTargetPosition => treasureTargetPosition;
+    public GameObject CarriedTreasure => carriedTreasure;
     
     // 상호작용 관련 접근자
     public PetController InteractionPartner => interactionPartner;
@@ -166,6 +180,24 @@ public class PetState
         if (from == PetStatus.GatheringInProgress || from == PetStatus.GatheredWaiting)
         {
             return to == PetStatus.Idle;
+        }
+        
+        // TreasureHunting 상태는 Idle에서 진입 가능
+        if (to == PetStatus.TreasureHunting)
+        {
+            return from == PetStatus.Idle || from == PetStatus.Environmental;
+        }
+        
+        // TreasureFound 상태는 TreasureHunting에서만 진입 가능
+        if (to == PetStatus.TreasureFound)
+        {
+            return from == PetStatus.TreasureHunting;
+        }
+        
+        // TreasureHunting과 TreasureFound에서는 Idle로만 전환 가능
+        if (from == PetStatus.TreasureHunting || from == PetStatus.TreasureFound)
+        {
+            return to == PetStatus.Idle || to == PetStatus.PlayerControl;
         }
         
         // Environmental 상태는 Idle, Interacting에서 진입 가능
@@ -448,6 +480,51 @@ public class PetState
                 TrySetStatus(PetStatus.Idle);
             }
         }
+    }
+    
+    /// <summary>
+    /// 보물찾기 상태 설정
+    /// </summary>
+    public void SetTreasureHuntingState(bool active)
+    {
+        isTreasureHuntActive = active;
+        if (active)
+        {
+            // 보물찾기 시작 시 상태를 Idle로 초기화하여 Activity가 시작할 수 있게 함
+            if (currentStatus != PetStatus.PlayerControl && currentStatus != PetStatus.Emergency)
+            {
+                TrySetStatus(PetStatus.Idle);
+            }
+        }
+        else
+        {
+            // 보물찾기 종료
+            isTreasureHuntActive = false;
+            carriedTreasure = null;
+            treasureTargetPosition = Vector3.zero;
+            
+            // 보물찾기 관련 상태라면 Idle로 전환
+            if (currentStatus == PetStatus.TreasureHunting || currentStatus == PetStatus.TreasureFound)
+            {
+                TrySetStatus(PetStatus.Idle);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 보물 타겟 설정
+    /// </summary>
+    public void SetTreasureTarget(Vector3 position)
+    {
+        treasureTargetPosition = position;
+    }
+    
+    /// <summary>
+    /// 보물 들기 설정
+    /// </summary>
+    public void SetCarriedTreasure(GameObject treasure)
+    {
+        carriedTreasure = treasure;
     }
     
     #endregion

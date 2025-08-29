@@ -60,6 +60,7 @@ public class PetAI : MonoBehaviour
         // Social Activities
         availableActivities.Add(new GatherActivity(petController));
         availableActivities.Add(new InteractWithPetActivity(petController));
+        availableActivities.Add(new TreasureHuntActivity(petController, movementController)); // 보물찾기 추가
         
         // Environment Activities
         availableActivities.Add(new EnvironmentGatherActivity(petController));
