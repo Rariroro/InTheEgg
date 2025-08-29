@@ -13,6 +13,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     private TreasureSpot targetSpot;
     private bool isSearching = false;
     private bool hasFoundTreasure = false;
+    private bool hasDroppedTreasure = false;
     private GameObject carriedTreasure;
     private float searchTimer = 0f;
     private const float SEARCH_INTERVAL = 0.5f; // 0.5초마다 새 타겟 검색
@@ -62,6 +63,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         pet.State.TrySetStatus(PetStatus.TreasureHunting);
         isSearching = true;
         hasFoundTreasure = false;
+        hasDroppedTreasure = false;
         searchTimer = 0f;
         
         // 속도 설정
@@ -168,6 +170,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         
         isSearching = false;
         hasFoundTreasure = false;
+        hasDroppedTreasure = false;
     }
     
     /// <summary>
@@ -263,20 +266,31 @@ public class TreasureHuntActivity : PetActivityAdapter
                 carriedTreasure.transform.localPosition = Vector3.up * 1.5f;
                 carriedTreasure.transform.localScale = Vector3.one * 0.5f;
             }
+            
+            // TreasureController의 StartCarrying 호출
+            TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
+            if (treasureController != null)
+            {
+                treasureController.StartCarrying(pet);
+            }
         }
         
         // 대기 위치로 이동
         if (targetSpot != null && agent != null && agent.enabled)
         {
-            agent.SetDestination(targetSpot.WaitingPosition);
+            Vector3 waitingPos = targetSpot.WaitingPosition;
+            agent.SetDestination(waitingPos);
             agent.isStopped = false;
+            
+            // 달리기 애니메이션 유지
+            if (pet.animator)
+            {
+                pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
+            }
         }
         
         // 기쁨 표현
         pet.ShowEmotion(EmotionType.Happy);
-        
-        // 점프 애니메이션 시작
-        pet.StartCoroutine(CelebrationJump());
         
         Debug.Log($"{pet.petName}: 보물 발견! 대기 위치로 이동 중...");
     }
@@ -289,18 +303,31 @@ public class TreasureHuntActivity : PetActivityAdapter
         if (agent == null || !agent.enabled) return;
         
         // 대기 위치 도착 체크
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        if (!agent.pathPending && agent.remainingDistance <= 0.5f)
         {
             agent.isStopped = true;
+            
+            // 보물을 아직 내려놓지 않았다면
+            if (!hasDroppedTreasure && carriedTreasure != null)
+            {
+                DropTreasure();
+                hasDroppedTreasure = true;
+                
+                // 점프 애니메이션 시작
+                pet.StartCoroutine(CelebrationJump());
+            }
             
             // 카메라 바라보기
             if (Camera.main != null)
             {
                 Vector3 directionToCamera = Camera.main.transform.position - pet.transform.position;
                 directionToCamera.y = 0;
-                Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
-                pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, 
-                    pet.Movement.rotationSmoothness * Time.deltaTime);
+                if (directionToCamera.magnitude > 0.1f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                    pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, 
+                        pet.Movement.rotationSmoothness * Time.deltaTime);
+                }
             }
         }
     }
@@ -310,12 +337,18 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator CelebrationJump()
     {
-        while (hasFoundTreasure)
+        while (hasFoundTreasure && hasDroppedTreasure)
         {
             // 점프 애니메이션
             if (pet.animator)
             {
                 pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
+            }
+            
+            // 점프 중 행복 표현
+            if (Random.value < 0.3f) // 30% 확률로 감정 표현
+            {
+                pet.ShowEmotion(EmotionType.Love);
             }
             
             yield return new WaitForSeconds(1f);
@@ -328,6 +361,32 @@ public class TreasureHuntActivity : PetActivityAdapter
             
             yield return new WaitForSeconds(2f);
         }
+    }
+    
+    /// <summary>
+    /// 보물을 바닥에 내려놓기
+    /// </summary>
+    private void DropTreasure()
+    {
+        if (carriedTreasure == null) return;
+        
+        // 보물을 펫 앞 바닥에 배치
+        carriedTreasure.transform.SetParent(null);
+        Vector3 dropPosition = pet.transform.position + pet.transform.forward * 0.5f;
+        dropPosition.y = pet.transform.position.y; // 바닥 높이로 조정
+        
+        carriedTreasure.transform.position = dropPosition;
+        carriedTreasure.transform.rotation = Quaternion.identity;
+        carriedTreasure.transform.localScale = Vector3.one; // 원래 크기로 복원
+        
+        // TreasureController의 EnableCollection 호출
+        TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
+        if (treasureController != null)
+        {
+            treasureController.EnableCollection();
+        }
+        
+        Debug.Log($"{pet.petName}: 보물을 내려놓고 대기 중!");
     }
     
     /// <summary>

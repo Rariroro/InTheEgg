@@ -48,7 +48,7 @@ public class PetNeeds
     [SerializeField] private float affectionDecreaseRateWhenHungry = 0.2f;  // 배고플 때 초당 친밀도 감소량 (2f → 0.2f로 감소)
     [SerializeField] private float hungerThresholdForAffectionDecrease = 80f;  // 친밀도가 감소하기 시작하는 배고픔 임계값
     [SerializeField] private float lowAffectionThreshold = 30f;  // 낮은 친밀도 임계값
-    [SerializeField] private float highAffectionThreshold = 80f; // 높은 친밀도 임계값
+    [SerializeField] private float highAffectionThreshold = 75f; // 높은 친밀도 임계값
     
     [Header("음식으로 인한 친밀도 증가 설정")]
     [Tooltip("드롭된 음식 아이템을 먹었을 때 친밀도 증가 최소값")]

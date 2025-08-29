@@ -49,7 +49,18 @@ public class TreasureController : MonoBehaviour
         if (treasureRenderer != null)
         {
             treasureMaterial = treasureRenderer.material;
-            originalColor = treasureMaterial.color;
+            
+            // Material이 _Color 속성을 가지고 있는지 확인
+            if (treasureMaterial.HasProperty("_Color"))
+            {
+                originalColor = treasureMaterial.color;
+            }
+            else
+            {
+                // _Color 속성이 없으면 기본 흰색 사용
+                originalColor = Color.white;
+                Debug.LogWarning($"Material '{treasureMaterial.name}' doesn't have '_Color' property. Using white as default.", gameObject);
+            }
         }
         
         treasureCollider = GetComponent<Collider>();
