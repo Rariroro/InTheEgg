@@ -31,6 +31,7 @@ public class TreasureController : MonoBehaviour
     [SerializeField] private TreasureSpot parentSpot;
     [SerializeField] private bool isCollectable = true;
     [SerializeField] private bool isCarried = false;
+    [SerializeField] private bool isDropped = false;  // 펫이 내려놓은 상태
     [SerializeField] private PetController carryingPet;
     
     private Vector3 startPosition;
@@ -89,7 +90,8 @@ public class TreasureController : MonoBehaviour
     
     private void Update()
     {
-        if (!isCarried)
+        // 들고 있지 않고, 내려놓은 상태도 아닐 때만 애니메이션
+        if (!isCarried && !isDropped)
         {
             // 위아래 움직임
             float yOffset = Mathf.Sin((Time.time + timeOffset) * floatSpeed) * floatAmplitude;
@@ -106,6 +108,19 @@ public class TreasureController : MonoBehaviour
     public void SetSpot(TreasureSpot spot)
     {
         parentSpot = spot;
+    }
+    
+    /// <summary>
+    /// 초기 상태 설정 (처음 생성 시 회전 여부 등 설정)
+    /// </summary>
+    public void SetInitialState(bool shouldRotate = false)
+    {
+        if (!shouldRotate)
+        {
+            isDropped = true;  // 회전하지 않도록 설정
+            // 시작 위치 저장
+            startPosition = transform.position;
+        }
     }
     
     /// <summary>
@@ -136,11 +151,12 @@ public class TreasureController : MonoBehaviour
         
         isCollectable = true;
         isCarried = false;  // 펫이 더 이상 들고 있지 않음
+        isDropped = true;   // 펫이 내려놓은 상태로 표시
         
         // 내려놓은 위치를 새로운 시작 위치로 설정 (원래 스팟으로 돌아가지 않도록)
         startPosition = transform.position;
         
-        Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}");
+        Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}");
         
         // 빙글빙글 도는 효과 재시작
         StartCoroutine(SparkleEffect());

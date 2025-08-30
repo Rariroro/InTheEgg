@@ -414,7 +414,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 보물을 펫 앞 바닥에 배치
         carriedTreasure.transform.SetParent(null);
         Vector3 dropPosition = pet.transform.position + pet.transform.forward * 0.5f;
-        dropPosition.y = pet.transform.position.y; // 바닥 높이로 조정
+        dropPosition.y = pet.transform.position.y + 1f; // 땅 위에 자연스럽게 놓이도록 높이 조정
         
         carriedTreasure.transform.position = dropPosition;
         carriedTreasure.transform.rotation = Quaternion.identity;

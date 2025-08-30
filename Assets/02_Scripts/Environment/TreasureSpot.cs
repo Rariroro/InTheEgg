@@ -69,16 +69,18 @@ public class TreasureSpot : MonoBehaviour
         if (roll > treasureProbability)
             return false;
             
-        // 보물 생성
-        currentTreasure = Instantiate(treasurePrefab, transform.position, Quaternion.identity);
+        // 보물 생성 (땅 위에 자연스럽게 놓이도록 높이 조정)
+        Vector3 spawnPosition = transform.position + Vector3.up * 1f;
+        currentTreasure = Instantiate(treasurePrefab, spawnPosition, Quaternion.identity);
         currentTreasure.transform.SetParent(transform);
         hasTreasure = true;
         
-        // 보물 컨트롤러에 이 스팟 연결
+        // 보물 컨트롤러에 이 스팟 연결 및 초기 상태 설정
         TreasureController treasureController = currentTreasure.GetComponent<TreasureController>();
         if (treasureController != null)
         {
             treasureController.SetSpot(this);
+            treasureController.SetInitialState(false);  // 회전하지 않도록 설정
         }
         
         return true;
