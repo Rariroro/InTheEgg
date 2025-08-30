@@ -64,6 +64,10 @@ public partial class PetController : MonoBehaviour
     
     [Header("Needs Management")]
     [SerializeField] private PetNeeds petNeeds = new PetNeeds();
+    
+    [Header("Treasure Settings")]
+    [Tooltip("보물을 물고 갈 위치 (입 위치) - Unity 에디터에서 설정")]
+    public Transform treasureHoldPoint;
     public PetState State => petState;
     public PetNeeds Needs => petNeeds;
     public PetAI AI => petAI;

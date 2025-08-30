@@ -275,18 +275,28 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             carriedTreasure = targetSpot.CurrentTreasure;
             
-            // 보물을 펫의 입 위치로 이동 (머리 위로 조정 가능)
-            Transform mouthBone = FindMouthBone();
-            if (mouthBone != null)
+            // 1순위: 펫에 설정된 treasureHoldPoint 사용
+            if (pet.treasureHoldPoint != null)
             {
-                carriedTreasure.transform.SetParent(mouthBone);
-                carriedTreasure.transform.localPosition = Vector3.forward * 0.3f;
+                carriedTreasure.transform.SetParent(pet.treasureHoldPoint);
+                carriedTreasure.transform.localPosition = Vector3.zero;
+                carriedTreasure.transform.localRotation = Quaternion.identity;
             }
+            // 2순위: 본 찾기 (기존 방식)
             else
             {
-                // 입 본이 없으면 펫 위에 띄우기
-                carriedTreasure.transform.SetParent(pet.transform);
-                carriedTreasure.transform.localPosition = Vector3.up * 1.5f;
+                Transform mouthBone = FindMouthBone();
+                if (mouthBone != null)
+                {
+                    carriedTreasure.transform.SetParent(mouthBone);
+                    carriedTreasure.transform.localPosition = Vector3.forward * 0.3f;
+                }
+                else
+                {
+                    // 3순위: 펫 위에 띄우기
+                    carriedTreasure.transform.SetParent(pet.transform);
+                    carriedTreasure.transform.localPosition = Vector3.up * 1.5f;
+                }
             }
             
             // TreasureController의 StartCarrying 호출

@@ -54,7 +54,6 @@ public class PetState
     // 보물찾기 관련
     [SerializeField] private bool isTreasureHuntActive;
     [SerializeField] private Vector3 treasureTargetPosition;
-    [SerializeField] private GameObject carriedTreasure;
     
     // 이벤트
     public event Action<PetStatus, PetStatus> OnStatusChanged; // (이전 상태, 새 상태)
@@ -102,7 +101,6 @@ public class PetState
     public bool IsTreasureHunting => currentStatus == PetStatus.TreasureHunting;
     public bool HasFoundTreasure => currentStatus == PetStatus.TreasureFound;
     public Vector3 TreasureTargetPosition => treasureTargetPosition;
-    public GameObject CarriedTreasure => carriedTreasure;
     
     // 상호작용 관련 접근자
     public PetController InteractionPartner => interactionPartner;
@@ -500,7 +498,6 @@ public class PetState
         {
             // 보물찾기 종료
             isTreasureHuntActive = false;
-            carriedTreasure = null;
             treasureTargetPosition = Vector3.zero;
             
             // 보물찾기 관련 상태라면 Idle로 전환
@@ -519,13 +516,6 @@ public class PetState
         treasureTargetPosition = position;
     }
     
-    /// <summary>
-    /// 보물 들기 설정
-    /// </summary>
-    public void SetCarriedTreasure(GameObject treasure)
-    {
-        carriedTreasure = treasure;
-    }
     
     #endregion
     
