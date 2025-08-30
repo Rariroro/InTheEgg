@@ -70,7 +70,8 @@ public class TreasureController : MonoBehaviour
             // 콜라이더가 없으면 추가
             treasureCollider = gameObject.AddComponent<BoxCollider>();
         }
-        treasureCollider.isTrigger = true;
+        // isTrigger를 false로 설정하여 Raycast가 감지할 수 있도록 함
+        treasureCollider.isTrigger = false;
         
         // 레이어 설정 (DroppedItem 레이어 사용)
         gameObject.layer = LayerMask.NameToLayer("DroppedItem");
@@ -135,10 +136,10 @@ public class TreasureController : MonoBehaviour
         // 움직임 효과 중지
         StopAllCoroutines();
         
-        // 콜라이더를 트리거로 변경
+        // 펫이 들고 있는 동안에는 콜라이더를 비활성화
         if (treasureCollider != null)
         {
-            treasureCollider.isTrigger = true;
+            treasureCollider.enabled = false;
         }
     }
     
@@ -147,23 +148,32 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     public void EnableCollection()
     {
-        Debug.Log($"[TreasureController] EnableCollection - 이전 상태: isCollectable={isCollectable}, isCarried={isCarried}");
+        Debug.Log($"[TreasureController] EnableCollection - 이전 상태: isCollectable={isCollectable}, isCarried={isCarried}, carryingPet={carryingPet?.petName}");
         
         isCollectable = true;
         isCarried = false;  // 펫이 더 이상 들고 있지 않음
         isDropped = true;   // 펫이 내려놓은 상태로 표시
+        // carryingPet은 유지! (누가 찾았는지 기억하기 위해)
+        
+        // 콜라이더 다시 활성화 (Raycast 감지를 위해)
+        if (treasureCollider != null)
+        {
+            treasureCollider.enabled = true;
+            treasureCollider.isTrigger = false; // Raycast가 감지할 수 있도록
+        }
         
         // 내려놓은 위치를 새로운 시작 위치로 설정 (원래 스팟으로 돌아가지 않도록)
         startPosition = transform.position;
         
-        Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}");
+        Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}, carryingPet={carryingPet?.petName}");
+        Debug.Log($"[TreasureController] Collider 상태: enabled={treasureCollider?.enabled}, isTrigger={treasureCollider?.isTrigger}");
         
         // 빙글빙글 도는 효과 재시작
         StartCoroutine(SparkleEffect());
     }
     
     /// <summary>
-    /// 터치 또는 클릭 감지
+    /// 터치 또는 클릭 감지 (Unity의 기본 OnMouseDown)
     /// </summary>
     private void OnMouseDown()
     {
@@ -171,7 +181,24 @@ public class TreasureController : MonoBehaviour
         
         if (!isCollectable) return;
         
-        Debug.Log($"[TreasureController] 클릭 감지! 수집 시도");
+        Debug.Log($"[TreasureController] OnMouseDown 클릭 감지! 수집 시도");
+        TryCollect();
+    }
+    
+    /// <summary>
+    /// CameraController에서 직접 호출하는 클릭 처리
+    /// </summary>
+    public void OnTreasureClicked()
+    {
+        Debug.Log($"[TreasureController] OnTreasureClicked - isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}");
+        
+        if (!isCollectable)
+        {
+            Debug.Log($"[TreasureController] 수집 불가능 상태");
+            return;
+        }
+        
+        Debug.Log($"[TreasureController] Raycast로 클릭 감지! 수집 시도");
         TryCollect();
     }
     
@@ -195,27 +222,68 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     private void TryCollect()
     {
-        Debug.Log($"[TreasureController] TryCollect - isCollectable={isCollectable}, carryingPet={carryingPet?.petName}");
+        Debug.Log($"[TreasureController] TryCollect - isCollectable={isCollectable}, carryingPet={carryingPet?.petName}, isDropped={isDropped}");
         
         if (!isCollectable) return;
         
-        // carryingPet이 null이면 기본 펫으로 설정 (테스트용)
-        if (carryingPet == null)
+        // 펫이 찾은 보물인 경우 (carryingPet이 있음)
+        if (carryingPet != null)
         {
-            Debug.LogWarning("[TreasureController] carryingPet이 null입니다. 수집 취소.");
-            return;
+            Debug.Log($"[TreasureController] {carryingPet.petName}이(가) 찾은 보물을 수집합니다.");
+        }
+        // 플레이어가 직접 찾은 보물이거나, 펫이 내려놓은 보물인 경우
+        else if (isDropped)
+        {
+            Debug.Log("[TreasureController] 플레이어가 펫이 찾아놓은 보물을 수집합니다.");
+            // 가장 가까운 펫을 찾아서 보상 제공 (선택사항)
+            FindNearestPetForReward();
+        }
+        else
+        {
+            Debug.Log("[TreasureController] 플레이어가 직접 보물을 발견했습니다.");
         }
         
         // 매니저에 수집 알림
-        if (TreasureHuntManager.Instance != null && parentSpot != null)
+        if (TreasureHuntManager.Instance != null)
         {
+            // parentSpot이 null이어도 수집 가능하도록 처리
             TreasureHuntManager.Instance.CollectTreasure(parentSpot, carryingPet);
         }
         
         // 수집 효과
         PlayCollectEffect();
         
-        // 이 오브젝트는 매니저에서 제거됨
+        // 오브젝트 제거
+        Destroy(gameObject, 0.1f);
+    }
+    
+    /// <summary>
+    /// 가장 가까운 펫을 찾아서 보상 제공 (선택사항)
+    /// </summary>
+    private void FindNearestPetForReward()
+    {
+        if (carryingPet != null) return; // 이미 펫이 지정된 경우
+        
+        PetController[] pets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
+        float minDistance = float.MaxValue;
+        PetController nearestPet = null;
+        
+        foreach (var pet in pets)
+        {
+            if (pet == null) continue;
+            float distance = Vector3.Distance(transform.position, pet.transform.position);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                nearestPet = pet;
+            }
+        }
+        
+        if (nearestPet != null && minDistance < 10f) // 10미터 이내의 펫에게만 보상
+        {
+            carryingPet = nearestPet;
+            Debug.Log($"[TreasureController] 가장 가까운 펫 {carryingPet.petName}에게 보상을 제공합니다.");
+        }
     }
     
     /// <summary>

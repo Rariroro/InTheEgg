@@ -440,6 +440,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         pet.StartCoroutine(DropTreasureAnimation(startPos, endPos));
     }
     
+    
     /// <summary>
     /// 보물을 부드럽게 앞에 놓는 애니메이션
     /// </summary>
@@ -447,29 +448,29 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         float duration = 0.3f;
         float elapsed = 0f;
-        
+
         // 부모 해제 (월드 좌표로 전환)
         carriedTreasure.transform.SetParent(null);
-        
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
-            
+
             // 포물선 움직임 (자연스럽게 떨어지는 효과)
             Vector3 pos = Vector3.Lerp(from, to, t);
             // 시작 높이에서 최종 높이로 포물선 형태로 이동
             float heightCurve = 1f - (t - 0.5f) * (t - 0.5f) * 4f; // 중간에 살짝 올라갔다가 내려옴
             pos.y = Mathf.Lerp(from.y, to.y, t) + heightCurve * 0.2f;
-            
+
             carriedTreasure.transform.position = pos;
             yield return null;
         }
-        
+
         // 최종 위치 설정
         carriedTreasure.transform.position = to;
         carriedTreasure.transform.rotation = Quaternion.identity;
-        
+
         // TreasureController의 EnableCollection 호출
         TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
         if (treasureController != null)
@@ -477,7 +478,7 @@ public class TreasureHuntActivity : PetActivityAdapter
             Debug.Log($"[TreasureHuntActivity] {pet.petName}: EnableCollection 호출");
             treasureController.EnableCollection();
         }
-        
+
         Debug.Log($"[TreasureHuntActivity] {pet.petName}: 보물을 내려놓고 대기 중! 위치: {carriedTreasure.transform.position}");
     }
     
