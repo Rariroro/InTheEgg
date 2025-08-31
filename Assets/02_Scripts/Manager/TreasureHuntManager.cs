@@ -239,17 +239,22 @@ public class TreasureHuntManager : MonoBehaviour
     /// <summary>
     /// 가장 가까운 보물 스팟 찾기
     /// </summary>
-    public TreasureSpot FindNearestAvailableSpot(Vector3 position)
+    public TreasureSpot FindNearestAvailableSpot(Vector3 position, float maxDistance = float.MaxValue)
     {
         TreasureSpot nearestSpot = null;
         float nearestDistance = float.MaxValue;
         
         foreach (var spot in activeTreasureSpots)
         {
-            if (spot == null || !spot.HasTreasure || spot.IsOccupied)
+            if (spot == null || !spot.HasTreasure)
                 continue;
                 
             float distance = Vector3.Distance(position, spot.transform.position);
+            
+            // 최대 거리 제한 체크
+            if (distance > maxDistance)
+                continue;
+                
             if (distance < nearestDistance)
             {
                 nearestDistance = distance;

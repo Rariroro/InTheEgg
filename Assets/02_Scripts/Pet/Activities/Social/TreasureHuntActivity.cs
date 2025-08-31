@@ -18,10 +18,23 @@ public class TreasureHuntActivity : PetActivityAdapter
     private float searchTimer = 0f;
     private const float SEARCH_INTERVAL = 0.5f; // 0.5초마다 새 타겟 검색
     
+    // 배회 시스템 추가 변수
+    private bool isWandering = false;  // 현재 배회 중인지
+    private Vector3 wanderDirection;    // 현재 배회 방향
+    private int wanderAttempts = 0;     // 배회 시도 횟수
+    private Vector3 lastWanderTarget = Vector3.zero;  // 마지막 배회 목표 위치
+    private const float MIN_WANDER_DISTANCE = 30f;  // 최소 배회 거리
+    private const float MAX_WANDER_DISTANCE = 50f;  // 최대 배회 거리
+    
     // 보물찾기 속도 배율
-    private const float SPEED_MULTIPLIER = 3f;
+    private const float SEARCH_SPEED_MULTIPLIER = 2f;  // 탐색 중 속도
+    private const float FOUND_SPEED_MULTIPLIER = 3f;   // 보물 발견 후 속도
     private const float ANGULAR_SPEED_MULTIPLIER = 3f;
     private const float ACCELERATION_MULTIPLIER = 3f;
+    
+    // 탐색 거리 설정
+    private const float NEAR_SEARCH_DISTANCE = 50f;    // 근거리 탐색
+    private const float FAR_SEARCH_DISTANCE = 100f;    // 중거리 탐색
     
     public override string Name => "TreasureHunt";
     public override bool IsInterruptible => false; // 보물찾기는 중단 불가
@@ -66,10 +79,10 @@ public class TreasureHuntActivity : PetActivityAdapter
         hasDroppedTreasure = false;
         searchTimer = 0f;
         
-        // 속도 설정
+        // 초기 속도 설정 (탐색 모드)
         if (agent != null && agent.enabled)
         {
-            agent.speed = pet.Movement.walkSpeed * SPEED_MULTIPLIER;
+            agent.speed = pet.Movement.walkSpeed * SEARCH_SPEED_MULTIPLIER;
             agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
             agent.acceleration = pet.Movement.acceleration * ACCELERATION_MULTIPLIER;
         }
@@ -115,25 +128,54 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 현재 타겟으로 이동
         if (targetSpot != null && agent != null && agent.enabled)
         {
+            isWandering = false;  // 보물 타겟이 있으면 배회 중단
+            
             // 목표 지점 도착 체크
             if (!agent.pathPending && agent.remainingDistance <= 2f)
             {
                 // 이 지점에 보물이 있는지 확인
-                if (targetSpot.HasTreasure && targetSpot.TryOccupy(pet))
+                if (targetSpot.HasTreasure)
                 {
-                    pet.StartCoroutine(PickupTreasureSequence());
+                    // 보물 획득 시도
+                    if (targetSpot.TryCollect(pet))
+                    {
+                        // 성공: 보물 줍기
+                        pet.StartCoroutine(PickupTreasureSequence());
+                    }
+                    else
+                    {
+                        // 실패: 다른 펫이 먼저 가져감
+                        Debug.Log($"{pet.petName}: 아쉽게도 다른 펫이 먼저 보물을 가져갔습니다.");
+                        pet.ShowEmotion(EmotionType.Sad);
+                        
+                        // 잠시 실망 표현 후 다른 보물 찾기
+                        pet.StartCoroutine(DisappointmentAndSearch());
+                    }
                 }
                 else
                 {
-                    // 보물이 없거나 다른 펫이 차지했으면 다음 타겟 찾기
+                    // 보물이 이미 없음
                     FindNewTarget();
                 }
             }
         }
         else if (targetSpot == null)
         {
-            // 타겟이 없으면 새로 찾기
-            FindNewTarget();
+            // 배회 중이고 도착했으면 다음 위치로
+            if (isWandering && agent != null && agent.enabled)
+            {
+                // 도착 판정을 더 일찍 (5m 이내 또는 거의 도착)
+                if (!agent.pathPending && (agent.remainingDistance <= 5f || !agent.hasPath))
+                {
+                    // 다음 배회 위치 설정
+                    WanderToNextLocation();
+                }
+            }
+            else
+            {
+                // 타겟이 없고 배회도 안하고 있으면 새로 찾기
+                FindNewTarget();
+            }
         }
     }
     
@@ -171,6 +213,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         isSearching = false;
         hasFoundTreasure = false;
         hasDroppedTreasure = false;
+        isWandering = false;
     }
     
     /// <summary>
@@ -184,26 +227,44 @@ public class TreasureHuntActivity : PetActivityAdapter
         if (targetSpot != null)
         {
             targetSpot.Release(pet);
+            targetSpot = null;
         }
         
-        // 가장 가까운 사용 가능한 보물 스팟 찾기
-        targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(pet.transform.position);
+        // 1단계: 근거리 탐색 (50m)
+        targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(
+            pet.transform.position, NEAR_SEARCH_DISTANCE);
+        
+        // 2단계: 중거리 탐색 (100m)
+        if (targetSpot == null)
+        {
+            targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(
+                pet.transform.position, FAR_SEARCH_DISTANCE);
+        }
         
         if (targetSpot != null)
         {
-            // 새 타겟으로 이동
-            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            // 보물 발견! 속도 증가
+            if (agent != null && agent.enabled)
             {
+                agent.speed = pet.Movement.walkSpeed * FOUND_SPEED_MULTIPLIER;
                 agent.SetDestination(targetSpot.transform.position);
                 agent.isStopped = false;
             }
+            
+            // 이 보물을 목표로 설정 (경쟁 추적)
+            targetSpot.AddCompetingPet(pet);
             
             Debug.Log($"{pet.petName}: 새 보물 타겟 설정 - {targetSpot.name}");
         }
         else
         {
-            // 찾을 보물이 없으면 랜덤 위치로 탐색
+            // 찾을 보물이 없으면 랜덤 위치로 탐색 (탐색 속도)
+            if (agent != null && agent.enabled)
+            {
+                agent.speed = pet.Movement.walkSpeed * SEARCH_SPEED_MULTIPLIER;
+            }
             WanderRandomly();
+            Debug.Log($"{pet.petName}: 근처에 보물이 없어 배회 탐색 시작");
         }
     }
     
@@ -212,29 +273,119 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private void CheckCurrentTarget()
     {
-        if (targetSpot == null || !targetSpot.HasTreasure || 
-            (targetSpot.IsOccupied && !targetSpot.TryOccupy(pet)))
+        if (targetSpot == null || !targetSpot.HasTreasure)
         {
             FindNewTarget();
         }
     }
     
     /// <summary>
-    /// 랜덤하게 배회하며 탐색
+    /// 랜덤하게 배회하며 탐색 시작
     /// </summary>
     private void WanderRandomly()
     {
         if (agent == null || !agent.enabled || !agent.isOnNavMesh) return;
         
-        // 랜덤 위치 생성
-        Vector3 randomDirection = Random.insideUnitSphere * 10f;
-        randomDirection += pet.transform.position;
+        isWandering = true;
+        wanderAttempts = 0;
         
+        // 처음 방향 설정 - 현재 진행 방향이 있으면 그것을 기준으로
+        if (agent.velocity.magnitude > 0.1f)
+        {
+            // 현재 이동 방향을 기준으로 약간 변경
+            wanderDirection = agent.velocity.normalized;
+            float angleChange = Random.Range(-45f, 45f);
+            wanderDirection = Quaternion.Euler(0, angleChange, 0) * wanderDirection;
+        }
+        else
+        {
+            // 정지 상태면 랜덤 방향
+            wanderDirection = Random.insideUnitSphere;
+            wanderDirection.y = 0;
+            wanderDirection.Normalize();
+        }
+        
+        // 마지막 목표 위치 초기화
+        lastWanderTarget = pet.transform.position;
+        
+        WanderToNextLocation();
+    }
+    
+    /// <summary>
+    /// 다음 배회 위치로 이동
+    /// </summary>
+    private void WanderToNextLocation()
+    {
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh) return;
+        
+        wanderAttempts++;
+        
+        // 2번마다 방향 조정 (이전보다 자주)
+        if (wanderAttempts > 2)
+        {
+            wanderAttempts = 0;
+            // 현재 방향에서 ±90도 범위로 회전 (완전 랜덤이 아닌 연속성 있는 방향)
+            float angleChange = Random.Range(-90f, 90f);
+            wanderDirection = Quaternion.Euler(0, angleChange, 0) * wanderDirection;
+            wanderDirection.Normalize();
+        }
+        
+        // 거리를 더 크게 설정 (40m에서 80m까지)
+        float distance = Mathf.Lerp(40f, 80f, wanderAttempts / 2f);
+        
+        // 목표 위치 계산 - 마지막 배회 목표 위치 기준 (연속성 보장)
+        Vector3 basePosition;
+        if (lastWanderTarget != Vector3.zero && Vector3.Distance(lastWanderTarget, pet.transform.position) > 5f)
+        {
+            // 마지막 목표가 있고 아직 멀리 있으면 그것을 기준으로
+            basePosition = lastWanderTarget;
+            Debug.Log($"{pet.petName}: 마지막 목표 기준 이동 (거리: {Vector3.Distance(lastWanderTarget, pet.transform.position):F1}m)");
+        }
+        else
+        {
+            // 그렇지 않으면 현재 위치 기준
+            basePosition = pet.transform.position;
+            Debug.Log($"{pet.petName}: 현재 위치 기준 이동");
+        }
+        
+        Vector3 targetPosition = basePosition + wanderDirection * distance;
+        
+        // 랜덤 요소 최소화 (10m → 3m)
+        targetPosition += Random.insideUnitSphere * 3f;
+        targetPosition.y = pet.transform.position.y;
+        
+        // NavMesh 상의 유효한 위치 찾기
         NavMeshHit hit;
-        if (NavMesh.SamplePosition(randomDirection, out hit, 10f, NavMesh.AllAreas))
+        if (NavMesh.SamplePosition(targetPosition, out hit, distance * 1.2f, NavMesh.AllAreas))
         {
             agent.SetDestination(hit.position);
             agent.isStopped = false;
+            
+            // 새로운 목표 위치 저장
+            lastWanderTarget = hit.position;
+            
+            Vector3 actualDirection = (hit.position - pet.transform.position).normalized;
+            float actualDistance = Vector3.Distance(pet.transform.position, hit.position);
+            
+            Debug.Log($"{pet.petName}: 배회 이동 - 실제방향: {actualDirection}, 실제거리: {actualDistance:F1}m, 목표: {hit.position}");
+        }
+        else
+        {
+            // 유효한 위치를 찾지 못하면 방향을 약간만 조정 (재귀 호출 제거)
+            wanderDirection = Quaternion.Euler(0, Random.Range(30f, 60f), 0) * wanderDirection;
+            wanderDirection.Normalize();
+            
+            // 더 가까운 거리로 다시 시도
+            distance = MIN_WANDER_DISTANCE;
+            targetPosition = pet.transform.position + wanderDirection * distance;
+            
+            if (NavMesh.SamplePosition(targetPosition, out hit, distance, NavMesh.AllAreas))
+            {
+                agent.SetDestination(hit.position);
+                agent.isStopped = false;
+                lastWanderTarget = hit.position;
+                Debug.Log($"{pet.petName}: 대체 경로로 이동 - 목표: {hit.position}");
+            }
         }
     }
     
@@ -480,6 +631,35 @@ public class TreasureHuntActivity : PetActivityAdapter
         }
 
         Debug.Log($"[TreasureHuntActivity] {pet.petName}: 보물을 내려놓고 대기 중! 위치: {carriedTreasure.transform.position}");
+    }
+    
+    /// <summary>
+    /// 실망 표현 후 재탐색
+    /// </summary>
+    private IEnumerator DisappointmentAndSearch()
+    {
+        // 실망 애니메이션 (예: 고개 숙이기)
+        if (pet.animator)
+        {
+            pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
+        }
+        
+        // 잠시 멈춤
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = true;
+        }
+        
+        yield return new WaitForSeconds(1.5f);
+        
+        // 다시 이동 시작
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = false;
+        }
+        
+        // 새로운 보물 찾기
+        FindNewTarget();
     }
     
     /// <summary>

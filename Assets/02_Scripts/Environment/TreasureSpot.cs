@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// 보물이 나타날 수 있는 위치를 정의하는 컴포넌트
@@ -29,11 +30,15 @@ public class TreasureSpot : MonoBehaviour
              "인스펙터에서 수동 설정 불필요")]
     [SerializeField] private PetController occupyingPet;  // 이 보물 스팟을 점유한 펫
     
+    // 경쟁 시스템을 위한 추가 필드
+    [SerializeField] private List<PetController> competingPets = new List<PetController>();  // 이 보물을 향해 오고 있는 펫들
+    
     // 프로퍼티
-    public bool HasTreasure => hasTreasure;
+    public bool HasTreasure => hasTreasure && currentTreasure != null;
     public bool IsOccupied => occupyingPet != null;
     public GameObject CurrentTreasure => currentTreasure;
     public Vector3 WaitingPosition => waitingPoint != null ? waitingPoint.position : transform.position + Vector3.forward * 2f;
+    public List<PetController> CompetingPets => competingPets;
     
     private void Awake()
     {
@@ -87,7 +92,7 @@ public class TreasureSpot : MonoBehaviour
     }
     
     /// <summary>
-    /// 펫이 이 위치를 점유
+    /// 펫이 이 위치를 점유 (경쟁 시스템에서는 사용 안함)
     /// </summary>
     public bool TryOccupy(PetController pet)
     {
@@ -99,6 +104,58 @@ public class TreasureSpot : MonoBehaviour
     }
     
     /// <summary>
+    /// 펫이 이 보물을 목표로 설정 (경쟁 추적)
+    /// </summary>
+    public void AddCompetingPet(PetController pet)
+    {
+        if (!competingPets.Contains(pet))
+        {
+            competingPets.Add(pet);
+            Debug.Log($"{pet.petName}이(가) {name} 보물을 목표로 설정했습니다.");
+        }
+    }
+    
+    /// <summary>
+    /// 펫이 보물에 도착해서 획듍 시도
+    /// </summary>
+    public bool TryCollect(PetController pet)
+    {
+        // 이미 누군가 가져간 경우
+        if (!HasTreasure || occupyingPet != null)
+        {
+            Debug.Log($"{pet.petName}: 보물이 이미 다른 펫에게 가져가졌습니다.");
+            
+            // 경쟁에서 패배한 펫들에게 알림
+            NotifyLosingPets(pet);
+            return false;
+        }
+        
+        // 성공적으로 획듍
+        occupyingPet = pet;
+        Debug.Log($"{pet.petName}이(가) {name} 보물을 획듍했습니다!");
+        
+        // 경쟁에서 패배한 다른 펫들에게 알림
+        NotifyLosingPets(pet);
+        
+        return true;
+    }
+    
+    /// <summary>
+    /// 경쟁에서 패배한 펫들에게 알림
+    /// </summary>
+    private void NotifyLosingPets(PetController winner)
+    {
+        foreach (var loser in competingPets)
+        {
+            if (loser != winner && loser != null)
+            {
+                // TreasureHuntActivity에서 실망 처리를 하도록 알림
+                Debug.Log($"{loser.petName}은(는) {winner.petName}에게 보물을 빼앗겼습니다.");
+            }
+        }
+    }
+    
+    /// <summary>
     /// 펫이 이 위치 점유 해제
     /// </summary>
     public void Release(PetController pet)
@@ -107,6 +164,9 @@ public class TreasureSpot : MonoBehaviour
         {
             occupyingPet = null;
         }
+        
+        // 경쟁 리스트에서도 제거
+        competingPets.Remove(pet);
     }
     
     /// <summary>
@@ -123,6 +183,7 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
+        competingPets.Clear();
     }
     
     /// <summary>
@@ -138,6 +199,7 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
+        competingPets.Clear();
     }
     
     // 에디터에서 시각화
