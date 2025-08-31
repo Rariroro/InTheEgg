@@ -31,6 +31,7 @@ public class TreasureHuntButton : MonoBehaviour
     private bool isHuntActive = false;
     private float checkInterval = 1f; // 1초마다 조건 체크
     private float checkTimer = 0f;
+    private bool shouldShowConditionText = false; // 조건 텍스트 표시 여부
     
     private void Start()
     {
@@ -81,6 +82,8 @@ public class TreasureHuntButton : MonoBehaviour
     /// </summary>
     private void OnButtonClick()
     {
+        Debug.Log("[TreasureHuntButton] 버튼 클릭!");
+        
         if (TreasureHuntManager.Instance == null)
         {
             Debug.LogError("TreasureHuntManager를 찾을 수 없습니다!");
@@ -90,12 +93,42 @@ public class TreasureHuntButton : MonoBehaviour
         if (isHuntActive)
         {
             // 보물찾기 종료
+            Debug.Log("[TreasureHuntButton] 보물찾기 종료");
             TreasureHuntManager.Instance.EndTreasureHunt();
+            shouldShowConditionText = false; // 종료 시 조건 텍스트 숨김
+            if (conditionText != null)
+            {
+                conditionText.gameObject.SetActive(false);
+            }
         }
         else
         {
-            // 보물찾기 시작
-            TreasureHuntManager.Instance.StartTreasureHunt();
+            // 친밀도 조건 체크
+            PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
+            int qualifiedPets = 0;
+            
+            foreach (var pet in allPets)
+            {
+                if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
+                {
+                    qualifiedPets++;
+                }
+            }
+            
+            Debug.Log($"[TreasureHuntButton] 조건 체크: {qualifiedPets}마리 참여 가능");
+            
+            if (qualifiedPets > 0)
+            {
+                // 조건 만족 - 보물찾기 시작
+                Debug.Log("[TreasureHuntButton] 조건 만족 - 보물찾기 시작");
+                TreasureHuntManager.Instance.StartTreasureHunt();
+            }
+            else
+            {
+                // 조건 불만족 - 조건 텍스트 잠시 표시
+                Debug.Log("[TreasureHuntButton] 조건 불만족 - 조건 텍스트 표시");
+                ShowConditionTextTemporarily();
+            }
         }
     }
     
@@ -127,11 +160,14 @@ public class TreasureHuntButton : MonoBehaviour
         
         bool canActivate = qualifiedPets > 0;
         
-        // 버튼 상태 업데이트
-        SetButtonState(canActivate, canActivate ? activeColor : inactiveColor);
+        // 버튼 상태 업데이트 - 항상 활성화 상태로 유지하고 색상만 변경
+        SetButtonState(true, canActivate ? activeColor : inactiveColor);
         
-        // 조건 안내 표시
-        UpdateConditionText(qualifiedPets, allPets.Length);
+        // 조건 안내는 shouldShowConditionText가 true일 때만 표시
+        if (shouldShowConditionText)
+        {
+            UpdateConditionText(qualifiedPets, allPets.Length);
+        }
     }
     
     /// <summary>
@@ -189,8 +225,48 @@ public class TreasureHuntButton : MonoBehaviour
         }
         else
         {
-            conditionText.gameObject.SetActive(true);
-            conditionText.text = $"<color=green>참여 가능: {qualified}마리</color>";
+            // 조건을 만족할 때는 텍스트를 숨김 (버튼을 눌렀을 때만 보여줌)
+            conditionText.gameObject.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// 조건 텍스트를 잠시 표시했다가 숨기기
+    /// </summary>
+    private void ShowConditionTextTemporarily()
+    {
+        Debug.Log("[TreasureHuntButton] ShowConditionTextTemporarily 호출");
+        shouldShowConditionText = true;
+        
+        // 현재 조건 체크 및 표시
+        PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
+        int qualifiedPets = 0;
+        
+        foreach (var pet in allPets)
+        {
+            if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
+            {
+                qualifiedPets++;
+            }
+        }
+        
+        Debug.Log($"[TreasureHuntButton] 조건 텍스트 표시: {qualifiedPets}/{allPets.Length}마리");
+        UpdateConditionText(qualifiedPets, allPets.Length);
+        
+        // 3초 후 자동으로 숨기기
+        StartCoroutine(HideConditionTextAfterDelay(3f));
+    }
+    
+    /// <summary>
+    /// 지연 후 조건 텍스트 숨기기
+    /// </summary>
+    private System.Collections.IEnumerator HideConditionTextAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        shouldShowConditionText = false;
+        if (conditionText != null && !isHuntActive)
+        {
+            conditionText.gameObject.SetActive(false);
         }
     }
     
@@ -200,8 +276,16 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntStarted()
     {
         isHuntActive = true;
+        shouldShowConditionText = true; // 진행 중 표시를 위해
         UpdateButtonText("보물찾기 종료");
         SetButtonState(true, progressColor);
+        
+        // 진행 중 표시
+        if (conditionText != null)
+        {
+            conditionText.gameObject.SetActive(true);
+            conditionText.text = $"<color=green>보물찾기 진행 중...</color>";
+        }
         
         // 시작 효과
         if (treasureHuntButton != null)
@@ -221,8 +305,15 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntEnded()
     {
         isHuntActive = false;
+        shouldShowConditionText = false; // 종료 시 조건 텍스트 숨김
         UpdateButtonText("보물찾기 시작");
         CheckButtonAvailability();
+        
+        // 조건 텍스트 숨기기
+        if (conditionText != null)
+        {
+            conditionText.gameObject.SetActive(false);
+        }
         
         // 종료 효과
         if (treasureHuntButton != null)
