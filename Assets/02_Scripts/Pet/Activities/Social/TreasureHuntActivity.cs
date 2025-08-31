@@ -18,6 +18,12 @@ public class TreasureHuntActivity : PetActivityAdapter
     private float searchTimer = 0f;
     private const float SEARCH_INTERVAL = 0.5f; // 0.5초마다 새 타겟 검색
     
+    // 보물 획득 보호 변수
+    private float approachStartTime = 0f;  // 보물 접근 시작 시간
+    private bool isPathRecalculating = false;  // 경로 재계산 중인지
+    private float lastValidPathTime = 0f;  // 마지막 유효 경로 시간
+    private const float MIN_APPROACH_TIME = 0.5f;  // 최소 접근 시간 (획득 전 필요)
+    
     // 배회 시스템 추가 변수
     private bool isWandering = false;  // 현재 배회 중인지
     private Vector3 wanderDirection;    // 현재 배회 방향
@@ -133,9 +139,61 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             isWandering = false;  // 보물 타겟이 있으면 배회 중단
             
-            // 목표 지점 도착 체크
-            if (!agent.pathPending && agent.remainingDistance <= 2f)
+            // 경로 유효성 체크
+            if (!agent.pathPending && agent.hasPath)
             {
+                lastValidPathTime = Time.time;
+                isPathRecalculating = false;
+            }
+            else if (!agent.hasPath && Time.time - lastValidPathTime > 1f)
+            {
+                // 경로가 없고 1초 이상 지났으면 재계산 중으로 표시
+                isPathRecalculating = true;
+                Debug.Log($"[TreasureHunt] {pet.petName}: 경로 재계산 중 (경로 없음)");
+            }
+            
+            // 접근 시간 추적
+            float distance = agent.remainingDistance;
+            if (distance <= 3f && distance > 0.1f && approachStartTime == 0f)
+            {
+                approachStartTime = Time.time;
+                Debug.Log($"[TreasureHunt] {pet.petName}: 보물 접근 시작 (거리: {distance:F1}m)");
+            }
+            
+            // 목표 지점 도착 체크 (더 엄격한 조건)
+            if (!agent.pathPending && agent.remainingDistance <= 1.5f && !isPathRecalculating)
+            {
+                // 추가 검증: 물 속에 있지 않고, 충분한 접근 시간이 지났는지
+                bool canPickup = true;
+                string blockReason = "";
+                
+                // 1. 물 속 체크
+                if (pet.State.IsInWater)
+                {
+                    canPickup = false;
+                    blockReason = "물 속에 있음";
+                }
+                // 2. 최소 접근 시간 체크
+                else if (approachStartTime > 0 && Time.time - approachStartTime < MIN_APPROACH_TIME)
+                {
+                    canPickup = false;
+                    blockReason = $"접근 시간 부족 ({Time.time - approachStartTime:F1}초)";
+                }
+                // 3. 실제 거리 재확인
+                else if (Vector3.Distance(pet.transform.position, targetSpot.transform.position) > 2f)
+                {
+                    canPickup = false;
+                    blockReason = $"실제 거리 멀음 ({Vector3.Distance(pet.transform.position, targetSpot.transform.position):F1}m)";
+                }
+                
+                if (!canPickup)
+                {
+                    Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 차단 - {blockReason}");
+                    return;
+                }
+                
+                Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 조건 충족 (거리: {agent.remainingDistance:F1}m)");
+                
                 // 이 지점에 보물이 있는지 확인
                 if (targetSpot.HasTreasure)
                 {
@@ -143,6 +201,8 @@ public class TreasureHuntActivity : PetActivityAdapter
                     if (targetSpot.TryCollect(pet))
                     {
                         // 성공: 보물 줍기
+                        Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 성공!");
+                        approachStartTime = 0f;  // 리셋
                         pet.StartCoroutine(PickupTreasureSequence());
                     }
                     else
@@ -150,6 +210,7 @@ public class TreasureHuntActivity : PetActivityAdapter
                         // 실패: 다른 펫이 먼저 가져감
                         Debug.Log($"{pet.petName}: 아쉽게도 다른 펫이 먼저 보물을 가져갔습니다.");
                         pet.ShowEmotion(EmotionType.Sad);
+                        approachStartTime = 0f;  // 리셋
                         
                         // 잠시 실망 표현 후 다른 보물 찾기
                         pet.StartCoroutine(DisappointmentAndSearch());
@@ -158,6 +219,8 @@ public class TreasureHuntActivity : PetActivityAdapter
                 else
                 {
                     // 보물이 이미 없음
+                    Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 이미 없음");
+                    approachStartTime = 0f;  // 리셋
                     FindNewTarget();
                 }
             }
@@ -217,6 +280,9 @@ public class TreasureHuntActivity : PetActivityAdapter
         hasFoundTreasure = false;
         hasDroppedTreasure = false;
         isWandering = false;
+        approachStartTime = 0f;
+        isPathRecalculating = false;
+        lastValidPathTime = 0f;
     }
     
     /// <summary>
@@ -502,7 +568,15 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 Debug.Log($"{pet.petName}: 경로 이탈 감지! 대기 위치로 재설정");
                 agent.SetDestination(expectedDestination);
+                isPathRecalculating = true;  // 경로 재계산 플래그 설정
                 return;  // 아직 도착 안 함
+            }
+            
+            // 물 속에 있으면 대기
+            if (pet.State.IsInWater)
+            {
+                Debug.Log($"[TreasureHunt] {pet.petName}: 물 속에서 대기 중...");
+                return;
             }
         }
         
