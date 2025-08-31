@@ -117,12 +117,15 @@ public class TreasureHuntActivity : PetActivityAdapter
             return;
         }
         
-        // 주기적으로 타겟 재검색
-        searchTimer += Time.deltaTime;
-        if (searchTimer >= SEARCH_INTERVAL)
+        // 주기적으로 타겟 재검색 (보물 찾기 전에만)
+        if (!hasFoundTreasure)
         {
-            searchTimer = 0f;
-            CheckCurrentTarget();
+            searchTimer += Time.deltaTime;
+            if (searchTimer >= SEARCH_INTERVAL)
+            {
+                searchTimer = 0f;
+                CheckCurrentTarget();
+            }
         }
         
         // 현재 타겟으로 이동
@@ -159,7 +162,7 @@ public class TreasureHuntActivity : PetActivityAdapter
                 }
             }
         }
-        else if (targetSpot == null)
+        else if (targetSpot == null && !hasFoundTreasure)  // 보물 찾은 후에는 배회 안 함
         {
             // 배회 중이고 도착했으면 다음 위치로
             if (isWandering && agent != null && agent.enabled)
@@ -221,6 +224,9 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private void FindNewTarget()
     {
+        // 보물을 이미 찾았으면 새 타겟 찾지 않음
+        if (hasFoundTreasure) return;
+        
         if (TreasureHuntManager.Instance == null) return;
         
         // 이전 타겟 해제
@@ -273,6 +279,9 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private void CheckCurrentTarget()
     {
+        // 보물을 이미 찾았으면 타겟 체크 안 함
+        if (hasFoundTreasure) return;
+        
         if (targetSpot == null || !targetSpot.HasTreasure)
         {
             FindNewTarget();
@@ -484,6 +493,18 @@ public class TreasureHuntActivity : PetActivityAdapter
     private void HandleTreasureFound()
     {
         if (agent == null || !agent.enabled) return;
+        
+        // 대기 위치가 변경되었는지 확인하고 재설정
+        if (targetSpot != null)
+        {
+            Vector3 expectedDestination = targetSpot.WaitingPosition;
+            if (Vector3.Distance(agent.destination, expectedDestination) > 1f)
+            {
+                Debug.Log($"{pet.petName}: 경로 이탈 감지! 대기 위치로 재설정");
+                agent.SetDestination(expectedDestination);
+                return;  // 아직 도착 안 함
+            }
+        }
         
         // 대기 위치 도착 체크
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
