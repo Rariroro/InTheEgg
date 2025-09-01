@@ -39,8 +39,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     private const float ACCELERATION_MULTIPLIER = 3f;
     
     // 탐색 거리 설정
-    private const float NEAR_SEARCH_DISTANCE = 50f;    // 근거리 탐색
-    private const float FAR_SEARCH_DISTANCE = 100f;    // 중거리 탐색
+    private const float SEARCH_DISTANCE = 70f;    // 보물 탐색 거리
     
     public override string Name => "TreasureHunt";
     public override bool IsInterruptible => false; // 보물찾기는 중단 불가
@@ -109,6 +108,28 @@ public class TreasureHuntActivity : PetActivityAdapter
     public override void Update()
     {
         if (!isSearching) return;
+        
+        // agent 목적지 유실 체크 및 복구
+        if (agent != null && agent.enabled && !agent.isStopped)
+        {
+            // 목적지가 없거나 경로가 없는 경우
+            if (!agent.hasPath || agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
+            {
+                // 보물을 찾은 상태면 목적지 재설정
+                if (hasFoundTreasure && targetSpot != null)
+                {
+                    Vector3 destination = carriedTreasure != null ? targetSpot.WaitingPosition : targetSpot.transform.position;
+                    Debug.Log($"[TreasureHunt] {pet.petName}: 목적지 유실 감지! 재설정 (hasFoundTreasure={hasFoundTreasure}, destination={destination})");
+                    agent.SetDestination(destination);
+                }
+                // 탐색 중이고 타겟이 있으면 재설정
+                else if (!hasFoundTreasure && targetSpot != null)
+                {
+                    Debug.Log($"[TreasureHunt] {pet.petName}: 탐색 목적지 유실! 재설정 - {targetSpot.name}");
+                    agent.SetDestination(targetSpot.transform.position);
+                }
+            }
+        }
         
         // 회전 처리
         if (moveController != null)
@@ -302,16 +323,9 @@ public class TreasureHuntActivity : PetActivityAdapter
             targetSpot = null;
         }
         
-        // 1단계: 근거리 탐색 (50m)
+        // 보물 탐색 (70m)
         targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(
-            pet.transform.position, NEAR_SEARCH_DISTANCE);
-        
-        // 2단계: 중거리 탐색 (100m)
-        if (targetSpot == null)
-        {
-            targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(
-                pet.transform.position, FAR_SEARCH_DISTANCE);
-        }
+            pet.transform.position, SEARCH_DISTANCE);
         
         if (targetSpot != null)
         {
