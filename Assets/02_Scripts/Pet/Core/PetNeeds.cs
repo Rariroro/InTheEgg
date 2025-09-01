@@ -60,6 +60,7 @@ public class PetNeeds
     [Tooltip("환경 음식(FeedingArea)을 먹었을 때 친밀도 증가 최대값")]
     [SerializeField] private float environmentFoodAffectionMax = 7f;
     
+    
     // 프로퍼티로 외부 접근 허용
     public float AffectionDecreaseRateWhenHungry
     {

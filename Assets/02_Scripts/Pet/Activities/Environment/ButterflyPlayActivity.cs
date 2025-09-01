@@ -117,11 +117,39 @@ public class ButterflyPlayActivity : PetActivityAdapter
             }
         }
         
-        // 속도 약간 증가
+        // NavMeshAgent 상태 확인
         if (pet.agent != null)
         {
+            if (!pet.agent.enabled)
+            {
+                Debug.LogWarning($"[ButterflyPlayActivity] NavMeshAgent가 비활성화 상태입니다. 활성화 시도...");
+                pet.agent.enabled = true;
+            }
+            
+            if (!pet.agent.isOnNavMesh)
+            {
+                Debug.LogWarning($"[ButterflyPlayActivity] NavMeshAgent가 NavMesh 위에 없습니다. 위치 보정 시도...");
+                
+                // NavMesh 위의 가장 가까운 위치 찾기
+                UnityEngine.AI.NavMeshHit hit;
+                if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+                {
+                    pet.transform.position = hit.position;
+                    Debug.Log($"[ButterflyPlayActivity] NavMesh 위치로 보정됨: {hit.position}");
+                }
+                else
+                {
+                    Debug.LogError($"[ButterflyPlayActivity] NavMesh 위치를 찾을 수 없습니다!");
+                }
+            }
+            
+            // 속도 약간 증가
             pet.agent.speed = pet.baseSpeed * CHASE_SPEED_MULTIPLIER;
             Debug.Log($"[ButterflyPlayActivity] 속도 증가: {pet.agent.speed}");
+        }
+        else
+        {
+            Debug.LogError($"[ButterflyPlayActivity] NavMeshAgent가 null입니다!");
         }
         
         // 애니메이션 잠금 설정 (다른 시스템의 간섭 방지)
@@ -269,8 +297,32 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 // 나비에게 이동
                 if (pet.agent != null && pet.agent.enabled)
                 {
-                    pet.agent.SetDestination(targetButterfly.transform.position);
-                    Debug.Log($"[PlayWithButterfly] SetDestination 호출: {targetButterfly.transform.position}");
+                    // NavMesh 위에 있는지 확인
+                    if (pet.agent.isOnNavMesh)
+                    {
+                        pet.agent.SetDestination(targetButterfly.transform.position);
+                        Debug.Log($"[PlayWithButterfly] SetDestination 호출: {targetButterfly.transform.position}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[PlayWithButterfly] NavMeshAgent가 NavMesh 위에 없음! 가장 가까운 위치로 이동 시도");
+                        
+                        // NavMesh 위의 가장 가까운 위치 찾기
+                        UnityEngine.AI.NavMeshHit hit;
+                        if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+                        {
+                            pet.transform.position = hit.position;
+                            if (pet.agent.isOnNavMesh)
+                            {
+                                pet.agent.SetDestination(targetButterfly.transform.position);
+                                Debug.Log($"[PlayWithButterfly] NavMesh 위치 보정 후 SetDestination 호출");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError($"[PlayWithButterfly] NavMesh 위치를 찾을 수 없음!");
+                        }
+                    }
                     
                     // 달리기 애니메이션
                     if (animationController != null)
