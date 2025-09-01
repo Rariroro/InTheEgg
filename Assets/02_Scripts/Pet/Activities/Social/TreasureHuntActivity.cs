@@ -648,12 +648,27 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator CelebrationJump()
     {
+        var animController = pet.GetComponent<PetAnimationController>();
+        
         while (hasFoundTreasure && hasDroppedTreasure)
         {
-            // 점프 애니메이션
-            if (pet.animator)
+            // 점프 애니메이션 - PlayAnimationWithCustomDuration 사용으로 완전한 재생 보장
+            if (animController != null)
             {
+                // 점프 애니메이션을 2초 동안 완전히 재생
+                yield return pet.StartCoroutine(animController.PlayAnimationWithCustomDuration(
+                    PetAnimationController.PetAnimationType.Jump, 
+                    2f,    // 애니메이션 재생 시간 (1초 → 2초로 증가)
+                    true,  // returnToIdle - 자동으로 Idle로 복귀
+                    false  // resumeMovementAfter - 이동 재개하지 않음
+                ));
+            }
+            else if (pet.animator)
+            {
+                // 폴백: AnimationController가 없는 경우 직접 제어
                 pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Jump);
+                yield return new WaitForSeconds(2f);
+                pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
             }
             
             // 점프 중 행복 표현
@@ -662,14 +677,7 @@ public class TreasureHuntActivity : PetActivityAdapter
                 pet.ShowEmotion(EmotionType.Love);
             }
             
-            yield return new WaitForSeconds(1f);
-            
-            // Idle 애니메이션
-            if (pet.animator)
-            {
-                pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
-            }
-            
+            // Idle 상태에서 대기
             yield return new WaitForSeconds(2f);
         }
     }
