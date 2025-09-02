@@ -232,9 +232,23 @@ public class TreasureHuntManager : MonoBehaviour
         }
         else
         {
-            // 일반 종료 - 펫은 보물 앞에서 계속 대기
-            // IsTreasureHuntActive만 false로 설정
-            // 펫들은 TreasureFound 상태 유지
+            // 일반 종료 - 보물찾기 상태는 해제하되 찾은 보물은 유지
+            foreach (var pet in participatingPets)
+            {
+                if (pet != null)
+                {
+                    // 보물찾기 활성 상태만 해제
+                    pet.State.SetTreasureHuntingState(false);
+                    
+                    // TreasureHunting 상태인 펫들만 Idle로 전환 (아직 못 찾은 펫들)
+                    if (pet.State.CurrentStatus == PetStatus.TreasureHunting)
+                    {
+                        pet.State.TrySetStatus(PetStatus.Idle);
+                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물찾기 종료, Idle로 전환");
+                    }
+                    // TreasureFound 상태인 펫들은 그대로 유지 (계속 점프)
+                }
+            }
         }
         
         isTreasureHuntActive = false;
@@ -293,7 +307,8 @@ public class TreasureHuntManager : MonoBehaviour
         
         foreach (var spot in activeTreasureSpots)
         {
-            if (spot == null || !spot.HasTreasure)
+            // IsAvailable 체크: 보물이 있고 아직 차지되지 않은 경우만
+            if (spot == null || !spot.IsAvailable)
                 continue;
                 
             float distance = Vector3.Distance(position, spot.transform.position);

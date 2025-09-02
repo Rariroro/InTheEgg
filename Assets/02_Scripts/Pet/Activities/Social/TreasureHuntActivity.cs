@@ -234,12 +234,11 @@ public class TreasureHuntActivity : PetActivityAdapter
                     else
                     {
                         // 실패: 다른 펫이 먼저 가져감
-                        Debug.Log($"{pet.petName}: 아쉽게도 다른 펫이 먼저 보물을 가져갔습니다.");
-                        pet.ShowEmotion(EmotionType.Sad);
+                        Debug.Log($"[TreasureHunt] {pet.petName}: 도착했지만 이미 다른 펫이 보물을 가져감 (TryCollect 실패)");
                         approachStartTime = 0f;  // 리셋
                         
-                        // 잠시 실망 표현 후 다른 보물 찾기
-                        pet.StartCoroutine(DisappointmentAndSearch());
+                        // NotifyLosingPets에서 OnTargetLost가 호출되므로 여기서는 아무것도 안 함
+                        // 중복 처리 방지
                     }
                 }
                 else
@@ -377,6 +376,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         
         if (targetSpot == null || !targetSpot.HasTreasure)
         {
+            Debug.Log($"[TreasureHunt] {pet.petName}: 주기적 체크에서 타겟 무효 감지 (0.5초 간격)");
             FindNewTarget();
         }
     }
@@ -795,33 +795,38 @@ public class TreasureHuntActivity : PetActivityAdapter
     }
     
     /// <summary>
-    /// 실망 표현 후 재탐색
+    /// 다른 펫이 보물을 가져갔을 때 호출되는 메서드
+    /// TreasureSpot.NotifyLosingPets()에서 호출됨
     /// </summary>
-    private IEnumerator DisappointmentAndSearch()
+    public void OnTargetLost()
     {
-        // 실망 애니메이션 (예: 고개 숙이기)
-        if (pet.animator)
+        if (!isSearching || hasFoundTreasure) return;
+        
+        Debug.Log($"[TreasureHunt] {pet.petName}: 목표 보물을 다른 펫이 가져감! 즉시 새 보물 찾기");
+        
+        // 현재 타겟 해제
+        targetSpot = null;
+        approachStartTime = 0f;
+        isPathRecalculating = false;
+        
+        // 슬픔 감정 표현
+        pet.ShowEmotion(EmotionType.Sad);
+        
+        // 보물찾기가 아직 진행 중인지 확인
+        if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
         {
-            pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
+            // 즉시 새로운 보물 찾기 (지연 없이)
+            FindNewTarget();
         }
-        
-        // 잠시 멈춤
-        if (agent != null && agent.enabled)
+        else
         {
-            agent.isStopped = true;
+            // 보물찾기가 종료되었으면 Idle로 전환
+            Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기가 종료되어 Idle로 전환");
+            pet.State.TrySetStatus(PetStatus.Idle);
+            isSearching = false;
         }
-        
-        yield return new WaitForSeconds(1.5f);
-        
-        // 다시 이동 시작
-        if (agent != null && agent.enabled)
-        {
-            agent.isStopped = false;
-        }
-        
-        // 새로운 보물 찾기
-        FindNewTarget();
     }
+    
     
     /// <summary>
     /// 펫의 입 본 찾기 (모델에 따라 다를 수 있음)

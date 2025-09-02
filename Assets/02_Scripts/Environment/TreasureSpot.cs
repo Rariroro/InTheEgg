@@ -36,6 +36,7 @@ public class TreasureSpot : MonoBehaviour
     // 프로퍼티
     public bool HasTreasure => hasTreasure && currentTreasure != null;
     public bool IsOccupied => occupyingPet != null;
+    public bool IsAvailable => HasTreasure && !IsOccupied;  // 보물이 있고 아직 차지되지 않은 경우만 true
     public GameObject CurrentTreasure => currentTreasure;
     public Vector3 WaitingPosition => waitingPoint != null ? waitingPoint.position : transform.position + Vector3.forward * 2f;
     public List<PetController> CompetingPets => competingPets;
@@ -149,8 +150,24 @@ public class TreasureSpot : MonoBehaviour
         {
             if (loser != winner && loser != null)
             {
-                // TreasureHuntActivity에서 실망 처리를 하도록 알림
-                Debug.Log($"{loser.petName}은(는) {winner.petName}에게 보물을 빼앗겼습니다.");
+                Debug.Log($"[TreasureSpot] {loser.petName}은(는) {winner.petName}에게 보물을 빼앗겼습니다. 즉시 알림 전송");
+                
+                // TreasureHuntActivity의 OnTargetLost 메서드 호출
+                // PetAI를 통해 현재 Activity 접근
+                if (loser.AI != null)
+                {
+                    var currentActivity = loser.AI.GetCurrentActivity();
+                    if (currentActivity is TreasureHuntActivity treasureHuntActivity)
+                    {
+                        // 즉시 다른 보물을 찾도록 알림
+                        treasureHuntActivity.OnTargetLost();
+                        Debug.Log($"[TreasureSpot] {loser.petName}에게 OnTargetLost 알림 전송 완료");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[TreasureSpot] {loser.petName}의 CurrentActivity가 TreasureHuntActivity가 아님 (현재: {currentActivity?.Name ?? "None"})");
+                    }
+                }
             }
         }
     }
