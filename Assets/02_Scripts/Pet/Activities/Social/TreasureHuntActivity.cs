@@ -15,6 +15,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     private bool hasFoundTreasure = false;
     private bool hasDroppedTreasure = false;
     private GameObject carriedTreasure;
+    private GameObject droppedTreasureObject;  // 내려놓은 보물 GameObject 추적
     private float searchTimer = 0f;
     private const float SEARCH_INTERVAL = 0.5f; // 0.5초마다 새 타겟 검색
     
@@ -275,7 +276,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 (hasFoundTreasure={hasFoundTreasure}, hasDroppedTreasure={hasDroppedTreasure})");
         
         // 보물을 찾아서 내려놓은 상태면 계속 유지 (유저가 가져갈 때까지)
-        if (hasFoundTreasure && hasDroppedTreasure && carriedTreasure == null)
+        if (hasFoundTreasure && hasDroppedTreasure && droppedTreasureObject != null)
         {
             Debug.Log($"[TreasureHunt] {pet.petName}: 보물을 찾은 상태 유지, 계속 점프할 예정");
             // 상태만 유지하고 Stop하지 않음
@@ -312,6 +313,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         isSearching = false;
         hasFoundTreasure = false;
         hasDroppedTreasure = false;
+        droppedTreasureObject = null;
         isWandering = false;
         approachStartTime = 0f;
         isPathRecalculating = false;
@@ -670,10 +672,10 @@ public class TreasureHuntActivity : PetActivityAdapter
         var animController = pet.GetComponent<PetAnimationController>();
         
         // 보물찾기가 종료되어도 계속 점프 (유저가 보물 가져갈 때까지)
-        while (hasFoundTreasure && hasDroppedTreasure && carriedTreasure == null)
+        while (hasFoundTreasure && hasDroppedTreasure && droppedTreasureObject != null)
         {
-            // carriedTreasure가 삭제되면 (유저가 가져가면) 종료
-            if (carriedTreasure != null && !carriedTreasure.activeInHierarchy)
+            // droppedTreasureObject가 실제로 삭제되었는지 확인 (유저가 가져가면)
+            if (droppedTreasureObject == null)
             {
                 Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 수집됨, 점프 종료");
                 break;
@@ -711,6 +713,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 점프 종료 후 처리
         hasFoundTreasure = false;
         hasDroppedTreasure = false;
+        droppedTreasureObject = null;
         
         // 보물찾기가 아직 진행 중인지 확인
         if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
@@ -758,11 +761,21 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator DropTreasureAnimation(Vector3 from, Vector3 to)
     {
+        // carriedTreasure를 지역 변수에 저장 (코루틴 실행 중 null이 되는 것 방지)
+        GameObject treasureToAnimate = carriedTreasure;
+        
+        // null 체크
+        if (treasureToAnimate == null)
+        {
+            Debug.LogWarning($"[TreasureHuntActivity] {pet.petName}: 보물이 null입니다. 애니메이션 취소");
+            yield break;
+        }
+        
         float duration = 0.3f;
         float elapsed = 0f;
 
         // 부모 해제 (월드 좌표로 전환)
-        carriedTreasure.transform.SetParent(null);
+        treasureToAnimate.transform.SetParent(null);
 
         while (elapsed < duration)
         {
@@ -775,23 +788,41 @@ public class TreasureHuntActivity : PetActivityAdapter
             float heightCurve = 1f - (t - 0.5f) * (t - 0.5f) * 4f; // 중간에 살짝 올라갔다가 내려옴
             pos.y = Mathf.Lerp(from.y, to.y, t) + heightCurve * 0.2f;
 
-            carriedTreasure.transform.position = pos;
+            // null 체크 추가 (애니메이션 중 삭제될 수 있음)
+            if (treasureToAnimate == null)
+            {
+                Debug.LogWarning($"[TreasureHuntActivity] {pet.petName}: 애니메이션 중 보물이 삭제됨");
+                yield break;
+            }
+            
+            treasureToAnimate.transform.position = pos;
             yield return null;
         }
 
+        // 최종 null 체크
+        if (treasureToAnimate == null)
+        {
+            Debug.LogWarning($"[TreasureHuntActivity] {pet.petName}: 애니메이션 종료 시 보물이 null");
+            yield break;
+        }
+
         // 최종 위치 설정
-        carriedTreasure.transform.position = to;
-        carriedTreasure.transform.rotation = Quaternion.identity;
+        treasureToAnimate.transform.position = to;
+        treasureToAnimate.transform.rotation = Quaternion.identity;
+
+        // 내려놓은 보물 GameObject 저장
+        droppedTreasureObject = treasureToAnimate;
+        carriedTreasure = null;  // carriedTreasure는 null로 설정
 
         // TreasureController의 EnableCollection 호출
-        TreasureController treasureController = carriedTreasure.GetComponent<TreasureController>();
+        TreasureController treasureController = droppedTreasureObject.GetComponent<TreasureController>();
         if (treasureController != null)
         {
             Debug.Log($"[TreasureHuntActivity] {pet.petName}: EnableCollection 호출");
             treasureController.EnableCollection();
         }
 
-        Debug.Log($"[TreasureHuntActivity] {pet.petName}: 보물을 내려놓고 대기 중! 위치: {carriedTreasure.transform.position}");
+        Debug.Log($"[TreasureHuntActivity] {pet.petName}: 보물을 내려놓고 대기 중! 위치: {droppedTreasureObject.transform.position}");
     }
     
     /// <summary>
