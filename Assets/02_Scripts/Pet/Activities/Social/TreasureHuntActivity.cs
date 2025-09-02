@@ -708,11 +708,22 @@ public class TreasureHuntActivity : PetActivityAdapter
             yield return new WaitForSeconds(2f);
         }
         
-        // 점프 종료 후 상태 초기화
-        Debug.Log($"[TreasureHunt] {pet.petName}: 축하 점프 종료, 일상으로 복귀");
+        // 점프 종료 후 처리
         hasFoundTreasure = false;
         hasDroppedTreasure = false;
-        pet.State.TrySetStatus(PetStatus.Idle);
+        
+        // 보물찾기가 아직 진행 중인지 확인
+        if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
+        {
+            Debug.Log($"[TreasureHunt] {pet.petName}: 축하 점프 종료, 다른 보물 찾으러 갑니다!");
+            // TreasureHunting 상태로 설정하면 다시 보물 찾기 시작
+            pet.State.TrySetStatus(PetStatus.TreasureHunting);
+        }
+        else
+        {
+            Debug.Log($"[TreasureHunt] {pet.petName}: 축하 점프 종료, 일상으로 복귀");
+            pet.State.TrySetStatus(PetStatus.Idle);
+        }
     }
     
     /// <summary>

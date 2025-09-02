@@ -363,21 +363,45 @@ public class TreasureHuntManager : MonoBehaviour
         // 코인 이벤트 발생
         OnCoinsCollected?.Invoke(coins);
         
-        // 이 보물을 찾은 펫만 상태 초기화
+        // 이 보물을 찾은 펫의 상태 처리
         if (pet != null)
         {
-            pet.State.SetTreasureHuntingState(false);
-            pet.State.TrySetStatus(PetStatus.Idle);
             pet.ShowEmotion(EmotionType.Happy);
             
-            // AI 리셋
-            if (pet.AI != null)
+            // 보물찾기가 아직 진행 중이면 다시 보물 찾기
+            if (isTreasureHuntActive)
             {
-                pet.AI.InterruptAndResetAI();
+                Debug.Log($"{pet.petName}: 다른 보물을 찾으러 갑니다!");
+                
+                // 보물찾기 상태 유지
+                pet.State.SetTreasureHuntingState(true);
+                pet.State.TrySetStatus(PetStatus.TreasureHunting);
+                
+                // AI 리셋하여 새로운 보물 찾기 시작
+                if (pet.AI != null)
+                {
+                    pet.AI.InterruptAndResetAI();
+                }
+                
+                // 참여 펫 목록에는 계속 유지
             }
-            
-            // 참여 펫 목록에서 제거
-            participatingPets.Remove(pet);
+            else
+            {
+                // 보물찾기가 종료되었으면 일상으로 복귀
+                Debug.Log($"{pet.petName}: 보물찾기 종료, 일상으로 복귀");
+                
+                pet.State.SetTreasureHuntingState(false);
+                pet.State.TrySetStatus(PetStatus.Idle);
+                
+                // AI 리셋
+                if (pet.AI != null)
+                {
+                    pet.AI.InterruptAndResetAI();
+                }
+                
+                // 참여 펫 목록에서 제거
+                participatingPets.Remove(pet);
+            }
         }
         
         Debug.Log($"유저가 {pet?.petName}이(가) 찾은 보물을 수집했습니다! +{coins} 코인");
