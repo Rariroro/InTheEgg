@@ -31,6 +31,11 @@ public class TreasureHuntManager : MonoBehaviour
     [Tooltip("보물 하나당 최대 코인")]
     public int maxCoinReward = 50;
     
+    [Header("시간 설정")]
+    [Tooltip("보물찾기 제한 시간 (초)")]
+    [Range(30, 300)]
+    public float treasureHuntDuration = 120f;  // 기본 2분
+    
     [Header("친밀도 설정")]
     [Tooltip("보물찾기 참여에 필요한 최소 친밀도")]
     public float requiredAffection = 75f;
@@ -48,16 +53,25 @@ public class TreasureHuntManager : MonoBehaviour
     [SerializeField] private List<TreasureSpot> allTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<TreasureSpot> activeTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<PetController> participatingPets = new List<PetController>();
+    [SerializeField] private float remainingTime = 0f;
+    [SerializeField] private int totalTreasureCount = 0;  // 전체 보물 개수
+    [SerializeField] private int foundTreasureCount = 0;  // 찾은 보물 개수
+    private Coroutine timerCoroutine;
     
     // 프로퍼티
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
     public int TotalCoins => totalCoins;
+    public float RemainingTime => remainingTime;
+    public int TotalTreasureCount => totalTreasureCount;
+    public int FoundTreasureCount => foundTreasureCount;
     
     // 이벤트
     public System.Action<int> OnCoinsCollected;
     public System.Action OnTreasureHuntStarted;
     public System.Action OnTreasureHuntEnded;
+    public System.Action<int, int> OnTreasureFound;  // 찾은 개수, 전체 개수
+    public System.Action<float> OnTimeUpdate;  // 남은 시간
     
     private void Awake()
     {
@@ -153,52 +167,85 @@ public class TreasureHuntManager : MonoBehaviour
         // 보물 생성
         SpawnTreasures();
         
+        // 상태 초기화
+        foundTreasureCount = 0;
+        totalTreasureCount = activeTreasureSpots.Count;
+        remainingTime = treasureHuntDuration;
+        
         isTreasureHuntActive = true;
         OnTreasureHuntStarted?.Invoke();
+        OnTreasureFound?.Invoke(foundTreasureCount, totalTreasureCount);
         
-        Debug.Log($"보물찾기 시작! {participatingPets.Count}마리 참여, {activeTreasureSpots.Count}개 보물 생성");
+        // 타이머 시작
+        if (timerCoroutine != null)
+        {
+            StopCoroutine(timerCoroutine);
+        }
+        timerCoroutine = StartCoroutine(TreasureHuntTimer());
+        
+        Debug.Log($"보물찾기 시작! {participatingPets.Count}마리 참여, {totalTreasureCount}개 보물 생성, 제한시간 {treasureHuntDuration}초");
         ShowFeedback($"{participatingPets.Count}마리가 보물찾기를 시작합니다!");
     }
     
     /// <summary>
-    /// 보물찾기 종료
+    /// 보물찾기 종료 (완료 상태로 - 펫과 보물 유지)
     /// </summary>
-    public void EndTreasureHunt()
+    public void EndTreasureHunt(bool clearAll = false)
     {
         if (!isTreasureHuntActive) return;
         
-        // 모든 보물 제거
-        foreach (var spot in activeTreasureSpots)
+        // 타이머 중지
+        if (timerCoroutine != null)
         {
-            if (spot != null)
-            {
-                spot.Clear();
-            }
+            StopCoroutine(timerCoroutine);
+            timerCoroutine = null;
         }
-        activeTreasureSpots.Clear();
         
-        // 모든 펫 상태 초기화
-        foreach (var pet in participatingPets)
+        if (clearAll)
         {
-            if (pet != null)
+            // 강제 종료 시에만 모든 것을 정리 (테스트용)
+            foreach (var spot in activeTreasureSpots)
             {
-                pet.State.SetTreasureHuntingState(false);
-                pet.State.TrySetStatus(PetStatus.Idle);
-                
-                // AI 리셋
-                if (pet.AI != null)
+                if (spot != null)
                 {
-                    pet.AI.InterruptAndResetAI();
+                    spot.Clear();
                 }
             }
+            activeTreasureSpots.Clear();
+            
+            // 모든 펫 상태 초기화
+            foreach (var pet in participatingPets)
+            {
+                if (pet != null)
+                {
+                    pet.State.SetTreasureHuntingState(false);
+                    pet.State.TrySetStatus(PetStatus.Idle);
+                    
+                    // AI 리셋
+                    if (pet.AI != null)
+                    {
+                        pet.AI.InterruptAndResetAI();
+                    }
+                }
+            }
+            participatingPets.Clear();
         }
-        participatingPets.Clear();
+        else
+        {
+            // 일반 종료 - 펫은 보물 앞에서 계속 대기
+            // IsTreasureHuntActive만 false로 설정
+            // 펫들은 TreasureFound 상태 유지
+        }
         
         isTreasureHuntActive = false;
         OnTreasureHuntEnded?.Invoke();
         
-        Debug.Log("보물찾기 종료!");
-        ShowFeedback("보물찾기가 종료되었습니다.");
+        string endMessage = foundTreasureCount == totalTreasureCount ? 
+            $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" : 
+            $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
+        
+        Debug.Log($"보물찾기 종료! {endMessage}");
+        ShowFeedback(endMessage);
     }
     
     /// <summary>
@@ -270,37 +317,64 @@ public class TreasureHuntManager : MonoBehaviour
     /// </summary>
     public void CollectTreasure(TreasureSpot spot, PetController pet)
     {
-        if (spot == null || !spot.HasTreasure) return;
+        // spot이 null이어도 처리 가능 (펫이 놓은 보물)
         
         // 코인 보상
         int coins = Random.Range(minCoinReward, maxCoinReward + 1);
         totalCoins += coins;
         
+        // 찾은 보물 개수 증가
+        foundTreasureCount++;
+        
         // UI 업데이트
         UpdateCoinUI();
-        ShowCoinFeedback(coins, spot.transform.position);
+        if (spot != null)
+        {
+            ShowCoinFeedback(coins, spot.transform.position);
+        }
+        else if (pet != null)
+        {
+            ShowCoinFeedback(coins, pet.transform.position);
+        }
         
         // 이벤트 발생
         OnCoinsCollected?.Invoke(coins);
+        OnTreasureFound?.Invoke(foundTreasureCount, totalTreasureCount);
         
         // 스팟에서 보물 제거
-        spot.CollectTreasure();
-        activeTreasureSpots.Remove(spot);
-        
-        // 펫 상태 초기화
-        if (pet != null)
+        if (spot != null)
         {
-            pet.State.TrySetStatus(PetStatus.Idle);
-            pet.ShowEmotion(EmotionType.Happy);
+            if (spot.HasTreasure)
+            {
+                spot.CollectTreasure();
+            }
+            activeTreasureSpots.Remove(spot);
         }
         
-        Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! +{coins} 코인");
+        // 이 보물을 찾은 펫만 상태 초기화
+        if (pet != null)
+        {
+            pet.State.SetTreasureHuntingState(false);
+            pet.State.TrySetStatus(PetStatus.Idle);
+            pet.ShowEmotion(EmotionType.Happy);
+            
+            // AI 리셋
+            if (pet.AI != null)
+            {
+                pet.AI.InterruptAndResetAI();
+            }
+            
+            // 참여 펫 목록에서 제거
+            participatingPets.Remove(pet);
+        }
+        
+        Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! +{coins} 코인 ({foundTreasureCount}/{totalTreasureCount})");
         
         // 모든 보물을 찾았는지 확인
-        if (activeTreasureSpots.Count == 0 && isTreasureHuntActive)
+        if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
         {
             ShowFeedback("모든 보물을 찾았습니다!");
-            // 잠시 후 자동 종료
+            // 잠시 후 종료 (펫과 보물은 유지)
             StartCoroutine(EndAfterDelay(2f));
         }
     }
@@ -308,7 +382,33 @@ public class TreasureHuntManager : MonoBehaviour
     private IEnumerator EndAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        EndTreasureHunt();
+        EndTreasureHunt(false);  // 일반 종료 - 펫과 보물 유지
+    }
+    
+    /// <summary>
+    /// 보물찾기 타이머
+    /// </summary>
+    private IEnumerator TreasureHuntTimer()
+    {
+        while (remainingTime > 0 && isTreasureHuntActive)
+        {
+            remainingTime -= Time.deltaTime;
+            OnTimeUpdate?.Invoke(remainingTime);
+            
+            // 마지막 10초 경고
+            if (remainingTime <= 10f && remainingTime > 9f)
+            {
+                ShowFeedback("10초 남았습니다!");
+            }
+            
+            yield return null;
+        }
+        
+        if (isTreasureHuntActive)
+        {
+            // 시간 종료로 인한 종료
+            EndTreasureHunt(false);
+        }
     }
     
     /// <summary>

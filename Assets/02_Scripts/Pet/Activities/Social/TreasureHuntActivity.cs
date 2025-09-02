@@ -52,16 +52,17 @@ public class TreasureHuntActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 보물찾기 모드가 활성화되어 있고, 친밀도가 충분할 때만
-        if (!state.IsTreasureHuntActive) return false;
-        if (needs.Affection < 75f) return false;
+        // 보물찾기 모드가 활성화되어 있거나, 보물을 찾은 상태일 때
+        bool canStart = (state.IsTreasureHuntActive || state.CurrentStatus == PetStatus.TreasureFound) 
+                       && needs.Affection >= 75f;
         
         // 이미 다른 중요한 상태에 있으면 불가
         if (state.IsHolding || state.IsSelected) return false;
         if (state.CurrentStatus == PetStatus.Emergency) return false;
         
-        return state.CurrentStatus == PetStatus.TreasureHunting || 
-               state.CurrentStatus == PetStatus.Idle;
+        return canStart && (state.CurrentStatus == PetStatus.TreasureHunting || 
+                           state.CurrentStatus == PetStatus.TreasureFound ||
+                           state.CurrentStatus == PetStatus.Idle);
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -69,7 +70,11 @@ public class TreasureHuntActivity : PetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
             
-        // 보물찾기는 높은 우선순위 (모이기보다는 낮음)
+        // 보물을 찾은 상태면 최고 우선순위 (계속 점프하기 위해)
+        if (state.CurrentStatus == PetStatus.TreasureFound || hasFoundTreasure)
+            return 20.0f;
+            
+        // 일반 보물찾기는 높은 우선순위 (모이기보다는 낮음)
         return 15.0f;
     }
     
@@ -268,7 +273,15 @@ public class TreasureHuntActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료");
+        Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 (hasFoundTreasure={hasFoundTreasure}, hasDroppedTreasure={hasDroppedTreasure})");
+        
+        // 보물을 찾아서 내려놓은 상태면 계속 유지 (유저가 가져갈 때까지)
+        if (hasFoundTreasure && hasDroppedTreasure && carriedTreasure == null)
+        {
+            Debug.Log($"[TreasureHunt] {pet.petName}: 보물을 찾은 상태 유지, 계속 점프할 예정");
+            // 상태만 유지하고 Stop하지 않음
+            return;
+        }
         
         // 속도 원래대로 복구
         if (agent != null && agent.enabled)
@@ -650,15 +663,23 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         var animController = pet.GetComponent<PetAnimationController>();
         
-        while (hasFoundTreasure && hasDroppedTreasure)
+        // 보물찾기가 종료되어도 계속 점프 (유저가 보물 가져갈 때까지)
+        while (hasFoundTreasure && hasDroppedTreasure && carriedTreasure == null)
         {
+            // carriedTreasure가 삭제되면 (유저가 가져가면) 종료
+            if (carriedTreasure != null && !carriedTreasure.activeInHierarchy)
+            {
+                Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 수집됨, 점프 종료");
+                break;
+            }
+            
             // 점프 애니메이션 - PlayAnimationWithCustomDuration 사용으로 완전한 재생 보장
             if (animController != null)
             {
                 // 점프 애니메이션을 2초 동안 완전히 재생
                 yield return pet.StartCoroutine(animController.PlayAnimationWithCustomDuration(
                     PetAnimationController.PetAnimationType.Jump, 
-                    2f,    // 애니메이션 재생 시간 (1초 → 2초로 증가)
+                    2f,    // 애니메이션 재생 시간
                     true,  // returnToIdle - 자동으로 Idle로 복귀
                     false  // resumeMovementAfter - 이동 재개하지 않음
                 ));
@@ -680,6 +701,12 @@ public class TreasureHuntActivity : PetActivityAdapter
             // Idle 상태에서 대기
             yield return new WaitForSeconds(2f);
         }
+        
+        // 점프 종료 후 상태 초기화
+        Debug.Log($"[TreasureHunt] {pet.petName}: 축하 점프 종료, 일상으로 복귀");
+        hasFoundTreasure = false;
+        hasDroppedTreasure = false;
+        pet.State.TrySetStatus(PetStatus.Idle);
     }
     
     /// <summary>

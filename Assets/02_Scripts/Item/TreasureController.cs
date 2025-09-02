@@ -230,6 +230,10 @@ public class TreasureController : MonoBehaviour
         if (carryingPet != null)
         {
             Debug.Log($"[TreasureController] {carryingPet.petName}이(가) 찾은 보물을 수집합니다.");
+            
+            // 이 펫의 점프 상태를 종료시킴
+            // TreasureHuntActivity가 보물 삭제를 감지하고 자동으로 종료됨
+            // 여기서는 추가 작업 필요 없음
         }
         // 플레이어가 직접 찾은 보물이거나, 펫이 내려놓은 보물인 경우
         else if (isDropped)
@@ -243,7 +247,7 @@ public class TreasureController : MonoBehaviour
             Debug.Log("[TreasureController] 플레이어가 직접 보물을 발견했습니다.");
         }
         
-        // 매니저에 수집 알림
+        // 매니저에 수집 알림 (펫 상태 리셋은 매니저에서 처리)
         if (TreasureHuntManager.Instance != null)
         {
             // parentSpot이 null이어도 수집 가능하도록 처리

@@ -19,6 +19,12 @@ public class TreasureHuntButton : MonoBehaviour
     [Tooltip("조건 안내 텍스트")]
     public TMP_Text conditionText;
     
+    [Tooltip("보물 개수 표시 텍스트")]
+    public TMP_Text treasureCountText;
+    
+    [Tooltip("남은 시간 표시 텍스트")]
+    public TMP_Text timerText;
+    
     [Header("설정")]
     [Tooltip("필요한 최소 친밀도")]
     public float requiredAffection = 75f;
@@ -54,12 +60,24 @@ public class TreasureHuntButton : MonoBehaviour
             conditionText.gameObject.SetActive(false);
         }
         
+        // 보물 개수와 타이머 텍스트 초기화
+        if (treasureCountText != null)
+        {
+            treasureCountText.gameObject.SetActive(false);
+        }
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(false);
+        }
+        
         // 매니저 이벤트 연결
         if (TreasureHuntManager.Instance != null)
         {
             TreasureHuntManager.Instance.OnTreasureHuntStarted += OnHuntStarted;
             TreasureHuntManager.Instance.OnTreasureHuntEnded += OnHuntEnded;
             TreasureHuntManager.Instance.OnCoinsCollected += OnCoinsCollected;
+            TreasureHuntManager.Instance.OnTreasureFound += OnTreasureFound;
+            TreasureHuntManager.Instance.OnTimeUpdate += OnTimeUpdate;
         }
         
         // 초기 상태 체크
@@ -92,14 +110,9 @@ public class TreasureHuntButton : MonoBehaviour
         
         if (isHuntActive)
         {
-            // 보물찾기 종료
-            Debug.Log("[TreasureHuntButton] 보물찾기 종료");
-            TreasureHuntManager.Instance.EndTreasureHunt();
-            shouldShowConditionText = false; // 종료 시 조건 텍스트 숨김
-            if (conditionText != null)
-            {
-                conditionText.gameObject.SetActive(false);
-            }
+            // 진행 중에는 버튼 동작 안 함 (시작 버튼만 제공)
+            Debug.Log("[TreasureHuntButton] 보물찾기가 이미 진행 중입니다.");
+            return;
         }
         else
         {
@@ -276,15 +289,26 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntStarted()
     {
         isHuntActive = true;
-        shouldShowConditionText = true; // 진행 중 표시를 위해
-        UpdateButtonText("보물찾기 종료");
-        SetButtonState(true, progressColor);
+        shouldShowConditionText = false; // 조건 텍스트 숨김
+        UpdateButtonText("보물찾기 진행중");
+        SetButtonState(false, progressColor);  // 진행 중에는 버튼 비활성화
         
-        // 진행 중 표시
+        // 조건 텍스트 숨기기
         if (conditionText != null)
         {
-            conditionText.gameObject.SetActive(true);
-            conditionText.text = $"<color=green>보물찾기 진행 중...</color>";
+            conditionText.gameObject.SetActive(false);
+        }
+        
+        // 보물 개수와 타이머 표시
+        if (treasureCountText != null)
+        {
+            treasureCountText.gameObject.SetActive(true);
+            UpdateTreasureCountDisplay(0, TreasureHuntManager.Instance.TotalTreasureCount);
+        }
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(true);
+            UpdateTimerDisplay(TreasureHuntManager.Instance.RemainingTime);
         }
         
         // 시작 효과
@@ -305,14 +329,22 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntEnded()
     {
         isHuntActive = false;
-        shouldShowConditionText = false; // 종료 시 조건 텍스트 숨김
+        shouldShowConditionText = false;
         UpdateButtonText("보물찾기 시작");
         CheckButtonAvailability();
         
-        // 조건 텍스트 숨기기
+        // 모든 UI 요소 숨기기
         if (conditionText != null)
         {
             conditionText.gameObject.SetActive(false);
+        }
+        if (treasureCountText != null)
+        {
+            treasureCountText.gameObject.SetActive(false);
+        }
+        if (timerText != null)
+        {
+            timerText.gameObject.SetActive(false);
         }
         
         // 종료 효과
@@ -354,6 +386,81 @@ public class TreasureHuntButton : MonoBehaviour
         treasureHuntButton.colors = originalColors;
     }
     
+    /// <summary>
+    /// 보물 발견 이벤트 처리
+    /// </summary>
+    private void OnTreasureFound(int found, int total)
+    {
+        UpdateTreasureCountDisplay(found, total);
+        
+        // 보물 찾을 때마다 짧은 플래시 효과
+        if (treasureCountText != null)
+        {
+            StartCoroutine(FlashText(treasureCountText));
+        }
+    }
+    
+    /// <summary>
+    /// 시간 업데이트 이벤트 처리
+    /// </summary>
+    private void OnTimeUpdate(float remainingTime)
+    {
+        UpdateTimerDisplay(remainingTime);
+        
+        // 10초 이하일 때 빨간색으로 표시
+        if (timerText != null && remainingTime <= 10f)
+        {
+            timerText.color = Color.red;
+        }
+    }
+    
+    /// <summary>
+    /// 보물 개수 표시 업데이트
+    /// </summary>
+    private void UpdateTreasureCountDisplay(int found, int total)
+    {
+        if (treasureCountText != null)
+        {
+            treasureCountText.text = $"보물: {found}/{total} 찾음";
+            
+            // 모두 찾았을 때 특별한 색상
+            if (found >= total)
+            {
+                treasureCountText.color = Color.yellow;
+            }
+            else
+            {
+                treasureCountText.color = Color.white;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// 타이머 표시 업데이트
+    /// </summary>
+    private void UpdateTimerDisplay(float seconds)
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(seconds / 60f);
+            int secs = Mathf.FloorToInt(seconds % 60f);
+            timerText.text = $"남은 시간: {minutes:00}:{secs:00}";
+        }
+    }
+    
+    /// <summary>
+    /// 텍스트 플래시 효과
+    /// </summary>
+    private System.Collections.IEnumerator FlashText(TMP_Text text)
+    {
+        if (text == null) yield break;
+        
+        Color originalColor = text.color;
+        text.color = Color.green;
+        yield return new WaitForSeconds(0.2f);
+        text.color = originalColor;
+    }
+    
     private void OnDestroy()
     {
         // 이벤트 연결 해제
@@ -362,6 +469,8 @@ public class TreasureHuntButton : MonoBehaviour
             TreasureHuntManager.Instance.OnTreasureHuntStarted -= OnHuntStarted;
             TreasureHuntManager.Instance.OnTreasureHuntEnded -= OnHuntEnded;
             TreasureHuntManager.Instance.OnCoinsCollected -= OnCoinsCollected;
+            TreasureHuntManager.Instance.OnTreasureFound -= OnTreasureFound;
+            TreasureHuntManager.Instance.OnTimeUpdate -= OnTimeUpdate;
         }
         
         if (treasureHuntButton != null)
