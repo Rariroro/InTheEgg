@@ -558,6 +558,12 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 treasureController.StartCarrying(pet);
             }
+            
+            // 매니저에 보물 찾음 알림 (이 시점에 카운팅!)
+            if (TreasureHuntManager.Instance != null)
+            {
+                TreasureHuntManager.Instance.OnPetFoundTreasure(targetSpot, pet);
+            }
         }
         
         // 대기 위치로 이동

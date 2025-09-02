@@ -313,18 +313,41 @@ public class TreasureHuntManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 보물 수집 처리
+    /// 펫이 보물을 찾았을 때 (카운팅만 처리, 보물은 유지)
     /// </summary>
-    public void CollectTreasure(TreasureSpot spot, PetController pet)
+    public void OnPetFoundTreasure(TreasureSpot spot, PetController pet)
     {
-        // spot이 null이어도 처리 가능 (펫이 놓은 보물)
-        
-        // 코인 보상
-        int coins = Random.Range(minCoinReward, maxCoinReward + 1);
-        totalCoins += coins;
+        if (!isTreasureHuntActive) return;
         
         // 찾은 보물 개수 증가
         foundTreasureCount++;
+        
+        // 보물은 제거하지 않음! 펫이 물고 가서 내려놓을 것임
+        // spot.CollectTreasure() 호출하지 않음
+        // activeTreasureSpots에서도 제거하지 않음
+        
+        // UI 이벤트 발생 (보물 개수 업데이트)
+        OnTreasureFound?.Invoke(foundTreasureCount, totalTreasureCount);
+        
+        Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})");
+        
+        // 모든 보물을 찾았는지 확인
+        if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
+        {
+            ShowFeedback("모든 보물을 찾았습니다!");
+            // 잠시 후 종료 (펫과 보물은 유지)
+            StartCoroutine(EndAfterDelay(2f));
+        }
+    }
+    
+    /// <summary>
+    /// 유저가 보물을 수집할 때 (코인 보상만 처리)
+    /// </summary>
+    public void CollectTreasure(TreasureSpot spot, PetController pet)
+    {
+        // 코인 보상
+        int coins = Random.Range(minCoinReward, maxCoinReward + 1);
+        totalCoins += coins;
         
         // UI 업데이트
         UpdateCoinUI();
@@ -337,19 +360,8 @@ public class TreasureHuntManager : MonoBehaviour
             ShowCoinFeedback(coins, pet.transform.position);
         }
         
-        // 이벤트 발생
+        // 코인 이벤트 발생
         OnCoinsCollected?.Invoke(coins);
-        OnTreasureFound?.Invoke(foundTreasureCount, totalTreasureCount);
-        
-        // 스팟에서 보물 제거
-        if (spot != null)
-        {
-            if (spot.HasTreasure)
-            {
-                spot.CollectTreasure();
-            }
-            activeTreasureSpots.Remove(spot);
-        }
         
         // 이 보물을 찾은 펫만 상태 초기화
         if (pet != null)
@@ -368,15 +380,7 @@ public class TreasureHuntManager : MonoBehaviour
             participatingPets.Remove(pet);
         }
         
-        Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! +{coins} 코인 ({foundTreasureCount}/{totalTreasureCount})");
-        
-        // 모든 보물을 찾았는지 확인
-        if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
-        {
-            ShowFeedback("모든 보물을 찾았습니다!");
-            // 잠시 후 종료 (펫과 보물은 유지)
-            StartCoroutine(EndAfterDelay(2f));
-        }
+        Debug.Log($"유저가 {pet?.petName}이(가) 찾은 보물을 수집했습니다! +{coins} 코인");
     }
     
     private IEnumerator EndAfterDelay(float delay)

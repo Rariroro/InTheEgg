@@ -29,7 +29,7 @@ public class TreasureController : MonoBehaviour
     
     [Header("상태")]
     [SerializeField] private TreasureSpot parentSpot;
-    [SerializeField] private bool isCollectable = true;
+    [SerializeField] private bool isCollectable = false;  // 기본값을 false로 변경 (펫이 찾기 전에는 수집 불가)
     [SerializeField] private bool isCarried = false;
     [SerializeField] private bool isDropped = false;  // 펫이 내려놓은 상태
     [SerializeField] private PetController carryingPet;
@@ -72,6 +72,9 @@ public class TreasureController : MonoBehaviour
         }
         // isTrigger를 false로 설정하여 Raycast가 감지할 수 있도록 함
         treasureCollider.isTrigger = false;
+        
+        // 초기에는 콜라이더 비활성화 (펫이 찾기 전에는 클릭 불가)
+        treasureCollider.enabled = false;
         
         // 레이어 설정 (DroppedItem 레이어 사용)
         gameObject.layer = LayerMask.NameToLayer("DroppedItem");
@@ -177,9 +180,14 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     private void OnMouseDown()
     {
-        Debug.Log($"[TreasureController] OnMouseDown - isCollectable={isCollectable}, isCarried={isCarried}");
+        Debug.Log($"[TreasureController] OnMouseDown - isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}");
         
-        if (!isCollectable) return;
+        // 펫이 찾아서 내려놓은 보물만 수집 가능
+        if (!isCollectable || !isDropped)
+        {
+            Debug.Log($"[TreasureController] 아직 펫이 찾지 않은 보물입니다. 수집 불가!");
+            return;
+        }
         
         Debug.Log($"[TreasureController] OnMouseDown 클릭 감지! 수집 시도");
         TryCollect();
@@ -192,9 +200,10 @@ public class TreasureController : MonoBehaviour
     {
         Debug.Log($"[TreasureController] OnTreasureClicked - isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}");
         
-        if (!isCollectable)
+        // 펫이 찾아서 내려놓은 보물만 수집 가능
+        if (!isCollectable || !isDropped)
         {
-            Debug.Log($"[TreasureController] 수집 불가능 상태");
+            Debug.Log($"[TreasureController] 아직 펫이 찾지 않은 보물입니다. 수집 불가!");
             return;
         }
         
