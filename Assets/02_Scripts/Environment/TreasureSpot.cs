@@ -30,8 +30,6 @@ public class TreasureSpot : MonoBehaviour
              "인스펙터에서 수동 설정 불필요")]
     [SerializeField] private PetController occupyingPet;  // 이 보물 스팟을 점유한 펫
     
-    // 경쟁 시스템을 위한 추가 필드
-    [SerializeField] private List<PetController> competingPets = new List<PetController>();  // 이 보물을 향해 오고 있는 펫들
     
     // 프로퍼티
     public bool HasTreasure => hasTreasure && currentTreasure != null;
@@ -39,7 +37,6 @@ public class TreasureSpot : MonoBehaviour
     public bool IsAvailable => HasTreasure && !IsOccupied;  // 보물이 있고 아직 차지되지 않은 경우만 true
     public GameObject CurrentTreasure => currentTreasure;
     public Vector3 WaitingPosition => waitingPoint != null ? waitingPoint.position : transform.position + Vector3.forward * 2f;
-    public List<PetController> CompetingPets => competingPets;
     
     private void Awake()
     {
@@ -104,73 +101,27 @@ public class TreasureSpot : MonoBehaviour
         return true;
     }
     
-    /// <summary>
-    /// 펫이 이 보물을 목표로 설정 (경쟁 추적)
-    /// </summary>
-    public void AddCompetingPet(PetController pet)
-    {
-        if (!competingPets.Contains(pet))
-        {
-            competingPets.Add(pet);
-            Debug.Log($"{pet.petName}이(가) {name} 보물을 목표로 설정했습니다.");
-        }
-    }
     
     /// <summary>
-    /// 펫이 보물에 도착해서 획듍 시도
+    /// 펫이 보물에 도착해서 획득 시도
     /// </summary>
     public bool TryCollect(PetController pet)
     {
-        // 이미 누군가 가져간 경우
-        if (!HasTreasure || occupyingPet != null)
+        // 보물이 없거나, 다른 펫이 이미 예약한 경우 실패
+        // (자신이 예약한 경우는 성공)
+        if (!HasTreasure || (occupyingPet != null && occupyingPet != pet))
         {
-            Debug.Log($"{pet.petName}: 보물이 이미 다른 펫에게 가져가졌습니다.");
-            
-            // 경쟁에서 패배한 펫들에게 알림
-            NotifyLosingPets(pet);
+            Debug.Log($"{pet.petName}: 보물이 없거나 다른 펫이 이미 예약했습니다.");
             return false;
         }
         
-        // 성공적으로 획듍
-        occupyingPet = pet;
-        Debug.Log($"{pet.petName}이(가) {name} 보물을 획듍했습니다!");
-        
-        // 경쟁에서 패배한 다른 펫들에게 알림
-        NotifyLosingPets(pet);
+        // 성공적으로 획득
+        occupyingPet = pet;  // 이미 설정되어 있겠지만 안전하게 재설정
+        Debug.Log($"{pet.petName}이(가) {name} 보물을 획득했습니다!");
         
         return true;
     }
     
-    /// <summary>
-    /// 경쟁에서 패배한 펫들에게 알림
-    /// </summary>
-    private void NotifyLosingPets(PetController winner)
-    {
-        foreach (var loser in competingPets)
-        {
-            if (loser != winner && loser != null)
-            {
-                Debug.Log($"[TreasureSpot] {loser.petName}은(는) {winner.petName}에게 보물을 빼앗겼습니다. 즉시 알림 전송");
-                
-                // TreasureHuntActivity의 OnTargetLost 메서드 호출
-                // PetAI를 통해 현재 Activity 접근
-                if (loser.AI != null)
-                {
-                    var currentActivity = loser.AI.GetCurrentActivity();
-                    if (currentActivity is TreasureHuntActivity treasureHuntActivity)
-                    {
-                        // 즉시 다른 보물을 찾도록 알림
-                        treasureHuntActivity.OnTargetLost();
-                        Debug.Log($"[TreasureSpot] {loser.petName}에게 OnTargetLost 알림 전송 완료");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[TreasureSpot] {loser.petName}의 CurrentActivity가 TreasureHuntActivity가 아님 (현재: {currentActivity?.Name ?? "None"})");
-                    }
-                }
-            }
-        }
-    }
     
     /// <summary>
     /// 펫이 이 위치 점유 해제
@@ -181,9 +132,6 @@ public class TreasureSpot : MonoBehaviour
         {
             occupyingPet = null;
         }
-        
-        // 경쟁 리스트에서도 제거
-        competingPets.Remove(pet);
     }
     
     /// <summary>
@@ -200,7 +148,6 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
-        competingPets.Clear();
     }
     
     /// <summary>
@@ -216,7 +163,6 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
-        competingPets.Clear();
     }
     
     // 에디터에서 시각화
