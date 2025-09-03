@@ -115,6 +115,24 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         if (!isSearching) return;
         
+        // 보물을 내려놓고 점프 중이면 다른 업데이트 처리 안 함
+        if (hasDroppedTreasure)
+        {
+            // 카메라 바라보기만 수행
+            if (Camera.main != null)
+            {
+                Vector3 directionToCamera = Camera.main.transform.position - pet.transform.position;
+                directionToCamera.y = 0;
+                if (directionToCamera.magnitude > 0.1f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                    pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, 
+                        pet.Movement.rotationSmoothness * Time.deltaTime);
+                }
+            }
+            return;
+        }
+        
         // agent 목적지 유실 체크 및 복구
         if (agent != null && agent.enabled && !agent.isStopped)
         {
@@ -122,7 +140,7 @@ public class TreasureHuntActivity : PetActivityAdapter
             if (!agent.hasPath || agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
             {
                 // 보물을 찾은 상태면 목적지 재설정
-                if (hasFoundTreasure && targetSpot != null)
+                if (hasFoundTreasure && targetSpot != null && !hasDroppedTreasure)
                 {
                     Vector3 destination = carriedTreasure != null ? targetSpot.WaitingPosition : targetSpot.transform.position;
                     Debug.Log($"[TreasureHunt] {pet.petName}: 목적지 유실 감지! 재설정 (hasFoundTreasure={hasFoundTreasure}, destination={destination})");
@@ -166,17 +184,20 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             isWandering = false;  // 보물 타겟이 있으면 배회 중단
             
-            // 경로 유효성 체크
-            if (!agent.pathPending && agent.hasPath)
+            // 경로 유효성 체크 (보물 내려놓기 전까지만)
+            if (!hasDroppedTreasure)
             {
-                lastValidPathTime = Time.time;
-                isPathRecalculating = false;
-            }
-            else if (!agent.hasPath && Time.time - lastValidPathTime > 1f)
-            {
-                // 경로가 없고 1초 이상 지났으면 재계산 중으로 표시
-                isPathRecalculating = true;
-                Debug.Log($"[TreasureHunt] {pet.petName}: 경로 재계산 중 (경로 없음)");
+                if (!agent.pathPending && agent.hasPath)
+                {
+                    lastValidPathTime = Time.time;
+                    isPathRecalculating = false;
+                }
+                else if (!agent.hasPath && Time.time - lastValidPathTime > 1f)
+                {
+                    // 경로가 없고 1초 이상 지났으면 재계산 중으로 표시
+                    isPathRecalculating = true;
+                    Debug.Log($"[TreasureHunt] {pet.petName}: 경로 재계산 중 (경로 없음)");
+                }
             }
             
             // 접근 시간 추적
@@ -275,14 +296,6 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 (hasFoundTreasure={hasFoundTreasure}, hasDroppedTreasure={hasDroppedTreasure})");
         
-        // 보물을 찾아서 내려놓은 상태면 계속 유지 (유저가 가져갈 때까지)
-        if (hasFoundTreasure && hasDroppedTreasure && droppedTreasureObject != null)
-        {
-            Debug.Log($"[TreasureHunt] {pet.petName}: 보물을 찾은 상태 유지, 계속 점프할 예정");
-            // 상태만 유지하고 Stop하지 않음
-            return;
-        }
-        
         // 속도 원래대로 복구
         if (agent != null && agent.enabled)
         {
@@ -307,13 +320,28 @@ public class TreasureHuntActivity : PetActivityAdapter
             carriedTreasure = null;
         }
         
-        // 애니메이션 정상화
-        pet.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+        // 애니메이션 정상화 (점프 중이 아닌 경우만)
+        if (!hasDroppedTreasure)
+        {
+            pet.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+        }
+        
+        // 보물을 찾아서 내려놓은 상태면 점프 코루틴 계속 실행
+        if (hasFoundTreasure && hasDroppedTreasure && droppedTreasureObject != null)
+        {
+            Debug.Log($"[TreasureHunt] {pet.petName}: Activity는 종료하지만 점프는 계속할 예정");
+            // 점프 코루틴이 이미 실행 중이므로 추가 작업 불필요
+            // CelebrationJump 코루틴이 독립적으로 계속 실행됨
+        }
+        else
+        {
+            // 점프 중이 아니면 모든 상태 초기화
+            hasFoundTreasure = false;
+            hasDroppedTreasure = false;
+            droppedTreasureObject = null;
+        }
         
         isSearching = false;
-        hasFoundTreasure = false;
-        hasDroppedTreasure = false;
-        droppedTreasureObject = null;
         isWandering = false;
         approachStartTime = 0f;
         isPathRecalculating = false;
@@ -593,6 +621,24 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private void HandleTreasureFound()
     {
+        // 이미 보물을 내려놓았으면 아무것도 하지 않음 (점프만 계속)
+        if (hasDroppedTreasure)
+        {
+            // 카메라 바라보기만 수행
+            if (Camera.main != null)
+            {
+                Vector3 directionToCamera = Camera.main.transform.position - pet.transform.position;
+                directionToCamera.y = 0;
+                if (directionToCamera.magnitude > 0.1f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
+                    pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, 
+                        pet.Movement.rotationSmoothness * Time.deltaTime);
+                }
+            }
+            return;
+        }
+        
         if (agent == null || !agent.enabled) return;
         
         // 대기 위치가 변경되었는지 확인하고 재설정
@@ -626,19 +672,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 // 내려놓기 시퀀스 시작
                 pet.StartCoroutine(DropTreasureSequence());
             }
-            
-            // 카메라 바라보기
-            if (Camera.main != null)
-            {
-                Vector3 directionToCamera = Camera.main.transform.position - pet.transform.position;
-                directionToCamera.y = 0;
-                if (directionToCamera.magnitude > 0.1f)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(directionToCamera);
-                    pet.transform.rotation = Quaternion.Slerp(pet.transform.rotation, targetRotation, 
-                        pet.Movement.rotationSmoothness * Time.deltaTime);
-                }
-            }
         }
     }
     
@@ -671,16 +704,11 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         var animController = pet.GetComponent<PetAnimationController>();
         
+        Debug.Log($"[TreasureHunt] {pet.petName}: 축하 점프 시작!");
+        
         // 보물찾기가 종료되어도 계속 점프 (유저가 보물 가져갈 때까지)
-        while (hasFoundTreasure && hasDroppedTreasure && droppedTreasureObject != null)
+        while (droppedTreasureObject != null)
         {
-            // droppedTreasureObject가 실제로 삭제되었는지 확인 (유저가 가져가면)
-            if (droppedTreasureObject == null)
-            {
-                Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 수집됨, 점프 종료");
-                break;
-            }
-            
             // 점프 애니메이션 - PlayAnimationWithCustomDuration 사용으로 완전한 재생 보장
             if (animController != null)
             {
@@ -701,7 +729,7 @@ public class TreasureHuntActivity : PetActivityAdapter
             }
             
             // 점프 중 행복 표현
-            if (Random.value < 0.3f) // 30% 확률로 감정 표현
+            if (Random.value < 0.3f) // 30% 확륥로 감정 표현
             {
                 pet.ShowEmotion(EmotionType.Love);
             }
@@ -709,6 +737,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             // Idle 상태에서 대기
             yield return new WaitForSeconds(2f);
         }
+        
+        Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 수집됨, 점프 종료");
         
         // 점프 종료 후 처리
         hasFoundTreasure = false;
