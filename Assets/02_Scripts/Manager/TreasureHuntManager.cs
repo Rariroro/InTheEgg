@@ -334,7 +334,19 @@ public class TreasureHuntManager : MonoBehaviour
     {
         if (!isTreasureHuntActive) return;
         
-        // 찾은 보물 개수 증가
+        // 이미 카운팅된 보물인지 확인
+        if (spot != null && spot.HasBeenCounted)
+        {
+            Debug.Log($"{pet?.petName}이(가) 이미 카운팅된 보물을 다시 찾음. 중복 카운팅 방지!");
+            return;
+        }
+        
+        // 처음 카운팅하는 경우만 증가
+        if (spot != null)
+        {
+            spot.SetCounted();
+        }
+        
         foundTreasureCount++;
         
         // 보물은 제거하지 않음! 펫이 물고 가서 내려놓을 것임

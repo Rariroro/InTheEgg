@@ -18,6 +18,7 @@ public class TreasureSpot : MonoBehaviour
     
     [Header("상태")]
     [SerializeField] private bool hasTreasure = false;
+    [SerializeField] private bool hasBeenCounted = false;  // 이미 카운팅되었는지 추적
     
     [Tooltip("런타임에 자동 관리됨 - 이 스팟에 생성된 보물 오브젝트 참조\n" +
              "보물이 생성되면 자동으로 할당되고, 수집되면 null이 됩니다.\n" +
@@ -37,6 +38,7 @@ public class TreasureSpot : MonoBehaviour
     public bool IsAvailable => HasTreasure && !IsOccupied;  // 보물이 있고 아직 차지되지 않은 경우만 true
     public GameObject CurrentTreasure => currentTreasure;
     public Vector3 WaitingPosition => waitingPoint != null ? waitingPoint.position : transform.position + Vector3.forward * 2f;
+    public bool HasBeenCounted => hasBeenCounted;
     
     private void Awake()
     {
@@ -77,6 +79,7 @@ public class TreasureSpot : MonoBehaviour
         currentTreasure = Instantiate(treasurePrefab, spawnPosition, Quaternion.identity);
         currentTreasure.transform.SetParent(transform);
         hasTreasure = true;
+        hasBeenCounted = false;  // 새 보물은 아직 카운팅 안됨
         
         // 보물 컨트롤러에 이 스팟 연결 및 초기 상태 설정
         TreasureController treasureController = currentTreasure.GetComponent<TreasureController>();
@@ -135,6 +138,14 @@ public class TreasureSpot : MonoBehaviour
     }
     
     /// <summary>
+    /// 이 보물이 카운팅되었음을 표시
+    /// </summary>
+    public void SetCounted()
+    {
+        hasBeenCounted = true;
+    }
+    
+    /// <summary>
     /// 보물 획득 처리
     /// </summary>
     public void CollectTreasure()
@@ -148,6 +159,7 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
+        hasBeenCounted = false;
     }
     
     /// <summary>
@@ -163,6 +175,7 @@ public class TreasureSpot : MonoBehaviour
         
         hasTreasure = false;
         occupyingPet = null;
+        hasBeenCounted = false;
     }
     
     // 에디터에서 시각화
