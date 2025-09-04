@@ -38,9 +38,8 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 보물을 찾은 상태이고, 보물찾기가 활성화되어 있을 때만
+        // 보물을 찾은 상태이기만 하면 됨 (보물찾기 종료 여부와 무관)
         if (state.CurrentStatus != PetStatus.TreasureFound) return false;
-        if (!state.IsTreasureHuntActive) return false;
         if (state.IsHolding || state.IsSelected) return false;
         
         return true;
@@ -344,15 +343,9 @@ public class TreasureFoundActivity : PetActivityAdapter
         
         Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 시작!");
         
-        // 보물이 수집될 때까지 계속 점프
+        // 보물이 수집될 때까지 계속 점프 (보물찾기 종료와 무관)
         while (droppedTreasureObject != null)
         {
-            // 보물찾기가 종료되면 즉시 중단
-            if (!pet.State.IsTreasureHuntActive)
-            {
-                Debug.Log($"[TreasureFound] {pet.petName}: 보물찾기 종료로 점프 중단");
-                break;
-            }
             
             // 점프 애니메이션
             if (animController != null)
@@ -382,22 +375,14 @@ public class TreasureFoundActivity : PetActivityAdapter
         
         Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 종료");
         
-        // 점프 종료 후 처리
+        // 점프 종료 후 처리 (보물이 수집됨)
         isCelebrating = false;
         hasDroppedTreasure = false;
         droppedTreasureObject = null;
         
-        // 보물찾기가 아직 진행 중이면 다시 탐색
-        if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
-        {
-            Debug.Log($"[TreasureFound] {pet.petName}: 다른 보물 찾으러 갑니다!");
-            pet.State.TrySetStatus(PetStatus.TreasureHunting);
-        }
-        else
-        {
-            Debug.Log($"[TreasureFound] {pet.petName}: 일상으로 복귀");
-            pet.State.TrySetStatus(PetStatus.Idle);
-        }
+        // 보물이 수집되었으므로 항상 Idle로 전환
+        Debug.Log($"[TreasureFound] {pet.petName}: 보물 수집 완료, 일상으로 복귀");
+        pet.State.TrySetStatus(PetStatus.Idle);
     }
     
     /// <summary>
