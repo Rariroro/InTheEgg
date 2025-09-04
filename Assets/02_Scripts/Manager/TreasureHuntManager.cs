@@ -237,16 +237,39 @@ public class TreasureHuntManager : MonoBehaviour
             {
                 if (pet != null)
                 {
-                    // 보물찾기 활성 상태만 해제
+                    // 보물찾기 활성 상태 해제 (매우 중요!)
                     pet.State.SetTreasureHuntingState(false);
                     
-                    // TreasureHunting 상태인 펫들만 Idle로 전환 (아직 못 찾은 펫들)
+                    // 현재 활동 강제 중단
+                    if (pet.AI != null)
+                    {
+                        pet.AI.ForceStopCurrentActivity();
+                    }
+                    
+                    // TreasureHunting 상태인 펫들은 Idle로 전환 (아직 못 찾은 펫들)
                     if (pet.State.CurrentStatus == PetStatus.TreasureHunting)
                     {
                         pet.State.TrySetStatus(PetStatus.Idle);
                         Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물찾기 종료, Idle로 전환");
+                        
+                        // AI 완전 리셋
+                        if (pet.AI != null)
+                        {
+                            pet.AI.InterruptAndResetAI();
+                        }
                     }
-                    // TreasureFound 상태인 펫들은 그대로 유지 (계속 점프)
+                    // TreasureFound 상태인 펫들도 Idle로 전환 (점프 중단)
+                    else if (pet.State.CurrentStatus == PetStatus.TreasureFound)
+                    {
+                        pet.State.TrySetStatus(PetStatus.Idle);
+                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물 찾은 펫도 Idle로 전환");
+                        
+                        // AI 완전 리셋
+                        if (pet.AI != null)
+                        {
+                            pet.AI.InterruptAndResetAI();
+                        }
+                    }
                 }
             }
         }

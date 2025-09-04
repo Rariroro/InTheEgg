@@ -60,7 +60,8 @@ public class PetAI : MonoBehaviour
         // Social Activities
         availableActivities.Add(new GatherActivity(petController));
         availableActivities.Add(new InteractWithPetActivity(petController));
-        availableActivities.Add(new TreasureHuntActivity(petController, movementController)); // 보물찾기 추가
+        availableActivities.Add(new TreasureHuntActivity(petController, movementController)); // 보물찾기 탐색
+        availableActivities.Add(new TreasureFoundActivity(petController, movementController)); // 보물 발견 후 처리
         
         // Environment Activities
         availableActivities.Add(new EnvironmentGatherActivity(petController));
@@ -183,6 +184,19 @@ public class PetAI : MonoBehaviour
         currentActivity = activity;
         // PetDebug.LogActivityChange(petController.petName, currentActivity?.Name ?? "None", activity.Name);
         currentActivity.Start();
+    }
+    
+    /// <summary>
+    /// 현재 활동을 강제로 중단 (보물찾기 종료 등에서 사용)
+    /// </summary>
+    public void ForceStopCurrentActivity()
+    {
+        if (currentActivity != null)
+        {
+            Debug.Log($"[PetAI] {petController.petName}: 현재 활동 {currentActivity.Name} 강제 중단");
+            currentActivity.Stop();
+            currentActivity = null;
+        }
     }
     
     /// <summary>

@@ -34,6 +34,11 @@ public class TreasureController : MonoBehaviour
     [SerializeField] private bool isDropped = false;  // 펫이 내려놓은 상태
     [SerializeField] private PetController carryingPet;
     
+    // Public 속성
+    public bool IsCarried => isCarried;
+    public bool IsDropped => isDropped;
+    public PetController CarryingPet => carryingPet;
+    
     private Vector3 startPosition;
     private float timeOffset;
     private Renderer treasureRenderer;
