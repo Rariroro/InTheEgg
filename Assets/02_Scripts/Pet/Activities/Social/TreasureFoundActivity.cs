@@ -307,15 +307,36 @@ public class TreasureFoundActivity : PetActivityAdapter
         
         GameObject treasureToAnimate = carriedTreasure;
         
-        // 보물 위치 즉시 설정
-        Vector3 endPos = pet.transform.position + pet.transform.forward * 0.7f;
-        endPos.y = pet.transform.position.y + 1f;
+        // 보물 위치 설정 (펫 앞쪽 1.5f 거리)
+        Vector3 dropPosition = pet.transform.position + pet.transform.forward * 1.5f;
+        
+        // Raycast로 지면 높이 찾기
+        RaycastHit hit;
+        Vector3 rayStart = dropPosition + Vector3.up * 5f;
+        
+        // Ground 레이어가 있으면 우선 사용, 없으면 Default 레이어 사용
+        int groundLayer = LayerMask.NameToLayer("Ground");
+        LayerMask layerMask = groundLayer != -1 ? 
+            (1 << groundLayer) | (1 << 0) :  // Ground + Default
+            ~0;  // 모든 레이어
+        
+        if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, layerMask))
+        {
+            dropPosition.y = hit.point.y + 0.5f;  // 지면 위 0.5f
+            Debug.Log($"[TreasureFound] 지면 감지됨: {hit.collider.name}, 높이: {hit.point.y}");
+        }
+        else
+        {
+            // 지면을 찾지 못한 경우 펫과 같은 높이 사용
+            dropPosition.y = pet.transform.position.y;
+            Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {dropPosition.y}");
+        }
         
         // 부모 해제
         treasureToAnimate.transform.SetParent(null);
         
         // 위치와 회전 설정
-        treasureToAnimate.transform.position = endPos;
+        treasureToAnimate.transform.position = dropPosition;
         treasureToAnimate.transform.rotation = Quaternion.identity;
         
         droppedTreasureObject = treasureToAnimate;
