@@ -248,27 +248,28 @@ public class TreasureFoundActivity : PetActivityAdapter
         Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치로 이동 시작 - {waitingPos}");
     }
     
+    
     /// <summary>
     /// 대기 위치 도착 체크
     /// </summary>
     private void CheckWaitingPointArrival()
     {
         if (agent == null || !agent.enabled) return;
-        
+
         // 물 속에 있으면 대기
         if (pet.State.IsInWater)
         {
             Debug.Log($"[TreasureFound] {pet.petName}: 물 속에서 대기 중...");
             return;
         }
-        
+
         // 도착 체크
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
         {
             Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치 도착!");
             agent.isStopped = true;
             isMovingToWaitingPoint = false;
-            
+
             // 보물 내려놓기 시퀀스 시작
             pet.StartCoroutine(DropTreasureSequence());
         }
@@ -288,10 +289,10 @@ public class TreasureFoundActivity : PetActivityAdapter
             pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Eat);
         }
         
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.3f);
         
-        // 보물 내려놓기 - 즉시 실행
-        DropTreasureImmediate();
+        // 애니메이션 커브로 보물 떨어뜨리기
+        yield return DropTreasureAnimationImproved();
         
         // 축하 점프 시작
         isCelebrating = true;
@@ -299,7 +300,202 @@ public class TreasureFoundActivity : PetActivityAdapter
     }
     
     /// <summary>
-    /// 보물을 즉시 바닥에 내려놓기 (코루틴 없이)
+    /// 개선된 애니메이션 커브로 보물 떨어뜨리기
+    /// </summary>
+    private IEnumerator DropTreasureAnimationImproved()
+    {
+        if (carriedTreasure == null) yield break;
+        
+        GameObject treasureToAnimate = carriedTreasure;
+        
+        // 부모 해제
+        treasureToAnimate.transform.SetParent(null);
+        
+        // 시작 위치 (현재 보물 위치 - 펫 입)
+        Vector3 startPos = treasureToAnimate.transform.position;
+        
+        // 목표 위치 (펫 앞쪽 지면 - 더 멀리)
+        Vector3 targetPos = pet.transform.position + pet.transform.forward * 3.5f;
+        
+        // Raycast로 정확한 지면 높이 찾기
+        RaycastHit hit;
+        Vector3 rayStart = targetPos + Vector3.up * 5f;
+        int groundLayer = LayerMask.NameToLayer("Ground");
+        LayerMask layerMask = groundLayer != -1 ? (1 << groundLayer) | (1 << 0) : ~0;
+        
+        if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, layerMask))
+        {
+            targetPos.y = hit.point.y + 0.3f;  // 지면 위 0.3f (보물 크기 고려)
+        }
+        else
+        {
+            targetPos.y = pet.transform.position.y;
+        }
+        
+        // 애니메이션 파라미터
+        float duration = 0.8f;
+        float elapsed = 0f;
+        float gravity = 9.8f;
+        
+        // 초기 속도 계산 (포물선 운동)
+        float initialVelocityY = 2f;  // 살짝 위로 던지는 효과
+        
+        // 애니메이션 루프
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            
+            // XZ 평면 이동 (선형 보간 + 약간의 곡선)
+            float easedT = Mathf.SmoothStep(0, 1, t);
+            Vector3 pos = Vector3.Lerp(startPos, targetPos, easedT);
+            
+            // Y축 이동 (중력 시뮬레이션)
+            float timeInAir = elapsed;
+            float currentY = startPos.y + (initialVelocityY * timeInAir) - (0.5f * gravity * timeInAir * timeInAir);
+            
+            // 지면 아래로 가지 않도록 제한
+            currentY = Mathf.Max(currentY, targetPos.y);
+            pos.y = currentY;
+            
+            // 위치 적용
+            if (treasureToAnimate == null) yield break;
+            treasureToAnimate.transform.position = pos;
+            
+            yield return null;
+        }
+        
+        // 최종 위치 설정
+        if (treasureToAnimate == null) yield break;
+        treasureToAnimate.transform.position = targetPos;
+        
+        // 바운스 효과 추가
+        yield return BounceEffect(treasureToAnimate, targetPos);
+        
+        // 최종 처리
+        droppedTreasureObject = treasureToAnimate;
+        carriedTreasure = null;
+        
+        // 수집 가능하게 설정
+        TreasureController treasureController = droppedTreasureObject?.GetComponent<TreasureController>();
+        if (treasureController != null)
+        {
+            treasureController.EnableCollection();
+        }
+        
+        Debug.Log($"[TreasureFound] {pet.petName}: 보물을 자연스럽게 떨어뜨렸습니다!");
+    }
+    
+    /// <summary>
+    /// 바운스 효과
+    /// </summary>
+    private IEnumerator BounceEffect(GameObject treasure, Vector3 groundPos)
+    {
+        if (treasure == null) yield break;
+        
+        float bounceHeight = 0.2f;
+        float bounceDuration = 0.2f;
+        float elapsed = 0f;
+        
+        while (elapsed < bounceDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / bounceDuration;
+            
+            // 바운스 커브 (위로 올라갔다가 내려옴)
+            float bounce = Mathf.Sin(t * Mathf.PI) * bounceHeight;
+            
+            if (treasure == null) yield break;
+            treasure.transform.position = groundPos + Vector3.up * bounce;
+            
+            yield return null;
+        }
+        
+        // 최종 위치 고정
+        if (treasure != null)
+        {
+            treasure.transform.position = groundPos;
+        }
+    }
+    
+    /// <summary>
+    /// 물리 기반으로 보물을 자연스럽게 떨어뜨리기 (백업)
+    /// </summary>
+    private void DropTreasureWithPhysics()
+    {
+        if (carriedTreasure == null) return;
+        
+        GameObject treasureToAnimate = carriedTreasure;
+        
+        // 부모 해제
+        treasureToAnimate.transform.SetParent(null);
+        
+        // 현재 위치 유지 (펫 입 위치)
+        // 위치는 이미 펫에 부착된 상태이므로 그대로 유지
+        
+        // Rigidbody 컴포넌트 확인 및 추가
+        Rigidbody rb = treasureToAnimate.GetComponent<Rigidbody>();
+        if (rb == null)
+        {
+            rb = treasureToAnimate.AddComponent<Rigidbody>();
+        }
+        
+        // 물리 설정
+        rb.useGravity = true;
+        rb.isKinematic = false;
+        rb.mass = 0.5f;  // 가벼운 보물
+        rb.linearDamping = 0.5f;  // 공기 저항
+        rb.angularDamping = 0.5f;  // 회전 저항
+        
+        // 콜라이더가 없으면 추가
+        if (treasureToAnimate.GetComponent<Collider>() == null)
+        {
+            treasureToAnimate.AddComponent<BoxCollider>();
+        }
+        
+        // 약간의 앞쪽과 아래쪽 힘 추가 (자연스럽게 떨어뜨리는 효과)
+        Vector3 dropForce = pet.transform.forward * 1.5f + Vector3.down * 0.5f;
+        rb.AddForce(dropForce, ForceMode.Impulse);
+        
+        // 약간의 회전 추가 (더 자연스러운 효과)
+        rb.AddTorque(Random.insideUnitSphere * 2f, ForceMode.Impulse);
+        
+        droppedTreasureObject = treasureToAnimate;
+        carriedTreasure = null;
+        
+        // 1초 후 물리 비활성화 및 수집 가능 설정
+        pet.StartCoroutine(FinalizeDroppedTreasure(treasureToAnimate, rb));
+        
+        Debug.Log($"[TreasureFound] {pet.petName}: 보물을 떨어뜨립니다! (물리 기반)");
+    }
+    
+    /// <summary>
+    /// 떨어진 보물 마무리 처리
+    /// </summary>
+    private IEnumerator FinalizeDroppedTreasure(GameObject treasure, Rigidbody rb)
+    {
+        // 보물이 땅에 안착할 때까지 대기
+        yield return new WaitForSeconds(1.5f);
+        
+        if (treasure != null && rb != null)
+        {
+            // 물리 비활성화 (더 이상 움직이지 않도록)
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            
+            // 수집 가능하게 설정
+            TreasureController treasureController = treasure.GetComponent<TreasureController>();
+            if (treasureController != null)
+            {
+                treasureController.EnableCollection();
+            }
+            
+            Debug.Log($"[TreasureFound] 보물이 땅에 안착했습니다!");
+        }
+    }
+    
+    /// <summary>
+    /// 보물을 즉시 바닥에 내려놓기 (코루틴 없이) - 백업용
     /// </summary>
     private void DropTreasureImmediate()
     {
