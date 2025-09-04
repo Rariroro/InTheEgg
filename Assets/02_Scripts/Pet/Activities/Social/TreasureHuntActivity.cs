@@ -14,6 +14,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     private bool isSearching = false;
     private float searchTimer = 0f;
     private const float SEARCH_INTERVAL = 0.5f;
+    private bool isTransitioningToFound = false; // 중복 전환 방지
     
     // 보물 획득 보호 변수
     private float approachStartTime = 0f;
@@ -39,7 +40,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     private const float SEARCH_DISTANCE = 70f;
     
     public override string Name => "TreasureHunt";
-    public override bool IsInterruptible => false;
+    public override bool IsInterruptible => !pet.State.IsTreasureHuntActive; // 보물찾기 종료 시 중단 가능
     
     public TreasureHuntActivity(PetController petController, PetMovementController movementController) : base(petController)
     {
@@ -104,11 +105,20 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         if (!isSearching) return;
         
-        // 보물찾기가 종료되면 즉시 중단
+        // 보물찾기가 종료되면 즉시 Stop 호출하여 완전히 중단
         if (!pet.State.IsTreasureHuntActive)
         {
-            Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 감지, 활동 중단");
+            Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 감지, 활동 완전 중단");
             isSearching = false;
+            
+            // Stop 메서드 호출하여 정리
+            Stop();
+            
+            // AI에게 재평가 요청
+            if (pet.AI != null)
+            {
+                pet.AI.InterruptAndResetAI();
+            }
             return;
         }
         
@@ -199,6 +209,12 @@ public class TreasureHuntActivity : PetActivityAdapter
                     return;
                 }
                 
+                // 이미 전환 중이면 중복 실행 방지
+                if (isTransitioningToFound)
+                {
+                    return;
+                }
+                
                 Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 조건 충족 (거리: {agent.remainingDistance:F1}m)");
                 
                 // 이 지점에 보물이 있는지 확인
@@ -210,6 +226,8 @@ public class TreasureHuntActivity : PetActivityAdapter
                         // 성공: 보물 획득 후 TreasureFound 상태로 전환
                         Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 성공! TreasureFound 상태로 전환");
                         approachStartTime = 0f;  // 리셋
+                        isTransitioningToFound = true;  // 전환 시작
+                        isSearching = false;  // Update 즉시 중단
                         
                         // 먹는 애니메이션 잠시 재생 후 상태 전환
                         pet.StartCoroutine(TransitionToFoundState());
@@ -256,6 +274,9 @@ public class TreasureHuntActivity : PetActivityAdapter
     public override void Stop()
     {
         Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료");
+        
+        // 플래그 리셋
+        isTransitioningToFound = false;
         
         // 속도 원래대로 복구
         if (agent != null && agent.enabled)
@@ -480,10 +501,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 애니메이션 대기
         yield return new WaitForSeconds(0.5f);
         
-        // TreasureFound 상태로 전환 (TreasureFoundActivity가 처리할 것)
-        pet.State.TrySetStatus(PetStatus.TreasureFound);
-        
-        // 보물 시각적 처리
+        // 보물 시각적 처리를 먼저 수행 (상태 전환 전에!)
         if (targetSpot != null && targetSpot.CurrentTreasure != null)
         {
             GameObject treasure = targetSpot.CurrentTreasure;
@@ -517,6 +535,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             if (treasureController != null)
             {
                 treasureController.StartCarrying(pet);
+                // IsCarried는 읽기 전용이므로 StartCarrying에서 설정됨
+                Debug.Log($"[TreasureHunt] {pet.petName}: StartCarrying 호출 완료 - IsCarried: {treasureController.IsCarried}, CarryingPet: {treasureController.CarryingPet?.petName}");
             }
             
             // 매니저에 보물 찾음 알림
@@ -524,10 +544,22 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 TreasureHuntManager.Instance.OnPetFoundTreasure(targetSpot, pet);
             }
+            
+            // targetSpot은 유지 - TreasureFoundActivity가 사용할 수 있도록
         }
         
         // 기쁨 표현
         pet.ShowEmotion(EmotionType.Happy);
+        
+        // 이제 보물이 부착되었으므로 상태 전환
+        Debug.Log($"[TreasureHunt] {pet.petName}: 보물 부착 완료, TreasureFound 상태로 전환");
+        pet.State.TrySetStatus(PetStatus.TreasureFound);
+        
+        // AI에게 즉시 재평가 요청 - 새로운 Activity로 전환하도록
+        if (pet.AI != null)
+        {
+            pet.AI.InterruptAndResetAI();
+        }
         
         Debug.Log($"[TreasureHunt] {pet.petName}: TreasureFound 상태로 전환 완료!");
     }

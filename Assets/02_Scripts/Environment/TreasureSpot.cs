@@ -120,6 +120,7 @@ public class TreasureSpot : MonoBehaviour
         
         // 성공적으로 획득
         occupyingPet = pet;  // 이미 설정되어 있겠지만 안전하게 재설정
+        // hasTreasure는 아직 true로 유지 - TreasureFoundActivity가 보물을 찾을 수 있도록
         Debug.Log($"{pet.petName}이(가) {name} 보물을 획득했습니다!");
         
         return true;
@@ -169,8 +170,23 @@ public class TreasureSpot : MonoBehaviour
     {
         if (currentTreasure != null)
         {
-            Destroy(currentTreasure);
-            currentTreasure = null;
+            // 보물 컨트롤러 확인
+            TreasureController treasureController = currentTreasure.GetComponent<TreasureController>();
+            
+            // 펫이 내려놓은 보물은 삭제하지 않음
+            if (treasureController != null && treasureController.IsDropped)
+            {
+                Debug.Log($"[TreasureSpot] 펫이 내려놓은 보물은 유지: {currentTreasure.name}");
+                // currentTreasure 참조만 해제 (오브젝트는 유지)
+                currentTreasure = null;
+            }
+            // 아직 스팟에 있거나 펫이 들고 있는 보물만 삭제
+            else
+            {
+                Debug.Log($"[TreasureSpot] 미발견 보물 제거: {currentTreasure.name}");
+                Destroy(currentTreasure);
+                currentTreasure = null;
+            }
         }
         
         hasTreasure = false;

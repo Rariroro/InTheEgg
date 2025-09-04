@@ -232,7 +232,42 @@ public class TreasureHuntManager : MonoBehaviour
         }
         else
         {
-            // 일반 종료 - 보물찾기 상태는 해제하되 찾은 보물은 유지
+            // 일반 종료 - 보물찾기 상태는 해제하고 모든 펫을 정상 상태로 전환
+            
+            // 남아있는 미발견 보물만 정리 (펫이 찾아서 내려놓은 보물은 유지)
+            foreach (var spot in activeTreasureSpots)
+            {
+                if (spot != null)
+                {
+                    spot.Clear();  // 스팟에 남아있는 미발견 보물만 제거
+                }
+            }
+            
+            // 펫이 아직 들고 있는 보물만 제거 (내려놓은 보물은 유지)
+            TreasureController[] allTreasures = FindObjectsOfType<TreasureController>();
+            foreach (var treasure in allTreasures)
+            {
+                if (treasure != null && treasure.gameObject != null)
+                {
+                    // 수집 가능한 상태(내려놓은 보물)는 유지
+                    if (treasure.IsDropped)
+                    {
+                        Debug.Log($"[TreasureHuntManager] 수집 가능한 보물 유지: {treasure.gameObject.name}");
+                        continue;
+                    }
+                    
+                    // 아직 펫이 들고 있는 보물은 제거
+                    if (treasure.IsCarried)
+                    {
+                        Debug.Log($"[TreasureHuntManager] 펫이 들고 있는 보물 제거: {treasure.gameObject.name}");
+                        Destroy(treasure.gameObject);
+                    }
+                }
+            }
+            
+            activeTreasureSpots.Clear();  // 활성 스팟 목록 비우기
+            
+            // 펫 상태 초기화
             foreach (var pet in participatingPets)
             {
                 if (pet != null)
@@ -258,11 +293,24 @@ public class TreasureHuntManager : MonoBehaviour
                             pet.AI.InterruptAndResetAI();
                         }
                     }
-                    // TreasureFound 상태인 펫들은 그대로 유지 (계속 점프)
+                    // TreasureFound 상태인 펫들도 강제로 Idle로 전환
                     else if (pet.State.CurrentStatus == PetStatus.TreasureFound)
                     {
-                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물 찾은 펫은 계속 축하 중...");
-                        // 아무것도 하지 않음 - 펫이 계속 점프하도록 유지
+                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물 찾은 펫도 강제 종료, Idle로 전환");
+                        
+                        // 현재 활동 강제 중단
+                        if (pet.AI != null)
+                        {
+                            pet.AI.ForceStopCurrentActivity();
+                        }
+                        
+                        pet.State.TrySetStatus(PetStatus.Idle);
+                        
+                        // AI 완전 리셋
+                        if (pet.AI != null)
+                        {
+                            pet.AI.InterruptAndResetAI();
+                        }
                     }
                 }
             }

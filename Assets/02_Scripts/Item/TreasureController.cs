@@ -163,6 +163,13 @@ public class TreasureController : MonoBehaviour
         isDropped = true;   // 펫이 내려놓은 상태로 표시
         // carryingPet은 유지! (누가 찾았는지 기억하기 위해)
         
+        // TreasureSpot과의 연결 해제 (보물찾기 종료 시 삭제되지 않도록)
+        if (parentSpot != null)
+        {
+            Debug.Log($"[TreasureController] TreasureSpot과 연결 해제: {parentSpot.name}");
+            parentSpot = null;
+        }
+        
         // 콜라이더 다시 활성화 (Raycast 감지를 위해)
         if (treasureCollider != null)
         {
