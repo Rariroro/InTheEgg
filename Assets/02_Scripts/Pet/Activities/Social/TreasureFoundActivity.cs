@@ -22,6 +22,12 @@ public class TreasureFoundActivity : PetActivityAdapter
     private bool isCelebrating = false;
     private Coroutine celebrationCoroutine;
     
+    // 경로 막힘 감지용
+    private Vector3 lastPosition;
+    private float stuckTimer = 0f;
+    private const float STUCK_THRESHOLD = 3f;  // 3초 동안 움직이지 못하면 막힌 것으로 판단
+    private const float STUCK_DISTANCE = 0.5f;  // 이동 거리가 0.5 미만이면 막힌 것으로 판단
+    
     // 속도 설정
     private const float CARRY_SPEED_MULTIPLIER = 3f;
     private const float ANGULAR_SPEED_MULTIPLIER = 3f;
@@ -65,18 +71,26 @@ public class TreasureFoundActivity : PetActivityAdapter
         isMovingToWaitingPoint = false;
         isCelebrating = false;
         celebrationCoroutine = null;
+        lastPosition = pet.transform.position;
+        stuckTimer = 0f;
         
         // 보물 정보 가져오기
         FindCarriedTreasure();
         
         if (carriedTreasure != null)
         {
-            // 속도 설정 (NavMesh 상태 확인)
+            // 속도 설정 및 충돌 회피 설정 (NavMesh 상태 확인)
             if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.speed = pet.Movement.walkSpeed * CARRY_SPEED_MULTIPLIER;
                 agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
                 agent.acceleration = pet.Movement.acceleration * ACCELERATION_MULTIPLIER;
+                
+                // 다른 펫들을 통과할 수 있도록 설정
+                agent.avoidancePriority = 10;  // 높은 우선순위 (기본값 50)
+                agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
+                agent.radius = agent.radius * 0.5f;  // 충돌 반경 축소
+                Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 우선순위 설정 - Priority: 10, ObstacleAvoidance: None");
             }
             
             // 대기 위치로 이동 시작
@@ -126,7 +140,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             celebrationCoroutine = null;
         }
         
-        // 속도 원래대로 (NavMesh 상태 확인)
+        // NavMesh 설정 원래대로 복구 (NavMesh 상태 확인)
         if (agent != null && agent.enabled)
         {
             // NavMesh에 있는 경우에만 상태 변경
@@ -136,10 +150,16 @@ public class TreasureFoundActivity : PetActivityAdapter
                 agent.ResetPath();
             }
             
-            // 속도는 항상 리셋
+            // 모든 NavMesh 설정 원래대로 복구
             agent.speed = pet.Movement.walkSpeed;
             agent.angularSpeed = pet.Movement.angularSpeed;
             agent.acceleration = pet.Movement.acceleration;
+            
+            // 충돌 회피 설정 원래대로 복구
+            agent.avoidancePriority = 50;  // 기본값으로 복구
+            agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+            agent.radius = 0.5f;  // 기본 반경으로 복구 (일반적인 펫 크기)
+            Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 설정 복구 완료");
         }
         
         // 애니메이션 정상화
@@ -261,6 +281,24 @@ public class TreasureFoundActivity : PetActivityAdapter
             Debug.Log($"[TreasureFound] {pet.petName}: 물 속에서 대기 중...");
             return;
         }
+        
+        // 경로 막힘 감지
+        float distance = Vector3.Distance(pet.transform.position, lastPosition);
+        if (distance < STUCK_DISTANCE)
+        {
+            stuckTimer += Time.deltaTime;
+            if (stuckTimer >= STUCK_THRESHOLD)
+            {
+                Debug.Log($"[TreasureFound] {pet.petName}: 경로가 막혔습니다. 대체 위치 찾기...");
+                FindAlternativeWaitingPoint();
+                stuckTimer = 0f;
+            }
+        }
+        else
+        {
+            stuckTimer = 0f;
+            lastPosition = pet.transform.position;
+        }
 
         // 도착 체크
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
@@ -275,6 +313,48 @@ public class TreasureFoundActivity : PetActivityAdapter
             // 보물 내려놓기 시퀀스 시작
             pet.StartCoroutine(DropTreasureSequence());
         }
+    }
+    
+    /// <summary>
+    /// 경로가 막혔을 때 대체 위치 찾기
+    /// </summary>
+    private void FindAlternativeWaitingPoint()
+    {
+        if (targetSpot == null || agent == null || !agent.isOnNavMesh) return;
+        
+        Vector3 currentTarget = targetSpot.WaitingPosition;
+        float searchRadius = 3f;
+        
+        // 현재 위치 주변에서 유효한 NavMesh 위치 찾기
+        for (int i = 0; i < 8; i++)
+        {
+            float angle = i * 45f;
+            Vector3 direction = Quaternion.Euler(0, angle, 0) * Vector3.forward;
+            Vector3 testPosition = currentTarget + direction * searchRadius;
+            
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(testPosition, out hit, searchRadius, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                // 유효한 경로가 있는지 확인
+                UnityEngine.AI.NavMeshPath path = new UnityEngine.AI.NavMeshPath();
+                if (agent.CalculatePath(hit.position, path) && path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete)
+                {
+                    Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치 발견 - {hit.position}");
+                    agent.SetDestination(hit.position);
+                    lastPosition = pet.transform.position;
+                    return;
+                }
+            }
+        }
+        
+        // 대체 위치를 찾지 못한 경우, 현재 위치에서 보물 내려놓기
+        Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치를 찾지 못했습니다. 현재 위치에서 보물을 내려놓습니다.");
+        if (agent.isOnNavMesh)
+        {
+            agent.isStopped = true;
+        }
+        isMovingToWaitingPoint = false;
+        pet.StartCoroutine(DropTreasureSequence());
     }
     
     /// <summary>

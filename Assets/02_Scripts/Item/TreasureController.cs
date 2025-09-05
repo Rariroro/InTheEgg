@@ -75,8 +75,7 @@ public class TreasureController : MonoBehaviour
             // 콜라이더가 없으면 추가
             treasureCollider = gameObject.AddComponent<BoxCollider>();
         }
-        // isTrigger를 false로 설정하여 Raycast가 감지할 수 있도록 함
-        treasureCollider.isTrigger = false;
+        // 프리팹에 설정된 isTrigger 값을 유지 (보통 true로 설정되어 있음)
         
         // 초기에는 콜라이더 비활성화 (펫이 찾기 전에는 클릭 불가)
         treasureCollider.enabled = false;
@@ -170,11 +169,11 @@ public class TreasureController : MonoBehaviour
             parentSpot = null;
         }
         
-        // 콜라이더 다시 활성화 (Raycast 감지를 위해)
+        // 콜라이더 다시 활성화 (터치/클릭 감지를 위해)
         if (treasureCollider != null)
         {
             treasureCollider.enabled = true;
-            treasureCollider.isTrigger = false; // Raycast가 감지할 수 있도록
+            // isTrigger는 프리팹 설정 유지 (true면 다른 오브젝트와 충돌하지 않음)
         }
         
         // 내려놓은 위치를 새로운 시작 위치로 설정 (원래 스팟으로 돌아가지 않도록)
