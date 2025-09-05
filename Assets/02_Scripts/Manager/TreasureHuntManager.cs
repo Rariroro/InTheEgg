@@ -58,6 +58,9 @@ public class TreasureHuntManager : MonoBehaviour
     [SerializeField] private int foundTreasureCount = 0;  // 찾은 보물 개수
     private Coroutine timerCoroutine;
     
+    // 펫이 찾아서 내려놓은 보물들 추적
+    [SerializeField] private List<TreasureController> droppedTreasures = new List<TreasureController>();
+    
     // 프로퍼티
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
@@ -66,12 +69,31 @@ public class TreasureHuntManager : MonoBehaviour
     public int TotalTreasureCount => totalTreasureCount;
     public int FoundTreasureCount => foundTreasureCount;
     
+    // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
+    public List<TreasureController> DroppedTreasures => new List<TreasureController>(droppedTreasures);
+    
+    // 내려놓은 보물 개수 반환
+    public int GetDroppedTreasureCount() => droppedTreasures.Count;
+    
+    // 내려놓은 보물 리스트 반환 (GameObject로)
+    public List<GameObject> GetDroppedTreasureList()
+    {
+        List<GameObject> treasures = new List<GameObject>();
+        foreach (var treasure in droppedTreasures)
+        {
+            if (treasure != null && treasure.gameObject != null)
+                treasures.Add(treasure.gameObject);
+        }
+        return treasures;
+    }
+    
     // 이벤트
     public System.Action<int> OnCoinsCollected;
     public System.Action OnTreasureHuntStarted;
     public System.Action OnTreasureHuntEnded;
     public System.Action<int, int> OnTreasureFound;  // 찾은 개수, 전체 개수
     public System.Action<float> OnTimeUpdate;  // 남은 시간
+    public System.Action<int> OnDroppedTreasureUpdate;  // 내려놓은 보물 개수 업데이트
     
     private void Awake()
     {
@@ -171,6 +193,7 @@ public class TreasureHuntManager : MonoBehaviour
         foundTreasureCount = 0;
         totalTreasureCount = activeTreasureSpots.Count;
         remainingTime = treasureHuntDuration;
+        droppedTreasures.Clear();  // 내려놓은 보물 리스트 초기화
         
         isTreasureHuntActive = true;
         OnTreasureHuntStarted?.Invoke();
@@ -307,6 +330,9 @@ public class TreasureHuntManager : MonoBehaviour
         isTreasureHuntActive = false;
         OnTreasureHuntEnded?.Invoke();
         
+        // 보물찾기 종료 시 내려놓은 보물 리스트는 유지 (유저가 수집할 수 있도록)
+        // droppedTreasures.Clear(); // 이 부분은 제거
+        
         string endMessage = foundTreasureCount == totalTreasureCount ? 
             $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" : 
             $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
@@ -417,6 +443,32 @@ public class TreasureHuntManager : MonoBehaviour
             ShowFeedback("모든 보물을 찾았습니다!");
             // 잠시 후 종료 (펫과 보물은 유지)
             StartCoroutine(EndAfterDelay(2f));
+        }
+    }
+    
+    /// <summary>
+    /// 펫이 보물을 내려놓았을 때 리스트에 추가
+    /// </summary>
+    public void RegisterDroppedTreasure(TreasureController treasure)
+    {
+        if (treasure != null && !droppedTreasures.Contains(treasure))
+        {
+            droppedTreasures.Add(treasure);
+            Debug.Log($"[TreasureHuntManager] 보물이 내려놓아짐. 현재 개수: {droppedTreasures.Count}");
+            OnDroppedTreasureUpdate?.Invoke(droppedTreasures.Count);
+        }
+    }
+    
+    /// <summary>
+    /// 유저가 보물을 수집할 때 리스트에서 제거
+    /// </summary>
+    public void UnregisterDroppedTreasure(TreasureController treasure)
+    {
+        if (treasure != null && droppedTreasures.Contains(treasure))
+        {
+            droppedTreasures.Remove(treasure);
+            Debug.Log($"[TreasureHuntManager] 보물이 수집됨. 남은 개수: {droppedTreasures.Count}");
+            OnDroppedTreasureUpdate?.Invoke(droppedTreasures.Count);
         }
     }
     

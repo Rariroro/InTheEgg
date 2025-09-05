@@ -180,6 +180,12 @@ public class TreasureController : MonoBehaviour
         // 내려놓은 위치를 새로운 시작 위치로 설정 (원래 스팟으로 돌아가지 않도록)
         startPosition = transform.position;
         
+        // TreasureHuntManager에 내려놓은 보물 등록
+        if (TreasureHuntManager.Instance != null)
+        {
+            TreasureHuntManager.Instance.RegisterDroppedTreasure(this);
+        }
+        
         Debug.Log($"[TreasureController] EnableCollection - 현재 상태: isCollectable={isCollectable}, isCarried={isCarried}, isDropped={isDropped}, carryingPet={carryingPet?.petName}");
         Debug.Log($"[TreasureController] Collider 상태: enabled={treasureCollider?.enabled}, isTrigger={treasureCollider?.isTrigger}");
         
@@ -271,6 +277,9 @@ public class TreasureController : MonoBehaviour
         // 매니저에 수집 알림 (펫 상태 리셋은 매니저에서 처리)
         if (TreasureHuntManager.Instance != null)
         {
+            // 내려놓은 보물 리스트에서 제거
+            TreasureHuntManager.Instance.UnregisterDroppedTreasure(this);
+            
             // parentSpot이 null이어도 수집 가능하도록 처리
             TreasureHuntManager.Instance.CollectTreasure(parentSpot, carryingPet);
         }

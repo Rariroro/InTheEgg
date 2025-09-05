@@ -39,6 +39,7 @@ public class GiftBoxUIManager : MonoBehaviour
     // 매니저 참조
     private PetManager petManager;
     private EnvironmentManager environmentManager;
+    private TreasureHuntManager treasureHuntManager;
     
     // 카메라 원래 위치 저장
     private Vector3 originalCameraPosition;
@@ -76,6 +77,7 @@ public class GiftBoxUIManager : MonoBehaviour
         // 매니저 찾기
         petManager = FindObjectOfType<PetManager>();
         environmentManager = FindObjectOfType<EnvironmentManager>();
+        treasureHuntManager = TreasureHuntManager.Instance;
         
         // 원래 카메라 위치 저장
         if (mainCamera != null)
@@ -88,9 +90,16 @@ public class GiftBoxUIManager : MonoBehaviour
         // 선물 타입별 리스트 초기화
         activeGifts["pet"] = new List<GameObject>();
         activeGifts["environment"] = new List<GameObject>();
+        activeGifts["treasure"] = new List<GameObject>();  // 보물 타입 추가
         
         // 주기적으로 선물 상자 체크
         InvokeRepeating(nameof(UpdateGiftBoxes), 0.5f, 0.5f);
+        
+        // TreasureHuntManager의 이벤트 구독
+        if (treasureHuntManager != null)
+        {
+            treasureHuntManager.OnDroppedTreasureUpdate += OnTreasureCountUpdated;
+        }
     }
     
     // 선물 상자 등록
@@ -139,6 +148,16 @@ public class GiftBoxUIManager : MonoBehaviour
             
             UpdateGiftButton("environment");
         }
+        
+        // 보물 업데이트
+        if (treasureHuntManager != null)
+        {
+            var treasures = GetDroppedTreasures();
+            activeGifts["treasure"].Clear();
+            activeGifts["treasure"].AddRange(treasures);
+            
+            UpdateGiftButton("treasure");
+        }
     }
     
     // PetManager에서 선물 상자 가져오기
@@ -161,6 +180,28 @@ public class GiftBoxUIManager : MonoBehaviour
         }
         
         return new List<GameObject>();
+    }
+    
+    // TreasureHuntManager에서 내려놓은 보물 가져오기
+    private List<GameObject> GetDroppedTreasures()
+    {
+        if (treasureHuntManager != null)
+        {
+            return treasureHuntManager.GetDroppedTreasureList();
+        }
+        
+        return new List<GameObject>();
+    }
+    
+    // 보물 개수 업데이트 이벤트 핸들러
+    private void OnTreasureCountUpdated(int count)
+    {
+        // 보물 업데이트
+        var treasures = GetDroppedTreasures();
+        activeGifts["treasure"].Clear();
+        activeGifts["treasure"].AddRange(treasures);
+        
+        UpdateGiftButton("treasure");
     }
     
     // 선물 버튼 업데이트
@@ -348,5 +389,11 @@ public class GiftBoxUIManager : MonoBehaviour
     private void OnDestroy()
     {
         CancelInvoke(nameof(UpdateGiftBoxes));
+        
+        // 이벤트 구독 해제
+        if (treasureHuntManager != null)
+        {
+            treasureHuntManager.OnDroppedTreasureUpdate -= OnTreasureCountUpdated;
+        }
     }
 }
