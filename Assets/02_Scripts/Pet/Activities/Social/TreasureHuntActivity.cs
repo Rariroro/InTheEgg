@@ -75,10 +75,40 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 시작!");
         
-        // 상태 설정
-        pet.State.TrySetStatus(PetStatus.TreasureHunting);
+        // 모든 상태 변수 명시적 초기화
+        targetSpot = null;
         isSearching = true;
         searchTimer = 0f;
+        isTransitioningToFound = false;
+        approachStartTime = 0f;
+        isPathRecalculating = false;
+        lastValidPathTime = 0f;
+        isWandering = false;
+        wanderAttempts = 0;
+        lastWanderTarget = Vector3.zero;
+        
+        // agent가 NavMesh에 있는지 확인
+        if (agent != null && agent.enabled && !agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[TreasureHunt] {pet.petName}: Agent가 NavMesh에 없습니다. 위치 재설정 시도.");
+            
+            // NavMesh에 가장 가까운 위치로 워프
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                agent.Warp(hit.position);
+                Debug.Log($"[TreasureHunt] {pet.petName}: Agent를 NavMesh 위치로 워프: {hit.position}");
+            }
+            else
+            {
+                Debug.LogError($"[TreasureHunt] {pet.petName}: NavMesh에 적합한 위치를 찾을 수 없습니다!");
+                isSearching = false;
+                return;
+            }
+        }
+        
+        // 상태 설정
+        pet.State.TrySetStatus(PetStatus.TreasureHunting);
         
         // 초기 속도 설정 (탐색 모드)
         if (agent != null && agent.enabled)
@@ -122,8 +152,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             return;
         }
         
-        // agent 목적지 유실 체크 및 복구
-        if (agent != null && agent.enabled && !agent.isStopped)
+        // agent 목적지 유실 체크 및 복구 (NavMesh 상태 확인 추가)
+        if (agent != null && agent.enabled && agent.isOnNavMesh && !agent.isStopped)
         {
             // 목적지가 없거나 경로가 없는 경우
             if (!agent.hasPath || agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
@@ -152,7 +182,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         }
         
         // 현재 타겟으로 이동
-        if (targetSpot != null && agent != null && agent.enabled)
+        if (targetSpot != null && agent != null && agent.enabled && agent.isOnNavMesh)
         {
             isWandering = false;  // 보물 타겟이 있으면 배회 중단
             
@@ -254,7 +284,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         else if (targetSpot == null)  // 타겟이 없으면 배회
         {
             // 배회 중이고 도착했으면 다음 위치로
-            if (isWandering && agent != null && agent.enabled)
+            if (isWandering && agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 // 도착 판정을 더 일찍 (5m 이내 또는 거의 도착)
                 if (!agent.pathPending && (agent.remainingDistance <= 5f || !agent.hasPath))
@@ -275,16 +305,32 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료");
         
-        // 플래그 리셋
+        // 모든 플래그 및 참조 완전 리셋
         isTransitioningToFound = false;
+        isSearching = false;
+        isWandering = false;
+        searchTimer = 0f;
+        approachStartTime = 0f;
+        isPathRecalculating = false;
+        lastValidPathTime = 0f;
+        wanderAttempts = 0;
+        lastWanderTarget = Vector3.zero;
+        wanderDirection = Vector3.zero;
         
-        // 속도 원래대로 복구
+        // agent 상태 안전하게 리셋
         if (agent != null && agent.enabled)
         {
+            // NavMesh에 있는 경우에만 상태 변경
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.ResetPath();
+            }
+            
+            // 속도 원래대로 복구
             agent.speed = pet.Movement.walkSpeed;
             agent.angularSpeed = pet.Movement.angularSpeed;
             agent.acceleration = pet.Movement.acceleration;
-            agent.isStopped = false;
         }
         
         // 타겟 해제
@@ -338,7 +384,7 @@ public class TreasureHuntActivity : PetActivityAdapter
             Debug.Log($"{pet.petName}: {targetSpot.name} 보물 예약 성공!");
             
             // 보물 발견! 속도 증가
-            if (agent != null && agent.enabled)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.speed = pet.Movement.walkSpeed * FOUND_SPEED_MULTIPLIER;
                 agent.SetDestination(targetSpot.transform.position);
@@ -350,7 +396,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         else
         {
             // 찾을 보물이 없으면 랜덤 위치로 탐색 (탐색 속도)
-            if (agent != null && agent.enabled)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.speed = pet.Movement.walkSpeed * SEARCH_SPEED_MULTIPLIER;
             }
@@ -486,8 +532,8 @@ public class TreasureHuntActivity : PetActivityAdapter
     /// </summary>
     private IEnumerator TransitionToFoundState()
     {
-        // 일단 멈추기
-        if (agent != null && agent.enabled)
+        // 일단 멈추기 (NavMesh 상태 확인)
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.isStopped = true;
         }

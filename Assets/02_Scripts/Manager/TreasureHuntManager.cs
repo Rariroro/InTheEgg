@@ -61,6 +61,10 @@ public class TreasureHuntManager : MonoBehaviour
     // 펫이 찾아서 내려놓은 보물들 추적
     [SerializeField] private List<TreasureController> droppedTreasures = new List<TreasureController>();
     
+    // 동시성 제어를 위한 필드들
+    private readonly object countLock = new object();  // 카운팅 동기화용 lock
+    private HashSet<TreasureSpot> countedSpots = new HashSet<TreasureSpot>();  // 이미 카운팅된 스팟들
+    
     // 프로퍼티
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
@@ -189,11 +193,23 @@ public class TreasureHuntManager : MonoBehaviour
         // 보물 생성
         SpawnTreasures();
         
-        // 상태 초기화
+        // 상태 초기화 (완전한 초기화)
         foundTreasureCount = 0;
         totalTreasureCount = activeTreasureSpots.Count;
         remainingTime = treasureHuntDuration;
         droppedTreasures.Clear();  // 내려놓은 보물 리스트 초기화
+        countedSpots.Clear();  // 카운팅된 스팟 초기화
+        
+        // 모든 스팟의 카운팅 플래그 리셋
+        foreach (var spot in activeTreasureSpots)
+        {
+            if (spot != null)
+            {
+                spot.ResetCountingFlag();
+            }
+        }
+        
+        Debug.Log($"[TreasureHuntManager] 초기화 완료: foundCount={foundTreasureCount}, totalCount={totalTreasureCount}, countedSpots={countedSpots.Count}");
         
         isTreasureHuntActive = true;
         OnTreasureHuntStarted?.Invoke();
@@ -235,6 +251,7 @@ public class TreasureHuntManager : MonoBehaviour
                 }
             }
             activeTreasureSpots.Clear();
+            countedSpots.Clear();  // 카운팅된 스팟 목록 초기화
             
             // 모든 펫 상태 초기화
             foreach (var pet in participatingPets)
@@ -289,6 +306,7 @@ public class TreasureHuntManager : MonoBehaviour
             }
             
             activeTreasureSpots.Clear();  // 활성 스팟 목록 비우기
+            countedSpots.Clear();  // 카운팅된 스팟 목록 초기화
             
             // 펫 상태 초기화
             foreach (var pet in participatingPets)
@@ -412,21 +430,33 @@ public class TreasureHuntManager : MonoBehaviour
     public void OnPetFoundTreasure(TreasureSpot spot, PetController pet)
     {
         if (!isTreasureHuntActive) return;
+        if (spot == null) return;
         
-        // 이미 카운팅된 보물인지 확인
-        if (spot != null && spot.HasBeenCounted)
+        bool shouldCount = false;
+        
+        // 동기화 블록 - 중복 카운팅 완벽 방지
+        lock (countLock)
         {
-            Debug.Log($"{pet?.petName}이(가) 이미 카운팅된 보물을 다시 찾음. 중복 카운팅 방지!");
-            return;
+            // HashSet과 플래그 이중 체크
+            if (!countedSpots.Contains(spot) && !spot.HasBeenCounted)
+            {
+                // 카운팅 처리
+                countedSpots.Add(spot);
+                spot.SetCounted();
+                foundTreasureCount++;
+                shouldCount = true;
+                
+                Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 보물 카운팅 성공! (스팟: {spot.name}, 현재: {foundTreasureCount}/{totalTreasureCount})");
+            }
+            else
+            {
+                Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 이미 카운팅된 보물 접근 - 중복 방지! (스팟: {spot.name}, HashSet: {countedSpots.Contains(spot)}, Flag: {spot.HasBeenCounted})");
+                return;
+            }
         }
         
-        // 처음 카운팅하는 경우만 증가
-        if (spot != null)
-        {
-            spot.SetCounted();
-        }
-        
-        foundTreasureCount++;
+        // lock 밖에서 처리 (데드락 방지)
+        if (!shouldCount) return;
         
         // 보물은 제거하지 않음! 펫이 물고 가서 내려놓을 것임
         // spot.CollectTreasure() 호출하지 않음

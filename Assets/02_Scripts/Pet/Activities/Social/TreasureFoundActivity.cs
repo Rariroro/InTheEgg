@@ -57,18 +57,22 @@ public class TreasureFoundActivity : PetActivityAdapter
     {
         Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 시작!");
         
-        // 초기화
+        // 모든 상태 변수 명시적 초기화
+        targetSpot = null;
+        carriedTreasure = null;
+        droppedTreasureObject = null;
         hasDroppedTreasure = false;
         isMovingToWaitingPoint = false;
         isCelebrating = false;
+        celebrationCoroutine = null;
         
         // 보물 정보 가져오기
         FindCarriedTreasure();
         
         if (carriedTreasure != null)
         {
-            // 속도 설정
-            if (agent != null && agent.enabled)
+            // 속도 설정 (NavMesh 상태 확인)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
                 agent.speed = pet.Movement.walkSpeed * CARRY_SPEED_MULTIPLIER;
                 agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
@@ -113,7 +117,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 종료");
+        Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 종료 (완전 초기화)");
         
         // 축하 코루틴 정리
         if (celebrationCoroutine != null)
@@ -122,13 +126,20 @@ public class TreasureFoundActivity : PetActivityAdapter
             celebrationCoroutine = null;
         }
         
-        // 속도 원래대로
+        // 속도 원래대로 (NavMesh 상태 확인)
         if (agent != null && agent.enabled)
         {
+            // NavMesh에 있는 경우에만 상태 변경
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.ResetPath();
+            }
+            
+            // 속도는 항상 리셋
             agent.speed = pet.Movement.walkSpeed;
             agent.angularSpeed = pet.Movement.angularSpeed;
             agent.acceleration = pet.Movement.acceleration;
-            agent.isStopped = false;
         }
         
         // 애니메이션 정상화
@@ -219,7 +230,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     /// </summary>
     private void MoveToWaitingPoint()
     {
-        if (targetSpot == null || agent == null || !agent.enabled) return;
+        if (targetSpot == null || agent == null || !agent.enabled || !agent.isOnNavMesh) return;
         
         isMovingToWaitingPoint = true;
         Vector3 waitingPos = targetSpot.WaitingPosition;
@@ -242,7 +253,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     /// </summary>
     private void CheckWaitingPointArrival()
     {
-        if (agent == null || !agent.enabled) return;
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh) return;
 
         // 물 속에 있으면 대기
         if (pet.State.IsInWater)
@@ -255,7 +266,10 @@ public class TreasureFoundActivity : PetActivityAdapter
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
         {
             Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치 도착!");
-            agent.isStopped = true;
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = true;
+            }
             isMovingToWaitingPoint = false;
 
             // 보물 내려놓기 시퀀스 시작
