@@ -28,7 +28,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     private const float ACCELERATION_MULTIPLIER = 3f;
     
     public override string Name => "TreasureFound";
-    public override bool IsInterruptible => true; // 항상 중단 가능 (보물찾기 종료 시 즉시 중단되도록)
+    public override bool IsInterruptible => false; // 보물 수집까지 중단 불가
     
     public TreasureFoundActivity(PetController petController, PetMovementController movementController) : base(petController)
     {
@@ -38,7 +38,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override bool CanStart(PetState state, PetNeeds needs)
     {
-        // 보물을 찾은 상태이기만 하면 됨 (보물찾기 종료 여부와 무관)
+        // 보물을 찾은 상태이기만 하면 됨 (보물찾기 종료 여부와 완전히 무관)
         if (state.CurrentStatus != PetStatus.TreasureFound) return false;
         if (state.IsHolding || state.IsSelected) return false;
         
@@ -88,20 +88,8 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Update()
     {
-        // 보물찾기가 종료되면 즉시 중단
-        if (!TreasureHuntManager.Instance?.IsTreasureHuntActive ?? true)
-        {
-            Debug.Log($"[TreasureFound] {pet.petName}: 보물찾기 종료 감지, 축하 중단");
-            Stop();
-            pet.State.TrySetStatus(PetStatus.Idle);
-            
-            // AI 재평가
-            if (pet.AI != null)
-            {
-                pet.AI.InterruptAndResetAI();
-            }
-            return;
-        }
+        // 보물찾기 종료 여부와 무관하게 계속 진행
+        // 보물이 수집될 때까지 축하 행동 유지
         
         // 축하 점프 중이면 카메라만 바라보기
         if (isCelebrating && hasDroppedTreasure)
@@ -616,9 +604,8 @@ public class TreasureFoundActivity : PetActivityAdapter
         
         Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 시작!");
         
-        // 보물이 수집될 때까지 또는 보물찾기가 종료될 때까지 점프
-        while (droppedTreasureObject != null && 
-               (TreasureHuntManager.Instance?.IsTreasureHuntActive ?? false))
+        // 보물이 수집될 때까지 계속 점프 (보물찾기 종료 여부와 무관)
+        while (droppedTreasureObject != null)
         {
             
             // 점프 애니메이션
@@ -649,21 +636,19 @@ public class TreasureFoundActivity : PetActivityAdapter
         
         Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 종료");
         
-        // 보물찾기가 종료되어 중단된 경우 - 보물 유지
-        if (!TreasureHuntManager.Instance?.IsTreasureHuntActive ?? true)
-        {
-            Debug.Log($"[TreasureFound] {pet.petName}: 보물찾기 종료로 인한 중단, 보물 유지");
-            isCelebrating = false;
-            // hasDroppedTreasure와 droppedTreasureObject는 유지하여 보물 보호
-            pet.State.TrySetStatus(PetStatus.Idle);
-        }
-        // 보물이 수집된 경우
-        else if (droppedTreasureObject == null)
+        // 보물이 수집된 경우에만 Idle로 전환
+        if (droppedTreasureObject == null)
         {
             Debug.Log($"[TreasureFound] {pet.petName}: 보물 수집 완료, 일상으로 복귀");
             isCelebrating = false;
             hasDroppedTreasure = false;
             pet.State.TrySetStatus(PetStatus.Idle);
+            
+            // AI 재평가
+            if (pet.AI != null)
+            {
+                pet.AI.InterruptAndResetAI();
+            }
         }
     }
     
