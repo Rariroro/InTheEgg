@@ -500,11 +500,12 @@ public class PetState
             isTreasureHuntActive = false;
             treasureTargetPosition = Vector3.zero;
             
-            // 보물찾기 관련 상태라면 Idle로 전환
-            if (currentStatus == PetStatus.TreasureHunting || currentStatus == PetStatus.TreasureFound)
+            // TreasureHunting 상태만 Idle로 전환 (TreasureFound는 유지)
+            if (currentStatus == PetStatus.TreasureHunting)
             {
                 TrySetStatus(PetStatus.Idle);
             }
+            // TreasureFound 상태는 그대로 유지 - 유저가 보물을 수집할 때까지
         }
     }
     
