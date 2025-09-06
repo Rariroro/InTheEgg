@@ -399,19 +399,47 @@ public class TreasureFoundActivity : PetActivityAdapter
         // 목표 위치 (펫 앞쪽 지면 - 더 멀리)
         Vector3 targetPos = pet.transform.position + pet.transform.forward * 3.5f;
         
-        // Raycast로 정확한 지면 높이 찾기
-        RaycastHit hit;
+        // RaycastAll로 모든 충돌체 감지 후 펫 제외
         Vector3 rayStart = targetPos + Vector3.up * 5f;
-        int groundLayer = LayerMask.NameToLayer("Ground");
-        LayerMask layerMask = groundLayer != -1 ? (1 << groundLayer) | (1 << 0) : ~0;
+        RaycastHit[] hits = Physics.RaycastAll(rayStart, Vector3.down, 10f);
         
-        if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, layerMask))
+        bool groundFound = false;
+        foreach (var hit in hits)
         {
-            targetPos.y = hit.point.y + 0.3f;  // 지면 위 0.3f (보물 크기 고려)
+            // 펫이 아닌 경우만 지면으로 인식
+            if (hit.collider != null && hit.collider.GetComponent<PetController>() == null)
+            {
+                targetPos.y = hit.point.y + 0.3f;  // 지면 위 0.3f (보물 크기 고려)
+                groundFound = true;
+                Debug.Log($"[TreasureFound] 지면 감지: {hit.collider.name} at height {hit.point.y}");
+                break;
+            }
         }
-        else
+        
+        // 지면을 찾지 못한 경우 Terrain 레이어만 다시 검사
+        if (!groundFound)
         {
-            targetPos.y = pet.transform.position.y;
+            int terrainLayer = LayerMask.NameToLayer("Terrain");
+            if (terrainLayer != -1)
+            {
+                LayerMask terrainOnlyMask = 1 << terrainLayer;
+                RaycastHit hit;
+                if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, terrainOnlyMask))
+                {
+                    targetPos.y = hit.point.y + 0.3f;
+                    Debug.Log($"[TreasureFound] Terrain 레이어에서 지면 감지: {hit.point.y}");
+                }
+                else
+                {
+                    // 최후의 수단으로 펫과 같은 높이 사용
+                    targetPos.y = pet.transform.position.y;
+                    Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {targetPos.y}");
+                }
+            }
+            else
+            {
+                targetPos.y = pet.transform.position.y;
+            }
         }
         
         // 애니메이션 파라미터
