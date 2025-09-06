@@ -132,6 +132,7 @@ MonoBehaviour:
   parentSpot: {fileID: 0}
   isCollectable: 1
   isCarried: 0
+  isDropped: 0
   carryingPet: {fileID: 0}
 --- !u!65 &5216608890740181608
 BoxCollider:
