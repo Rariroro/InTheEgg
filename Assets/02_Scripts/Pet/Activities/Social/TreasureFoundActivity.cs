@@ -409,7 +409,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             // 펫이 아닌 경우만 지면으로 인식
             if (hit.collider != null && hit.collider.GetComponent<PetController>() == null)
             {
-                targetPos.y = hit.point.y + 0.3f;  // 지면 위 0.3f (보물 크기 고려)
+                targetPos.y = hit.point.y + 1f;  // 지면 위 0.3f (보물 크기 고려)
                 groundFound = true;
                 Debug.Log($"[TreasureFound] 지면 감지: {hit.collider.name} at height {hit.point.y}");
                 break;
