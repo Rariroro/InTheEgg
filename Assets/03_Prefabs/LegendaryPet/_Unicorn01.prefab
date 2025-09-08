@@ -93,7 +93,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e570ae4b9a9a04792949a72a8590de27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  petType: 0
+  petType: 2
   petName: Legendary Pet
   traits:
     moveSpeed: 0
@@ -101,8 +101,18 @@ MonoBehaviour:
     particleAmount: 0
     canFly: 1
     hasAura: 0
+    walkAnimIndex: 0
+    runAnimIndex: 0
+    flyAnimIndex: 0
   isActive: 1
   isMoving: 0
+  isFlying: 0
+  flyHeight: 5
+  ascendSpeed: 2
+  descendSpeed: 3
+  flySpeed: 8
+  bobAmount: 0.5
+  bobSpeed: 2
   glowEffect: {fileID: 0}
   auraEffect: {fileID: 0}
   petLight: {fileID: 0}

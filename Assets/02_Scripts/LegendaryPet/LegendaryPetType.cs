@@ -29,6 +29,11 @@ namespace LegendaryPet
         public bool canFly;            // 비행 가능 여부
         public bool hasAura;           // 오라 효과 여부
         
+        // 애니메이션 인덱스
+        public int walkAnimIndex;      // 걷기 애니메이션 인덱스
+        public int runAnimIndex;       // 뛰기 애니메이션 인덱스
+        public int flyAnimIndex;       // 비행 애니메이션 인덱스
+        
         public static LegendaryPetTraits GetDefault(LegendaryPetType type)
         {
             var traits = new LegendaryPetTraits();
@@ -41,6 +46,9 @@ namespace LegendaryPet
                     traits.particleAmount = 100f;
                     traits.canFly = true;
                     traits.hasAura = true;
+                    traits.walkAnimIndex = 9;
+                    traits.runAnimIndex = 13;
+                    traits.flyAnimIndex = 17;
                     break;
                     
                 case LegendaryPetType.Phoenix:
@@ -57,6 +65,9 @@ namespace LegendaryPet
                     traits.particleAmount = 80f;
                     traits.canFly = true;
                     traits.hasAura = true;
+                    traits.walkAnimIndex = 6;
+                    traits.runAnimIndex = 5;
+                    traits.flyAnimIndex = 9;
                     break;
                     
                 case LegendaryPetType.Griffin:

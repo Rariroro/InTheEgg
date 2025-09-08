@@ -25,6 +25,19 @@ namespace LegendaryPet
         [Header("상태")]
         [SerializeField] private bool isActive = true;
         [SerializeField] private bool isMoving = false;
+        [SerializeField] private bool isFlying = false;
+        
+        [Header("비행 설정")]
+        [SerializeField] private float flyHeight = 5f;           // 비행 높이
+        [SerializeField] private float ascendSpeed = 2f;         // 상승 속도
+        [SerializeField] private float descendSpeed = 3f;        // 하강 속도
+        [SerializeField] private float flySpeed = 8f;            // 비행 속도
+        [SerializeField] private float bobAmount = 0.5f;         // 상하 움직임 크기
+        [SerializeField] private float bobSpeed = 2f;            // 상하 움직임 속도
+        
+        private Vector3 flyDestination;
+        private float currentFlyHeight;
+        private Coroutine flyingCoroutine;
         
         [Header("시각 효과")]
         [SerializeField] private ParticleSystem glowEffect;
@@ -37,6 +50,7 @@ namespace LegendaryPet
         public LegendaryPetTraits Traits => traits;
         public bool IsActive => isActive;
         public bool IsMoving => isMoving;
+        public bool IsFlying => isFlying;
         public NavMeshAgent Agent => agent;
         public Animator Animator => animator;
         
@@ -237,17 +251,180 @@ namespace LegendaryPet
             }
         }
         
+        // 비행 시작
+        public bool StartFlying(Vector3 destination)
+        {
+            // 유니콘과 드래곤만 비행 가능
+            if (!traits.canFly || !(petType == LegendaryPetType.Dragon || petType == LegendaryPetType.Unicorn))
+            {
+                Debug.Log($"[LegendaryPet] {petName}은(는) 비행할 수 없습니다.");
+                return false;
+            }
+            
+            if (isFlying)
+            {
+                Debug.Log($"[LegendaryPet] {petName}은(는) 이미 비행 중입니다.");
+                return false;
+            }
+            
+            flyDestination = destination;
+            
+            if (flyingCoroutine != null)
+            {
+                StopCoroutine(flyingCoroutine);
+            }
+            
+            flyingCoroutine = StartCoroutine(FlyToDestination());
+            return true;
+        }
+        
+        // 비행 중지
+        public void StopFlying()
+        {
+            if (!isFlying) return;
+            
+            if (flyingCoroutine != null)
+            {
+                StopCoroutine(flyingCoroutine);
+                flyingCoroutine = null;
+            }
+            
+            StartCoroutine(Land());
+        }
+        
+        // 비행 코루틴
+        private IEnumerator FlyToDestination()
+        {
+            isFlying = true;
+            
+            // NavMeshAgent 비활성화
+            if (agent != null && agent.enabled)
+            {
+                agent.isStopped = true;
+                agent.enabled = false;
+            }
+            
+            // 비행 애니메이션 시작
+            if (animator != null && traits.flyAnimIndex > 0)
+            {
+                animator.SetInteger("State", traits.flyAnimIndex);
+            }
+            
+            // 상승
+            float startHeight = transform.position.y;
+            float targetHeight = startHeight + flyHeight;
+            float elapsed = 0f;
+            
+            while (elapsed < 1f / ascendSpeed)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed * ascendSpeed;
+                
+                Vector3 pos = transform.position;
+                pos.y = Mathf.Lerp(startHeight, targetHeight, t);
+                transform.position = pos;
+                
+                yield return null;
+            }
+            
+            currentFlyHeight = targetHeight;
+            
+            // 목적지로 비행
+            while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), 
+                                   new Vector3(flyDestination.x, 0, flyDestination.z)) > 1f)
+            {
+                // XZ 평면에서 이동
+                Vector3 direction = (flyDestination - transform.position).normalized;
+                direction.y = 0;
+                
+                Vector3 newPos = transform.position + direction * flySpeed * Time.deltaTime;
+                
+                // 부드러운 상하 움직임
+                newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
+                
+                transform.position = newPos;
+                
+                // 회전
+                if (direction != Vector3.zero)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(direction);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 5f);
+                }
+                
+                yield return null;
+            }
+            
+            // 착륙
+            yield return StartCoroutine(Land());
+        }
+        
+        // 착륙 코루틴
+        private IEnumerator Land()
+        {
+            // 착륙 위치 찾기
+            RaycastHit hit;
+            Vector3 landingPos = transform.position;
+            
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 50f))
+            {
+                landingPos = hit.point;
+            }
+            else
+            {
+                landingPos.y = 0; // 기본 높이
+            }
+            
+            // 하강
+            float startHeight = transform.position.y;
+            float elapsed = 0f;
+            
+            while (elapsed < 1f / descendSpeed)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed * descendSpeed;
+                
+                Vector3 pos = transform.position;
+                pos.y = Mathf.Lerp(startHeight, landingPos.y, t);
+                transform.position = pos;
+                
+                yield return null;
+            }
+            
+            transform.position = new Vector3(transform.position.x, landingPos.y, transform.position.z);
+            
+            // NavMeshAgent 재활성화
+            if (agent != null)
+            {
+                agent.enabled = true;
+                agent.Warp(transform.position);
+                agent.isStopped = false;
+            }
+            
+            // 걷기 애니메이션으로 전환
+            if (animator != null && traits.walkAnimIndex > 0)
+            {
+                animator.SetInteger("State", traits.walkAnimIndex);
+            }
+            
+            isFlying = false;
+            flyingCoroutine = null;
+        }
+        
         private void Update()
         {
             if (!isActive) return;
             
-            // 이동 상태 업데이트
-            if (agent != null && agent.isOnNavMesh)
+            // 비행 중이면 이동 상태 업데이트 건너뛰기
+            if (!isFlying)
             {
-                bool shouldBeMoving = agent.hasPath && !agent.isStopped && agent.remainingDistance > agent.stoppingDistance;
-                if (shouldBeMoving != isMoving)
+                // 이동 상태 업데이트
+                if (agent != null && agent.enabled && agent.isOnNavMesh)
                 {
-                    SetMoving(shouldBeMoving);
+                    bool shouldBeMoving = agent.hasPath && !agent.isStopped && agent.remainingDistance > agent.stoppingDistance;
+                    if (shouldBeMoving != isMoving)
+                    {
+                        SetMoving(shouldBeMoving);
+                    }
                 }
             }
             

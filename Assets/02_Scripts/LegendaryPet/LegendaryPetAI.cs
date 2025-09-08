@@ -18,6 +18,9 @@ namespace LegendaryPet
         [SerializeField] private float idleTimeMax = 8f;           // 최대 대기 시간
         [SerializeField] private float specialAnimationChance = 0.1f; // 특별 애니메이션 확률
         
+        [Header("비행 설정")]
+        [SerializeField] [Range(0f, 1f)] private float flyingChance = 0.9f; // 비행 확률 (0~1)
+        
         [Header("움직임 패턴")]
         [SerializeField] private MovementPattern currentPattern = MovementPattern.Elegant;
         
@@ -88,8 +91,16 @@ namespace LegendaryPet
         
         private IEnumerator DecideNextAction()
         {
+            // 유니콘과 드래곤의 비행 체크
+            if ((controller.PetType == LegendaryPetType.Dragon || controller.PetType == LegendaryPetType.Unicorn) 
+                && controller.Traits.canFly 
+                && !controller.IsFlying 
+                && Random.value < flyingChance)
+            {
+                yield return StartCoroutine(PerformFlight());
+            }
             // 특별 애니메이션 확률 체크
-            if (Random.value < specialAnimationChance)
+            else if (Random.value < specialAnimationChance)
             {
                 yield return StartCoroutine(PerformSpecialAction());
             }
@@ -310,6 +321,49 @@ namespace LegendaryPet
             Vector3 randomDirection = Random.insideUnitSphere * wanderRadius;
             randomDirection.y = 0;
             return transform.position + randomDirection;
+        }
+        
+        // 비행 수행
+        private IEnumerator PerformFlight()
+        {
+            Debug.Log($"[LegendaryPetAI] {controller.PetName}이(가) 비행을 시작합니다!");
+            
+            // 비행 목적지 설정 (현재 위치에서 랜덤한 방향)
+            Vector3 flyDestination = GetRandomFlightDestination();
+            
+            // 비행 시작
+            if (controller.StartFlying(flyDestination))
+            {
+                // 비행이 완료될 때까지 대기
+                while (controller.IsFlying)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                }
+                
+                // 비행 완료 후 잠시 대기
+                nextActionTime = Time.time + Random.Range(2f, 4f);
+            }
+            else
+            {
+                // 비행 실패 시 일반 행동으로 전환
+                yield return StartCoroutine(WanderToNewPosition());
+            }
+        }
+        
+        // 비행 목적지 생성
+        private Vector3 GetRandomFlightDestination()
+        {
+            // 현재 위치에서 랜덤한 방향으로 비행 목적지 설정
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float distance = Random.Range(wanderRadius * 0.5f, wanderRadius);
+            
+            Vector3 destination = spawnPosition + new Vector3(
+                Mathf.Cos(angle) * distance,
+                0f,
+                Mathf.Sin(angle) * distance
+            );
+            
+            return destination;
         }
         
         // 패턴 변경 메서드 (외부에서 호출 가능)
