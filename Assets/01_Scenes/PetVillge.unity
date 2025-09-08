@@ -82783,8 +82783,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   legendaryPetPrefabs:
-  - {fileID: 2181385752272073091, guid: dabe6fefb8c9c4af9b8b6654e70ebab2, type: 3}
-  - {fileID: 1406143316378826, guid: 929b1589f10964992be86dfce9731984, type: 3}
+  - {fileID: 6264055543194103547, guid: f0f905d5ab2404575b479dcc11814dd9, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
   spawnRadius: 50
   maxLegendaryPets: 10
   firstAppearanceEffectPrefab: {fileID: 0}
