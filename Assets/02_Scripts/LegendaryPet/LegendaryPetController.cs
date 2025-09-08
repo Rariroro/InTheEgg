@@ -9,7 +9,7 @@ namespace LegendaryPet
     /// 일반 펫과 독립적으로 작동하는 단순화된 시스템
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
-    [RequireComponent(typeof(Animator))]
+    // Animator는 자식 오브젝트에 있으므로 RequireComponent 제거
     public class LegendaryPetController : MonoBehaviour
     {
         [Header("레전드 펫 설정")]
@@ -56,12 +56,14 @@ namespace LegendaryPet
         
         private void Awake()
         {
-            InitializeComponents();
+            // traits만 먼저 초기화 (NavMeshAgent 속도 설정용)
             InitializeTraits();
         }
         
         private void Start()
         {
+            // Components는 Start에서 초기화
+            InitializeComponents();
             StartCoroutine(DelayedStart());
         }
         
@@ -109,13 +111,14 @@ namespace LegendaryPet
                 agent.updateUpAxis = false;
             }
             
-            // Animator 설정
-            animator = GetComponent<Animator>();
-            if (animator == null)
+            // Animator 설정 (자식 오브젝트에서 검색)
+            animator = GetComponentInChildren<Animator>(true);
+            if (animator != null && !animator.enabled)
             {
-                Debug.LogWarning($"[LegendaryPet] {gameObject.name}에 Animator 컴포넌트가 없습니다");
+                animator.enabled = true;
             }
         }
+        
         
         private void InitializeTraits()
         {
@@ -202,11 +205,25 @@ namespace LegendaryPet
         {
             isMoving = moving;
             
-            // 애니메이션 업데이트
-            if (animator != null)
+            // 애니메이션 업데이트 (AnimatorController가 있을 때만)
+            if (animator != null && animator.runtimeAnimatorController != null)
             {
-                animator.SetBool("isWalking", moving);
-                animator.SetFloat("moveSpeed", moving ? agent.velocity.magnitude : 0f);
+                if (moving)
+                {
+                    // 속도에 따라 걷기/뛰기 구분
+                    if (agent != null && agent.velocity.magnitude > traits.moveSpeed * 0.7f)
+                    {
+                        animator.SetInteger("animation", traits.runAnimIndex);
+                    }
+                    else
+                    {
+                        animator.SetInteger("animation", traits.walkAnimIndex);
+                    }
+                }
+                else
+                {
+                    animator.SetInteger("animation", 1); // Idle (1번이 Idle)
+                }
             }
         }
         
@@ -231,7 +248,8 @@ namespace LegendaryPet
         
         public void PlaySpecialAnimation()
         {
-            if (animator != null)
+            // AnimatorController 체크 추가
+            if (animator != null && animator.runtimeAnimatorController != null)
             {
                 // 특별 애니메이션 재생 (펫 타입별로 다른 애니메이션)
                 switch (petType)
@@ -304,10 +322,10 @@ namespace LegendaryPet
                 agent.enabled = false;
             }
             
-            // 비행 애니메이션 시작
-            if (animator != null && traits.flyAnimIndex > 0)
+            // 비행 애니메이션 시작 (AnimatorController가 있을 때만)
+            if (animator != null && animator.runtimeAnimatorController != null && traits.flyAnimIndex > 0)
             {
-                animator.SetInteger("State", traits.flyAnimIndex);
+                animator.SetInteger("animation", traits.flyAnimIndex);
             }
             
             // 상승
@@ -395,15 +413,36 @@ namespace LegendaryPet
             // NavMeshAgent 재활성화
             if (agent != null)
             {
+                // NavMesh 상의 유효한 위치 찾기
+                NavMeshHit navHit;
+                Vector3 finalPosition = transform.position;
+                
+                if (NavMesh.SamplePosition(transform.position, out navHit, 5f, NavMesh.AllAreas))
+                {
+                    finalPosition = navHit.position;
+                    transform.position = finalPosition;
+                }
+                
                 agent.enabled = true;
-                agent.Warp(transform.position);
-                agent.isStopped = false;
+                
+                // agent가 완전히 활성화되도록 프레임 대기
+                yield return null;
+                
+                if (agent.isOnNavMesh)
+                {
+                    agent.Warp(finalPosition);
+                    agent.isStopped = false;
+                }
+                else
+                {
+                    Debug.LogWarning($"[LegendaryPet] {petName} 착륙 실패 - NavMesh를 찾을 수 없음");
+                }
             }
             
-            // 걷기 애니메이션으로 전환
-            if (animator != null && traits.walkAnimIndex > 0)
+            // 걷기 애니메이션으로 전환 (AnimatorController가 있을 때만)
+            if (animator != null && animator.runtimeAnimatorController != null && traits.walkAnimIndex > 0)
             {
-                animator.SetInteger("State", traits.walkAnimIndex);
+                animator.SetInteger("animation", traits.walkAnimIndex);
             }
             
             isFlying = false;
@@ -417,13 +456,40 @@ namespace LegendaryPet
             // 비행 중이면 이동 상태 업데이트 건너뛰기
             if (!isFlying)
             {
-                // 이동 상태 업데이트
+                // 이동 상태 업데이트 - 실제 속도 기반으로 판단
                 if (agent != null && agent.enabled && agent.isOnNavMesh)
                 {
-                    bool shouldBeMoving = agent.hasPath && !agent.isStopped && agent.remainingDistance > agent.stoppingDistance;
-                    if (shouldBeMoving != isMoving)
+                    float currentSpeed = agent.velocity.magnitude;
+                    bool actuallyMoving = currentSpeed > 0.1f; // 0.1 이하는 정지 상태로 간주
+                    
+                    // 실제 움직임과 isMoving 상태가 다르면 업데이트
+                    if (actuallyMoving != isMoving)
                     {
-                        SetMoving(shouldBeMoving);
+                        SetMoving(actuallyMoving);
+                    }
+                    // 애니메이션 직접 업데이트 (속도 기반)
+                    else if (animator != null && animator.runtimeAnimatorController != null)
+                    {
+                        if (actuallyMoving)
+                        {
+                            // 속도에 따라 걷기/뛰기 애니메이션 선택
+                            if (currentSpeed > traits.moveSpeed * 0.7f)
+                            {
+                                if (animator.GetInteger("animation") != traits.runAnimIndex)
+                                    animator.SetInteger("animation", traits.runAnimIndex);
+                            }
+                            else
+                            {
+                                if (animator.GetInteger("animation") != traits.walkAnimIndex)
+                                    animator.SetInteger("animation", traits.walkAnimIndex);
+                            }
+                        }
+                        else
+                        {
+                            // 정지 상태 - Idle 애니메이션
+                            if (animator.GetInteger("animation") != 1)
+                                animator.SetInteger("animation", 1); // Idle
+                        }
                     }
                 }
             }

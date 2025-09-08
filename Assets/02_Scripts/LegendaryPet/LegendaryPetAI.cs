@@ -19,7 +19,7 @@ namespace LegendaryPet
         [SerializeField] private float specialAnimationChance = 0.1f; // 특별 애니메이션 확률
         
         [Header("비행 설정")]
-        [SerializeField] [Range(0f, 1f)] private float flyingChance = 0.9f; // 비행 확률 (0~1)
+        [SerializeField] [Range(0f, 1f)] private float flyingChance = 0.7f; // 비행 확률 (0~1)
         
         [Header("움직임 패턴")]
         [SerializeField] private MovementPattern currentPattern = MovementPattern.Elegant;
@@ -148,7 +148,18 @@ namespace LegendaryPet
                     }
                 }
                 
+                // 속도가 충분히 낮아질 때까지 대기
+                float waitTime = 0f;
+                while (agent.velocity.magnitude > 0.1f && waitTime < 1f)
+                {
+                    yield return new WaitForSeconds(0.1f);
+                    waitTime += 0.1f;
+                }
+                
                 controller.StopMoving();
+                
+                // 애니메이션 전환을 위한 짧은 딜레이
+                yield return new WaitForSeconds(0.1f);
             }
             
             // 도착 후 잠시 대기

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8080112024123063249}
   - component: {fileID: 8851457445490579825}
-  - component: {fileID: 3218843892478668288}
   - component: {fileID: 86903145575007477}
   - component: {fileID: 2345662513985674719}
   - component: {fileID: 5327545790487572495}
@@ -59,28 +58,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!95 &3218843892478668288
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6264055543194103547}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &86903145575007477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -101,8 +78,18 @@ MonoBehaviour:
     particleAmount: 0
     canFly: 1
     hasAura: 0
+    walkAnimIndex: 0
+    runAnimIndex: 0
+    flyAnimIndex: 0
   isActive: 1
   isMoving: 0
+  isFlying: 0
+  flyHeight: 5
+  ascendSpeed: 2
+  descendSpeed: 3
+  flySpeed: 8
+  bobAmount: 0.5
+  bobSpeed: 2
   glowEffect: {fileID: 0}
   auraEffect: {fileID: 0}
   petLight: {fileID: 0}
