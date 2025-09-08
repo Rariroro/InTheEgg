@@ -55,7 +55,7 @@ namespace LegendaryPet
                     traits.moveSpeed = 7f;
                     traits.glowIntensity = 1.2f;
                     traits.particleAmount = 80f;
-                    traits.canFly = false;
+                    traits.canFly = true;
                     traits.hasAura = true;
                     break;
                     
