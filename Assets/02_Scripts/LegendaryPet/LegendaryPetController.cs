@@ -37,6 +37,8 @@ namespace LegendaryPet
         
         private Vector3 flyDestination;
         private float currentFlyHeight;
+        private float startFlyHeight;      // 시작 비행 높이
+        private float targetFlyHeight;     // 목표 비행 높이
         private Coroutine flyingCoroutine;
         
         [Header("시각 효과")]
@@ -186,6 +188,24 @@ namespace LegendaryPet
             }
         }
         
+        // 지형 높이를 가져오는 헬퍼 메서드
+        private float GetGroundHeight(Vector3 position)
+        {
+            RaycastHit hit;
+            // 위에서 아래로 레이캐스트를 쏴서 지형 높이 확인
+            if (Physics.Raycast(new Vector3(position.x, 100f, position.z), Vector3.down, out hit, 200f))
+            {
+                return hit.point.y;
+            }
+            // 레이캐스트가 실패하면 NavMesh 높이 사용
+            NavMeshHit navHit;
+            if (NavMesh.SamplePosition(position, out navHit, 10f, NavMesh.AllAreas))
+            {
+                return navHit.position.y;
+            }
+            return position.y;
+        }
+        
         public void SetActive(bool active)
         {
             isActive = active;
@@ -300,7 +320,17 @@ namespace LegendaryPet
             }
             
             flyDestination = navHit.position;
-            Debug.Log($"[LegendaryPet] {petName}: 비행 목적지 설정 - {flyDestination}");
+            
+            // 시작점과 목적지의 지형 높이 계산
+            float startGroundHeight = GetGroundHeight(transform.position);
+            float destinationGroundHeight = GetGroundHeight(flyDestination);
+            
+            // 시작과 끝 중 더 높은 지형 기준으로 비행 높이 설정
+            float maxGroundHeight = Mathf.Max(startGroundHeight, destinationGroundHeight);
+            startFlyHeight = startGroundHeight + flyHeight;
+            targetFlyHeight = maxGroundHeight + flyHeight;
+            
+            Debug.Log($"[LegendaryPet] {petName}: 비행 목적지 설정 - {flyDestination}, 시작 높이: {startFlyHeight}, 목표 높이: {targetFlyHeight}");
             
             if (flyingCoroutine != null)
             {
@@ -346,9 +376,8 @@ namespace LegendaryPet
                 animator.SetInteger("animation", traits.flyAnimIndex);
             }
             
-            // 상승
+            // 상승 (시작 비행 높이로)
             float startHeight = transform.position.y;
-            float targetHeight = startHeight + flyHeight;
             float elapsed = 0f;
             
             while (elapsed < 1f / ascendSpeed)
@@ -357,17 +386,20 @@ namespace LegendaryPet
                 float t = elapsed * ascendSpeed;
                 
                 Vector3 pos = transform.position;
-                pos.y = Mathf.Lerp(startHeight, targetHeight, t);
+                pos.y = Mathf.Lerp(startHeight, startFlyHeight, t);
                 transform.position = pos;
                 
                 yield return null;
             }
             
-            currentFlyHeight = targetHeight;
+            currentFlyHeight = startFlyHeight;
             
             // 목적지로 비행
             float flightTimeout = 0f;
             float maxFlightTime = 30f; // 최대 비행 시간 제한
+            Vector3 startPosition = transform.position;
+            float totalDistance = Vector3.Distance(new Vector3(startPosition.x, 0, startPosition.z), 
+                                                  new Vector3(flyDestination.x, 0, flyDestination.z));
             
             while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), 
                                    new Vector3(flyDestination.x, 0, flyDestination.z)) > 1f)
@@ -404,7 +436,16 @@ namespace LegendaryPet
                 
                 Vector3 newPos = transform.position + direction * flySpeed * Time.deltaTime;
                 
-                // 부드러운 상하 움직임
+                // 진행도 계산 (0~1)
+                float currentDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
+                                                        new Vector3(flyDestination.x, 0, flyDestination.z));
+                float progress = 1f - (currentDistance / totalDistance);
+                progress = Mathf.Clamp01(progress);
+                
+                // 높이를 진행도에 따라 부드럽게 보간
+                currentFlyHeight = Mathf.Lerp(startFlyHeight, targetFlyHeight, progress);
+                
+                // 부드러운 상하 움직임 추가
                 newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
                 
                 // 맵 경계 체크 (예시: -200 ~ 200 범위)
