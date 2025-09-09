@@ -285,7 +285,22 @@ namespace LegendaryPet
                 return false;
             }
             
-            flyDestination = destination;
+            // 목적지가 NavMesh 범위 내에 있는지 사전 검증
+            NavMeshHit navHit;
+            if (!NavMesh.SamplePosition(destination, out navHit, 30f, NavMesh.AllAreas))
+            {
+                Debug.LogWarning($"[LegendaryPet] {petName}: 비행 목적지가 NavMesh 범위를 벗어났습니다. 가장 가까운 유효한 위치로 조정합니다.");
+                
+                // 더 넓은 범위에서 재시도
+                if (!NavMesh.SamplePosition(destination, out navHit, 50f, NavMesh.AllAreas))
+                {
+                    Debug.LogError($"[LegendaryPet] {petName}: 유효한 비행 목적지를 찾을 수 없습니다.");
+                    return false;
+                }
+            }
+            
+            flyDestination = navHit.position;
+            Debug.Log($"[LegendaryPet] {petName}: 비행 목적지 설정 - {flyDestination}");
             
             if (flyingCoroutine != null)
             {
@@ -351,17 +366,51 @@ namespace LegendaryPet
             currentFlyHeight = targetHeight;
             
             // 목적지로 비행
+            float flightTimeout = 0f;
+            float maxFlightTime = 30f; // 최대 비행 시간 제한
+            
             while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), 
                                    new Vector3(flyDestination.x, 0, flyDestination.z)) > 1f)
             {
+                // 비행 시간 초과 체크
+                flightTimeout += Time.deltaTime;
+                if (flightTimeout > maxFlightTime)
+                {
+                    Debug.LogWarning($"[LegendaryPet] {petName}: 비행 시간 초과, 강제 착륙합니다.");
+                    break;
+                }
+                
+                // 목적지 유효성 재검증 (주기적으로)
+                if (flightTimeout % 5f < Time.deltaTime) // 5초마다 체크
+                {
+                    NavMeshHit navHit;
+                    if (!NavMesh.SamplePosition(flyDestination, out navHit, 30f, NavMesh.AllAreas))
+                    {
+                        Debug.LogWarning($"[LegendaryPet] {petName}: 목적지가 더 이상 유효하지 않습니다. 착륙합니다.");
+                        break;
+                    }
+                }
+                
                 // XZ 평면에서 이동
                 Vector3 direction = (flyDestination - transform.position).normalized;
                 direction.y = 0;
+                
+                // 방향이 유효하지 않으면 중단
+                if (direction.magnitude < 0.01f)
+                {
+                    Debug.Log($"[LegendaryPet] {petName}: 목적지에 도달했습니다.");
+                    break;
+                }
                 
                 Vector3 newPos = transform.position + direction * flySpeed * Time.deltaTime;
                 
                 // 부드러운 상하 움직임
                 newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
+                
+                // 맵 경계 체크 (예시: -200 ~ 200 범위)
+                float mapBoundary = 200f;
+                newPos.x = Mathf.Clamp(newPos.x, -mapBoundary, mapBoundary);
+                newPos.z = Mathf.Clamp(newPos.z, -mapBoundary, mapBoundary);
                 
                 transform.position = newPos;
                 
@@ -382,63 +431,110 @@ namespace LegendaryPet
         // 착륙 코루틴
         private IEnumerator Land()
         {
-            // 착륙 위치 찾기
-            RaycastHit hit;
-            Vector3 landingPos = transform.position;
+            // 착륙 위치를 NavMesh 상에서 먼저 찾기
+            Vector3 targetLandingPos = transform.position;
+            targetLandingPos.y = 0; // 기본 높이로 초기화
             
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 50f))
+            // 현재 위치 아래에서 NavMesh 위치 찾기
+            NavMeshHit navHit;
+            bool foundValidPosition = false;
+            
+            // 1차 시도: 현재 위치 바로 아래에서 NavMesh 찾기
+            if (NavMesh.SamplePosition(new Vector3(transform.position.x, 0, transform.position.z), out navHit, 20f, NavMesh.AllAreas))
             {
-                landingPos = hit.point;
+                targetLandingPos = navHit.position;
+                foundValidPosition = true;
+                Debug.Log($"[LegendaryPet] {petName}: 착륙 위치 확보 - {targetLandingPos}");
             }
+            // 2차 시도: 더 넓은 범위에서 찾기
+            else if (NavMesh.SamplePosition(transform.position, out navHit, 50f, NavMesh.AllAreas))
+            {
+                targetLandingPos = navHit.position;
+                foundValidPosition = true;
+                Debug.LogWarning($"[LegendaryPet] {petName}: 대체 착륙 위치 확보 - {targetLandingPos}");
+            }
+            // 3차 시도: 스폰 위치 근처에서 찾기
             else
             {
-                landingPos.y = 0; // 기본 높이
+                Vector3 spawnPos = GameObject.Find("SpawnPoint")?.transform.position ?? Vector3.zero;
+                if (NavMesh.SamplePosition(spawnPos, out navHit, 100f, NavMesh.AllAreas))
+                {
+                    targetLandingPos = navHit.position;
+                    foundValidPosition = true;
+                    Debug.LogWarning($"[LegendaryPet] {petName}: 스폰 위치 근처로 착륙 - {targetLandingPos}");
+                }
             }
             
-            // 하강
+            if (!foundValidPosition)
+            {
+                Debug.LogError($"[LegendaryPet] {petName}: 유효한 착륙 위치를 찾을 수 없습니다!");
+                // 비상 착륙: 원점으로
+                targetLandingPos = Vector3.zero;
+            }
+            
+            // 지면 높이 확인을 위한 Raycast
+            RaycastHit groundHit;
+            if (Physics.Raycast(new Vector3(targetLandingPos.x, 50f, targetLandingPos.z), Vector3.down, out groundHit, 100f))
+            {
+                // NavMesh 높이와 실제 지면 높이 중 더 높은 것 선택 (땅 아래로 떨어지는 것 방지)
+                targetLandingPos.y = Mathf.Max(targetLandingPos.y, groundHit.point.y);
+            }
+            
+            // 하강 애니메이션
             float startHeight = transform.position.y;
             float elapsed = 0f;
+            Vector3 startXZ = new Vector3(transform.position.x, 0, transform.position.z);
+            Vector3 targetXZ = new Vector3(targetLandingPos.x, 0, targetLandingPos.z);
             
             while (elapsed < 1f / descendSpeed)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed * descendSpeed;
                 
-                Vector3 pos = transform.position;
-                pos.y = Mathf.Lerp(startHeight, landingPos.y, t);
-                transform.position = pos;
+                // 높이는 부드럽게 하강
+                float currentHeight = Mathf.Lerp(startHeight, targetLandingPos.y, t);
+                
+                // XZ 위치도 부드럽게 이동 (착륙 위치가 다른 경우)
+                Vector3 currentXZ = Vector3.Lerp(startXZ, targetXZ, t);
+                
+                transform.position = new Vector3(currentXZ.x, currentHeight, currentXZ.z);
                 
                 yield return null;
             }
             
-            transform.position = new Vector3(transform.position.x, landingPos.y, transform.position.z);
+            // 최종 위치 설정
+            transform.position = targetLandingPos;
             
             // NavMeshAgent 재활성화
             if (agent != null)
             {
-                // NavMesh 상의 유효한 위치 찾기
-                NavMeshHit navHit;
-                Vector3 finalPosition = transform.position;
-                
-                if (NavMesh.SamplePosition(transform.position, out navHit, 5f, NavMesh.AllAreas))
-                {
-                    finalPosition = navHit.position;
-                    transform.position = finalPosition;
-                }
-                
                 agent.enabled = true;
                 
                 // agent가 완전히 활성화되도록 프레임 대기
                 yield return null;
                 
-                if (agent.isOnNavMesh)
+                // 최종 위치에서 다시 한번 NavMesh 확인
+                if (NavMesh.SamplePosition(transform.position, out navHit, 10f, NavMesh.AllAreas))
                 {
-                    agent.Warp(finalPosition);
-                    agent.isStopped = false;
+                    transform.position = navHit.position;
+                    
+                    if (agent.isOnNavMesh)
+                    {
+                        agent.Warp(navHit.position);
+                        agent.isStopped = false;
+                        Debug.Log($"[LegendaryPet] {petName}: 성공적으로 착륙했습니다.");
+                    }
+                    else
+                    {
+                        Debug.LogError($"[LegendaryPet] {petName}: NavMesh에 배치 실패!");
+                        // 비상 처리: 에이전트 비활성화 상태 유지
+                        agent.enabled = false;
+                    }
                 }
                 else
                 {
-                    Debug.LogWarning($"[LegendaryPet] {petName} 착륙 실패 - NavMesh를 찾을 수 없음");
+                    Debug.LogError($"[LegendaryPet] {petName}: 착륙 후 NavMesh를 찾을 수 없음!");
+                    agent.enabled = false;
                 }
             }
             

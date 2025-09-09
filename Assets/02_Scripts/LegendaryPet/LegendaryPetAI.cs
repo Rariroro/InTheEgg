@@ -446,15 +446,57 @@ namespace LegendaryPet
         // 비행 목적지 생성
         private Vector3 GetRandomFlightDestination()
         {
-            // 현재 위치에서 랜덤한 방향으로 비행 목적지 설정
-            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-            float distance = Random.Range(wanderRadius * 0.5f, wanderRadius);
+            Vector3 destination = Vector3.zero;
+            int maxAttempts = 10; // 최대 시도 횟수
+            bool foundValidDestination = false;
             
-            Vector3 destination = spawnPosition + new Vector3(
-                Mathf.Cos(angle) * distance,
-                0f,
-                Mathf.Sin(angle) * distance
-            );
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                // 현재 위치에서 랜덤한 방향으로 비행 목적지 설정
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                float distance = Random.Range(wanderRadius * 0.5f, wanderRadius);
+                
+                Vector3 candidateDestination = spawnPosition + new Vector3(
+                    Mathf.Cos(angle) * distance,
+                    0f,
+                    Mathf.Sin(angle) * distance
+                );
+                
+                // 맵 경계 내인지 확인 (예: -200 ~ 200 범위)
+                float mapBoundary = 150f; // 안전한 범위로 설정
+                if (Mathf.Abs(candidateDestination.x) > mapBoundary || 
+                    Mathf.Abs(candidateDestination.z) > mapBoundary)
+                {
+                    continue; // 범위 밖이면 다시 시도
+                }
+                
+                // NavMesh 상에 유효한 위치인지 확인
+                NavMeshHit navHit;
+                if (NavMesh.SamplePosition(candidateDestination, out navHit, 30f, NavMesh.AllAreas))
+                {
+                    destination = navHit.position;
+                    foundValidDestination = true;
+                    Debug.Log($"[LegendaryPetAI] {controller.PetName}: 유효한 비행 목적지 생성 - {destination}");
+                    break;
+                }
+            }
+            
+            // 유효한 목적지를 찾지 못한 경우, 스폰 위치 근처로 설정
+            if (!foundValidDestination)
+            {
+                NavMeshHit navHit;
+                if (NavMesh.SamplePosition(spawnPosition, out navHit, 50f, NavMesh.AllAreas))
+                {
+                    destination = navHit.position;
+                    Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 기본 비행 목적지 (스폰 위치) 사용");
+                }
+                else
+                {
+                    // 최후의 수단: 현재 위치 사용
+                    destination = transform.position;
+                    Debug.LogError($"[LegendaryPetAI] {controller.PetName}: 비행 목적지 생성 실패, 현재 위치 사용");
+                }
+            }
             
             return destination;
         }

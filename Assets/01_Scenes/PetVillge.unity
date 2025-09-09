@@ -82785,7 +82785,7 @@ MonoBehaviour:
   legendaryPetPrefabs:
   - {fileID: 6264055543194103547, guid: f0f905d5ab2404575b479dcc11814dd9, type: 3}
   - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
-  spawnRadius: 100
+  spawnRadius: 20
   maxLegendaryPets: 10
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
