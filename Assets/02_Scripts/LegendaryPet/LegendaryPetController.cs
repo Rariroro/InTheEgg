@@ -346,13 +346,10 @@ namespace LegendaryPet
         {
             if (!isFlying) return;
             
-            if (flyingCoroutine != null)
-            {
-                StopCoroutine(flyingCoroutine);
-                flyingCoroutine = null;
-            }
-            
-            StartCoroutine(Land());
+            // 착륙 플래그만 설정하고 FlyToDestination이 자연스럽게 종료되도록 함
+            // 목적지를 현재 위치로 설정하여 즉시 착륙 유도
+            flyDestination = new Vector3(transform.position.x, 0, transform.position.z);
+            Debug.Log($"[LegendaryPet] {petName}: 비행 중지 요청 - 현재 위치에서 착륙");
         }
         
         // 비행 코루틴
@@ -445,8 +442,13 @@ namespace LegendaryPet
                 // 높이를 진행도에 따라 부드럽게 보간
                 currentFlyHeight = Mathf.Lerp(startFlyHeight, targetFlyHeight, progress);
                 
-                // 부드러운 상하 움직임 추가
-                newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
+                // 착륙이 가까워지면 상하 움직임 감소 (착륙 준비)
+                float remainingDistance = Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
+                                                          new Vector3(flyDestination.x, 0, flyDestination.z));
+                float bobMultiplier = Mathf.Clamp01(remainingDistance / 10f); // 10미터 이내에서 감소 시작
+                
+                // 부드러운 상하 움직임 추가 (착륙 가까이에서는 감소)
+                newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount * bobMultiplier;
                 
                 // 맵 경계 체크 (예시: -200 ~ 200 범위)
                 float mapBoundary = 200f;
@@ -465,6 +467,12 @@ namespace LegendaryPet
                 yield return null;
             }
             
+            // 착륙 전 높이 정규화 (Sin 파동 제거)
+            Vector3 normalizedPos = transform.position;
+            normalizedPos.y = currentFlyHeight; // Sin 파동 없는 실제 비행 높이
+            transform.position = normalizedPos;
+            Debug.Log($"[LegendaryPet] {petName}: 착륙 준비 - 정규화된 높이: {normalizedPos.y:F2}");
+            
             // 착륙
             yield return StartCoroutine(Land());
         }
@@ -472,110 +480,152 @@ namespace LegendaryPet
         // 착륙 코루틴
         private IEnumerator Land()
         {
-            // 착륙 위치를 NavMesh 상에서 먼저 찾기
-            Vector3 targetLandingPos = transform.position;
-            targetLandingPos.y = 0; // 기본 높이로 초기화
+            // Sin 파동 효과 제거한 실제 현재 높이 계산
+            Vector3 currentPos = transform.position;
+            // bobAmount 효과를 제거하여 실제 비행 높이 복원
+            float actualHeight = currentPos.y;
             
-            // 현재 위치 아래에서 NavMesh 위치 찾기
+            Debug.Log($"[LegendaryPet] {petName}: 착륙 시작 - 현재 높이: {actualHeight:F2}");
+            
+            Vector3 targetLandingPos = currentPos;
+            
+            // 현재 위치에서 바로 아래로 Raycast를 쏴서 실제 지면 찾기
+            RaycastHit groundHit;
+            bool foundGround = false;
+            
+            // 현재 위치에서 바로 아래로 검색 (위로 올라가지 않음)
+            if (Physics.Raycast(new Vector3(currentPos.x, actualHeight, currentPos.z), Vector3.down, out groundHit, actualHeight + 100f))
+            {
+                targetLandingPos = groundHit.point;
+                foundGround = true;
+                Debug.Log($"[LegendaryPet] {petName}: 지면 감지 - 목표 높이: {groundHit.point.y:F2}, 거리: {(actualHeight - groundHit.point.y):F2}");
+            }
+            
+            // Raycast가 실패하면 NavMesh에서 찾기
             NavMeshHit navHit;
-            bool foundValidPosition = false;
-            
-            // 1차 시도: 현재 위치 바로 아래에서 NavMesh 찾기
-            if (NavMesh.SamplePosition(new Vector3(transform.position.x, 0, transform.position.z), out navHit, 20f, NavMesh.AllAreas))
+            if (!foundGround)
             {
-                targetLandingPos = navHit.position;
-                foundValidPosition = true;
-                Debug.Log($"[LegendaryPet] {petName}: 착륙 위치 확보 - {targetLandingPos}");
-            }
-            // 2차 시도: 더 넓은 범위에서 찾기
-            else if (NavMesh.SamplePosition(transform.position, out navHit, 50f, NavMesh.AllAreas))
-            {
-                targetLandingPos = navHit.position;
-                foundValidPosition = true;
-                Debug.LogWarning($"[LegendaryPet] {petName}: 대체 착륙 위치 확보 - {targetLandingPos}");
-            }
-            // 3차 시도: 스폰 위치 근처에서 찾기
-            else
-            {
-                Vector3 spawnPos = GameObject.Find("SpawnPoint")?.transform.position ?? Vector3.zero;
-                if (NavMesh.SamplePosition(spawnPos, out navHit, 100f, NavMesh.AllAreas))
+                // 현재 XZ 위치에서 NavMesh 찾기 (높이는 무시)
+                if (NavMesh.SamplePosition(new Vector3(currentPos.x, 0, currentPos.z), out navHit, 30f, NavMesh.AllAreas))
                 {
                     targetLandingPos = navHit.position;
-                    foundValidPosition = true;
-                    Debug.LogWarning($"[LegendaryPet] {petName}: 스폰 위치 근처로 착륙 - {targetLandingPos}");
+                    Debug.Log($"[LegendaryPet] {petName}: NavMesh 위치 사용 - {targetLandingPos}");
+                }
+                else
+                {
+                    // 더 넓은 범위에서 재시도
+                    if (NavMesh.SamplePosition(currentPos, out navHit, 50f, NavMesh.AllAreas))
+                    {
+                        targetLandingPos = navHit.position;
+                        Debug.LogWarning($"[LegendaryPet] {petName}: 대체 착륙 위치 - {targetLandingPos}");
+                    }
+                    else
+                    {
+                        // 최후의 수단: 원점 근처
+                        targetLandingPos = Vector3.zero;
+                        Debug.LogError($"[LegendaryPet] {petName}: 비상 착륙!");
+                    }
                 }
             }
             
-            if (!foundValidPosition)
+            // NavMesh 위치와 지면 높이 중 더 높은 값 사용 (땅 속에 빠지지 않도록)
+            if (NavMesh.SamplePosition(targetLandingPos, out navHit, 10f, NavMesh.AllAreas))
             {
-                Debug.LogError($"[LegendaryPet] {petName}: 유효한 착륙 위치를 찾을 수 없습니다!");
-                // 비상 착륙: 원점으로
-                targetLandingPos = Vector3.zero;
+                if (navHit.position.y > targetLandingPos.y)
+                {
+                    targetLandingPos.y = navHit.position.y;
+                }
             }
             
-            // 지면 높이 확인을 위한 Raycast
-            RaycastHit groundHit;
-            if (Physics.Raycast(new Vector3(targetLandingPos.x, 50f, targetLandingPos.z), Vector3.down, out groundHit, 100f))
-            {
-                // NavMesh 높이와 실제 지면 높이 중 더 높은 것 선택 (땅 아래로 떨어지는 것 방지)
-                targetLandingPos.y = Mathf.Max(targetLandingPos.y, groundHit.point.y);
-            }
+            // 부드러운 하강 애니메이션
+            float startHeight = actualHeight; // transform.position.y 대신 actualHeight 사용
+            float targetHeight = targetLandingPos.y;
+            Vector3 startPos = new Vector3(currentPos.x, actualHeight, currentPos.z); // 정확한 시작 위치
+            Vector3 endPos = targetLandingPos;
             
-            // 하강 애니메이션
-            float startHeight = transform.position.y;
+            // 하강 시간 계산 (거리에 비례)
+            float descendDistance = Mathf.Abs(startHeight - targetHeight);
+            float descendTime = Mathf.Max(0.5f, descendDistance / (descendSpeed * 3f)); // 최소 0.5초
+            
+            Debug.Log($"[LegendaryPet] {petName}: 하강 시작 - 시작 높이: {startHeight:F2}, 목표 높이: {targetHeight:F2}, 예상 시간: {descendTime:F2}초");
+            
             float elapsed = 0f;
-            Vector3 startXZ = new Vector3(transform.position.x, 0, transform.position.z);
-            Vector3 targetXZ = new Vector3(targetLandingPos.x, 0, targetLandingPos.z);
             
-            while (elapsed < 1f / descendSpeed)
+            while (elapsed < descendTime)
             {
                 elapsed += Time.deltaTime;
-                float t = elapsed * descendSpeed;
+                float t = elapsed / descendTime;
                 
-                // 높이는 부드럽게 하강
-                float currentHeight = Mathf.Lerp(startHeight, targetLandingPos.y, t);
+                // Ease-out 곡선 적용 (착지 직전 감속)
+                float easedT = 1f - Mathf.Pow(1f - t, 3f);
                 
-                // XZ 위치도 부드럽게 이동 (착륙 위치가 다른 경우)
-                Vector3 currentXZ = Vector3.Lerp(startXZ, targetXZ, t);
+                // 위치 보간 (XYZ 모두 함께)
+                Vector3 currentPosition = Vector3.Lerp(startPos, endPos, easedT);
                 
-                transform.position = new Vector3(currentXZ.x, currentHeight, currentXZ.z);
+                // 착지 직전에 다시 한번 지면 체크 (동적 지형 대응)
+                if (t > 0.8f) // 80% 이상 진행됐을 때
+                {
+                    if (Physics.Raycast(new Vector3(currentPosition.x, currentPosition.y + 1f, currentPosition.z), 
+                                       Vector3.down, out groundHit, 5f))
+                    {
+                        // 실시간으로 착지 높이 조정
+                        if (groundHit.point.y > targetHeight)
+                        {
+                            Debug.Log($"[LegendaryPet] {petName}: 지면 높이 재조정 - {targetHeight:F2} → {groundHit.point.y:F2}");
+                            targetHeight = groundHit.point.y;
+                            endPos.y = targetHeight;
+                        }
+                    }
+                }
+                
+                transform.position = currentPosition;
+                
+                // 디버그용 현재 높이 출력 (매 10프레임마다)
+                if (Time.frameCount % 10 == 0)
+                {
+                    Debug.Log($"[LegendaryPet] {petName}: 하강 중 - 진행도: {(t*100):F0}%, 현재 높이: {currentPosition.y:F2}");
+                }
                 
                 yield return null;
             }
             
-            // 최종 위치 설정
-            transform.position = targetLandingPos;
+            // 부드러운 하강이 끝났으므로 추가 위치 조정 없음
+            // transform.position = targetLandingPos; // 이 줄 제거!
             
             // NavMeshAgent 재활성화
             if (agent != null)
             {
+                // 활성화 전에 위치 확인
+                if (NavMesh.SamplePosition(transform.position, out navHit, 5f, NavMesh.AllAreas))
+                {
+                    // 너무 큰 차이가 있을 때만 조정
+                    if (Vector3.Distance(transform.position, navHit.position) > 0.5f)
+                    {
+                        transform.position = navHit.position;
+                    }
+                }
+                
                 agent.enabled = true;
                 
-                // agent가 완전히 활성화되도록 프레임 대기
-                yield return null;
+                // agent가 완전히 활성화되도록 충분한 대기
+                yield return new WaitForSeconds(0.1f);
                 
-                // 최종 위치에서 다시 한번 NavMesh 확인
-                if (NavMesh.SamplePosition(transform.position, out navHit, 10f, NavMesh.AllAreas))
+                if (agent.enabled && agent.isOnNavMesh)
                 {
-                    transform.position = navHit.position;
-                    
-                    if (agent.isOnNavMesh)
-                    {
-                        agent.Warp(navHit.position);
-                        agent.isStopped = false;
-                        Debug.Log($"[LegendaryPet] {petName}: 성공적으로 착륙했습니다.");
-                    }
-                    else
-                    {
-                        Debug.LogError($"[LegendaryPet] {petName}: NavMesh에 배치 실패!");
-                        // 비상 처리: 에이전트 비활성화 상태 유지
-                        agent.enabled = false;
-                    }
+                    agent.isStopped = false;
+                    Debug.Log($"[LegendaryPet] {petName}: 착륙 완료!");
                 }
                 else
                 {
-                    Debug.LogError($"[LegendaryPet] {petName}: 착륙 후 NavMesh를 찾을 수 없음!");
-                    agent.enabled = false;
+                    Debug.LogWarning($"[LegendaryPet] {petName}: NavMesh 재배치 실패, 재시도...");
+                    // 한 번 더 시도
+                    yield return new WaitForSeconds(0.1f);
+                    if (!agent.isOnNavMesh)
+                    {
+                        agent.enabled = false;
+                        yield return null;
+                        agent.enabled = true;
+                    }
                 }
             }
             
