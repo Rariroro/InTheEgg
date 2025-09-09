@@ -180,6 +180,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             2.0f));
     }
 
+
     /// <summary>
     /// 미어캣이 멧돼지 등에 올라타는 단계를 처리합니다.
     /// </summary>

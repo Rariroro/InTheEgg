@@ -270,7 +270,7 @@ namespace LegendaryPet
                         NavMeshHit hit;
                         Vector3 spawnPosition = position;
                         
-                        if (NavMesh.SamplePosition(position, out hit, 50f, NavMesh.AllAreas))
+                        if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))  // 50f → 100f 확대
                         {
                             spawnPosition = hit.position;
                         }
@@ -388,18 +388,44 @@ namespace LegendaryPet
         
         private Vector3 GetRandomSpawnPosition()
         {
-            Vector3 randomDirection = Random.insideUnitSphere * spawnRadius;
-            randomDirection.y = 0;
+            float mapRange = 150f;
             
-            Vector3 spawnPosition = transform.position + randomDirection;
-            
-            // 지면 높이 조정
-            if (Physics.Raycast(spawnPosition + Vector3.up * 10f, Vector3.down, out RaycastHit hit, 20f))
+            // 여러 번 시도하여 유효한 NavMesh 위치 찾기
+            for (int i = 0; i < 10; i++)
             {
-                spawnPosition.y = hit.point.y;
+                // 맵 전체에서 랜덤 위치 시도
+                Vector3 randomPos = new Vector3(
+                    Random.Range(-mapRange, mapRange),
+                    0,
+                    Random.Range(-mapRange, mapRange)
+                );
+                
+                // NavMesh 위치 찾기 (넓은 범위로 검색)
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(randomPos, out hit, 50f, NavMesh.AllAreas))
+                {
+                    Debug.Log($"[LegendaryPetManager] NavMesh 위치 찾기 성공 (시도 {i+1}/10): {hit.position}");
+                    return hit.position;
+                }
             }
             
-            return spawnPosition;
+            // 모든 시도 실패 시 중심점 근처에서 재시도
+            NavMeshHit centerHit;
+            if (NavMesh.SamplePosition(Vector3.zero, out centerHit, 200f, NavMesh.AllAreas))
+            {
+                Debug.LogWarning("[LegendaryPetManager] 랜덤 위치를 찾지 못해 중심점 근처로 스폰합니다.");
+                return centerHit.position;
+            }
+            
+            // 최후의 수단: 매니저 위치 근처
+            if (NavMesh.SamplePosition(transform.position, out centerHit, 100f, NavMesh.AllAreas))
+            {
+                Debug.LogWarning("[LegendaryPetManager] 매니저 위치 근처로 스폰합니다.");
+                return centerHit.position;
+            }
+            
+            Debug.LogError("[LegendaryPetManager] NavMesh 위치를 전혀 찾을 수 없습니다!");
+            return transform.position;
         }
         
         public void SetGlobalEffects(bool enabled)

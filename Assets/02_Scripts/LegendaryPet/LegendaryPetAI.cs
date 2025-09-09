@@ -12,11 +12,16 @@ namespace LegendaryPet
     public class LegendaryPetAI : MonoBehaviour
     {
         [Header("AI 설정")]
-        [SerializeField] private float wanderRadius = 30f;          // 배회 반경
-        [SerializeField] private float minWanderDistance = 10f;     // 최소 이동 거리
-        [SerializeField] private float idleTimeMin = 3f;           // 최소 대기 시간
-        [SerializeField] private float idleTimeMax = 8f;           // 최대 대기 시간
+        [SerializeField] private float wanderRadius = 100f;          // 배회 반경
+        [SerializeField] private float minWanderDistance = 20f;      // 최소 이동 거리
+        [SerializeField] private float idleTimeMin = 3f;            // 최소 대기 시간
+        [SerializeField] private float idleTimeMax = 8f;            // 최대 대기 시간
         [SerializeField] private float specialAnimationChance = 0.1f; // 특별 애니메이션 확률
+        
+        [Header("전역 탐험 설정")]
+        [SerializeField] private float explorationRadius = 200f;     // 전체 탐험 범위
+        [SerializeField] private bool useGlobalExploration = true;   // 전역 탐험 활성화
+        [SerializeField] private float globalExplorationChance = 0.3f; // 먼 곳 탐험 확률
         
         [Header("비행 설정")]
         [SerializeField] [Range(0f, 1f)] private float flyingChance = 0.7f; // 비행 확률 (0~1)
@@ -242,33 +247,65 @@ namespace LegendaryPet
         {
             Vector3 destination = Vector3.zero;
             
-            switch (currentPattern)
+            // 전역 탐험 모드 - 설정된 확률로 먼 곳 탐험
+            if (useGlobalExploration && Random.value < globalExplorationChance)
             {
-                case MovementPattern.Elegant:
-                    destination = GetElegantDestination();
-                    break;
-                    
-                case MovementPattern.Majestic:
-                    destination = GetMajesticDestination();
-                    break;
-                    
-                case MovementPattern.Playful:
-                    destination = GetPlayfulDestination();
-                    break;
-                    
-                case MovementPattern.Patrol:
-                    destination = GetPatrolDestination();
-                    break;
-                    
-                case MovementPattern.Random:
-                default:
-                    destination = GetRandomDestination();
-                    break;
+                destination = GetGlobalExplorationPoint();
+            }
+            else
+            {
+                switch (currentPattern)
+                {
+                    case MovementPattern.Elegant:
+                        destination = GetElegantDestination();
+                        break;
+                        
+                    case MovementPattern.Majestic:
+                        destination = GetMajesticDestination();
+                        break;
+                        
+                    case MovementPattern.Playful:
+                        destination = GetPlayfulDestination();
+                        break;
+                        
+                    case MovementPattern.Patrol:
+                        destination = GetPatrolDestination();
+                        break;
+                        
+                    case MovementPattern.Random:
+                    default:
+                        destination = GetRandomDestination();
+                        break;
+                }
             }
             
             // NavMesh 상의 유효한 위치 찾기
             if (NavMesh.SamplePosition(destination, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
             {
+                // 높이 차이 검증 - 현재 위치와 5미터 이상 차이나면 거부
+                float heightDifference = Mathf.Abs(hit.position.y - transform.position.y);
+                if (heightDifference > 5f)
+                {
+                    // 지면 Raycast로 올바른 높이 찾기
+                    if (Physics.Raycast(destination + Vector3.up * 10f, Vector3.down, out RaycastHit groundHit, 20f))
+                    {
+                        destination.y = groundHit.point.y;
+                        
+                        // 다시 NavMesh 샘플링 시도
+                        if (NavMesh.SamplePosition(destination, out NavMeshHit newHit, 5f, NavMesh.AllAreas))
+                        {
+                            // 새로운 위치도 높이 차이 검증
+                            if (Mathf.Abs(newHit.position.y - transform.position.y) <= 5f)
+                            {
+                                return newHit.position;
+                            }
+                        }
+                    }
+                    
+                    Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 목적지 높이 차이가 너무 큼 ({heightDifference:F1}m)");
+                    return Vector3.zero;
+                }
+                
                 return hit.position;
             }
             
@@ -284,7 +321,11 @@ namespace LegendaryPet
             float angle = Random.Range(-30f, 30f);
             direction = Quaternion.Euler(0, angle, 0) * direction;
             
-            float distance = Random.Range(wanderRadius * 0.6f, wanderRadius);
+            // 더 먼 거리로 이동 가능
+            float distance = useGlobalExploration ? 
+                Random.Range(wanderRadius, wanderRadius * 2f) : 
+                Random.Range(wanderRadius * 0.6f, wanderRadius);
+            
             return transform.position + direction * distance;
         }
         
@@ -313,25 +354,66 @@ namespace LegendaryPet
         
         private Vector3 GetPatrolDestination()
         {
-            // 순찰 패턴: 스폰 지점 주변을 원형으로 순찰
-            float angle = Time.time * 10f; // 시간에 따라 각도 변화
-            float radius = wanderRadius * 0.7f;
-            
-            Vector3 offset = new Vector3(
-                Mathf.Sin(angle * Mathf.Deg2Rad) * radius,
-                0,
-                Mathf.Cos(angle * Mathf.Deg2Rad) * radius
-            );
-            
-            return spawnPosition + offset;
+            if (useGlobalExploration)
+            {
+                // 전역 순찰: 맵의 주요 지점들을 순회
+                Vector3[] patrolPoints = new Vector3[]
+                {
+                    new Vector3(100, 0, 100),
+                    new Vector3(-100, 0, 100),
+                    new Vector3(-100, 0, -100),
+                    new Vector3(100, 0, -100),
+                    new Vector3(0, 0, 0)
+                };
+                
+                int index = Mathf.FloorToInt(Time.time / 30f) % patrolPoints.Length;
+                return patrolPoints[index];
+            }
+            else
+            {
+                // 순찰 패턴: 스폰 지점 주변을 원형으로 순찰
+                float angle = Time.time * 10f; // 시간에 따라 각도 변화
+                float radius = wanderRadius * 0.7f;
+                
+                Vector3 offset = new Vector3(
+                    Mathf.Sin(angle * Mathf.Deg2Rad) * radius,
+                    0,
+                    Mathf.Cos(angle * Mathf.Deg2Rad) * radius
+                );
+                
+                return spawnPosition + offset;
+            }
         }
         
         private Vector3 GetRandomDestination()
         {
-            // 무작위 패턴: 완전히 랜덤한 위치
-            Vector3 randomDirection = Random.insideUnitSphere * wanderRadius;
-            randomDirection.y = 0;
-            return transform.position + randomDirection;
+            if (useGlobalExploration)
+            {
+                // 맵 중심 기준 전역 랜덤
+                Vector3 mapCenter = Vector3.zero;
+                float radius = Random.Range(wanderRadius, explorationRadius);
+                
+                Vector3 randomDirection = Random.insideUnitSphere * radius;
+                randomDirection.y = 0;
+                
+                return mapCenter + randomDirection;
+            }
+            else
+            {
+                // 무작위 패턴: 현재 위치 기준 랜덤
+                Vector3 randomDirection = Random.insideUnitSphere * wanderRadius;
+                randomDirection.y = 0;
+                return transform.position + randomDirection;
+            }
+        }
+        
+        // 전역 탐험 포인트 생성
+        private Vector3 GetGlobalExplorationPoint()
+        {
+            // 맵 전체에서 랜덤 위치 선택
+            float x = Random.Range(-explorationRadius, explorationRadius);
+            float z = Random.Range(-explorationRadius, explorationRadius);
+            return new Vector3(x, 0, z);
         }
         
         // 비행 수행
