@@ -246,69 +246,97 @@ namespace LegendaryPet
         private Vector3 GetWanderDestination()
         {
             Vector3 destination = Vector3.zero;
+            int maxRetries = 3; // 재시도 횟수
             
-            // 전역 탐험 모드 - 설정된 확률로 먼 곳 탐험
-            if (useGlobalExploration && Random.value < globalExplorationChance)
+            for (int retry = 0; retry < maxRetries; retry++)
             {
-                destination = GetGlobalExplorationPoint();
-            }
-            else
-            {
-                switch (currentPattern)
+                // 전역 탐험 모드 - 설정된 확률로 먼 곳 탐험
+                if (useGlobalExploration && Random.value < globalExplorationChance)
                 {
-                    case MovementPattern.Elegant:
-                        destination = GetElegantDestination();
-                        break;
-                        
-                    case MovementPattern.Majestic:
-                        destination = GetMajesticDestination();
-                        break;
-                        
-                    case MovementPattern.Playful:
-                        destination = GetPlayfulDestination();
-                        break;
-                        
-                    case MovementPattern.Patrol:
-                        destination = GetPatrolDestination();
-                        break;
-                        
-                    case MovementPattern.Random:
-                    default:
-                        destination = GetRandomDestination();
-                        break;
+                    destination = GetGlobalExplorationPoint();
                 }
-            }
-            
-            // NavMesh 상의 유효한 위치 찾기
-            if (NavMesh.SamplePosition(destination, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
-            {
-                // 높이 차이 검증 - 현재 위치와 5미터 이상 차이나면 거부
-                float heightDifference = Mathf.Abs(hit.position.y - transform.position.y);
-                if (heightDifference > 5f)
+                else
                 {
-                    // 지면 Raycast로 올바른 높이 찾기
-                    if (Physics.Raycast(destination + Vector3.up * 10f, Vector3.down, out RaycastHit groundHit, 20f))
+                    switch (currentPattern)
                     {
-                        destination.y = groundHit.point.y;
-                        
-                        // 다시 NavMesh 샘플링 시도
-                        if (NavMesh.SamplePosition(destination, out NavMeshHit newHit, 5f, NavMesh.AllAreas))
-                        {
-                            // 새로운 위치도 높이 차이 검증
-                            if (Mathf.Abs(newHit.position.y - transform.position.y) <= 5f)
-                            {
-                                return newHit.position;
-                            }
-                        }
+                        case MovementPattern.Elegant:
+                            destination = GetElegantDestination();
+                            break;
+                            
+                        case MovementPattern.Majestic:
+                            destination = GetMajesticDestination();
+                            break;
+                            
+                        case MovementPattern.Playful:
+                            destination = GetPlayfulDestination();
+                            break;
+                            
+                        case MovementPattern.Patrol:
+                            destination = GetPatrolDestination();
+                            break;
+                            
+                        case MovementPattern.Random:
+                        default:
+                            destination = GetRandomDestination();
+                            break;
                     }
-                    
-                    Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 목적지 높이 차이가 너무 큼 ({heightDifference:F1}m)");
-                    return Vector3.zero;
                 }
                 
-                return hit.position;
+                // NavMesh 상의 유효한 위치 찾기
+                if (NavMesh.SamplePosition(destination, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
+                {
+                    // 펫 타입별 높이 제한 설정
+                    float maxHeightDifference = 15f; // 기본값 15m (이전 5m에서 완화)
+                    
+                    // 날 수 있는 펫은 더 큰 높이 차이 허용
+                    if (controller.Traits.canFly)
+                    {
+                        maxHeightDifference = 20f;
+                    }
+                    
+                    // 높이 차이 검증
+                    float heightDifference = Mathf.Abs(hit.position.y - transform.position.y);
+                    if (heightDifference > maxHeightDifference)
+                    {
+                        // 지면 Raycast로 올바른 높이 찾기
+                        if (Physics.Raycast(destination + Vector3.up * 10f, Vector3.down, out RaycastHit groundHit, 30f))
+                        {
+                            destination.y = groundHit.point.y;
+                            
+                            // 다시 NavMesh 샘플링 시도
+                            if (NavMesh.SamplePosition(destination, out NavMeshHit newHit, 10f, NavMesh.AllAreas))
+                            {
+                                // 새로운 위치도 높이 차이 검증
+                                if (Mathf.Abs(newHit.position.y - transform.position.y) <= maxHeightDifference)
+                                {
+                                    Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 조정 후 유효한 목적지 찾음");
+                                    return newHit.position;
+                                }
+                            }
+                        }
+                        
+                        // 재시도할 경우 경고는 마지막에만 출력
+                        if (retry == maxRetries - 1)
+                        {
+                            Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 목적지 높이 차이가 너무 큼 ({heightDifference:F1}m > {maxHeightDifference}m) - {retry + 1}번 시도 실패");
+                        }
+                        else
+                        {
+                            Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m - 재시도 {retry + 1}/{maxRetries}");
+                        }
+                        continue; // 다음 재시도
+                    }
+                    
+                    // 유효한 목적지 찾음
+                    if (heightDifference > 5f)
+                    {
+                        Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m의 목적지로 이동");
+                    }
+                    return hit.position;
+                }
             }
             
+            Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: {maxRetries}번 시도 후 유효한 목적지를 찾지 못함");
             return Vector3.zero;
         }
         
