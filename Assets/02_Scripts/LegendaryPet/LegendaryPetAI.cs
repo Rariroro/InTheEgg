@@ -286,7 +286,7 @@ namespace LegendaryPet
                 if (NavMesh.SamplePosition(destination, out NavMeshHit hit, wanderRadius, NavMesh.AllAreas))
                 {
                     // 펫 타입별 높이 제한 설정
-                    float maxHeightDifference = 15f; // 기본값 15m (이전 5m에서 완화)
+                    float maxHeightDifference = 20f; // 기본값 15m (이전 5m에서 완화)
                     
                     // 날 수 있는 펫은 더 큰 높이 차이 허용
                     if (controller.Traits.canFly)

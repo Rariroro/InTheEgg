@@ -275,13 +275,9 @@ namespace LegendaryPet
                 switch (petType)
                 {
                     case LegendaryPetType.Dragon:
-                    case LegendaryPetType.Phoenix:
-                        animator.SetTrigger("Roar");
-                        break;
+                   
                     case LegendaryPetType.Unicorn:
-                    case LegendaryPetType.Pegasus:
-                        animator.SetTrigger("Rear");
-                        break;
+                  
                     default:
                         animator.SetTrigger("Special");
                         break;
