@@ -318,7 +318,10 @@ namespace LegendaryPet
             // NavMeshAgent 비활성화
             if (agent != null && agent.enabled)
             {
-                agent.isStopped = true;
+                if (agent.isOnNavMesh)
+                {
+                    agent.isStopped = true;
+                }
                 agent.enabled = false;
             }
             
