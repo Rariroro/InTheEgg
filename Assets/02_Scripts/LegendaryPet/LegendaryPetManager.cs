@@ -12,14 +12,21 @@ namespace LegendaryPet
     public class LegendaryPetManager : MonoBehaviour
     {
         private static LegendaryPetManager instance;
+        private static bool applicationIsQuitting = false;
+        
         public static LegendaryPetManager Instance
         {
             get
             {
+                if (applicationIsQuitting)
+                {
+                    return null;
+                }
+                
                 if (instance == null)
                 {
                     instance = FindObjectOfType<LegendaryPetManager>();
-                    if (instance == null)
+                    if (instance == null && Application.isPlaying)
                     {
                         GameObject managerObject = new GameObject("LegendaryPetManager");
                         instance = managerObject.AddComponent<LegendaryPetManager>();
@@ -80,6 +87,7 @@ namespace LegendaryPet
             
             instance = this;
             DontDestroyOnLoad(gameObject);
+            applicationIsQuitting = false;
             
             Debug.Log("[LegendaryPetManager] 매니저 초기화 완료");
         }
@@ -524,6 +532,42 @@ namespace LegendaryPet
                     Gizmos.DrawLine(transform.position, pet.transform.position);
                 }
             }
+        }
+        
+        private void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
+            }
+            
+            // 대기 중인 선물 정리
+            if (pendingGifts != null)
+            {
+                foreach (var gift in pendingGifts.Keys)
+                {
+                    if (gift != null)
+                    {
+                        Destroy(gift);
+                    }
+                }
+                pendingGifts.Clear();
+            }
+            
+            // 레전드 펫 리스트 정리
+            if (legendaryPets != null)
+            {
+                legendaryPets.Clear();
+            }
+            
+            // 이벤트 구독 해제
+            OnLegendaryPetSpawned = null;
+            OnLegendaryPetRemoved = null;
+        }
+        
+        private void OnApplicationQuit()
+        {
+            applicationIsQuitting = true;
         }
     }
 }

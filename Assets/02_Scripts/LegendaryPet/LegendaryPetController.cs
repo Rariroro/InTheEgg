@@ -314,6 +314,8 @@ namespace LegendaryPet
                 StopCoroutine(flyingCoroutine);
             }
             
+
+            
             flyingCoroutine = StartCoroutine(FlyToDestination());
             return true;
         }
