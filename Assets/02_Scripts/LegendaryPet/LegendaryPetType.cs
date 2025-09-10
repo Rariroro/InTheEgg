@@ -57,6 +57,9 @@ namespace LegendaryPet
                     traits.particleAmount = 150f;
                     traits.canFly = true;
                     traits.hasAura = true;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
+                    traits.flyAnimIndex = 10;
                     break;
                     
                 case LegendaryPetType.Unicorn:
@@ -76,6 +79,9 @@ namespace LegendaryPet
                     traits.particleAmount = 60f;
                     traits.canFly = true;
                     traits.hasAura = false;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
+                    traits.flyAnimIndex = 8;
                     break;
                     
                 case LegendaryPetType.Pegasus:
@@ -84,6 +90,9 @@ namespace LegendaryPet
                     traits.particleAmount = 70f;
                     traits.canFly = true;
                     traits.hasAura = true;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
+                    traits.flyAnimIndex = 8;
                     break;
                     
                 case LegendaryPetType.Cerberus:
@@ -92,6 +101,8 @@ namespace LegendaryPet
                     traits.particleAmount = 50f;
                     traits.canFly = false;
                     traits.hasAura = false;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
                     break;
                     
                 case LegendaryPetType.Sphinx:
@@ -100,6 +111,8 @@ namespace LegendaryPet
                     traits.particleAmount = 40f;
                     traits.canFly = false;
                     traits.hasAura = true;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
                     break;
                     
                 case LegendaryPetType.Hydra:
@@ -108,6 +121,8 @@ namespace LegendaryPet
                     traits.particleAmount = 90f;
                     traits.canFly = false;
                     traits.hasAura = false;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
                     break;
                     
                 default:
@@ -116,6 +131,8 @@ namespace LegendaryPet
                     traits.particleAmount = 50f;
                     traits.canFly = false;
                     traits.hasAura = false;
+                    traits.walkAnimIndex = 2;
+                    traits.runAnimIndex = 3;
                     break;
             }
             

@@ -266,25 +266,6 @@ namespace LegendaryPet
             }
         }
         
-        public void PlaySpecialAnimation()
-        {
-            // AnimatorController 체크 추가
-            if (animator != null && animator.runtimeAnimatorController != null)
-            {
-                // 특별 애니메이션 재생 (펫 타입별로 다른 애니메이션)
-                switch (petType)
-                {
-                    case LegendaryPetType.Dragon:
-                   
-                    case LegendaryPetType.Unicorn:
-                  
-                    default:
-                        animator.SetTrigger("Special");
-                        break;
-                }
-            }
-        }
-        
         // 비행 시작
         public bool StartFlying(Vector3 destination)
         {
@@ -389,10 +370,15 @@ namespace LegendaryPet
             
             // 목적지로 비행
             float flightTimeout = 0f;
-            float maxFlightTime = 30f; // 최대 비행 시간 제한
             Vector3 startPosition = transform.position;
             float totalDistance = Vector3.Distance(new Vector3(startPosition.x, 0, startPosition.z), 
                                                   new Vector3(flyDestination.x, 0, flyDestination.z));
+            
+            // 거리에 따른 동적 비행 시간 계산 (거리/속도 + 여유시간)
+            float expectedFlightTime = totalDistance / flySpeed;  // 예상 비행 시간
+            float maxFlightTime = expectedFlightTime + 10f;       // 10초 여유 추가
+            
+            Debug.Log($"[LegendaryPet] {petName}: 비행 시작 - 거리: {totalDistance:F1}, 예상 시간: {expectedFlightTime:F1}초, 제한 시간: {maxFlightTime:F1}초");
             
             while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), 
                                    new Vector3(flyDestination.x, 0, flyDestination.z)) > 1f)
@@ -401,7 +387,7 @@ namespace LegendaryPet
                 flightTimeout += Time.deltaTime;
                 if (flightTimeout > maxFlightTime)
                 {
-                    Debug.LogWarning($"[LegendaryPet] {petName}: 비행 시간 초과, 강제 착륙합니다.");
+                    Debug.LogWarning($"[LegendaryPet] {petName}: 비행 시간 초과 ({flightTimeout:F1}/{maxFlightTime:F1}초), 강제 착륙합니다.");
                     break;
                 }
                 
