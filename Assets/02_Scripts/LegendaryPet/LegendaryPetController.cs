@@ -392,13 +392,14 @@ namespace LegendaryPet
                 }
                 
                 // 목적지 유효성 재검증 (주기적으로)
-                if (flightTimeout % 5f < Time.deltaTime) // 5초마다 체크
+                if (flightTimeout % 10f < Time.deltaTime) // 10초마다 체크 (5초에서 변경)
                 {
                     NavMeshHit navHit;
                     if (!NavMesh.SamplePosition(flyDestination, out navHit, 30f, NavMesh.AllAreas))
                     {
-                        Debug.LogWarning($"[LegendaryPet] {petName}: 목적지가 더 이상 유효하지 않습니다. 착륙합니다.");
-                        break;
+                        Debug.LogWarning($"[LegendaryPet] {petName}: 목적지가 더 이상 유효하지 않습니다. 부드럽게 착륙합니다.");
+                        // 즉시 중단하지 않고 현재 위치에서 착륙 유도
+                        flyDestination = new Vector3(transform.position.x, 0, transform.position.z);
                     }
                 }
                 
@@ -451,9 +452,24 @@ namespace LegendaryPet
             
             // 착륙 전 높이 정규화 (Sin 파동 제거)
             Vector3 normalizedPos = transform.position;
+            // Sin 파동 효과를 제거하고 실제 비행 높이로 설정
             normalizedPos.y = currentFlyHeight; // Sin 파동 없는 실제 비행 높이
+            
+            // 부드러운 전환을 위해 보간
+            float normalizeTime = 0.5f; // 0.5초 동안 부드럽게 전환
+            float normalizeElapsed = 0f;
+            Vector3 startPos = transform.position;
+            
+            while (normalizeElapsed < normalizeTime)
+            {
+                normalizeElapsed += Time.deltaTime;
+                float t = normalizeElapsed / normalizeTime;
+                transform.position = Vector3.Lerp(startPos, normalizedPos, t);
+                yield return null;
+            }
+            
             transform.position = normalizedPos;
-            Debug.Log($"[LegendaryPet] {petName}: 착륙 준비 - 정규화된 높이: {normalizedPos.y:F2}");
+            Debug.Log($"[LegendaryPet] {petName}: 착륙 준비 완료 - 정규화된 높이: {normalizedPos.y:F2}");
             
             // 착륙
             yield return StartCoroutine(Land());
@@ -571,8 +587,8 @@ namespace LegendaryPet
                 yield return null;
             }
             
-            // 부드러운 하강이 끝났으므로 추가 위치 조정 없음
-            // transform.position = targetLandingPos; // 이 줄 제거!
+            // 착륙 완료 - 최종 위치 미세 조정만 수행
+            // 이미 부드럽게 착륙했으므로 강제 위치 설정하지 않음
             
             // NavMeshAgent 재활성화
             if (agent != null)
@@ -580,10 +596,12 @@ namespace LegendaryPet
                 // 활성화 전에 위치 확인
                 if (NavMesh.SamplePosition(transform.position, out navHit, 5f, NavMesh.AllAreas))
                 {
-                    // 너무 큰 차이가 있을 때만 조정
-                    if (Vector3.Distance(transform.position, navHit.position) > 0.5f)
+                    // 위치 차이 허용 범위를 2f로 완화 (순간이동 방지)
+                    if (Vector3.Distance(transform.position, navHit.position) > 2f)
                     {
-                        transform.position = navHit.position;
+                        // 너무 큰 차이가 있을 때만 부드럽게 조정
+                        Debug.LogWarning($"[LegendaryPet] {petName}: NavMesh 위치 차이 {Vector3.Distance(transform.position, navHit.position):F2}m - 조정 필요");
+                        transform.position = Vector3.Lerp(transform.position, navHit.position, 0.5f);
                     }
                 }
                 
