@@ -433,10 +433,8 @@ namespace LegendaryPet
                 // 부드러운 상하 움직임 추가 (착륙 가까이에서는 감소)
                 newPos.y = currentFlyHeight + Mathf.Sin(Time.time * bobSpeed) * bobAmount * bobMultiplier;
                 
-                // 맵 경계 체크 (예시: -200 ~ 200 범위)
-                float mapBoundary = 200f;
-                newPos.x = Mathf.Clamp(newPos.x, -mapBoundary, mapBoundary);
-                newPos.z = Mathf.Clamp(newPos.z, -mapBoundary, mapBoundary);
+                // 맵 경계 제한 제거 - NavMesh 범위 내에서 자유롭게 비행
+                // NavMesh가 설정된 전체 영역을 활용할 수 있도록 함
                 
                 transform.position = newPos;
                 
