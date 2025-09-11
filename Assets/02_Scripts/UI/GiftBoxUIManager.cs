@@ -40,6 +40,7 @@ public class GiftBoxUIManager : MonoBehaviour
     private PetManager petManager;
     private EnvironmentManager environmentManager;
     private TreasureHuntManager treasureHuntManager;
+    private LegendaryPet.LegendaryPetManager legendaryPetManager;
     
     // 카메라 원래 위치 저장
     private Vector3 originalCameraPosition;
@@ -78,6 +79,7 @@ public class GiftBoxUIManager : MonoBehaviour
         petManager = FindObjectOfType<PetManager>();
         environmentManager = FindObjectOfType<EnvironmentManager>();
         treasureHuntManager = TreasureHuntManager.Instance;
+        legendaryPetManager = LegendaryPet.LegendaryPetManager.Instance;
         
         // 원래 카메라 위치 저장
         if (mainCamera != null)
@@ -91,6 +93,7 @@ public class GiftBoxUIManager : MonoBehaviour
         activeGifts["pet"] = new List<GameObject>();
         activeGifts["environment"] = new List<GameObject>();
         activeGifts["treasure"] = new List<GameObject>();  // 보물 타입 추가
+        activeGifts["legendary"] = new List<GameObject>();  // 레전드 펫 타입 추가
         
         // 주기적으로 선물 상자 체크
         InvokeRepeating(nameof(UpdateGiftBoxes), 0.5f, 0.5f);
@@ -158,6 +161,16 @@ public class GiftBoxUIManager : MonoBehaviour
             
             UpdateGiftButton("treasure");
         }
+        
+        // 레전드 펫 선물 상자 업데이트
+        if (legendaryPetManager != null)
+        {
+            var legendaryGifts = GetLegendaryGiftBoxes();
+            activeGifts["legendary"].Clear();
+            activeGifts["legendary"].AddRange(legendaryGifts);
+            
+            UpdateGiftButton("legendary");
+        }
     }
     
     // PetManager에서 선물 상자 가져오기
@@ -188,6 +201,17 @@ public class GiftBoxUIManager : MonoBehaviour
         if (treasureHuntManager != null)
         {
             return treasureHuntManager.GetDroppedTreasureList();
+        }
+        
+        return new List<GameObject>();
+    }
+    
+    // LegendaryPetManager에서 선물 상자 가져오기
+    private List<GameObject> GetLegendaryGiftBoxes()
+    {
+        if (legendaryPetManager != null)
+        {
+            return legendaryPetManager.GetPendingGiftList();
         }
         
         return new List<GameObject>();

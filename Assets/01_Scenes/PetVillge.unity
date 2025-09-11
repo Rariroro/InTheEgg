@@ -25882,6 +25882,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: giftPrefab
+      value: 
+      objectReference: {fileID: 1558863309331682, guid: a4c8a64405f70497a8960c8840f1ae5f, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -82785,11 +82789,19 @@ MonoBehaviour:
   legendaryPetPrefabs:
   - {fileID: 6264055543194103547, guid: f0f905d5ab2404575b479dcc11814dd9, type: 3}
   - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
+  - {fileID: 9045861745722796555, guid: 81e55e3a6d11f467e80e2c6e53b5127a, type: 3}
   spawnRadius: 20
   maxLegendaryPets: 10
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
-  giftPrefab: {fileID: 0}
+  giftPrefab: {fileID: 1920111936519340, guid: 5d6d392351378457bbb7849925498e79, type: 3}
   celebrationEffectPrefab: {fileID: 0}
   giftSpawnDelay: 0.5
   fireworkPrefabs: []
@@ -96853,14 +96865,22 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3706098258728710482, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}
       propertyPath: giftTypeIcons.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 3706098258728710482, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}
       propertyPath: giftTypeIcons.Array.data[2].icon
       value: 
       objectReference: {fileID: 21300000, guid: a104414bc8b404529bd1c0af713aa786, type: 3}
     - target: {fileID: 3706098258728710482, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}
+      propertyPath: giftTypeIcons.Array.data[3].icon
+      value: 
+      objectReference: {fileID: 21300000, guid: a104414bc8b404529bd1c0af713aa786, type: 3}
+    - target: {fileID: 3706098258728710482, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}
       propertyPath: giftTypeIcons.Array.data[2].giftType
+      value: treasure
+      objectReference: {fileID: 0}
+    - target: {fileID: 3706098258728710482, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}
+      propertyPath: giftTypeIcons.Array.data[3].giftType
       value: treasure
       objectReference: {fileID: 0}
     - target: {fileID: 3817386834751745334, guid: 5d3e516bbce774c628a8c8a799740fdc, type: 3}

@@ -63,6 +63,10 @@ namespace LegendaryPet
         // 대기 중인 선물들과 해당 레전드 펫 정보를 저장하는 딕셔너리
         private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
         
+        // 터치 처리 최적화를 위한 변수
+        private float lastTouchTime;
+        private const float TOUCH_COOLDOWN = 0.1f;
+        
         [Header("특수 효과 설정")]
         [SerializeField] private bool globalEffectsEnabled = true;
         [SerializeField] private float effectIntensityMultiplier = 1f;
@@ -96,6 +100,46 @@ namespace LegendaryPet
         {
             // PetManager와 동일하게 환경 준비 완료 후 스폰
             StartCoroutine(WaitForEnvironmentAndSpawnLegendaryPets());
+        }
+        
+        private void Update()
+        {
+            // 선물이 없으면 Update 실행하지 않음
+            if (pendingGifts.Count == 0) return;
+            
+            // 터치 쿨다운 체크
+            if (Time.time - lastTouchTime < TOUCH_COOLDOWN) return;
+            
+            // 선물 터치 감지
+            HandleGiftTouch();
+        }
+        
+        private void HandleGiftTouch()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                lastTouchTime = Time.time;
+                
+                if (Camera.main == null) return;
+                
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                
+                // Ignore Raycast 레이어를 제외한 모든 레이어와 충돌 검사
+                int layerMask = ~LayerMask.GetMask("Ignore Raycast");
+                
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+                {
+                    GameObject hitObject = hit.collider.gameObject;
+                    
+                    // 터치한 오브젝트가 대기 중인 선물인지 확인
+                    if (pendingGifts.ContainsKey(hitObject))
+                    {
+                        string legendaryPetId = pendingGifts[hitObject];
+                        StartCoroutine(OpenGiftCoroutine(hitObject, legendaryPetId));
+                    }
+                }
+            }
         }
         
         // 환경 준비 완료까지 기다리는 코루틴 (PetManager와 동일)
@@ -229,29 +273,47 @@ namespace LegendaryPet
             OnLegendaryPetRemoved?.Invoke(pet);
         }
         
-        // 레전드 펫 ID로 스폰 (PetManager와 동일한 방식)
+        // 레전드 펫 ID로 스폰 (새로운 ID 형식 지원)
         private void SpawnLegendaryPet(string legendaryPetId, bool withFirstAppearanceEffect)
         {
-            // 레전드 펫 ID 형식: "legend_001", "legend_002", ... 에서 숫자 부분 추출
-            if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
+            int legendIndex = -1;
+            
+            // 새로운 ID 형식: "unicorn1", "unicorn2", ..., "dragon1", "dragon2", ...
+            if (legendaryPetId.StartsWith("unicorn"))
             {
-                string numberPart = legendaryPetId.Substring(7); // "001", "002", ...
-                if (int.TryParse(numberPart, out int legendIndex))
+                string numberPart = legendaryPetId.Replace("unicorn", "");
+                if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
                 {
-                    // 인덱스는 0부터 시작하므로 1을 빼줌
-                    legendIndex = legendIndex - 1;
-                    
-                    // 유효한 인덱스인지 확인
-                    if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
-                    {
-                        Vector3 spawnPosition = GetRandomSpawnPosition();
-                        SpawnLegendaryPetAtPosition(legendaryPetId, spawnPosition, withFirstAppearanceEffect);
-                    }
-                    else
-                    {
-                        Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 인덱스: {legendIndex}");
-                    }
+                    legendIndex = unicornNumber - 1; // 유니콘은 인덱스 0-4
                 }
+            }
+            else if (legendaryPetId.StartsWith("dragon"))
+            {
+                string numberPart = legendaryPetId.Replace("dragon", "");
+                if (int.TryParse(numberPart, out int dragonNumber) && dragonNumber >= 1 && dragonNumber <= 5)
+                {
+                    legendIndex = dragonNumber + 4; // 드래곤은 인덱스 5-9
+                }
+            }
+            // 기존 ID 형식도 지원: "legend_001", "legend_002", ...
+            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
+            {
+                string numberPart = legendaryPetId.Substring(7);
+                if (int.TryParse(numberPart, out int number))
+                {
+                    legendIndex = number - 1;
+                }
+            }
+            
+            // 유효한 인덱스인지 확인하고 스폰
+            if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
+            {
+                Vector3 spawnPosition = GetRandomSpawnPosition();
+                SpawnLegendaryPetAtPosition(legendaryPetId, spawnPosition, withFirstAppearanceEffect);
+            }
+            else
+            {
+                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 ID: {legendaryPetId}");
             }
         }
         
@@ -264,51 +326,75 @@ namespace LegendaryPet
                 return;
             }
             
-            // 레전드 펫 ID에서 인덱스 추출
-            if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
+            int legendIndex = -1;
+            
+            // 새로운 ID 형식 처리
+            if (legendaryPetId.StartsWith("unicorn"))
+            {
+                string numberPart = legendaryPetId.Replace("unicorn", "");
+                if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
+                {
+                    legendIndex = unicornNumber - 1;
+                }
+            }
+            else if (legendaryPetId.StartsWith("dragon"))
+            {
+                string numberPart = legendaryPetId.Replace("dragon", "");
+                if (int.TryParse(numberPart, out int dragonNumber) && dragonNumber >= 1 && dragonNumber <= 5)
+                {
+                    legendIndex = dragonNumber + 4;
+                }
+            }
+            // 기존 ID 형식도 지원
+            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
             {
                 string numberPart = legendaryPetId.Substring(7);
-                if (int.TryParse(numberPart, out int legendIndex))
+                if (int.TryParse(numberPart, out int number))
                 {
-                    legendIndex = legendIndex - 1;
-                    
-                    if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
-                    {
-                        // NavMesh 위의 가장 가까운 유효한 위치 찾기
-                        NavMeshHit hit;
-                        Vector3 spawnPosition = position;
-                        
-                        if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))  // 50f → 100f 확대
-                        {
-                            spawnPosition = hit.position;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
-                        }
-                        
-                        // 레전드 펫 스폰
-                        GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], spawnPosition, Quaternion.identity);
-                        LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
-                        
-                        if (controller != null)
-                        {
-                            // 최초 등장 효과
-                            if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
-                            {
-                                GameObject effect = Instantiate(firstAppearanceEffectPrefab, spawnPosition, Quaternion.identity);
-                                Destroy(effect, 5f);
-                            }
-                            
-                            Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
-                        }
-                        else
-                        {
-                            Debug.LogError($"[LegendaryPetManager] {legendaryPetId}: LegendaryPetController를 찾을 수 없습니다");
-                            Destroy(legendObject);
-                        }
-                    }
+                    legendIndex = number - 1;
                 }
+            }
+            
+            // 유효한 인덱스인지 확인
+            if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
+            {
+                // NavMesh 위의 가장 가까운 유효한 위치 찾기
+                NavMeshHit hit;
+                Vector3 spawnPosition = position;
+                
+                if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))  // 50f → 100f 확대
+                {
+                    spawnPosition = hit.position;
+                }
+                else
+                {
+                    Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
+                }
+                
+                // 레전드 펫 스폰
+                GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], spawnPosition, Quaternion.identity);
+                LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
+                
+                if (controller != null)
+                {
+                    // 최초 등장 효과
+                    if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
+                    {
+                        GameObject effect = Instantiate(firstAppearanceEffectPrefab, spawnPosition, Quaternion.identity);
+                        Destroy(effect, 5f);
+                    }
+                    
+                    Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
+                }
+                else
+                {
+                    Debug.LogError($"[LegendaryPetManager] {legendaryPetId}: LegendaryPetController를 찾을 수 없습니다");
+                    Destroy(legendObject);
+                }
+            }
+            else
+            {
+                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 인덱스: {legendIndex} (ID: {legendaryPetId})");
             }
         }
         
@@ -340,40 +426,54 @@ namespace LegendaryPet
             Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - 위치: {giftPosition}");
         }
         
-        // 선물 열기 (터치 시 호출)
+        // 선물 열기 코루틴
+        private IEnumerator OpenGiftCoroutine(GameObject gift, string legendaryPetId)
+        {
+            if (gift == null || !pendingGifts.ContainsKey(gift))
+                yield break;
+            
+            Vector3 giftPosition = gift.transform.position;
+            
+            // 선물 제거
+            pendingGifts.Remove(gift);
+            
+            // 축하 효과
+            if (celebrationEffectPrefab != null)
+            {
+                GameObject celebration = Instantiate(celebrationEffectPrefab, giftPosition, Quaternion.identity);
+                Destroy(celebration, 5f);
+            }
+            
+            // 불꽃놀이 효과
+            if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
+            {
+                GameObject firework = Instantiate(
+                    fireworkPrefabs[Random.Range(0, fireworkPrefabs.Count)],
+                    giftPosition + Vector3.up * 5f,
+                    Quaternion.identity
+                );
+                Destroy(firework, 10f);
+            }
+            
+            // 선물 오브젝트 제거
+            Destroy(gift);
+            
+            // 약간의 딜레이 후 펫 스폰
+            yield return new WaitForSeconds(0.5f);
+            
+            // 레전드 펫 스폰
+            SpawnLegendaryPetAtPosition(legendaryPetId, giftPosition, true);
+            
+            Debug.Log($"[LegendaryPetManager] 선물 열기 완료: {legendaryPetId}");
+        }
+        
+        // 기존 OpenGift 메서드 (외부에서 호출용)
         public void OpenGift(GameObject gift)
         {
             if (gift != null && pendingGifts.ContainsKey(gift))
             {
                 string legendaryPetId = pendingGifts[gift];
-                Vector3 giftPosition = gift.transform.position;
-                
-                // 선물 제거
-                pendingGifts.Remove(gift);
-                Destroy(gift);
-                
-                // 축하 효과
-                if (celebrationEffectPrefab != null)
-                {
-                    GameObject celebration = Instantiate(celebrationEffectPrefab, giftPosition, Quaternion.identity);
-                    Destroy(celebration, 5f);
-                }
-                
-                // 불꽃놀이 효과
-                if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
-                {
-                    GameObject firework = Instantiate(
-                        fireworkPrefabs[Random.Range(0, fireworkPrefabs.Count)],
-                        giftPosition + Vector3.up * 5f,
-                        Quaternion.identity
-                    );
-                    Destroy(firework, 10f);
-                }
-                
-                // 레전드 펫 스폰
-                SpawnLegendaryPetAtPosition(legendaryPetId, giftPosition, true);
-                
-                Debug.Log($"[LegendaryPetManager] 선물 열기 완료: {legendaryPetId}");
+                StartCoroutine(OpenGiftCoroutine(gift, legendaryPetId));
             }
         }
         

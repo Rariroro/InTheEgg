@@ -203,6 +203,16 @@ public class PetSelectionUI : MonoBehaviour
 
     void OnStartButtonClicked()
     {
+        // 레전드 펫 선택 여부도 함께 로깅
+        if (LegendaryPet.LegendaryPetSelectionManager.Instance != null)
+        {
+            int legendCount = LegendaryPet.LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count;
+            if (legendCount > 0)
+            {
+                Debug.Log($"선택된 레전드 펫: {legendCount}개");
+            }
+        }
+        
         PetSelectionManager.Instance.LoadGameScene();
     }
 }
