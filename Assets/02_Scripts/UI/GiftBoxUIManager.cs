@@ -262,6 +262,7 @@ public class GiftBoxUIManager : MonoBehaviour
             {
                 Destroy(giftButtons[giftType]);
                 giftButtons.Remove(giftType);
+                ReorganizeButtons(); // 버튼 제거 후 재정렬
             }
             return;
         }
@@ -284,11 +285,6 @@ public class GiftBoxUIManager : MonoBehaviour
         GameObject buttonObj = Instantiate(giftButtonPrefab, buttonContainer);
         giftButtons[giftType] = buttonObj;
         
-        // 위치 설정
-        int index = giftButtons.Count - 1;
-        RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = new Vector2(index * buttonSpacing, 0);
-        
         // 아이콘 설정
         var icon = giftTypeIcons.Find(x => x.giftType == giftType);
         if (icon != null && icon.icon != null)
@@ -306,6 +302,31 @@ public class GiftBoxUIManager : MonoBehaviour
         {
             string type = giftType; // 클로저용
             button.onClick.AddListener(() => OnGiftButtonClicked(type));
+        }
+        
+        // 버튼 생성 후 모든 버튼 재정렬
+        ReorganizeButtons();
+    }
+    
+    // 버튼들을 오른쪽에서 왼쪽으로 재정렬
+    private void ReorganizeButtons()
+    {
+        // 버튼 타입 순서 정의 (오른쪽에서 왼쪽으로)
+        string[] buttonOrder = { "legendary", "treasure", "environment", "pet" };
+        int currentIndex = 0;
+        
+        foreach (string type in buttonOrder)
+        {
+            if (giftButtons.ContainsKey(type) && giftButtons[type] != null)
+            {
+                RectTransform rect = giftButtons[type].GetComponent<RectTransform>();
+                if (rect != null)
+                {
+                    // 오른쪽에서 시작 (음수 값으로 왼쪽으로 이동)
+                    rect.anchoredPosition = new Vector2(-currentIndex * buttonSpacing, 0);
+                    currentIndex++;
+                }
+            }
         }
     }
     
