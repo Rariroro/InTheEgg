@@ -46,6 +46,8 @@ public class GiftBoxUIManager : MonoBehaviour
     private Vector3 originalCameraPosition;
     private Quaternion originalCameraRotation;
     private float originalCameraFOV; // 원래 FOV 값 저장
+    private Vector3 originalCameraParentPosition; // 카메라 부모 오브젝트 위치 저장
+    private GameObject cameraParent; // CameraController 오브젝트 참조
     private bool isCameraMoving = false;
     
     // 싱글톤
@@ -66,10 +68,24 @@ public class GiftBoxUIManager : MonoBehaviour
     {
         instance = this;
         
-        // 카메라 찾기
+        // CameraController의 자식 카메라 찾기
         if (mainCamera == null)
         {
-            mainCamera = Camera.main;
+            CameraController cameraController = FindObjectOfType<CameraController>();
+            if (cameraController != null)
+            {
+                cameraParent = cameraController.gameObject;
+                mainCamera = cameraController.GetComponentInChildren<Camera>();
+                if (mainCamera == null)
+                {
+                    Debug.LogWarning("CameraController에서 자식 카메라를 찾을 수 없습니다. Camera.main 사용");
+                    mainCamera = Camera.main;
+                }
+            }
+            else
+            {
+                mainCamera = Camera.main;
+            }
         }
     }
     
@@ -87,6 +103,12 @@ public class GiftBoxUIManager : MonoBehaviour
             originalCameraPosition = mainCamera.transform.position;
             originalCameraRotation = mainCamera.transform.rotation;
             originalCameraFOV = mainCamera.fieldOfView; // FOV 값 저장
+            
+            // 카메라 부모 오브젝트 위치도 저장
+            if (cameraParent != null)
+            {
+                originalCameraParentPosition = cameraParent.transform.position;
+            }
         }
         
         // 선물 타입별 리스트 초기화
@@ -375,6 +397,12 @@ public class GiftBoxUIManager : MonoBehaviour
         
         // 3초 후 원래 위치로 복귀
         yield return new WaitForSeconds(3f);
+        
+        // 카메라 부모 오브젝트 위치 복원
+        if (cameraParent != null)
+        {
+            cameraParent.transform.position = originalCameraParentPosition;
+        }
         
         // 원래 위치로 복귀 (FOV 포함)
         yield return MoveCameraToPosition(originalCameraPosition, originalCameraRotation, originalCameraFOV);
