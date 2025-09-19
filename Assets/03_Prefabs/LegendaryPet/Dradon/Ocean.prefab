@@ -612,6 +612,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6184042778173709005}
   - component: {fileID: 8234732627566468282}
+  - component: {fileID: -3169589788181900612}
+  - component: {fileID: -5656011418742004938}
   m_Layer: 0
   m_Name: Ocean
   m_TagString: Untagged
@@ -663,6 +665,63 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!195 &-3169589788181900612
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3456018285846243268}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &-5656011418742004938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3456018285846243268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e570ae4b9a9a04792949a72a8590de27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  petType: 0
+  petName: Legendary Pet
+  traits:
+    moveSpeed: 0
+    glowIntensity: 0
+    particleAmount: 0
+    canFly: 0
+    hasAura: 0
+    walkAnimIndex: 0
+    runAnimIndex: 0
+    flyAnimIndex: 0
+  isActive: 1
+  isMoving: 0
+  isFlying: 0
+  flyHeight: 5
+  ascendSpeed: 2
+  descendSpeed: 3
+  flySpeed: 8
+  bobAmount: 0.5
+  bobSpeed: 2
+  glowEffect: {fileID: 0}
+  auraEffect: {fileID: 0}
+  petLight: {fileID: 0}
 --- !u!1 &3495022511060544743
 GameObject:
   m_ObjectHideFlags: 0

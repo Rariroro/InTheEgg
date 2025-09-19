@@ -38,11 +38,15 @@ namespace LegendaryPet
         }
         
         [Header("레전드 펫 프리팹")]
+        // 중요: 프리팹 할당 순서가 ID와 매칭됩니다!
+        // [0-10]: 드래곤 11개 (Amber, Blossom, Cloud, Ocean, Peach, Snow, Spring, Star, Storm, Sunset, Volcano)
+        // [11-20]: 유니콘 10개 (Dream, Mint, Night, Prism, Pure, Rose, Shadow, Sky, Terra, Twin)
+        // pet_legend_001 = 배열[0], pet_legend_021 = 배열[20]
         public GameObject[] legendaryPetPrefabs;  // 레전드 펫 프리팹 배열 (인덱스로 관리)
-        
+
         [Header("스폰 설정")]
         public float spawnRadius = 50f;  // 스폰 반경
-        public int maxLegendaryPets = 3; // 동시에 존재할 수 있는 최대 레전드 펫 수
+        public int maxLegendaryPets = 21; // 동시에 존재할 수 있는 최대 레전드 펫 수 (전체 21개)
         
         [Header("최초 등장 효과")]
         public GameObject firstAppearanceEffectPrefab; // 최초 등장 효과 프리팹
@@ -277,9 +281,18 @@ namespace LegendaryPet
         private void SpawnLegendaryPet(string legendaryPetId, bool withFirstAppearanceEffect)
         {
             int legendIndex = -1;
-            
-            // 새로운 ID 형식: "unicorn1", "unicorn2", ..., "dragon1", "dragon2", ...
-            if (legendaryPetId.StartsWith("unicorn"))
+
+            // pet_legend_XXX 형식 지원 (주요 형식)
+            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
+            {
+                string numberPart = legendaryPetId.Substring(11);  // "pet_legend_" 이후 부분
+                if (int.TryParse(numberPart, out int number))
+                {
+                    legendIndex = number - 1;  // pet_legend_001 = 인덱스 0
+                }
+            }
+            // 기존 형식도 지원 (하위 호환성)
+            else if (legendaryPetId.StartsWith("unicorn"))
             {
                 string numberPart = legendaryPetId.Replace("unicorn", "");
                 if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
@@ -304,7 +317,7 @@ namespace LegendaryPet
                     legendIndex = number - 1;
                 }
             }
-            
+
             // 유효한 인덱스인지 확인하고 스폰
             if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
             {
@@ -313,7 +326,7 @@ namespace LegendaryPet
             }
             else
             {
-                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 ID: {legendaryPetId}");
+                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 ID: {legendaryPetId} (인덱스: {legendIndex})");
             }
         }
         
@@ -327,9 +340,18 @@ namespace LegendaryPet
             }
             
             int legendIndex = -1;
-            
-            // 새로운 ID 형식 처리
-            if (legendaryPetId.StartsWith("unicorn"))
+
+            // pet_legend_XXX 형식 지원 (주요 형식)
+            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
+            {
+                string numberPart = legendaryPetId.Substring(11);  // "pet_legend_" 이후 부분
+                if (int.TryParse(numberPart, out int number))
+                {
+                    legendIndex = number - 1;  // pet_legend_001 = 인덱스 0
+                }
+            }
+            // 기존 형식도 지원 (하위 호환성)
+            else if (legendaryPetId.StartsWith("unicorn"))
             {
                 string numberPart = legendaryPetId.Replace("unicorn", "");
                 if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)

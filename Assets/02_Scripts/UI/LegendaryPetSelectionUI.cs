@@ -12,8 +12,8 @@ public class LegendaryPetSelectionUI : MonoBehaviour
     public Transform toggleContainer;         // 토글 버튼들이 배치될 부모 오브젝트
     public TMP_Text selectedLegendsText;      // 선택된 레전드 펫 수 표시 텍스트
     public Button selectAllLegendsButton;     // 모든 레전드 펫 선택 버튼
-    public int columns = 5;                   // 그리드 열 수 (5개씩 2줄)
-    public float toggleSpacing = 120f;        // 토글 간격
+    public int columns = 7;                   // 그리드 열 수 (7개씩 3줄)
+    public float toggleSpacing = 100f;        // 토글 간격
 
     private List<Toggle> legendToggles = new List<Toggle>();
     private List<Toggle> firstAppearanceToggles = new List<Toggle>(); // 최초 등장 토글 리스트
@@ -86,22 +86,16 @@ public class LegendaryPetSelectionUI : MonoBehaviour
             return;
         }
 
-        // 레전드 펫 ID 리스트 생성
+        // 레전드 펫 ID 리스트 생성 (21개)
         List<string> legendaryPetIds = new List<string>();
-        
-        // 유니콘 5종류
-        for (int i = 1; i <= 5; i++)
+
+        // pet_legend_001 ~ pet_legend_021 형식으로 21개 생성
+        for (int i = 1; i <= 21; i++)
         {
-            legendaryPetIds.Add($"unicorn{i}");
-        }
-        
-        // 드래곤 5종류
-        for (int i = 1; i <= 5; i++)
-        {
-            legendaryPetIds.Add($"dragon{i}");
+            legendaryPetIds.Add($"pet_legend_{i:D3}");
         }
 
-        // 10개의 레전드 펫 토글 생성 (2행 x 5열 그리드)
+        // 21개의 레전드 펫 토글 생성 (3행 x 7열 그리드)
         for (int i = 0; i < legendaryPetIds.Count; i++)
         {
             // 메인 컨테이너 생성 (레전드 펫 토글 + 최초 등장 토글을 담을 컨테이너)
@@ -131,10 +125,9 @@ public class LegendaryPetSelectionUI : MonoBehaviour
             TMP_Text legendLabelText = legendToggleObj.GetComponentInChildren<TMP_Text>();
             if (legendLabelText != null)
             {
-                // 더 읽기 쉬운 이름으로 표시
-                string displayName = legendId.Replace("unicorn", "Unicorn").Replace("dragon", "Dragon");
-                legendLabelText.text = displayName;
-                legendLabelText.fontSize = 20;
+                // pet_legend_XXX 형식을 간단하게 표시
+                legendLabelText.text = legendId.Replace("pet_legend_", "L");
+                legendLabelText.fontSize = 18;
             }
 
             // 최초 등장 토글 생성
