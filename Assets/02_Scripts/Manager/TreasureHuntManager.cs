@@ -608,7 +608,7 @@ public class TreasureHuntManager : MonoBehaviour
     {
         if (totalCoinsText != null)
         {
-            totalCoinsText.text = $"코인: {totalCoins}";
+            totalCoinsText.text = $"{totalCoins}";
         }
     }
     
