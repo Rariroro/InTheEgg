@@ -23,12 +23,31 @@ public class ItemDropButton : MonoBehaviour
     public GameObject GrassPrefab;
     public GameObject hayPrefab;
 
+    // 아이템 타입별 아이콘
+    [System.Serializable]
+    public class ItemTypeIcon
+    {
+        public string itemType;
+        public Sprite icon;
+    }
+
+    [Header("아이콘 설정")]
+    public List<ItemTypeIcon> itemTypeIcons = new List<ItemTypeIcon>();
+
+    [Header("가방 버튼")]
+    public Button bagButton;
+    public Image bagBackground;           // Background 이미지
+    public Sprite bagBackgroundEmpty;     // 투명 스프라이트 (아이템 없을 때)
+    public Sprite bagBackgroundFilled;    // 색상 있는 스프라이트 (아이템 있을 때)
+    public TMP_Text bagCountText;         // 가방의 CountBackground/CountText
+
     private Dictionary<string, GameObject> itemPrefabs = new Dictionary<string, GameObject>();
     private Dictionary<string, int> itemCounts = new Dictionary<string, int>();
     private Dictionary<string, Button> itemButtons = new Dictionary<string, Button>();
 
     private bool waitingForDropLocation = false;
     private string currentItemType = "";
+    private bool isItemListVisible = false;
 
     void Start()
     {
@@ -40,6 +59,18 @@ public class ItemDropButton : MonoBehaviour
         itemPrefabs["Grain"] = GrainPrefab;
         itemPrefabs["Grass"] = GrassPrefab;
         itemPrefabs["hay"] = hayPrefab;
+
+        // 가방 버튼 클릭 이벤트 연결
+        if (bagButton != null)
+        {
+            bagButton.onClick.AddListener(ToggleBag);
+        }
+
+        // ItemButtonContainer 초기에 비활성화
+        if (itemButtonContainer != null)
+        {
+            itemButtonContainer.gameObject.SetActive(false);
+        }
 
         // ItemSelectionManager에서 아이템 정보 가져오기
         if (ItemSelectionManager.Instance != null)
@@ -54,6 +85,9 @@ public class ItemDropButton : MonoBehaviour
             }
         }
 
+        // 초기 가방 상태 업데이트
+        UpdateBagState();
+
         if (feedbackText != null)
         {
             feedbackText.gameObject.SetActive(false);
@@ -66,30 +100,30 @@ public class ItemDropButton : MonoBehaviour
 
         GameObject buttonObj = Instantiate(itemButtonPrefab, itemButtonContainer);
         Button button = buttonObj.GetComponent<Button>();
-        TMP_Text buttonText = buttonObj.GetComponentInChildren<TMP_Text>();
-        Image buttonImage = buttonObj.GetComponent<Image>();
 
-        if (buttonImage != null)
+        // 아이콘 설정
+        var icon = itemTypeIcons.Find(x => x.itemType == itemType);
+        if (icon != null && icon.icon != null)
         {
-             switch (itemType)
+            Image iconImage = buttonObj.transform.Find("Icon")?.GetComponent<Image>();
+            if (iconImage != null)
             {
-                case "meat": buttonImage.color = new Color(1f, 0.5f, 0.5f); break;
-                case "fish": buttonImage.color = new Color(0.5f, 0.5f, 1f); break;
-                case "fruit": buttonImage.color = new Color(0.5f, 1f, 0.5f); break;
-                case "vegetable": buttonImage.color = new Color(1f, 1f, 0.5f); break;
-                case "Grain": buttonImage.color = new Color(0.8f, 0.7f, 0.5f); break;
-                case "Grass": buttonImage.color = new Color(0.2f, 0.8f, 0.2f); break;
-                case "hay": buttonImage.color = new Color(0.7f, 0.6f, 0.2f); break;
+                iconImage.sprite = icon.icon;
             }
         }
-        
-        if (buttonText != null)
+
+        // 카운트 설정
+        TMP_Text countText = buttonObj.transform.Find("CountBackground/CountText")?.GetComponent<TMP_Text>();
+        if (countText != null)
         {
-            buttonText.text = $"{itemType} ({count})";
+            countText.text = count.ToString();
         }
-        
+
         button.onClick.AddListener(() => OnItemButtonClicked(itemType));
         itemButtons[itemType] = button;
+
+        // 가방 상태 업데이트
+        UpdateBagState();
     }
 
     void OnItemButtonClicked(string itemType)
@@ -165,6 +199,9 @@ public class ItemDropButton : MonoBehaviour
             itemCounts.Remove(currentItemType);
         }
 
+        // 가방 상태 업데이트
+        UpdateBagState();
+
         CancelDropMode();
     }
 
@@ -172,10 +209,19 @@ public class ItemDropButton : MonoBehaviour
     {
         if (itemButtons.TryGetValue(itemType, out Button button))
         {
-            TMP_Text buttonText = button.GetComponentInChildren<TMP_Text>();
-            if (buttonText != null)
+            GameObject buttonObj = button.gameObject;
+            TMP_Text countText = buttonObj.transform.Find("CountBackground/CountText")?.GetComponent<TMP_Text>();
+
+            if (countText != null)
             {
-                buttonText.text = $"{itemType} ({itemCounts[itemType]})";
+                countText.text = itemCounts[itemType].ToString();
+            }
+
+            // 개수가 0이면 CountBackground 숨기기
+            Transform countBg = buttonObj.transform.Find("CountBackground");
+            if (countBg != null)
+            {
+                countBg.gameObject.SetActive(itemCounts[itemType] > 0);
             }
         }
     }
@@ -188,6 +234,101 @@ public class ItemDropButton : MonoBehaviour
         if (feedbackText != null)
         {
             feedbackText.gameObject.SetActive(false);
+        }
+    }
+
+    void ToggleBag()
+    {
+        if (!HasAnyItems()) return; // 아이템 없으면 무시
+
+        isItemListVisible = !isItemListVisible;
+        StartCoroutine(AnimateItemContainer(isItemListVisible));
+    }
+
+    void UpdateBagState()
+    {
+        bool hasItems = HasAnyItems();
+
+        // Background 스프라이트 변경
+        if (bagBackground != null)
+        {
+            bagBackground.sprite = hasItems ? bagBackgroundFilled : bagBackgroundEmpty;
+        }
+
+        // 버튼 활성화/비활성화
+        if (bagButton != null)
+        {
+            bagButton.interactable = hasItems;
+        }
+
+        // 아이템 없으면 리스트 닫기
+        if (!hasItems && isItemListVisible)
+        {
+            isItemListVisible = false;
+            if (itemButtonContainer != null)
+            {
+                itemButtonContainer.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    bool HasAnyItems()
+    {
+        if (itemCounts.Count == 0) return false;
+
+        foreach (var count in itemCounts.Values)
+        {
+            if (count > 0) return true;
+        }
+
+        return false;
+    }
+
+    System.Collections.IEnumerator AnimateItemContainer(bool show)
+    {
+        if (itemButtonContainer == null) yield break;
+
+        RectTransform rect = itemButtonContainer.GetComponent<RectTransform>();
+        CanvasGroup canvasGroup = itemButtonContainer.GetComponent<CanvasGroup>();
+
+        if (canvasGroup == null)
+            canvasGroup = itemButtonContainer.gameObject.AddComponent<CanvasGroup>();
+
+        itemButtonContainer.gameObject.SetActive(true);
+
+        float duration = 0.3f;
+        float elapsed = 0f;
+
+        // 시작/끝 스케일 (아래에서 위로 펼쳐지는 효과)
+        Vector3 startScale = show ? new Vector3(1, 0, 1) : Vector3.one;
+        Vector3 endScale = show ? Vector3.one : new Vector3(1, 0, 1);
+
+        float startAlpha = show ? 0f : 1f;
+        float endAlpha = show ? 1f : 0f;
+
+        // Pivot을 (0, 0)으로 설정하면 아래에서 위로 펼쳐짐
+        Vector2 originalPivot = rect.pivot;
+        rect.pivot = new Vector2(0, 0);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            t = t * t * (3f - 2f * t); // Smooth curve
+
+            rect.localScale = Vector3.Lerp(startScale, endScale, t);
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, t);
+
+            yield return null;
+        }
+
+        rect.localScale = endScale;
+        canvasGroup.alpha = endAlpha;
+        rect.pivot = originalPivot;
+
+        if (!show)
+        {
+            itemButtonContainer.gameObject.SetActive(false);
         }
     }
 }

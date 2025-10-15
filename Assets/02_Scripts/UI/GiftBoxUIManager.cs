@@ -9,7 +9,6 @@ public class GiftBoxUIManager : MonoBehaviour
     [Header("UI 요소")]
     public GameObject giftButtonPrefab; // 선물 버튼 프리팹
     public Transform buttonContainer; // 버튼들이 배치될 부모 오브젝트
-    public float buttonSpacing = 80f; // 버튼 간격
     
     [Header("카메라 설정")]
     public Camera mainCamera; // 메인 카메라
@@ -262,7 +261,6 @@ public class GiftBoxUIManager : MonoBehaviour
             {
                 Destroy(giftButtons[giftType]);
                 giftButtons.Remove(giftType);
-                ReorganizeButtons(); // 버튼 제거 후 재정렬
             }
             return;
         }
@@ -304,30 +302,6 @@ public class GiftBoxUIManager : MonoBehaviour
             button.onClick.AddListener(() => OnGiftButtonClicked(type));
         }
         
-        // 버튼 생성 후 모든 버튼 재정렬
-        ReorganizeButtons();
-    }
-    
-    // 버튼들을 오른쪽에서 왼쪽으로 재정렬
-    private void ReorganizeButtons()
-    {
-        // 버튼 타입 순서 정의 (오른쪽에서 왼쪽으로)
-        string[] buttonOrder = { "legendary", "treasure", "environment", "pet" };
-        int currentIndex = 0;
-        
-        foreach (string type in buttonOrder)
-        {
-            if (giftButtons.ContainsKey(type) && giftButtons[type] != null)
-            {
-                RectTransform rect = giftButtons[type].GetComponent<RectTransform>();
-                if (rect != null)
-                {
-                    // 오른쪽에서 시작 (음수 값으로 왼쪽으로 이동)
-                    rect.anchoredPosition = new Vector2(-currentIndex * buttonSpacing, 0);
-                    currentIndex++;
-                }
-            }
-        }
     }
     
     // 버튼 카운트 업데이트
