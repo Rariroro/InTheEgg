@@ -58,12 +58,20 @@ public class CameraController : MonoBehaviour
 
     void HandleMobileInput()
     {
+        // 펫이 들려있는지 확인
+        bool isPetHolding = CheckIfAnyPetIsHolding();
+
         if (Input.touchCount == 1)
         {
-            PanCamera();
+            // 펫을 들고 있지 않을 때만 카메라 이동
+            if (!isPetHolding)
+            {
+                PanCamera();
+            }
         }
         else if (Input.touchCount == 2)
         {
+            // 2손가락 줌은 펫 홀드와 상관없이 작동
             ZoomCamera();
         }
     }
@@ -139,6 +147,13 @@ public class CameraController : MonoBehaviour
 
         if (touch.phase == TouchPhase.Began)
         {
+            // 터치 시작 시 보물을 터치했는지 확인
+            if (CheckIfClickedOnTreasure())
+            {
+                Debug.Log("[CameraController] 모바일: 보물 터치 감지 - 카메라 이동 취소");
+                return;
+            }
+
             lastPanPosition = touch.position;
             fingerId = touch.fingerId;
         }
