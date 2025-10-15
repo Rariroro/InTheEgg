@@ -12,10 +12,7 @@ public class TreasureHuntButton : MonoBehaviour
     [Header("UI 참조")]
     [Tooltip("보물찾기 버튼")]
     public Button treasureHuntButton;
-    
-    [Tooltip("버튼 텍스트")]
-    public TMP_Text buttonText;
-    
+
     [Tooltip("조건 안내 텍스트")]
     public TMP_Text conditionText;
     
@@ -29,15 +26,21 @@ public class TreasureHuntButton : MonoBehaviour
     [Tooltip("필요한 최소 친밀도")]
     public float requiredAffection = 75f;
     
-    [Header("색상")]
-    public Color activeColor = Color.yellow;
-    public Color inactiveColor = Color.gray;
-    public Color progressColor = Color.green;
+    [Header("버튼 스프라이트")]
+    [Tooltip("조건 만족 시 스프라이트")]
+    public Sprite normalSprite;
+
+    [Tooltip("조건 불만족 시 스프라이트")]
+    public Sprite inactiveSprite;
+
+    [Tooltip("보물찾기 진행 중 스프라이트")]
+    public Sprite progressSprite;
     
     private bool isHuntActive = false;
     private float checkInterval = 1f; // 1초마다 조건 체크
     private float checkTimer = 0f;
     private bool shouldShowConditionText = false; // 조건 텍스트 표시 여부
+    private Image buttonImage; // 버튼의 Image 컴포넌트
     
     private void Start()
     {
@@ -45,21 +48,42 @@ public class TreasureHuntButton : MonoBehaviour
         if (treasureHuntButton != null)
         {
             treasureHuntButton.onClick.AddListener(OnButtonClick);
+
+            // 자식 "Button" 오브젝트의 Image 컴포넌트 가져오기
+            Transform buttonChild = treasureHuntButton.transform.Find("Button");
+            if (buttonChild != null)
+            {
+                buttonImage = buttonChild.GetComponent<Image>();
+                if (buttonImage == null)
+                {
+                    Debug.LogWarning("[TreasureHunt] 자식 'Button' 오브젝트에 Image 컴포넌트가 없습니다!");
+                }
+                else
+                {
+                    Debug.Log($"[TreasureHunt] buttonImage 찾음: {buttonImage.gameObject.name}, 현재 스프라이트: {(buttonImage.sprite != null ? buttonImage.sprite.name : "null")}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[TreasureHunt] 자식 'Button' 오브젝트를 찾을 수 없습니다!");
+            }
+
+            // 할당된 스프라이트 확인
+            Debug.Log($"[TreasureHunt] normalSprite: {(normalSprite != null ? normalSprite.name : "null")}");
+            Debug.Log($"[TreasureHunt] inactiveSprite: {(inactiveSprite != null ? inactiveSprite.name : "null")}");
+            Debug.Log($"[TreasureHunt] progressSprite: {(progressSprite != null ? progressSprite.name : "null")}");
         }
         else
         {
-            Debug.LogWarning("TreasureHuntButton: 버튼이 할당되지 않았습니다!");
+            Debug.LogWarning("[TreasureHunt] 버튼이 할당되지 않았습니다!");
         }
-        
-        // 초기 텍스트 설정
-        UpdateButtonText("보물찾기 시작");
-        
+
         // 조건 텍스트 초기화
         if (conditionText != null)
         {
             conditionText.gameObject.SetActive(false);
         }
-        
+
         // 보물 개수와 타이머 텍스트 초기화
         if (treasureCountText != null)
         {
@@ -69,7 +93,7 @@ public class TreasureHuntButton : MonoBehaviour
         {
             timerText.gameObject.SetActive(false);
         }
-        
+
         // 매니저 이벤트 연결
         if (TreasureHuntManager.Instance != null)
         {
@@ -79,7 +103,7 @@ public class TreasureHuntButton : MonoBehaviour
             TreasureHuntManager.Instance.OnTreasureFound += OnTreasureFound;
             TreasureHuntManager.Instance.OnTimeUpdate += OnTimeUpdate;
         }
-        
+
         // 초기 상태 체크
         CheckButtonAvailability();
     }
@@ -150,19 +174,24 @@ public class TreasureHuntButton : MonoBehaviour
     /// </summary>
     private void CheckButtonAvailability()
     {
-        if (treasureHuntButton == null) return;
-        
+        if (buttonImage == null)
+        {
+            Debug.LogWarning("[TreasureHunt] CheckButtonAvailability - buttonImage가 null입니다!");
+            return;
+        }
+
         // 보물찾기 진행 중이면 항상 활성화
         if (isHuntActive)
         {
-            SetButtonState(true, progressColor);
+            Debug.Log("[TreasureHunt] 보물찾기 진행 중 - progressSprite 설정");
+            SetButtonSprite(progressSprite);
             return;
         }
-        
+
         // 친밀도 조건 체크
         PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
         int qualifiedPets = 0;
-        
+
         foreach (var pet in allPets)
         {
             if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
@@ -170,12 +199,14 @@ public class TreasureHuntButton : MonoBehaviour
                 qualifiedPets++;
             }
         }
-        
+
         bool canActivate = qualifiedPets > 0;
-        
-        // 버튼 상태 업데이트 - 항상 활성화 상태로 유지하고 색상만 변경
-        SetButtonState(true, canActivate ? activeColor : inactiveColor);
-        
+
+        Debug.Log($"[TreasureHunt] 조건 체크: {qualifiedPets}/{allPets.Length}마리, canActivate: {canActivate}");
+
+        // 버튼 스프라이트 업데이트
+        SetButtonSprite(canActivate ? normalSprite : inactiveSprite);
+
         // 조건 안내는 shouldShowConditionText가 true일 때만 표시
         if (shouldShowConditionText)
         {
@@ -184,38 +215,29 @@ public class TreasureHuntButton : MonoBehaviour
     }
     
     /// <summary>
-    /// 버튼 상태 설정
+    /// 버튼 스프라이트 설정
     /// </summary>
-    private void SetButtonState(bool isInteractable, Color color)
+    private void SetButtonSprite(Sprite sprite)
+    {
+        if (buttonImage != null && sprite != null)
+        {
+            Debug.Log($"[TreasureHunt] 스프라이트 변경: {sprite.name}, buttonImage: {buttonImage.gameObject.name}");
+            buttonImage.sprite = sprite;
+        }
+        else
+        {
+            Debug.LogWarning($"[TreasureHunt] 스프라이트 변경 실패 - buttonImage: {buttonImage != null}, sprite: {sprite != null}");
+        }
+    }
+
+    /// <summary>
+    /// 버튼 상태 설정 (활성화/비활성화)
+    /// </summary>
+    private void SetButtonInteractable(bool isInteractable)
     {
         if (treasureHuntButton != null)
         {
             treasureHuntButton.interactable = isInteractable;
-            
-            // 버튼 색상 변경
-            ColorBlock colors = treasureHuntButton.colors;
-            colors.normalColor = color;
-            treasureHuntButton.colors = colors;
-        }
-    }
-    
-    /// <summary>
-    /// 버튼 텍스트 업데이트
-    /// </summary>
-    private void UpdateButtonText(string text)
-    {
-        if (buttonText != null)
-        {
-            buttonText.text = text;
-        }
-        else if (treasureHuntButton != null)
-        {
-            // 버튼의 자식에서 텍스트 컴포넌트 찾기
-            TMP_Text childText = treasureHuntButton.GetComponentInChildren<TMP_Text>();
-            if (childText != null)
-            {
-                childText.text = text;
-            }
         }
     }
     
@@ -290,15 +312,15 @@ public class TreasureHuntButton : MonoBehaviour
     {
         isHuntActive = true;
         shouldShowConditionText = false; // 조건 텍스트 숨김
-        UpdateButtonText("보물찾기 진행중");
-        SetButtonState(false, progressColor);  // 진행 중에는 버튼 비활성화
-        
+        SetButtonSprite(progressSprite);
+        SetButtonInteractable(false);  // 진행 중에는 버튼 비활성화
+
         // 조건 텍스트 숨기기
         if (conditionText != null)
         {
             conditionText.gameObject.SetActive(false);
         }
-        
+
         // 보물 개수와 타이머 표시
         if (treasureCountText != null)
         {
@@ -310,12 +332,12 @@ public class TreasureHuntButton : MonoBehaviour
             timerText.gameObject.SetActive(true);
             UpdateTimerDisplay(TreasureHuntManager.Instance.RemainingTime);
         }
-        
+
         // 시작 효과
-        if (treasureHuntButton != null)
+        if (buttonImage != null)
         {
             // 버튼 애니메이션 (선택사항)
-            Animator buttonAnimator = treasureHuntButton.GetComponent<Animator>();
+            Animator buttonAnimator = buttonImage.GetComponent<Animator>();
             if (buttonAnimator != null)
             {
                 buttonAnimator.SetTrigger("Start");
@@ -330,9 +352,8 @@ public class TreasureHuntButton : MonoBehaviour
     {
         isHuntActive = false;
         shouldShowConditionText = false;
-        UpdateButtonText("보물찾기 시작");
         CheckButtonAvailability();
-        
+
         // 모든 UI 요소 숨기기
         if (conditionText != null)
         {
@@ -346,11 +367,11 @@ public class TreasureHuntButton : MonoBehaviour
         {
             timerText.gameObject.SetActive(false);
         }
-        
+
         // 종료 효과
-        if (treasureHuntButton != null)
+        if (buttonImage != null)
         {
-            Animator buttonAnimator = treasureHuntButton.GetComponent<Animator>();
+            Animator buttonAnimator = buttonImage.GetComponent<Animator>();
             if (buttonAnimator != null)
             {
                 buttonAnimator.SetTrigger("End");
@@ -364,26 +385,23 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnCoinsCollected(int coins)
     {
         // 버튼 짧은 플래시 효과
-        if (treasureHuntButton != null)
+        if (buttonImage != null)
         {
             StartCoroutine(FlashButton());
         }
     }
-    
+
     /// <summary>
     /// 버튼 플래시 효과
     /// </summary>
     private System.Collections.IEnumerator FlashButton()
     {
-        if (treasureHuntButton == null) yield break;
-        
-        ColorBlock originalColors = treasureHuntButton.colors;
-        ColorBlock flashColors = originalColors;
-        flashColors.normalColor = Color.white;
-        
-        treasureHuntButton.colors = flashColors;
+        if (buttonImage == null) yield break;
+
+        Color originalColor = buttonImage.color;
+        buttonImage.color = Color.white;
         yield return new WaitForSeconds(0.1f);
-        treasureHuntButton.colors = originalColors;
+        buttonImage.color = originalColor;
     }
     
     /// <summary>
@@ -472,7 +490,7 @@ public class TreasureHuntButton : MonoBehaviour
             TreasureHuntManager.Instance.OnTreasureFound -= OnTreasureFound;
             TreasureHuntManager.Instance.OnTimeUpdate -= OnTimeUpdate;
         }
-        
+
         if (treasureHuntButton != null)
         {
             treasureHuntButton.onClick.RemoveListener(OnButtonClick);
