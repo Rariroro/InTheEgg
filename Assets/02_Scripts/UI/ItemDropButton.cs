@@ -248,6 +248,7 @@ public class ItemDropButton : MonoBehaviour
     void UpdateBagState()
     {
         bool hasItems = HasAnyItems();
+        int totalItemCount = GetTotalItemCount();
 
         // Background 스프라이트 변경
         if (bagBackground != null)
@@ -259,6 +260,18 @@ public class ItemDropButton : MonoBehaviour
         if (bagButton != null)
         {
             bagButton.interactable = hasItems;
+        }
+
+        // 전체 아이템 개수 표시
+        if (bagCountText != null)
+        {
+            bagCountText.text = totalItemCount.ToString();
+        }
+
+        // CountBackground 표시/숨김
+        if (bagCountText != null && bagCountText.transform.parent != null)
+        {
+            bagCountText.transform.parent.gameObject.SetActive(totalItemCount > 0);
         }
 
         // 아이템 없으면 리스트 닫기
@@ -282,6 +295,16 @@ public class ItemDropButton : MonoBehaviour
         }
 
         return false;
+    }
+
+    int GetTotalItemCount()
+    {
+        int total = 0;
+        foreach (var count in itemCounts.Values)
+        {
+            total += count;
+        }
+        return total;
     }
 
     System.Collections.IEnumerator AnimateItemContainer(bool show)
