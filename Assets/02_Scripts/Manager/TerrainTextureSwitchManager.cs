@@ -315,9 +315,9 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         float planeArea = planeWorldBounds.size.x * planeWorldBounds.size.z;
         int totalSamples = Mathf.Clamp(Mathf.RoundToInt(planeArea * samplesPerUnit), 20, 100);
         
-        // 배치 레이캐스트 준비
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(totalSamples, Allocator.TempJob);
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(totalSamples, Allocator.TempJob);
+        // 배치 레이캐스트 준비 (Temp 사용으로 변경 - 즉시 해제되는 작업이므로)
+        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(totalSamples, Allocator.Temp);
+        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(totalSamples, Allocator.Temp);
         
         List<Vector3> samplePoints = GenerateSamplePoints(plane, totalSamples);
         

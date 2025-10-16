@@ -6,8 +6,13 @@ using System.Collections.Generic;
 public class PetManager : MonoBehaviour
 {
     public GameObject[] petPrefabs;  // 60개의 펫 프리팹 배열
-    public float spawnRadius = 50f;  // 스폰 반경
+    public float spawnRadius = 50f;  // 스폰 반경 (폴백용)
     public int maxPets = 50;
+
+    [Header("스폰 위치 설정")]
+    public PetSpawnSpot[] spawnSpots; // 11개의 스폰 스팟
+    public bool useSpawnSpots = true; // 스폰 스팟 사용 여부
+    public float spawnOffsetRadius = 2f; // 같은 스팟에 여러 펫 스폰 시 오프셋 반경
 
     [Header("최초 등장 효과")]
     public GameObject firstAppearanceEffectPrefab; // 최초 등장 효과 프리팹 (옵션)
@@ -24,10 +29,16 @@ public class PetManager : MonoBehaviour
 
     // 대기 중인 선물들과 해당 펫 정보를 저장하는 딕셔너리
     private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
-    
+
+    // 스폰 스팟별 사용 카운트 (같은 스팟에 여러 펫이 스폰될 때 오프셋 계산용)
+    private Dictionary<int, int> spawnSpotUsageCount = new Dictionary<int, int>();
+
+    // 다음에 사용할 스폰 스팟 인덱스
+    private int nextSpawnSpotIndex = 0;
+
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
-    
+
     // 선물 개수 반환
     public int GetPendingGiftCount() => pendingGifts.Count;
     
@@ -49,6 +60,9 @@ public class PetManager : MonoBehaviour
 
     private void Start()
 {
+    // 스폰 스팟 초기화
+    InitializeSpawnSpots();
+
     // EnvironmentManager가 환경 스폰과 NavMesh 베이크를 완료할 때까지 기다린 후 펫 스폰
     StartCoroutine(WaitForEnvironmentAndSpawnPets());
 }
@@ -85,10 +99,45 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         SpawnAllPets();
     }
 }
+    // 스폰 스팟 초기화
+    private void InitializeSpawnSpots()
+    {
+        // 스폰 스팟이 설정되지 않았으면 씬에서 찾기
+        if (spawnSpots == null || spawnSpots.Length == 0)
+        {
+            spawnSpots = FindObjectsOfType<PetSpawnSpot>();
+            if (spawnSpots != null && spawnSpots.Length > 0)
+            {
+                // 인덱스 순으로 정렬
+                System.Array.Sort(spawnSpots, (a, b) => a.SpotIndex.CompareTo(b.SpotIndex));
+                Debug.Log($"[PetManager] 씬에서 {spawnSpots.Length}개의 스폰 스팟을 찾았습니다.");
+            }
+            else
+            {
+                Debug.LogWarning("[PetManager] 스폰 스팟을 찾을 수 없습니다. 랜덤 위치로 스폰됩니다.");
+                useSpawnSpots = false;
+            }
+        }
+
+        // 스폰 스팟 사용 카운트 초기화
+        spawnSpotUsageCount.Clear();
+        if (spawnSpots != null)
+        {
+            for (int i = 0; i < spawnSpots.Length; i++)
+            {
+                spawnSpotUsageCount[i] = 0;
+                if (spawnSpots[i] != null)
+                {
+                    spawnSpots[i].ResetPetCount();
+                }
+            }
+        }
+    }
+
     // 선택된 펫을 효과와 함께 스폰하는 코루틴 (새로 추가)
     private IEnumerator SpawnSelectedPetsWithEffects()
     {
-        
+
         // 일반 펫과 최초 등장 펫을 분리
         List<string> normalPets = new List<string>();
         List<string> firstAppearancePets = new List<string>();
@@ -200,16 +249,16 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             {
                 // 인덱스는 0부터 시작하므로 1을 빼줌
                 petIndex = petIndex - 1;
-                
+
                 // 유효한 인덱스인지 확인
                 if (petIndex >= 0 && petIndex < petPrefabs.Length)
                 {
-                    // 랜덤 위치에 펫 생성
-                    Vector3 spawnPosition = GetRandomPositionOnNavMesh();
-                    
+                    // 스폰 위치 결정
+                    Vector3 spawnPosition = GetNextSpawnPosition();
+
                     // 약간 위에서 스폰하여 지면에 확실히 닿도록 함
                     spawnPosition.y += 0.5f;
-                    
+
                     GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, Quaternion.identity);
 
                     if (withFirstAppearanceEffect)
@@ -251,30 +300,83 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     
     private void HandleGiftTouch()
     {
-        if (Input.GetMouseButtonDown(0))
+        bool shouldProcess = false;
+        Vector3 inputPosition = Vector3.zero;
+
+        // 모바일 터치 입력 처리
+        if (Input.touchCount > 0)
         {
-            lastTouchTime = Time.time;
-            
-            if (Camera.main == null) return;
-            
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            
-            // Ignore Raycast 레이어를 제외한 모든 레이어와 충돌 검사
-            // (PreferredZone 등 무시해야 할 오브젝트 제외)
-            int layerMask = ~LayerMask.GetMask("Ignore Raycast");
-            
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+            Touch touch = Input.GetTouch(0);
+            if (touch.phase == TouchPhase.Began)
+            {
+                shouldProcess = true;
+                inputPosition = touch.position;
+
+                // 모바일에서 UI 터치 확인
+                if (UnityEngine.EventSystems.EventSystem.current != null &&
+                    UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    Debug.Log("[PetManager] UI가 터치를 가로챔 (모바일)");
+                    return;
+                }
+            }
+        }
+        // PC 마우스 입력 처리
+        else if (Input.GetMouseButtonDown(0))
+        {
+            shouldProcess = true;
+            inputPosition = Input.mousePosition;
+
+            // PC에서 UI 클릭 확인
+            if (UnityEngine.EventSystems.EventSystem.current != null &&
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                Debug.Log("[PetManager] UI가 터치를 가로챔 (PC)");
+                return;
+            }
+        }
+
+        if (!shouldProcess) return;
+
+        lastTouchTime = Time.time;
+
+        if (Camera.main == null)
+        {
+            Debug.LogWarning("[PetManager] 메인 카메라가 없음");
+            return;
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(inputPosition);
+
+        // 모든 충돌 객체를 가져와서 가장 가까운 선물 찾기
+        RaycastHit[] hits = Physics.RaycastAll(ray, Mathf.Infinity);
+
+        if (hits.Length > 0)
+        {
+            // 거리순으로 정렬
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            // 가장 가까운 선물 찾기
+            foreach (RaycastHit hit in hits)
             {
                 GameObject hitObject = hit.collider.gameObject;
-                
+
                 // 터치한 오브젝트가 대기 중인 선물인지 확인
                 if (pendingGifts.ContainsKey(hitObject))
                 {
                     string petId = pendingGifts[hitObject];
+                    Debug.Log($"[PetManager] 선물 터치 감지: {petId}");
                     StartCoroutine(OpenGift(hitObject, petId));
+                    return;
                 }
             }
+
+            // 선물이 아닌 다른 객체를 터치한 경우
+            Debug.Log($"[PetManager] 터치한 객체: {hits[0].collider.gameObject.name} (레이어: {LayerMask.LayerToName(hits[0].collider.gameObject.layer)})");
+        }
+        else
+        {
+            Debug.Log("[PetManager] Raycast가 아무것도 감지하지 못함");
         }
     }
     
@@ -286,19 +388,19 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             SpawnPet(petId, true);
             return;
         }
-        
-        // 선물 스폰 위치
-        Vector3 giftPosition = GetRandomPositionOnNavMesh();
+
+        // 선물 스폰 위치 - 스폰 스팟 사용
+        Vector3 giftPosition = GetNextSpawnPosition();
         giftPosition.y += 5f; // 선물을 공중에 띄움
-        
+
         GameObject gift = Instantiate(giftPrefab, giftPosition, giftPrefab.transform.rotation);
-        
+
         // 선물 회전 애니메이션
         StartCoroutine(RotateGift(gift));
-        
+
         // 대기 중인 선물 목록에 추가
         pendingGifts.Add(gift, petId);
-        
+
     }
     
     private IEnumerator RotateGift(GameObject gift)
@@ -515,6 +617,47 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         }
     }
 
+    // 다음 스폰 위치를 가져오는 메서드
+    private Vector3 GetNextSpawnPosition()
+    {
+        // 스폰 스팟 사용 모드이고 유효한 스폰 스팟이 있는 경우
+        if (useSpawnSpots && spawnSpots != null && spawnSpots.Length > 0)
+        {
+            // 현재 스폰 스팟 인덱스 결정
+            int spotIndex = nextSpawnSpotIndex % spawnSpots.Length;
+            PetSpawnSpot currentSpot = spawnSpots[spotIndex];
+
+            if (currentSpot != null)
+            {
+                // 이 스팟에서 몇 번째로 스폰되는지 확인
+                int usageCount = spawnSpotUsageCount.ContainsKey(spotIndex) ? spawnSpotUsageCount[spotIndex] : 0;
+
+                // 스폰 위치 계산 (중복 시 오프셋 적용)
+                Vector3 spawnPosition = currentSpot.GetSpawnPosition(usageCount);
+
+                // NavMesh 위치 검증
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(spawnPosition, out hit, 10f, NavMesh.AllAreas))
+                {
+                    spawnPosition = hit.position;
+                }
+
+                // 사용 카운트 증가
+                spawnSpotUsageCount[spotIndex] = usageCount + 1;
+                currentSpot.OnPetSpawned();
+
+                // 다음 스폰 스팟 인덱스로 이동
+                nextSpawnSpotIndex++;
+
+                Debug.Log($"[PetManager] 스폰 스팟 #{spotIndex + 1}에 펫 스폰 (사용 횟수: {usageCount + 1})");
+                return spawnPosition;
+            }
+        }
+
+        // 스폰 스팟을 사용하지 않거나 실패한 경우 랜덤 위치 반환
+        return GetRandomPositionOnNavMesh();
+    }
+
     private Vector3 GetRandomPositionOnNavMesh()
     {
         // 여러 번 시도하여 유효한 위치 찾기
@@ -523,14 +666,14 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             Vector3 randomDirection = Random.insideUnitSphere * spawnRadius;
             randomDirection += transform.position;
             randomDirection.y = 0; // y축은 0으로 설정
-            
+
             NavMeshHit hit;
             if (NavMesh.SamplePosition(randomDirection, out hit, spawnRadius, NavMesh.AllAreas))
             {
                 return hit.position;
             }
         }
-        
+
         // 모든 시도가 실패하면 중심점에서 가장 가까운 NavMesh 위치 반환
         NavMeshHit centerHit;
         if (NavMesh.SamplePosition(transform.position, out centerHit, spawnRadius * 2, NavMesh.AllAreas))
@@ -538,7 +681,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             Debug.LogWarning($"[PetManager] 랜덤 위치를 찾지 못해 중심점 근처로 스폰합니다.");
             return centerHit.position;
         }
-        
+
         // 그래도 실패하면 기본 위치
         Debug.LogError($"[PetManager] NavMesh 위치를 전혀 찾을 수 없습니다!");
         return transform.position;
@@ -548,5 +691,41 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     {
         // 정리 작업
         pendingGifts.Clear();
+    }
+
+    // 씬 뷰에서 스폰 스팟 시각화
+    private void OnDrawGizmos()
+    {
+        if (!useSpawnSpots) return;
+
+        // 런타임이 아닐 때도 스폰 스팟 찾기
+        if (spawnSpots == null || spawnSpots.Length == 0)
+        {
+            spawnSpots = FindObjectsOfType<PetSpawnSpot>();
+            if (spawnSpots != null && spawnSpots.Length > 0)
+            {
+                System.Array.Sort(spawnSpots, (a, b) => a.SpotIndex.CompareTo(b.SpotIndex));
+            }
+        }
+
+        if (spawnSpots != null)
+        {
+            // 스폰 스팟 간 연결선 그리기
+            Gizmos.color = new Color(0.5f, 0.5f, 1f, 0.3f);
+            for (int i = 0; i < spawnSpots.Length - 1; i++)
+            {
+                if (spawnSpots[i] != null && spawnSpots[i + 1] != null)
+                {
+                    Gizmos.DrawLine(spawnSpots[i].transform.position, spawnSpots[i + 1].transform.position);
+                }
+            }
+
+            // 첫 번째와 마지막 스폰 스팟 연결 (순환)
+            if (spawnSpots.Length > 2 && spawnSpots[0] != null && spawnSpots[spawnSpots.Length - 1] != null)
+            {
+                Gizmos.color = new Color(0.5f, 0.5f, 1f, 0.2f);
+                Gizmos.DrawLine(spawnSpots[0].transform.position, spawnSpots[spawnSpots.Length - 1].transform.position);
+            }
+        }
     }
 }
