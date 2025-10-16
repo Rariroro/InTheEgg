@@ -11,6 +11,16 @@ public class PetCameraSwitcherButton : MonoBehaviour
     public Button petCameraButton;
     public TMP_Text petCameraButtonText;
 
+    [Header("Button Visual Settings")]
+    public Image iconImage;                    // Icon 오브젝트의 Image 컴포넌트
+    public Image buttonBackgroundImage;        // Button 오브젝트의 Image 컴포넌트
+    public Sprite petCameraIcon;              // Pet Camera 아이콘 (기본 상태)
+    public Sprite cameraIcon;                 // Camera 아이콘 (펫 카메라 모드)
+    public Sprite cancelIcon;                  // 취소 아이콘 (대기 상태)
+    public Sprite normalButtonBackground;     // 일반 버튼 배경
+    public Sprite activeButtonBackground;     // 활성화 버튼 배경
+    public Sprite cancelButtonBackground;     // 취소 버튼 배경
+
     // 기존에 사용한 피드백 텍스트 변수 (PetGatheringController와 동일한 역할)
     public TMP_Text feedbackText;
 
@@ -112,6 +122,8 @@ public class PetCameraSwitcherButton : MonoBehaviour
 
         if (petCameraButtonText != null)
             petCameraButtonText.text = "Camera";
+
+        UpdateButtonVisual("camera");
               // 피드백 텍스트 숨김
             if (feedbackText != null)
             {
@@ -140,6 +152,8 @@ public class PetCameraSwitcherButton : MonoBehaviour
 
         if (petCameraButtonText != null)
             petCameraButtonText.text = "Pet Camera";
+
+        UpdateButtonVisual("petCamera");
     }
 
     // 피드백 텍스트를 일정 시간 후 숨김 처리하는 코루틴
@@ -189,10 +203,34 @@ public class PetCameraSwitcherButton : MonoBehaviour
             // 버튼 텍스트를 "취소"로 변경
             if (petCameraButtonText != null)
                 petCameraButtonText.text = "취소";
+
+            UpdateButtonVisual("cancel");
         }
     }
     public bool IsInPetCameraMode()
     {
         return isInPetCameraMode;
+    }
+
+    private void UpdateButtonVisual(string mode)
+    {
+        if (iconImage != null && buttonBackgroundImage != null)
+        {
+            switch (mode)
+            {
+                case "petCamera":  // 기본 상태
+                    iconImage.sprite = petCameraIcon;
+                    buttonBackgroundImage.sprite = normalButtonBackground;
+                    break;
+                case "camera":  // 펫 카메라 모드 활성화 시
+                    iconImage.sprite = cameraIcon;
+                    buttonBackgroundImage.sprite = activeButtonBackground;
+                    break;
+                case "cancel":  // 대기 상태
+                    iconImage.sprite = cancelIcon;
+                    buttonBackgroundImage.sprite = cancelButtonBackground;
+                    break;
+            }
+        }
     }
 }
