@@ -62087,7 +62087,6 @@ GameObject:
   - component: {fileID: 1261194687}
   - component: {fileID: 1261194690}
   - component: {fileID: 1261194688}
-  - component: {fileID: 1261194689}
   m_Layer: 5
   m_Name: Gathering Button Square
   m_TagString: Untagged
@@ -62248,26 +62247,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1261194689
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1261194686}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c5f9a4c43754664a304b6450421515, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  treasureHuntButton: {fileID: 1261194687}
-  conditionText: {fileID: 0}
-  treasureCountText: {fileID: 0}
-  timerText: {fileID: 2069155051}
-  requiredAffection: 75
-  normalSprite: {fileID: 21300000, guid: 7240c0d166eb849899d1bbc12c3d2d36, type: 3}
-  inactiveSprite: {fileID: 21300000, guid: ebd4078abdc1e4038961aa1423bb18bf, type: 3}
-  progressSprite: {fileID: 21300000, guid: e57d758667ec647ba9a894dcad8b24ef, type: 3}
 --- !u!95 &1261194690
 Animator:
   serializedVersion: 7
