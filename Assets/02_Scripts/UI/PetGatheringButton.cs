@@ -15,6 +15,14 @@ public class PetGatheringButton : MonoBehaviour
     public float gatherRadius = 15f;  // 터치한 지점을 중심으로 펫들을 모을 영역 반경
     public TMP_Text feedbackText;    // UI 피드백용 텍스트 (인스펙터에서 할당)
 
+    [Header("Button Visual Settings")]
+    public Image iconImage;                    // Icon 오브젝트의 Image 컴포넌트 (인스펙터에서 할당)
+    public Image buttonBackgroundImage;        // Button 오브젝트의 Image 컴포넌트 (인스펙터에서 할당)
+    public Sprite gatherIcon;                  // 모이기 상태 아이콘 스프라이트
+    public Sprite cancelIcon;                  // 해제 상태 아이콘 스프라이트
+    public Sprite gatherButtonBackground;      // 모이기 버튼 배경 스프라이트
+    public Sprite cancelButtonBackground;      // 해제 버튼 배경 스프라이트
+
     // ▼▼▼ 이 변수들은 이제 GatherAction에서 직접 사용하므로 여기서는 제거해도 되지만,
     // 다른 곳에서 참조할 가능성을 위해 남겨두거나, 중앙 설정 파일로 옮기는 것을 권장합니다.
     // 이 예제에서는 시각적 확인을 위해 남겨두겠습니다.
@@ -41,7 +49,7 @@ public class PetGatheringButton : MonoBehaviour
         {
             feedbackText.gameObject.SetActive(false);
         }
-        UpdateButtonText("펫 모이기");
+        UpdateButtonVisual(false);
     }
 
     public void ToggleGatheringMode()
@@ -58,7 +66,7 @@ public class PetGatheringButton : MonoBehaviour
                 feedbackText.text = "지형을 터치하여 펫들을 모으세요.";
                 feedbackText.gameObject.SetActive(true);
             }
-            UpdateButtonText("모이기 해제");
+            UpdateButtonVisual(true);
             // Debug.Log("펫 모으기 모드 활성화됨.");
         }
     }
@@ -161,17 +169,21 @@ public class PetGatheringButton : MonoBehaviour
         if (feedbackText != null)
             feedbackText.gameObject.SetActive(false);
             
-        UpdateButtonText("펫 모이기");
+        UpdateButtonVisual(false);
     }
 
     // (이하 나머지 헬퍼 메서드들은 변경 없음)
     // UpdateButtonText, HideFeedbackAfterDelay, GenerateGridPositions, OptimizePositionAssignment 등...
-    private void UpdateButtonText(string newText)
+    private void UpdateButtonVisual(bool isGathering)
     {
-        TMP_Text btnText = gatherButton.GetComponentInChildren<TMP_Text>();
-        if (btnText != null)
+        if (iconImage != null)
         {
-            btnText.text = newText;
+            iconImage.sprite = isGathering ? cancelIcon : gatherIcon;
+        }
+
+        if (buttonBackgroundImage != null)
+        {
+            buttonBackgroundImage.sprite = isGathering ? cancelButtonBackground : gatherButtonBackground;
         }
     }
 

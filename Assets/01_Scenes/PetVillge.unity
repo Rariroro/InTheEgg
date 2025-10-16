@@ -95567,6 +95567,12 @@ MonoBehaviour:
   gatherButton: {fileID: 1261194687}
   gatherRadius: 15
   feedbackText: {fileID: 9049462943076198797}
+  iconImage: {fileID: 104089801}
+  buttonBackgroundImage: {fileID: 302736008}
+  gatherIcon: {fileID: 21300000, guid: e6bfd0b1457cf427e96b4919312370e5, type: 3}
+  cancelIcon: {fileID: 21300000, guid: 0b2d500afa7494e0f8a5280ae00c570c, type: 3}
+  gatherButtonBackground: {fileID: 21300000, guid: 7240c0d166eb849899d1bbc12c3d2d36, type: 3}
+  cancelButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
   speedMultiplier: 4
   angularSpeedMultiplier: 4
   accelerationMultiplier: 4
