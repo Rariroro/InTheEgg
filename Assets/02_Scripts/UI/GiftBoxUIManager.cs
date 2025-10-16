@@ -41,13 +41,15 @@ public class GiftBoxUIManager : MonoBehaviour
     private TreasureHuntManager treasureHuntManager;
     private LegendaryPet.LegendaryPetManager legendaryPetManager;
     
-    // 카메라 원래 위치 저장
-    private Vector3 originalCameraPosition;
-    private Quaternion originalCameraRotation;
-    private float originalCameraFOV; // 원래 FOV 값 저장
-    private Vector3 originalCameraParentPosition; // 카메라 부모 오브젝트 위치 저장
+    // 카메라 관련 변수
     private GameObject cameraParent; // CameraController 오브젝트 참조
     private bool isCameraMoving = false;
+
+    // 버튼 클릭 직전 카메라 상태 저장
+    private Vector3 lastCameraPosition;
+    private Quaternion lastCameraRotation;
+    private float lastCameraFOV;
+    private Vector3 lastCameraParentPosition;
     
     // 싱글톤
     private static GiftBoxUIManager instance;
@@ -96,17 +98,17 @@ public class GiftBoxUIManager : MonoBehaviour
         treasureHuntManager = TreasureHuntManager.Instance;
         legendaryPetManager = LegendaryPet.LegendaryPetManager.Instance;
         
-        // 원래 카메라 위치 저장
+        // 초기 카메라 상태를 lastCamera 변수에 저장 (첫 번째 버튼 클릭 전까지의 기본값)
         if (mainCamera != null)
         {
-            originalCameraPosition = mainCamera.transform.position;
-            originalCameraRotation = mainCamera.transform.rotation;
-            originalCameraFOV = mainCamera.fieldOfView; // FOV 값 저장
-            
+            lastCameraPosition = mainCamera.transform.position;
+            lastCameraRotation = mainCamera.transform.rotation;
+            lastCameraFOV = mainCamera.fieldOfView; // FOV 값 저장
+
             // 카메라 부모 오브젝트 위치도 저장
             if (cameraParent != null)
             {
-                originalCameraParentPosition = cameraParent.transform.position;
+                lastCameraParentPosition = cameraParent.transform.position;
             }
         }
         
@@ -330,10 +332,10 @@ public class GiftBoxUIManager : MonoBehaviour
     private void OnGiftButtonClicked(string giftType)
     {
         if (isCameraMoving) return;
-        
+
         List<GameObject> gifts = activeGifts[giftType];
         if (gifts.Count == 0) return;
-        
+
         // 유효한 선물 찾기
         GameObject targetGift = null;
         foreach (var gift in gifts)
@@ -344,9 +346,22 @@ public class GiftBoxUIManager : MonoBehaviour
                 break;
             }
         }
-        
+
         if (targetGift != null)
         {
+            // 버튼 클릭 직전의 카메라 상태 저장
+            if (mainCamera != null)
+            {
+                lastCameraPosition = mainCamera.transform.position;
+                lastCameraRotation = mainCamera.transform.rotation;
+                lastCameraFOV = mainCamera.fieldOfView;
+
+                if (cameraParent != null)
+                {
+                    lastCameraParentPosition = cameraParent.transform.position;
+                }
+            }
+
             StartCoroutine(MoveCameraToGift(targetGift, giftType));
         }
     }
@@ -355,79 +370,106 @@ public class GiftBoxUIManager : MonoBehaviour
     private IEnumerator MoveCameraToGift(GameObject gift, string giftType)
     {
         isCameraMoving = true;
-        
+
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
         float startFOV = mainCamera.fieldOfView; // 현재 FOV 값 저장
-        
+        Vector3 startParentPos = cameraParent != null ? cameraParent.transform.position : Vector3.zero;
+
         // 목표 위치 계산 (선물 타입에 따라 다른 거리 사용)
         Vector3 giftPos = gift.transform.position;
         float zoomDistance = (giftType == "environment") ? environmentCameraZoomDistance : cameraZoomDistance;
         float height = (giftType == "environment") ? environmentCameraHeight : cameraHeight;
         Vector3 offset = new Vector3(0, height, -zoomDistance);
         Vector3 targetPos = giftPos + offset;
-        
+
         // 선물을 바라보는 회전 계산
         Quaternion targetRot = Quaternion.LookRotation(giftPos - targetPos);
-        
+
+        // 카메라 부모를 선물 위치로 이동시킬 목표 위치 (선물의 x, z 좌표만 사용)
+        Vector3 targetParentPos = new Vector3(giftPos.x, startParentPos.y, giftPos.z);
+
         float elapsed = 0f;
         while (elapsed < cameraMoveDuration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / cameraMoveDuration;
-            
+
             // 부드러운 이동 (Ease In Out)
             t = t * t * (3f - 2f * t);
-            
+
+            // 카메라 부모 오브젝트도 부드럽게 이동
+            if (cameraParent != null)
+            {
+                cameraParent.transform.position = Vector3.Lerp(startParentPos, targetParentPos, t);
+            }
+
             mainCamera.transform.position = Vector3.Lerp(startPos, targetPos, t);
             mainCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, t);
             mainCamera.fieldOfView = Mathf.Lerp(startFOV, 60f, t); // FOV를 60으로 부드럽게 변경
-            
+
             yield return null;
         }
-        
+
+        // 최종 위치 설정
+        if (cameraParent != null)
+        {
+            cameraParent.transform.position = targetParentPos;
+        }
         mainCamera.transform.position = targetPos;
         mainCamera.transform.rotation = targetRot;
         mainCamera.fieldOfView = 60f; // 최종 FOV 값 설정
-        
-        // 3초 후 원래 위치로 복귀
+
+        // 3초 후 버튼 클릭 직전 위치로 복귀
         yield return new WaitForSeconds(3f);
-        
-        // 카메라 부모 오브젝트 위치 복원
-        if (cameraParent != null)
-        {
-            cameraParent.transform.position = originalCameraParentPosition;
-        }
-        
-        // 원래 위치로 복귀 (FOV 포함)
-        yield return MoveCameraToPosition(originalCameraPosition, originalCameraRotation, originalCameraFOV);
-        
+
+        // 버튼 클릭 직전 위치로 복귀 (저장된 last 위치 사용)
+        yield return MoveCameraToPosition(lastCameraPosition, lastCameraRotation, lastCameraFOV, lastCameraParentPosition);
+
         isCameraMoving = false;
     }
     
-    // 카메라를 특정 위치로 이동
+    // 카메라를 특정 위치로 이동 (오버로드 - 부모 위치 없이)
     private IEnumerator MoveCameraToPosition(Vector3 targetPos, Quaternion targetRot, float targetFOV)
+    {
+        yield return MoveCameraToPosition(targetPos, targetRot, targetFOV, Vector3.zero, false);
+    }
+
+    // 카메라를 특정 위치로 이동 (부모 위치 포함)
+    private IEnumerator MoveCameraToPosition(Vector3 targetPos, Quaternion targetRot, float targetFOV, Vector3 targetParentPos, bool moveParent = true)
     {
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
         float startFOV = mainCamera.fieldOfView;
-        
+        Vector3 startParentPos = cameraParent != null ? cameraParent.transform.position : Vector3.zero;
+
         float elapsed = 0f;
         while (elapsed < cameraMoveDuration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / cameraMoveDuration;
-            
+
             // 부드러운 이동
             t = t * t * (3f - 2f * t);
-            
+
+            // 카메라 부모 오브젝트도 부드럽게 이동 (필요한 경우)
+            if (moveParent && cameraParent != null)
+            {
+                cameraParent.transform.position = Vector3.Lerp(startParentPos, targetParentPos, t);
+            }
+
             mainCamera.transform.position = Vector3.Lerp(startPos, targetPos, t);
             mainCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, t);
             mainCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, t); // FOV도 부드럽게 변경
-            
+
             yield return null;
         }
-        
+
+        // 최종 위치 설정
+        if (moveParent && cameraParent != null)
+        {
+            cameraParent.transform.position = targetParentPos;
+        }
         mainCamera.transform.position = targetPos;
         mainCamera.transform.rotation = targetRot;
         mainCamera.fieldOfView = targetFOV; // 최종 FOV 값 설정
