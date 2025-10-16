@@ -53,10 +53,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 petController.agent.SetAreaCost(waterArea, waterCost);
                 
                 // 디버그 로그로 설정된 비용 확인
-        // Debug.Log($"[WaterBehavior] {petController.petName} - Water Area Cost: {waterCost}, " +
-                          $"Habitat: {petController.habitat}, " +
-                          $"Diet: {petController.diet}, " +
-                          $"Eats Fish: {(petController.diet & PetTraits.DietaryFlags.Fish) != 0}");
+        // Debug.Log($"[WaterBehavior] {petController.petName} - Water Area Cost: {waterCost}, " +   $"Habitat: {petController.habitat}, " +$"Diet: {petController.diet}, " +                          $"Eats Fish: {(petController.diet & PetTraits.DietaryFlags.Fish) != 0}");
             }
         }
     }
