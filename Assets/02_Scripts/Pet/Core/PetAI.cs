@@ -95,7 +95,7 @@ public class PetAI : MonoBehaviour
         // 현재 활동이 완료되었는지 확인
         if (currentActivity != null && currentActivity.IsComplete)
         {
-            Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 활동이 완료되어 종료");
+        // Debug.Log($"[PetAI] {petController.petName}: {currentActivity.Name} 활동이 완료되어 종료");
             currentActivity.Stop();
             currentActivity = null;
         }
@@ -131,7 +131,7 @@ public class PetAI : MonoBehaviour
                 }
                 
                 // 긴급 상황이면 강제 전환 허용
-                Debug.Log($"[PetAI] {petController.petName}: 긴급 상황(우선순위 {highestPriority:F1})으로 {currentActivity.Name}에서 {bestActivity?.Name ?? "None"}으로 강제 전환");
+        // Debug.Log($"[PetAI] {petController.petName}: 긴급 상황(우선순위 {highestPriority:F1})으로 {currentActivity.Name}에서 {bestActivity?.Name ?? "None"}으로 강제 전환");
             }
             
             // 현재 활동 중단
@@ -193,7 +193,7 @@ public class PetAI : MonoBehaviour
     {
         if (currentActivity != null)
         {
-            Debug.Log($"[PetAI] {petController.petName}: 현재 활동 {currentActivity.Name} 강제 중단");
+        // Debug.Log($"[PetAI] {petController.petName}: 현재 활동 {currentActivity.Name} 강제 중단");
             currentActivity.Stop();
             currentActivity = null;
         }

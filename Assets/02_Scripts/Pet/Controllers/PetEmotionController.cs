@@ -114,7 +114,7 @@ public class PetEmotionController : MonoBehaviour
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
 
-        Debug.Log("감정 실행됨");
+        // Debug.Log("감정 실행됨");
         // 음식 감정이 아닌 다른 감정이면 배고픔 감정 일시 중단
         if (!IsFoodEmotion(emotion) && isShowingHungerEmotion)
         {

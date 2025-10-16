@@ -84,13 +84,13 @@ public class PetInteractionManager : MonoBehaviour
     {
         yield return new WaitForSeconds(startDelay);
         canStartInteractions = true;
-        Debug.Log("[PetInteractionManager] 상호작용 시스템 활성화!");
+        // Debug.Log("[PetInteractionManager] 상호작용 시스템 활성화!");
     }
 
     private void RegisterInteractions()
     {
         registeredInteractions.AddRange(GetComponents<BasePetInteraction>());
-        Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
+        // Debug.Log($"[PetInteractionManager] {registeredInteractions.Count}개의 상호작용 컴포넌트 등록됨");
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class PetInteractionManager : MonoBehaviour
     
     private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
     {
-        Debug.Log($"[PetInteractionManager] {pet1.petName}와 {pet2.petName} 사이에 {interaction.InteractionName} 시작!");
+        // Debug.Log($"[PetInteractionManager] {pet1.petName}와 {pet2.petName} 사이에 {interaction.InteractionName} 시작!");
         
         // 상호작용 실행
         interaction.StartInteraction(pet1, pet2);
@@ -173,7 +173,7 @@ public class PetInteractionManager : MonoBehaviour
             pet2.State.EndInteraction();
         }
         
-        Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
+        // Debug.Log($"[PetInteractionManager] 상호작용 종료: {(pet1Valid ? pet1.petName : "null")} - {(pet2Valid ? pet2.petName : "null")}");
     }
 
     private bool IsInteracting(PetController pet)
@@ -197,7 +197,7 @@ public class PetInteractionManager : MonoBehaviour
         allPets.Clear();
         PetController[] foundPets = FindObjectsOfType<PetController>();
         allPets.AddRange(foundPets);
-        Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
+        // Debug.Log($"[PetInteractionManager] 펫 리스트 새로고침 완료. 총 {allPets.Count}마리");
     }
 
     public void RegisterPet(PetController pet)
@@ -205,7 +205,7 @@ public class PetInteractionManager : MonoBehaviour
         if (pet != null && !allPets.Contains(pet))
         {
             allPets.Add(pet);
-            Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
+        // Debug.Log($"[PetInteractionManager] 펫 등록: {pet.petName}");
         }
     }
 
@@ -227,7 +227,7 @@ public class PetInteractionManager : MonoBehaviour
             }
             
             lastInteractionTime.Remove(pet);
-            Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
+        // Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
         }
     }
 
@@ -242,11 +242,11 @@ public class PetInteractionManager : MonoBehaviour
     [ContextMenu("현재 상태 출력")]
     public void PrintCurrentStatus()
     {
-        Debug.Log($"[PetInteractionManager] 현재 상태:");
-        Debug.Log($"  - 총 펫 수: {allPets.Count}");
-        Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
-        Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
-        Debug.Log($"  - 등록된 상호작용: {registeredInteractions.Count}개");
+        // Debug.Log($"[PetInteractionManager] 현재 상태:");
+        // Debug.Log($"  - 총 펫 수: {allPets.Count}");
+        // Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
+        // Debug.Log($"  - 쿨다운 중인 펫: {lastInteractionTime.Count}");
+        // Debug.Log($"  - 등록된 상호작용: {registeredInteractions.Count}개");
     }
 
     private void OnDestroy()

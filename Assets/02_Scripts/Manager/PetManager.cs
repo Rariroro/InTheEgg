@@ -110,7 +110,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             {
                 // 인덱스 순으로 정렬
                 System.Array.Sort(spawnSpots, (a, b) => a.SpotIndex.CompareTo(b.SpotIndex));
-                Debug.Log($"[PetManager] 씬에서 {spawnSpots.Length}개의 스폰 스팟을 찾았습니다.");
+        // Debug.Log($"[PetManager] 씬에서 {spawnSpots.Length}개의 스폰 스팟을 찾았습니다.");
             }
             else
             {
@@ -316,7 +316,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                 if (UnityEngine.EventSystems.EventSystem.current != null &&
                     UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(touch.fingerId))
                 {
-                    Debug.Log("[PetManager] UI가 터치를 가로챔 (모바일)");
+        // Debug.Log("[PetManager] UI가 터치를 가로챔 (모바일)");
                     return;
                 }
             }
@@ -331,7 +331,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             if (UnityEngine.EventSystems.EventSystem.current != null &&
                 UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
-                Debug.Log("[PetManager] UI가 터치를 가로챔 (PC)");
+        // Debug.Log("[PetManager] UI가 터치를 가로챔 (PC)");
                 return;
             }
         }
@@ -365,18 +365,18 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                 if (pendingGifts.ContainsKey(hitObject))
                 {
                     string petId = pendingGifts[hitObject];
-                    Debug.Log($"[PetManager] 선물 터치 감지: {petId}");
+        // Debug.Log($"[PetManager] 선물 터치 감지: {petId}");
                     StartCoroutine(OpenGift(hitObject, petId));
                     return;
                 }
             }
 
             // 선물이 아닌 다른 객체를 터치한 경우
-            Debug.Log($"[PetManager] 터치한 객체: {hits[0].collider.gameObject.name} (레이어: {LayerMask.LayerToName(hits[0].collider.gameObject.layer)})");
+        // Debug.Log($"[PetManager] 터치한 객체: {hits[0].collider.gameObject.name} (레이어: {LayerMask.LayerToName(hits[0].collider.gameObject.layer)})");
         }
         else
         {
-            Debug.Log("[PetManager] Raycast가 아무것도 감지하지 못함");
+        // Debug.Log("[PetManager] Raycast가 아무것도 감지하지 못함");
         }
     }
     
@@ -649,7 +649,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                 // 다음 스폰 스팟 인덱스로 이동
                 nextSpawnSpotIndex++;
 
-                Debug.Log($"[PetManager] 스폰 스팟 #{spotIndex + 1}에 펫 스폰 (사용 횟수: {usageCount + 1})");
+        // Debug.Log($"[PetManager] 스폰 스팟 #{spotIndex + 1}에 펫 스폰 (사용 횟수: {usageCount + 1})");
                 return spawnPosition;
             }
         }

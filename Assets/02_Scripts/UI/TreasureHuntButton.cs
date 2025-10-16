@@ -37,10 +37,12 @@ public class TreasureHuntButton : MonoBehaviour
     public Sprite progressSprite;
     
     private bool isHuntActive = false;
-    private float checkInterval = 1f; // 1초마다 조건 체크
+    private float checkInterval = 5f; // 5초마다 조건 체크 (성능 개선)
     private float checkTimer = 0f;
     private bool shouldShowConditionText = false; // 조건 텍스트 표시 여부
     private Image buttonImage; // 버튼의 Image 컴포넌트
+    private bool lastCanActivate = false; // 이전 활성화 상태 캐싱
+    private Sprite currentSprite = null; // 현재 설정된 스프라이트 캐싱
     
     private void Start()
     {
@@ -60,7 +62,7 @@ public class TreasureHuntButton : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log($"[TreasureHunt] buttonImage 찾음: {buttonImage.gameObject.name}, 현재 스프라이트: {(buttonImage.sprite != null ? buttonImage.sprite.name : "null")}");
+        // Debug.Log($"[TreasureHunt] buttonImage 찾음: {buttonImage.gameObject.name}, 현재 스프라이트: {(buttonImage.sprite != null ? buttonImage.sprite.name : "null")}");
                 }
             }
             else
@@ -69,9 +71,9 @@ public class TreasureHuntButton : MonoBehaviour
             }
 
             // 할당된 스프라이트 확인
-            Debug.Log($"[TreasureHunt] normalSprite: {(normalSprite != null ? normalSprite.name : "null")}");
-            Debug.Log($"[TreasureHunt] inactiveSprite: {(inactiveSprite != null ? inactiveSprite.name : "null")}");
-            Debug.Log($"[TreasureHunt] progressSprite: {(progressSprite != null ? progressSprite.name : "null")}");
+        // Debug.Log($"[TreasureHunt] normalSprite: {(normalSprite != null ? normalSprite.name : "null")}");
+        // Debug.Log($"[TreasureHunt] inactiveSprite: {(inactiveSprite != null ? inactiveSprite.name : "null")}");
+        // Debug.Log($"[TreasureHunt] progressSprite: {(progressSprite != null ? progressSprite.name : "null")}");
         }
         else
         {
@@ -124,7 +126,7 @@ public class TreasureHuntButton : MonoBehaviour
     /// </summary>
     private void OnButtonClick()
     {
-        Debug.Log("[TreasureHuntButton] 버튼 클릭!");
+        // Debug.Log("[TreasureHuntButton] 버튼 클릭!");
         
         if (TreasureHuntManager.Instance == null)
         {
@@ -135,7 +137,7 @@ public class TreasureHuntButton : MonoBehaviour
         if (isHuntActive)
         {
             // 진행 중에는 버튼 동작 안 함 (시작 버튼만 제공)
-            Debug.Log("[TreasureHuntButton] 보물찾기가 이미 진행 중입니다.");
+        // Debug.Log("[TreasureHuntButton] 보물찾기가 이미 진행 중입니다.");
             return;
         }
         else
@@ -152,18 +154,18 @@ public class TreasureHuntButton : MonoBehaviour
                 }
             }
             
-            Debug.Log($"[TreasureHuntButton] 조건 체크: {qualifiedPets}마리 참여 가능");
+        // Debug.Log($"[TreasureHuntButton] 조건 체크: {qualifiedPets}마리 참여 가능");
             
             if (qualifiedPets > 0)
             {
                 // 조건 만족 - 보물찾기 시작
-                Debug.Log("[TreasureHuntButton] 조건 만족 - 보물찾기 시작");
+        // Debug.Log("[TreasureHuntButton] 조건 만족 - 보물찾기 시작");
                 TreasureHuntManager.Instance.StartTreasureHunt();
             }
             else
             {
                 // 조건 불만족 - 조건 텍스트 잠시 표시
-                Debug.Log("[TreasureHuntButton] 조건 불만족 - 조건 텍스트 표시");
+        // Debug.Log("[TreasureHuntButton] 조건 불만족 - 조건 텍스트 표시");
                 ShowConditionTextTemporarily();
             }
         }
@@ -176,15 +178,19 @@ public class TreasureHuntButton : MonoBehaviour
     {
         if (buttonImage == null)
         {
-            Debug.LogWarning("[TreasureHunt] CheckButtonAvailability - buttonImage가 null입니다!");
+            // Debug.LogWarning("[TreasureHunt] CheckButtonAvailability - buttonImage가 null입니다!");
             return;
         }
 
         // 보물찾기 진행 중이면 항상 활성화
         if (isHuntActive)
         {
-            Debug.Log("[TreasureHunt] 보물찾기 진행 중 - progressSprite 설정");
-            SetButtonSprite(progressSprite);
+            // 이미 진행 중 스프라이트가 설정되어 있으면 변경하지 않음
+            if (currentSprite != progressSprite)
+            {
+                // Debug.Log("[TreasureHunt] 보물찾기 진행 중 - progressSprite 설정");
+                SetButtonSprite(progressSprite);
+            }
             return;
         }
 
@@ -202,10 +208,15 @@ public class TreasureHuntButton : MonoBehaviour
 
         bool canActivate = qualifiedPets > 0;
 
-        Debug.Log($"[TreasureHunt] 조건 체크: {qualifiedPets}/{allPets.Length}마리, canActivate: {canActivate}");
+        // 상태가 변경된 경우에만 업데이트
+        if (canActivate != lastCanActivate)
+        {
+        // Debug.Log($"[TreasureHunt] 조건 변경 감지: {qualifiedPets}/{allPets.Length}마리, canActivate: {canActivate}");
+            lastCanActivate = canActivate;
 
-        // 버튼 스프라이트 업데이트
-        SetButtonSprite(canActivate ? normalSprite : inactiveSprite);
+            // 버튼 스프라이트 업데이트
+            SetButtonSprite(canActivate ? normalSprite : inactiveSprite);
+        }
 
         // 조건 안내는 shouldShowConditionText가 true일 때만 표시
         if (shouldShowConditionText)
@@ -221,12 +232,19 @@ public class TreasureHuntButton : MonoBehaviour
     {
         if (buttonImage != null && sprite != null)
         {
-            Debug.Log($"[TreasureHunt] 스프라이트 변경: {sprite.name}, buttonImage: {buttonImage.gameObject.name}");
+            // 이미 같은 스프라이트면 변경하지 않음
+            if (currentSprite == sprite)
+            {
+                return;
+            }
+
+            // Debug.Log($"[TreasureHunt] 스프라이트 변경: {sprite.name}");
             buttonImage.sprite = sprite;
+            currentSprite = sprite;
         }
-        else
+        else if (sprite == null || buttonImage == null)
         {
-            Debug.LogWarning($"[TreasureHunt] 스프라이트 변경 실패 - buttonImage: {buttonImage != null}, sprite: {sprite != null}");
+            // Debug.LogWarning($"[TreasureHunt] 스프라이트 변경 실패 - buttonImage: {buttonImage != null}, sprite: {sprite != null}");
         }
     }
 
@@ -270,7 +288,7 @@ public class TreasureHuntButton : MonoBehaviour
     /// </summary>
     private void ShowConditionTextTemporarily()
     {
-        Debug.Log("[TreasureHuntButton] ShowConditionTextTemporarily 호출");
+        // Debug.Log("[TreasureHuntButton] ShowConditionTextTemporarily 호출");
         shouldShowConditionText = true;
         
         // 현재 조건 체크 및 표시
@@ -285,7 +303,7 @@ public class TreasureHuntButton : MonoBehaviour
             }
         }
         
-        Debug.Log($"[TreasureHuntButton] 조건 텍스트 표시: {qualifiedPets}/{allPets.Length}마리");
+        // Debug.Log($"[TreasureHuntButton] 조건 텍스트 표시: {qualifiedPets}/{allPets.Length}마리");
         UpdateConditionText(qualifiedPets, allPets.Length);
         
         // 3초 후 자동으로 숨기기

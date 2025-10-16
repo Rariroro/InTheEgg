@@ -482,7 +482,7 @@ public class PetInputController : PetControllerBase
                 if (waterArea != -1 && (1 << waterArea) == navHit.mask)
                 {
                     // 물 영역이면 드롭 다이빙 시퀀스 실행
-                    Debug.Log($"StopHolding() - 물 영역 감지! 다이빙 시퀀스 시작");
+        // Debug.Log($"StopHolding() - 물 영역 감지! 다이빙 시퀀스 시작");
 
                     // 물 표면 높이 가져오기
                     float waterSurfaceY = hit.point.y;  // 기본값
@@ -731,7 +731,7 @@ public class PetInputController : PetControllerBase
         }
 
         // ===== 물 착수 =====
-        Debug.Log($"{petController.petName}: 물에 착수!");
+        // Debug.Log($"{petController.petName}: 물에 착수!");
 
         // 물 입수 시작 이벤트
         var waterController = petController.GetComponent<PetWaterBehaviorController>();
@@ -759,7 +759,7 @@ public class PetInputController : PetControllerBase
         petController.ResumeMovement();
         Deselect();
 
-        Debug.Log($"{petController.petName}: 드롭 다이빙 시퀀스 완료!");
+        // Debug.Log($"{petController.petName}: 드롭 다이빙 시퀀스 완료!");
     }
 
     /// <summary>
@@ -963,7 +963,7 @@ public class PetInputController : PetControllerBase
     /// </summary>
     private void ForceStopInteraction()
     {
-        Debug.Log($"[ForceStopInteraction] {petController.petName}: 상호작용 강제 중단 시작");
+        // Debug.Log($"[ForceStopInteraction] {petController.petName}: 상호작용 강제 중단 시작");
         
         if (petController.State.InteractionLogic != null)
         {
@@ -992,7 +992,7 @@ public class PetInputController : PetControllerBase
                     PetInteractionManager.Instance.NotifyInteractionEnded(petController, partner);
                 }
                 
-                Debug.Log($"[ForceStopInteraction] {petController.petName} & {partner.petName}: 상호작용 강제 중단 완료");
+        // Debug.Log($"[ForceStopInteraction] {petController.petName} & {partner.petName}: 상호작용 강제 중단 완료");
             }
             else
             {
@@ -1009,7 +1009,7 @@ public class PetInputController : PetControllerBase
     {
         if (pet == null) return;
         
-        Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 시작");
+        // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 시작");
         
         // 1. 상태 초기화
         pet.State.EndInteraction();
@@ -1047,14 +1047,14 @@ public class PetInputController : PetControllerBase
         // 6. AI 강제 재시작 (즉시)
         if (pet.AI != null)
         {
-            Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: AI 강제 재시작");
+        // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: AI 강제 재시작");
             pet.AI.InterruptAndResetAI();
             
             // 0.2초 후에도 AI가 활동이 없으면 Wander 강제 시작
             pet.StartCoroutine(EnsureActivityAfterDelay(pet, 0.2f));
         }
         
-        Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 완료");
+        // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 완료");
     }
     
     /// <summary>

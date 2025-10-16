@@ -271,7 +271,7 @@ public class PreferredZone : MonoBehaviour
                 if (!boxCollider.isTrigger)
                 {
                     boxCollider.isTrigger = true;
-                    Debug.Log($"{gameObject.name}: Box Collider의 Is Trigger를 자동으로 활성화했습니다.");
+        // Debug.Log($"{gameObject.name}: Box Collider의 Is Trigger를 자동으로 활성화했습니다.");
                 }
             }
         }

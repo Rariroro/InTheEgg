@@ -277,7 +277,7 @@ namespace LegendaryPet
                                 // 새로운 위치도 높이 차이 검증
                                 if (Mathf.Abs(newHit.position.y - transform.position.y) <= maxHeightDifference)
                                 {
-                                    Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 조정 후 유효한 목적지 찾음");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 조정 후 유효한 목적지 찾음");
                                     return newHit.position;
                                 }
                             }
@@ -290,7 +290,7 @@ namespace LegendaryPet
                         }
                         else
                         {
-                            Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m - 재시도 {retry + 1}/{maxRetries}");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m - 재시도 {retry + 1}/{maxRetries}");
                         }
                         continue; // 다음 재시도
                     }
@@ -298,7 +298,7 @@ namespace LegendaryPet
                     // 유효한 목적지 찾음
                     if (heightDifference > 5f)
                     {
-                        Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m의 목적지로 이동");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName}: 높이 차이 {heightDifference:F1}m의 목적지로 이동");
                     }
                     return hit.position;
                 }
@@ -363,7 +363,7 @@ namespace LegendaryPet
         // 비행 수행
         private IEnumerator PerformFlight()
         {
-            Debug.Log($"[LegendaryPetAI] {controller.PetName}이(가) 비행을 시작합니다!");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName}이(가) 비행을 시작합니다!");
             
             // 비행 목적지 설정 (현재 위치에서 랜덤한 방향)
             Vector3 flyDestination = GetRandomFlightDestination();
@@ -418,7 +418,7 @@ namespace LegendaryPet
                 {
                     destination = navHit.position;
                     foundValidDestination = true;
-                    Debug.Log($"[LegendaryPetAI] {controller.PetName}: 유효한 비행 목적지 생성 - {destination}");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName}: 유효한 비행 목적지 생성 - {destination}");
                     break;
                 }
             }
@@ -447,7 +447,7 @@ namespace LegendaryPet
         public void SetMovementPattern(MovementPattern pattern)
         {
             currentPattern = pattern;
-            Debug.Log($"[LegendaryPetAI] {controller.PetName} 움직임 패턴 변경: {pattern}");
+        // Debug.Log($"[LegendaryPetAI] {controller.PetName} 움직임 패턴 변경: {pattern}");
         }
         
     }

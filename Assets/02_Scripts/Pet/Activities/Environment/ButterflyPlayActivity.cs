@@ -68,7 +68,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // 처음 시작할 때만 50% 확률로 나비에게 관심을 가짐
         if (Random.Range(0f, 1f) > PLAY_INTEREST_CHANCE)
         {
-            Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비를 봤지만 관심 없음");
+        // Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비를 봤지만 관심 없음");
             return false;
         }
         
@@ -99,7 +99,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비와 놀기 시작!");
+        // Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비와 놀기 시작!");
         
         isPlayingWithButterfly = true;
         hasShowedEmotion = false;
@@ -135,7 +135,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
                 {
                     pet.transform.position = hit.position;
-                    Debug.Log($"[ButterflyPlayActivity] NavMesh 위치로 보정됨: {hit.position}");
+        // Debug.Log($"[ButterflyPlayActivity] NavMesh 위치로 보정됨: {hit.position}");
                 }
                 else
                 {
@@ -145,7 +145,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
             
             // 속도 약간 증가
             pet.agent.speed = pet.baseSpeed * CHASE_SPEED_MULTIPLIER;
-            Debug.Log($"[ButterflyPlayActivity] 속도 증가: {pet.agent.speed}");
+        // Debug.Log($"[ButterflyPlayActivity] 속도 증가: {pet.agent.speed}");
         }
         else
         {
@@ -159,7 +159,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (playCoroutine != null)
             pet.StopCoroutine(playCoroutine);
         playCoroutine = pet.StartCoroutine(PlayWithButterfly());
-        Debug.Log($"[ButterflyPlayActivity] PlayWithButterfly 코루틴 시작됨");
+        // Debug.Log($"[ButterflyPlayActivity] PlayWithButterfly 코루틴 시작됨");
     }
     
     public override void Update()
@@ -174,7 +174,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // 나비가 사라졌는지 체크
         if (targetButterfly == null || !targetButterfly.activeInHierarchy)
         {
-            Debug.Log($"[ButterflyPlayActivity] 나비가 사라져서 놀이 종료");
+        // Debug.Log($"[ButterflyPlayActivity] 나비가 사라져서 놀이 종료");
             isPlayingWithButterfly = false;
             return;
         }
@@ -182,7 +182,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // 놀이 시간 초과 체크
         if (Time.time - playStartTime > PLAY_DURATION)
         {
-            Debug.Log($"[ButterflyPlayActivity] 놀이 시간 종료");
+        // Debug.Log($"[ButterflyPlayActivity] 놀이 시간 종료");
             isPlayingWithButterfly = false;
             return;
         }
@@ -196,7 +196,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[ButterflyPlayActivity] {pet.petName}의 나비 놀이 종료");
+        // Debug.Log($"[ButterflyPlayActivity] {pet.petName}의 나비 놀이 종료");
         
         // 코루틴 정지
         if (playCoroutine != null)
@@ -249,7 +249,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 if (distance < DETECTION_RANGE)
                 {
                     targetButterfly = butterfly;
-                    Debug.Log($"[ButterflyPlayActivity] 이름으로 나비 발견: {distance:F1}m 거리");
+        // Debug.Log($"[ButterflyPlayActivity] 이름으로 나비 발견: {distance:F1}m 거리");
                 }
             }
             return;
@@ -271,7 +271,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         
         if (targetButterfly != null)
         {
-            Debug.Log($"[ButterflyPlayActivity] 나비 발견: {nearestDistance:F1}m 거리");
+        // Debug.Log($"[ButterflyPlayActivity] 나비 발견: {nearestDistance:F1}m 거리");
         }
     }
     
@@ -283,17 +283,17 @@ public class ButterflyPlayActivity : PetActivityAdapter
             yield break;
         }
         
-        Debug.Log($"[PlayWithButterfly] 코루틴 시작! 나비까지 거리: {Vector3.Distance(pet.transform.position, targetButterfly.transform.position):F1}m");
+        // Debug.Log($"[PlayWithButterfly] 코루틴 시작! 나비까지 거리: {Vector3.Distance(pet.transform.position, targetButterfly.transform.position):F1}m");
         
         // 나비에게 접근
         while (targetButterfly != null && isPlayingWithButterfly)
         {
             float distance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
-            Debug.Log($"[PlayWithButterfly] 현재 거리: {distance:F1}m, PLAY_DISTANCE: {PLAY_DISTANCE}m");
+        // Debug.Log($"[PlayWithButterfly] 현재 거리: {distance:F1}m, PLAY_DISTANCE: {PLAY_DISTANCE}m");
             
             if (distance > PLAY_DISTANCE)
             {
-                Debug.Log($"[PlayWithButterfly] 나비에게 이동 중...");
+        // Debug.Log($"[PlayWithButterfly] 나비에게 이동 중...");
                 // 나비에게 이동
                 if (pet.agent != null && pet.agent.enabled)
                 {
@@ -301,7 +301,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                     if (pet.agent.isOnNavMesh)
                     {
                         pet.agent.SetDestination(targetButterfly.transform.position);
-                        Debug.Log($"[PlayWithButterfly] SetDestination 호출: {targetButterfly.transform.position}");
+        // Debug.Log($"[PlayWithButterfly] SetDestination 호출: {targetButterfly.transform.position}");
                     }
                     else
                     {
@@ -315,7 +315,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                             if (pet.agent.isOnNavMesh)
                             {
                                 pet.agent.SetDestination(targetButterfly.transform.position);
-                                Debug.Log($"[PlayWithButterfly] NavMesh 위치 보정 후 SetDestination 호출");
+        // Debug.Log($"[PlayWithButterfly] NavMesh 위치 보정 후 SetDestination 호출");
                             }
                         }
                         else
@@ -328,7 +328,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                     if (animationController != null)
                     {
                         animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-                        Debug.Log($"[PlayWithButterfly] Run 애니메이션 설정");
+        // Debug.Log($"[PlayWithButterfly] Run 애니메이션 설정");
                     }
                 }
                 else
@@ -340,7 +340,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
             }
             else
             {
-                Debug.Log($"[PlayWithButterfly] 나비 근처 도착! 놀이 시작");
+        // Debug.Log($"[PlayWithButterfly] 나비 근처 도착! 놀이 시작");
                 // 나비 주변에서 놀기
                 yield return PlayAroundButterfly();
                 // PlayAroundButterfly가 끝나면 바로 다시 거리 체크 (대기 없이)
@@ -348,12 +348,12 @@ public class ButterflyPlayActivity : PetActivityAdapter
             }
         }
         
-        Debug.Log($"[PlayWithButterfly] 코루틴 종료. targetButterfly null: {targetButterfly == null}, isPlaying: {isPlayingWithButterfly}");
+        // Debug.Log($"[PlayWithButterfly] 코루틴 종료. targetButterfly null: {targetButterfly == null}, isPlaying: {isPlayingWithButterfly}");
     }
     
     private IEnumerator PlayAroundButterfly()
     {
-        Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비 주변에서 놀기 시작!");
+        // Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 나비 주변에서 놀기 시작!");
         
         float playTime = 0f;
         

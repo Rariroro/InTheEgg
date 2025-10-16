@@ -209,7 +209,7 @@ public class PetSelectionUI : MonoBehaviour
             int legendCount = LegendaryPet.LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count;
             if (legendCount > 0)
             {
-                Debug.Log($"선택된 레전드 펫: {legendCount}개");
+        // Debug.Log($"선택된 레전드 펫: {legendCount}개");
             }
         }
         

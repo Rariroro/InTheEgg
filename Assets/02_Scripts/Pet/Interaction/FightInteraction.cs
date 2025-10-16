@@ -375,7 +375,7 @@ public class FightInteraction : BasePetInteraction
         // 기본 거리에 평균 배율 적용
         float adjustedDistance = fightDistance * averageMultiplier;
         
-        Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
+        // Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
         
         return adjustedDistance;
     }

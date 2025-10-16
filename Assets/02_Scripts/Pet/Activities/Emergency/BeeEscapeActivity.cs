@@ -49,12 +49,12 @@ public class BeeEscapeActivity : PetActivityAdapter
                 // 배고픔이 아직 남아있으면 계속 먹어야 함
                 if (pet.Needs != null && pet.Needs.Hunger >= 70f)
                 {
-                    Debug.Log($"[BeeEscapeActivity] {pet.petName}: 아직 배고픔({pet.Needs.Hunger:F1}), 계속 먹기");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}: 아직 배고픔({pet.Needs.Hunger:F1}), 계속 먹기");
                     return 0.5f; // 매우 낮은 우선순위 - 먹기를 방해하지 않음
                 }
                 
                 // 배고픔이 해소되었으면 이제 도망갈 수 있음
-                Debug.Log($"[BeeEscapeActivity] {pet.petName}: 배고픔 해소({pet.Needs.Hunger:F1}), 이제 도망!");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}: 배고픔 해소({pet.Needs.Hunger:F1}), 이제 도망!");
                 return 100f; // 최우선순위로 도망
             }
             
@@ -83,7 +83,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) 벌 공격으로부터 도망가기 시작!");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) 벌 공격으로부터 도망가기 시작!");
         
         hasShowedEmotion = false;
         isEscaping = true;
@@ -141,7 +141,7 @@ public class BeeEscapeActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[BeeEscapeActivity] {pet.petName}의 벌 도망 행동 종료");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}의 벌 도망 행동 종료");
         
         // 속도 원래대로
         if (pet.agent != null)
@@ -185,7 +185,7 @@ public class BeeEscapeActivity : PetActivityAdapter
             escapeDestination = hit.position;
             pet.agent.SetDestination(escapeDestination);
             
-            Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) {escapeDestination} 방향으로 도망!");
+        // Debug.Log($"[BeeEscapeActivity] {pet.petName}이(가) {escapeDestination} 방향으로 도망!");
         }
         else
         {

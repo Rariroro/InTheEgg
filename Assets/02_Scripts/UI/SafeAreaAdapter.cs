@@ -78,7 +78,7 @@ public class SafeAreaAdapter : MonoBehaviour
         lastScreenSize = new Vector2Int(Screen.width, Screen.height);
 
         #if UNITY_EDITOR || DEBUG
-        Debug.Log($"[SafeAreaAdapter] Safe Area 적용: {safeArea} (Screen: {Screen.width}x{Screen.height})");
+        // Debug.Log($"[SafeAreaAdapter] Safe Area 적용: {safeArea} (Screen: {Screen.width}x{Screen.height})");
         #endif
     }
 

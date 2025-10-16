@@ -21,7 +21,7 @@ public class InteractWithPetActivity : PetActivityAdapter
             // 상호작용 중이었다면 즉시 false 반환하여 활동 전환 유도
             if (pet.State.IsInteracting)
             {
-                Debug.Log($"[InteractWithPetActivity] {pet.petName}: 터치/홀드로 인해 상호작용 불가");
+        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: 터치/홀드로 인해 상호작용 불가");
             }
             return false;
         }
@@ -64,7 +64,7 @@ public class InteractWithPetActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 활동 종료");
+        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: 상호작용 활동 종료");
         
         // 상호작용이 아직 남아있다면 강제로 정리
         if (pet.State.IsInteracting)
@@ -84,7 +84,7 @@ public class InteractWithPetActivity : PetActivityAdapter
         // AI 재평가 트리거
         if (pet.AI != null)
         {
-            Debug.Log($"[InteractWithPetActivity] {pet.petName}: AI 재평가 요청");
+        // Debug.Log($"[InteractWithPetActivity] {pet.petName}: AI 재평가 요청");
             // 약간의 지연 후 AI 재평가 (즉시 하면 충돌 가능)
             pet.StartCoroutine(TriggerAIRestart(0.1f));
         }

@@ -125,7 +125,7 @@ public class PetFeedingController : PetControllerBase
         if (!petController.agent.enabled)
         {
             petController.agent.enabled = true;
-            Debug.Log($"[Feeding] {petController.petName}: NavMeshAgent 재활성화 시도");
+        // Debug.Log($"[Feeding] {petController.petName}: NavMeshAgent 재활성화 시도");
         }
         
         // NavMesh에 없으면 재배치 시도
@@ -135,7 +135,7 @@ public class PetFeedingController : PetControllerBase
             if (UnityEngine.AI.NavMesh.SamplePosition(petController.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
             {
                 petController.agent.Warp(hit.position);
-                Debug.Log($"[Feeding] {petController.petName}: NavMesh로 재배치 성공");
+        // Debug.Log($"[Feeding] {petController.petName}: NavMesh로 재배치 성공");
             }
             else
             {
@@ -148,7 +148,7 @@ public class PetFeedingController : PetControllerBase
         float radius = searchRadius > 0 ? searchRadius : detectionRadius;
         
         Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, foodItemLayer);
-        Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {radius}m)");
+        // Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {radius}m)");
         GameObject nearestFood = FindClosestMatchingFood(foodColliders);
 
         if (nearestFood != null)
@@ -157,12 +157,12 @@ public class PetFeedingController : PetControllerBase
             targetFood = nearestFood;
             petController.agent.SetDestination(targetFood.transform.position); 
             petController.ResumeMovement();
-            Debug.Log($"[Feeding] {petController.petName}: 음식 {nearestFood.name}을(를) 향해 이동 시작");
+        // Debug.Log($"[Feeding] {petController.petName}: 음식 {nearestFood.name}을(를) 향해 이동 시작");
             return;
         }
         
         Collider[] areaColliders = Physics.OverlapSphere(transform.position, radius, feedingAreaLayer);
-        Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {radius}m)");
+        // Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {radius}m)");
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
 
         if (nearestArea != null)
@@ -171,11 +171,11 @@ public class PetFeedingController : PetControllerBase
             targetFeedingArea = nearestArea;
             petController.agent.SetDestination(nearestArea.transform.position);
             petController.ResumeMovement();
-            Debug.Log($"[Feeding] {petController.petName}: 피딩 에어리어 {nearestArea.name}을(를) 향해 이동 시작");
+        // Debug.Log($"[Feeding] {petController.petName}: 피딩 에어리어 {nearestArea.name}을(를) 향해 이동 시작");
         }
         else
         {
-            Debug.Log($"[Feeding] {petController.petName}: 먹을 수 있는 음식을 찾지 못함");
+        // Debug.Log($"[Feeding] {petController.petName}: 먹을 수 있는 음식을 찾지 못함");
         }
     }
     
@@ -188,7 +188,7 @@ public class PetFeedingController : PetControllerBase
         // 디버그: 펫의 현재 식성 출력
         if (colliders.Length > 0)
         {
-            Debug.Log($"[Feeding] {petController.petName}의 식성: {petController.diet} ({PetTraits.GetDietaryDescription(petController.diet)})");
+        // Debug.Log($"[Feeding] {petController.petName}의 식성: {petController.diet} ({PetTraits.GetDietaryDescription(petController.diet)})");
         }
 
         foreach (var col in colliders)
@@ -203,7 +203,7 @@ public class PetFeedingController : PetControllerBase
             }
 
             // 디버그: 발견된 음식 타입 출력
-            Debug.Log($"[Feeding] 발견된 음식: {col.name}, 타입: {foodType} ({PetTraits.GetDietaryDescription(foodType)})");
+        // Debug.Log($"[Feeding] 발견된 음식: {col.name}, 타입: {foodType} ({PetTraits.GetDietaryDescription(foodType)})");
 
             if ((petController.diet & foodType) != 0)
             {
@@ -212,12 +212,12 @@ public class PetFeedingController : PetControllerBase
                 {
                     nearestSource = col.gameObject;
                     nearestDistSqr = distSqr;
-                    Debug.Log($"[Feeding] {petController.petName}이(가) 먹을 수 있는 음식 발견: {col.name}");
+        // Debug.Log($"[Feeding] {petController.petName}이(가) 먹을 수 있는 음식 발견: {col.name}");
                 }
             }
             else
             {
-                Debug.Log($"[Feeding] {petController.petName}은(는) {col.name}을(를) 먹을 수 없음 (식성 불일치)");
+        // Debug.Log($"[Feeding] {petController.petName}은(는) {col.name}을(를) 먹을 수 없음 (식성 불일치)");
             }
         }
         return nearestSource;

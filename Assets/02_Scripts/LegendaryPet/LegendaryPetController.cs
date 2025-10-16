@@ -89,7 +89,7 @@ namespace LegendaryPet
                 }
                 
                 SetupVisualEffects();
-                Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료");
+        // Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료");
             }
             else
             {
@@ -272,13 +272,13 @@ namespace LegendaryPet
             // 유니콘과 드래곤만 비행 가능
             if (!traits.canFly || !(petType == LegendaryPetType.Dragon || petType == LegendaryPetType.Unicorn))
             {
-                Debug.Log($"[LegendaryPet] {petName}은(는) 비행할 수 없습니다.");
+        // Debug.Log($"[LegendaryPet] {petName}은(는) 비행할 수 없습니다.");
                 return false;
             }
             
             if (isFlying)
             {
-                Debug.Log($"[LegendaryPet] {petName}은(는) 이미 비행 중입니다.");
+        // Debug.Log($"[LegendaryPet] {petName}은(는) 이미 비행 중입니다.");
                 return false;
             }
             
@@ -307,7 +307,7 @@ namespace LegendaryPet
             startFlyHeight = startGroundHeight + flyHeight;
             targetFlyHeight = maxGroundHeight + flyHeight;
             
-            Debug.Log($"[LegendaryPet] {petName}: 비행 목적지 설정 - {flyDestination}, 시작 높이: {startFlyHeight}, 목표 높이: {targetFlyHeight}");
+        // Debug.Log($"[LegendaryPet] {petName}: 비행 목적지 설정 - {flyDestination}, 시작 높이: {startFlyHeight}, 목표 높이: {targetFlyHeight}");
             
             if (flyingCoroutine != null)
             {
@@ -326,7 +326,7 @@ namespace LegendaryPet
             // 착륙 플래그만 설정하고 FlyToDestination이 자연스럽게 종료되도록 함
             // 목적지를 현재 위치로 설정하여 즉시 착륙 유도
             flyDestination = new Vector3(transform.position.x, 0, transform.position.z);
-            Debug.Log($"[LegendaryPet] {petName}: 비행 중지 요청 - 현재 위치에서 착륙");
+        // Debug.Log($"[LegendaryPet] {petName}: 비행 중지 요청 - 현재 위치에서 착륙");
         }
         
         // 비행 코루틴
@@ -378,7 +378,7 @@ namespace LegendaryPet
             float expectedFlightTime = totalDistance / flySpeed;  // 예상 비행 시간
             float maxFlightTime = expectedFlightTime + 10f;       // 10초 여유 추가
             
-            Debug.Log($"[LegendaryPet] {petName}: 비행 시작 - 거리: {totalDistance:F1}, 예상 시간: {expectedFlightTime:F1}초, 제한 시간: {maxFlightTime:F1}초");
+        // Debug.Log($"[LegendaryPet] {petName}: 비행 시작 - 거리: {totalDistance:F1}, 예상 시간: {expectedFlightTime:F1}초, 제한 시간: {maxFlightTime:F1}초");
             
             while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z), 
                                    new Vector3(flyDestination.x, 0, flyDestination.z)) > 1f)
@@ -410,7 +410,7 @@ namespace LegendaryPet
                 // 방향이 유효하지 않으면 중단
                 if (direction.magnitude < 0.01f)
                 {
-                    Debug.Log($"[LegendaryPet] {petName}: 목적지에 도달했습니다.");
+        // Debug.Log($"[LegendaryPet] {petName}: 목적지에 도달했습니다.");
                     break;
                 }
                 
@@ -467,7 +467,7 @@ namespace LegendaryPet
             }
             
             transform.position = normalizedPos;
-            Debug.Log($"[LegendaryPet] {petName}: 착륙 준비 완료 - 정규화된 높이: {normalizedPos.y:F2}");
+        // Debug.Log($"[LegendaryPet] {petName}: 착륙 준비 완료 - 정규화된 높이: {normalizedPos.y:F2}");
             
             // 착륙
             yield return StartCoroutine(Land());
@@ -481,7 +481,7 @@ namespace LegendaryPet
             // bobAmount 효과를 제거하여 실제 비행 높이 복원
             float actualHeight = currentPos.y;
             
-            Debug.Log($"[LegendaryPet] {petName}: 착륙 시작 - 현재 높이: {actualHeight:F2}");
+        // Debug.Log($"[LegendaryPet] {petName}: 착륙 시작 - 현재 높이: {actualHeight:F2}");
             
             Vector3 targetLandingPos = currentPos;
             
@@ -494,7 +494,7 @@ namespace LegendaryPet
             {
                 targetLandingPos = groundHit.point;
                 foundGround = true;
-                Debug.Log($"[LegendaryPet] {petName}: 지면 감지 - 목표 높이: {groundHit.point.y:F2}, 거리: {(actualHeight - groundHit.point.y):F2}");
+        // Debug.Log($"[LegendaryPet] {petName}: 지면 감지 - 목표 높이: {groundHit.point.y:F2}, 거리: {(actualHeight - groundHit.point.y):F2}");
             }
             
             // Raycast가 실패하면 NavMesh에서 찾기
@@ -505,7 +505,7 @@ namespace LegendaryPet
                 if (NavMesh.SamplePosition(new Vector3(currentPos.x, 0, currentPos.z), out navHit, 30f, NavMesh.AllAreas))
                 {
                     targetLandingPos = navHit.position;
-                    Debug.Log($"[LegendaryPet] {petName}: NavMesh 위치 사용 - {targetLandingPos}");
+        // Debug.Log($"[LegendaryPet] {petName}: NavMesh 위치 사용 - {targetLandingPos}");
                 }
                 else
                 {
@@ -543,7 +543,7 @@ namespace LegendaryPet
             float descendDistance = Mathf.Abs(startHeight - targetHeight);
             float descendTime = Mathf.Max(0.5f, descendDistance / (descendSpeed * 3f)); // 최소 0.5초
             
-            Debug.Log($"[LegendaryPet] {petName}: 하강 시작 - 시작 높이: {startHeight:F2}, 목표 높이: {targetHeight:F2}, 예상 시간: {descendTime:F2}초");
+        // Debug.Log($"[LegendaryPet] {petName}: 하강 시작 - 시작 높이: {startHeight:F2}, 목표 높이: {targetHeight:F2}, 예상 시간: {descendTime:F2}초");
             
             float elapsed = 0f;
             
@@ -567,7 +567,7 @@ namespace LegendaryPet
                         // 실시간으로 착지 높이 조정
                         if (groundHit.point.y > targetHeight)
                         {
-                            Debug.Log($"[LegendaryPet] {petName}: 지면 높이 재조정 - {targetHeight:F2} → {groundHit.point.y:F2}");
+        // Debug.Log($"[LegendaryPet] {petName}: 지면 높이 재조정 - {targetHeight:F2} → {groundHit.point.y:F2}");
                             targetHeight = groundHit.point.y;
                             endPos.y = targetHeight;
                         }
@@ -579,7 +579,7 @@ namespace LegendaryPet
                 // 디버그용 현재 높이 출력 (매 10프레임마다)
                 if (Time.frameCount % 10 == 0)
                 {
-                    Debug.Log($"[LegendaryPet] {petName}: 하강 중 - 진행도: {(t*100):F0}%, 현재 높이: {currentPosition.y:F2}");
+        // Debug.Log($"[LegendaryPet] {petName}: 하강 중 - 진행도: {(t*100):F0}%, 현재 높이: {currentPosition.y:F2}");
                 }
                 
                 yield return null;
@@ -611,7 +611,7 @@ namespace LegendaryPet
                 if (agent.enabled && agent.isOnNavMesh)
                 {
                     agent.isStopped = false;
-                    Debug.Log($"[LegendaryPet] {petName}: 착륙 완료!");
+        // Debug.Log($"[LegendaryPet] {petName}: 착륙 완료!");
                 }
                 else
                 {

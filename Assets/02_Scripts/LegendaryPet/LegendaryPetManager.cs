@@ -97,7 +97,7 @@ namespace LegendaryPet
             DontDestroyOnLoad(gameObject);
             applicationIsQuitting = false;
             
-            Debug.Log("[LegendaryPetManager] 매니저 초기화 완료");
+        // Debug.Log("[LegendaryPetManager] 매니저 초기화 완료");
         }
         
         private void Start()
@@ -237,7 +237,7 @@ namespace LegendaryPet
                     if (controller != null)
                     {
                         spawnCount++;
-                        Debug.Log($"[LegendaryPetManager] 레전드 펫 스폰 ({spawnCount}/{maxLegendaryPets}): {controller.PetType}");
+        // Debug.Log($"[LegendaryPetManager] 레전드 펫 스폰 ({spawnCount}/{maxLegendaryPets}): {controller.PetType}");
                     }
                     else
                     {
@@ -253,7 +253,7 @@ namespace LegendaryPet
             }
             else
             {
-                Debug.Log($"[LegendaryPetManager] 총 {spawnCount}개의 레전드 펫 스폰 완료");
+        // Debug.Log($"[LegendaryPetManager] 총 {spawnCount}개의 레전드 펫 스폰 완료");
             }
         }
         
@@ -262,7 +262,7 @@ namespace LegendaryPet
             if (pet == null || legendaryPets.Contains(pet)) return;
             
             legendaryPets.Add(pet);
-            Debug.Log($"[LegendaryPetManager] {pet.PetName} ({pet.PetType}) 등록 완료");
+        // Debug.Log($"[LegendaryPetManager] {pet.PetName} ({pet.PetType}) 등록 완료");
             
             OnLegendaryPetSpawned?.Invoke(pet);
         }
@@ -272,7 +272,7 @@ namespace LegendaryPet
             if (pet == null || !legendaryPets.Contains(pet)) return;
             
             legendaryPets.Remove(pet);
-            Debug.Log($"[LegendaryPetManager] {pet.PetName} ({pet.PetType}) 등록 해제");
+        // Debug.Log($"[LegendaryPetManager] {pet.PetName} ({pet.PetType}) 등록 해제");
             
             OnLegendaryPetRemoved?.Invoke(pet);
         }
@@ -406,7 +406,7 @@ namespace LegendaryPet
                         Destroy(effect, 5f);
                     }
                     
-                    Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
+        // Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
                 }
                 else
                 {
@@ -445,7 +445,7 @@ namespace LegendaryPet
             // 선물 딕셔너리에 추가
             pendingGifts.Add(gift, legendaryPetId);
             
-            Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - 위치: {giftPosition}");
+        // Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - 위치: {giftPosition}");
         }
         
         // 선물 열기 코루틴
@@ -486,7 +486,7 @@ namespace LegendaryPet
             // 레전드 펫 스폰
             SpawnLegendaryPetAtPosition(legendaryPetId, giftPosition, true);
             
-            Debug.Log($"[LegendaryPetManager] 선물 열기 완료: {legendaryPetId}");
+        // Debug.Log($"[LegendaryPetManager] 선물 열기 완료: {legendaryPetId}");
         }
         
         // 기존 OpenGift 메서드 (외부에서 호출용)
@@ -534,7 +534,7 @@ namespace LegendaryPet
                 NavMeshHit hit;
                 if (NavMesh.SamplePosition(randomPos, out hit, 50f, NavMesh.AllAreas))
                 {
-                    Debug.Log($"[LegendaryPetManager] NavMesh 위치 찾기 성공 (시도 {i+1}/10): {hit.position}");
+        // Debug.Log($"[LegendaryPetManager] NavMesh 위치 찾기 성공 (시도 {i+1}/10): {hit.position}");
                     return hit.position;
                 }
             }
@@ -570,7 +570,7 @@ namespace LegendaryPet
                 }
             }
             
-            Debug.Log($"[LegendaryPetManager] 글로벌 효과: {(enabled ? "활성화" : "비활성화")}");
+        // Debug.Log($"[LegendaryPetManager] 글로벌 효과: {(enabled ? "활성화" : "비활성화")}");
         }
         
         public void SetAllPetsMovementPattern(LegendaryPetAI.MovementPattern pattern)
@@ -587,7 +587,7 @@ namespace LegendaryPet
                 }
             }
             
-            Debug.Log($"[LegendaryPetManager] 모든 레전드 펫 움직임 패턴 변경: {pattern}");
+        // Debug.Log($"[LegendaryPetManager] 모든 레전드 펫 움직임 패턴 변경: {pattern}");
         }
         
         public LegendaryPetController GetLegendaryPetByType(LegendaryPetType type)

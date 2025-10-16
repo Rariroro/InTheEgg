@@ -104,12 +104,12 @@ public class TreasureSpot : MonoBehaviour
         {
             if (IsOccupied && occupyingPet != pet)
             {
-                Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 실패 - 이미 {occupyingPet?.petName}이(가) 점유 중");
+        // Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 실패 - 이미 {occupyingPet?.petName}이(가) 점유 중");
                 return false;
             }
             
             occupyingPet = pet;
-            Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 성공");
+        // Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 성공");
             return true;
         }
     }
@@ -126,14 +126,14 @@ public class TreasureSpot : MonoBehaviour
             // (자신이 예약한 경우는 성공)
             if (!HasTreasure || (occupyingPet != null && occupyingPet != pet))
             {
-                Debug.Log($"[TreasureSpot] {pet.petName}: 보물 획득 실패 - HasTreasure={HasTreasure}, occupyingPet={occupyingPet?.petName}");
+        // Debug.Log($"[TreasureSpot] {pet.petName}: 보물 획득 실패 - HasTreasure={HasTreasure}, occupyingPet={occupyingPet?.petName}");
                 return false;
             }
             
             // 성공적으로 획득
             occupyingPet = pet;  // 이미 설정되어 있겠지만 안전하게 재설정
             // hasTreasure는 아직 true로 유지 - TreasureFoundActivity가 보물을 찾을 수 있도록
-            Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 보물 획득 성공!");
+        // Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 보물 획득 성공!");
             
             return true;
         }
@@ -149,7 +149,7 @@ public class TreasureSpot : MonoBehaviour
         {
             if (occupyingPet == pet)
             {
-                Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 해제");
+        // Debug.Log($"[TreasureSpot] {pet.petName}이(가) {name} 점유 해제");
                 occupyingPet = null;
             }
         }
@@ -169,7 +169,7 @@ public class TreasureSpot : MonoBehaviour
     public void ResetCountingFlag()
     {
         hasBeenCounted = false;
-        Debug.Log($"[TreasureSpot] {name} 카운팅 플래그 리셋");
+        // Debug.Log($"[TreasureSpot] {name} 카운팅 플래그 리셋");
     }
     
     /// <summary>
@@ -204,14 +204,14 @@ public class TreasureSpot : MonoBehaviour
                 // 펫이 내려놓은 보물은 삭제하지 않음
                 if (treasureController != null && treasureController.IsDropped)
                 {
-                    Debug.Log($"[TreasureSpot] 펫이 내려놓은 보물은 유지: {currentTreasure.name}");
+        // Debug.Log($"[TreasureSpot] 펫이 내려놓은 보물은 유지: {currentTreasure.name}");
                     // currentTreasure 참조만 해제 (오브젝트는 유지)
                     currentTreasure = null;
                 }
                 // 아직 스팟에 있거나 펫이 들고 있는 보물만 삭제
                 else
                 {
-                    Debug.Log($"[TreasureSpot] 미발견 보물 제거: {currentTreasure?.name}");
+        // Debug.Log($"[TreasureSpot] 미발견 보물 제거: {currentTreasure?.name}");
                     if (currentTreasure != null)
                     {
                         Destroy(currentTreasure);
@@ -223,7 +223,7 @@ public class TreasureSpot : MonoBehaviour
             hasTreasure = false;
             occupyingPet = null;
             hasBeenCounted = false;
-            Debug.Log($"[TreasureSpot] {name} Clear 완료 - 모든 참조 해제");
+        // Debug.Log($"[TreasureSpot] {name} Clear 완료 - 모든 참조 해제");
         }
     }
     

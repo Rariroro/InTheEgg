@@ -38,7 +38,7 @@ namespace LegendaryPet
             if (!selectedLegendaryPetIds.Contains(legendaryPetId))
             {
                 selectedLegendaryPetIds.Add(legendaryPetId);
-                Debug.Log($"[LegendaryPetSelection] 레전드 펫 추가: {legendaryPetId}, 현재 선택된 레전드 펫: {selectedLegendaryPetIds.Count}개");
+        // Debug.Log($"[LegendaryPetSelection] 레전드 펫 추가: {legendaryPetId}, 현재 선택된 레전드 펫: {selectedLegendaryPetIds.Count}개");
             }
         }
 
@@ -53,7 +53,7 @@ namespace LegendaryPet
                 {
                     firstAppearanceLegendaryIds.Remove(legendaryPetId);
                 }
-                Debug.Log($"[LegendaryPetSelection] 레전드 펫 제거: {legendaryPetId}, 현재 선택된 레전드 펫: {selectedLegendaryPetIds.Count}개");
+        // Debug.Log($"[LegendaryPetSelection] 레전드 펫 제거: {legendaryPetId}, 현재 선택된 레전드 펫: {selectedLegendaryPetIds.Count}개");
             }
         }
 
@@ -65,7 +65,7 @@ namespace LegendaryPet
                 if (!firstAppearanceLegendaryIds.Contains(legendaryPetId))
                 {
                     firstAppearanceLegendaryIds.Add(legendaryPetId);
-                    Debug.Log($"[LegendaryPetSelection] 레전드 펫 최초 등장 설정: {legendaryPetId}");
+        // Debug.Log($"[LegendaryPetSelection] 레전드 펫 최초 등장 설정: {legendaryPetId}");
                 }
             }
             else
@@ -73,7 +73,7 @@ namespace LegendaryPet
                 if (firstAppearanceLegendaryIds.Contains(legendaryPetId))
                 {
                     firstAppearanceLegendaryIds.Remove(legendaryPetId);
-                    Debug.Log($"[LegendaryPetSelection] 레전드 펫 최초 등장 해제: {legendaryPetId}");
+        // Debug.Log($"[LegendaryPetSelection] 레전드 펫 최초 등장 해제: {legendaryPetId}");
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace LegendaryPet
         {
             selectedLegendaryPetIds.Clear();
             firstAppearanceLegendaryIds.Clear();
-            Debug.Log("[LegendaryPetSelection] 선택된 모든 레전드 펫 초기화");
+        // Debug.Log("[LegendaryPetSelection] 선택된 모든 레전드 펫 초기화");
         }
 
         // 레전드 펫이 선택되었는지 확인

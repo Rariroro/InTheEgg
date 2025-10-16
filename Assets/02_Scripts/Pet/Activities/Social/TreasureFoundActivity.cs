@@ -61,7 +61,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Start()
     {
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 시작!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 시작!");
         
         // 모든 상태 변수 명시적 초기화
         targetSpot = null;
@@ -90,7 +90,7 @@ public class TreasureFoundActivity : PetActivityAdapter
                 agent.avoidancePriority = 10;  // 높은 우선순위 (기본값 50)
                 agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
                 agent.radius = agent.radius * 0.5f;  // 충돌 반경 축소
-                Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 우선순위 설정 - Priority: 10, ObstacleAvoidance: None");
+        // Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 우선순위 설정 - Priority: 10, ObstacleAvoidance: None");
             }
             
             // 대기 위치로 이동 시작
@@ -131,7 +131,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 종료 (완전 초기화)");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 운반 활동 종료 (완전 초기화)");
         
         // 축하 코루틴 정리
         if (celebrationCoroutine != null)
@@ -159,7 +159,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             agent.avoidancePriority = 50;  // 기본값으로 복구
             agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.HighQualityObstacleAvoidance;
             agent.radius = 0.5f;  // 기본 반경으로 복구 (일반적인 펫 크기)
-            Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 설정 복구 완료");
+        // Debug.Log($"[TreasureFound] {pet.petName}: NavMesh 설정 복구 완료");
         }
         
         // 애니메이션 정상화
@@ -190,11 +190,11 @@ public class TreasureFoundActivity : PetActivityAdapter
             // 이미 내려놓은 보물은 유지
             if (droppedTreasureObject != null)
             {
-                Debug.Log($"[TreasureFound] {pet.petName}: Stop() - 내려놓은 보물 유지: {droppedTreasureObject.name}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: Stop() - 내려놓은 보물 유지: {droppedTreasureObject.name}");
             }
             else
             {
-                Debug.Log($"[TreasureFound] {pet.petName}: Stop() - 내려놓은 보물이 이미 삭제됨");
+        // Debug.Log($"[TreasureFound] {pet.petName}: Stop() - 내려놓은 보물이 이미 삭제됨");
             }
         }
         
@@ -208,23 +208,23 @@ public class TreasureFoundActivity : PetActivityAdapter
     /// </summary>
     private void FindCarriedTreasure()
     {
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 찾기 시작");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 찾기 시작");
         
         // 펫의 모든 자식에서 TreasureController 찾기
         TreasureController[] treasures = pet.GetComponentsInChildren<TreasureController>();
-        Debug.Log($"[TreasureFound] {pet.petName}: 찾은 TreasureController 수: {treasures.Length}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 찾은 TreasureController 수: {treasures.Length}");
         
         foreach (var tc in treasures)
         {
             if (tc != null)
             {
-                Debug.Log($"[TreasureFound] {pet.petName}: 보물 발견 - IsCarried: {tc.IsCarried}, CarryingPet: {tc.CarryingPet?.petName}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 발견 - IsCarried: {tc.IsCarried}, CarryingPet: {tc.CarryingPet?.petName}");
                 
                 // IsCarried 체크를 제거하고 CarryingPet으로 확인
                 if (tc.CarryingPet == pet)
                 {
                     carriedTreasure = tc.gameObject;
-                    Debug.Log($"[TreasureFound] {pet.petName}: 내 보물 확인! 위치: {carriedTreasure.transform.parent?.name}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 내 보물 확인! 위치: {carriedTreasure.transform.parent?.name}");
                     
                     // TreasureSpot 찾기
                     TreasureSpot[] spots = Object.FindObjectsOfType<TreasureSpot>();
@@ -233,7 +233,7 @@ public class TreasureFoundActivity : PetActivityAdapter
                         if (spot.CurrentTreasure == carriedTreasure)
                         {
                             targetSpot = spot;
-                            Debug.Log($"[TreasureFound] {pet.petName}: TreasureSpot 찾음: {spot.name}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: TreasureSpot 찾음: {spot.name}");
                             break;
                         }
                     }
@@ -242,7 +242,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             }
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물을 찾지 못함!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물을 찾지 못함!");
     }
     
     /// <summary>
@@ -264,7 +264,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치로 이동 시작 - {waitingPos}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치로 이동 시작 - {waitingPos}");
     }
     
     
@@ -278,7 +278,7 @@ public class TreasureFoundActivity : PetActivityAdapter
         // 물 속에 있으면 대기
         if (pet.State.IsInWater)
         {
-            Debug.Log($"[TreasureFound] {pet.petName}: 물 속에서 대기 중...");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 물 속에서 대기 중...");
             return;
         }
         
@@ -289,7 +289,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             stuckTimer += Time.deltaTime;
             if (stuckTimer >= STUCK_THRESHOLD)
             {
-                Debug.Log($"[TreasureFound] {pet.petName}: 경로가 막혔습니다. 대체 위치 찾기...");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 경로가 막혔습니다. 대체 위치 찾기...");
                 FindAlternativeWaitingPoint();
                 stuckTimer = 0f;
             }
@@ -303,7 +303,7 @@ public class TreasureFoundActivity : PetActivityAdapter
         // 도착 체크
         if (!agent.pathPending && agent.remainingDistance <= 0.5f)
         {
-            Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치 도착!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 대기 위치 도착!");
             if (agent.isOnNavMesh)
             {
                 agent.isStopped = true;
@@ -339,7 +339,7 @@ public class TreasureFoundActivity : PetActivityAdapter
                 UnityEngine.AI.NavMeshPath path = new UnityEngine.AI.NavMeshPath();
                 if (agent.CalculatePath(hit.position, path) && path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete)
                 {
-                    Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치 발견 - {hit.position}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치 발견 - {hit.position}");
                     agent.SetDestination(hit.position);
                     lastPosition = pet.transform.position;
                     return;
@@ -348,7 +348,7 @@ public class TreasureFoundActivity : PetActivityAdapter
         }
         
         // 대체 위치를 찾지 못한 경우, 현재 위치에서 보물 내려놓기
-        Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치를 찾지 못했습니다. 현재 위치에서 보물을 내려놓습니다.");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 대체 위치를 찾지 못했습니다. 현재 위치에서 보물을 내려놓습니다.");
         if (agent.isOnNavMesh)
         {
             agent.isStopped = true;
@@ -411,7 +411,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             {
                 targetPos.y = hit.point.y + 1f;  // 지면 위 0.3f (보물 크기 고려)
                 groundFound = true;
-                Debug.Log($"[TreasureFound] 지면 감지: {hit.collider.name} at height {hit.point.y}");
+        // Debug.Log($"[TreasureFound] 지면 감지: {hit.collider.name} at height {hit.point.y}");
                 break;
             }
         }
@@ -427,13 +427,13 @@ public class TreasureFoundActivity : PetActivityAdapter
                 if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, terrainOnlyMask))
                 {
                     targetPos.y = hit.point.y + 0.3f;
-                    Debug.Log($"[TreasureFound] Terrain 레이어에서 지면 감지: {hit.point.y}");
+        // Debug.Log($"[TreasureFound] Terrain 레이어에서 지면 감지: {hit.point.y}");
                 }
                 else
                 {
                     // 최후의 수단으로 펫과 같은 높이 사용
                     targetPos.y = pet.transform.position.y;
-                    Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {targetPos.y}");
+        // Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {targetPos.y}");
                 }
             }
             else
@@ -493,7 +493,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             treasureController.EnableCollection();
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물을 자연스럽게 떨어뜨렸습니다!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물을 자연스럽게 떨어뜨렸습니다!");
     }
     
     /// <summary>
@@ -576,7 +576,7 @@ public class TreasureFoundActivity : PetActivityAdapter
         // 1초 후 물리 비활성화 및 수집 가능 설정
         pet.StartCoroutine(FinalizeDroppedTreasure(treasureToAnimate, rb));
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물을 떨어뜨립니다! (물리 기반)");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물을 떨어뜨립니다! (물리 기반)");
     }
     
     /// <summary>
@@ -600,7 +600,7 @@ public class TreasureFoundActivity : PetActivityAdapter
                 treasureController.EnableCollection();
             }
             
-            Debug.Log($"[TreasureFound] 보물이 땅에 안착했습니다!");
+        // Debug.Log($"[TreasureFound] 보물이 땅에 안착했습니다!");
         }
     }
     
@@ -629,13 +629,13 @@ public class TreasureFoundActivity : PetActivityAdapter
         if (Physics.Raycast(rayStart, Vector3.down, out hit, 10f, layerMask))
         {
             dropPosition.y = hit.point.y + 0.5f;  // 지면 위 0.5f
-            Debug.Log($"[TreasureFound] 지면 감지됨: {hit.collider.name}, 높이: {hit.point.y}");
+        // Debug.Log($"[TreasureFound] 지면 감지됨: {hit.collider.name}, 높이: {hit.point.y}");
         }
         else
         {
             // 지면을 찾지 못한 경우 펫과 같은 높이 사용
             dropPosition.y = pet.transform.position.y;
-            Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {dropPosition.y}");
+        // Debug.Log($"[TreasureFound] 지면 미감지, 펫 높이 사용: {dropPosition.y}");
         }
         
         // 부모 해제
@@ -655,7 +655,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             treasureController.EnableCollection();
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 내려놓기 완료! (즉시 처리)");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 내려놓기 완료! (즉시 처리)");
     }
     
     /// <summary>
@@ -714,7 +714,7 @@ public class TreasureFoundActivity : PetActivityAdapter
             treasureController.EnableCollection();
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 보물 내려놓기 완료!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 내려놓기 완료!");
     }
     
     /// <summary>
@@ -724,7 +724,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     {
         var animController = pet.GetComponent<PetAnimationController>();
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 시작!");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 시작!");
         
         // 보물이 수집될 때까지 계속 점프 (보물찾기 종료 여부와 무관)
         while (droppedTreasureObject != null)
@@ -756,12 +756,12 @@ public class TreasureFoundActivity : PetActivityAdapter
             yield return new WaitForSeconds(2f);
         }
         
-        Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 종료");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 축하 점프 종료");
         
         // 보물이 수집된 경우에만 Idle로 전환
         if (droppedTreasureObject == null)
         {
-            Debug.Log($"[TreasureFound] {pet.petName}: 보물 수집 완료, 일상으로 복귀");
+        // Debug.Log($"[TreasureFound] {pet.petName}: 보물 수집 완료, 일상으로 복귀");
             isCelebrating = false;
             hasDroppedTreasure = false;
             pet.State.TrySetStatus(PetStatus.Idle);

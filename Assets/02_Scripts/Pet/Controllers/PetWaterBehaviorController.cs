@@ -53,7 +53,7 @@ public class PetWaterBehaviorController : PetControllerBase
                 petController.agent.SetAreaCost(waterArea, waterCost);
                 
                 // 디버그 로그로 설정된 비용 확인
-                Debug.Log($"[WaterBehavior] {petController.petName} - Water Area Cost: {waterCost}, " +
+        // Debug.Log($"[WaterBehavior] {petController.petName} - Water Area Cost: {waterCost}, " +
                           $"Habitat: {petController.habitat}, " +
                           $"Diet: {petController.diet}, " +
                           $"Eats Fish: {(petController.diet & PetTraits.DietaryFlags.Fish) != 0}");
@@ -204,12 +204,12 @@ public class PetWaterBehaviorController : PetControllerBase
         else if (isSeekingFood)
         {
             // 먹이 찾기 중일 때는 NavMesh 경로 유지, 속도만 조정
-            Debug.Log($"[WaterBehavior] {petController.petName}: 먹이 찾기 중 - Y 위치 변경 스킵, 경로 유지");
+        // Debug.Log($"[WaterBehavior] {petController.petName}: 먹이 찾기 중 - Y 위치 변경 스킵, 경로 유지");
         }
         else if (isTreasureHunting)
         {
             // 보물찾기 중일 때는 NavMesh 경로 유지, 속도만 조정
-            Debug.Log($"[WaterBehavior] {petController.petName}: 보물찾기 중 - Y 위치 변경 스킵, 경로 유지");
+        // Debug.Log($"[WaterBehavior] {petController.petName}: 보물찾기 중 - Y 위치 변경 스킵, 경로 유지");
         }
 
         // 물 속 이동 속도 적용

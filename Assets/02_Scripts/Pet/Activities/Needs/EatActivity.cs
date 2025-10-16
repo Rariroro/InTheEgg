@@ -108,14 +108,14 @@ public class EatActivity : PetActivityAdapter
             {
                 // 꿀을 먹기 시작했다면 중단 불가능 상태로 설정
                 isEatingHoney = true;
-                Debug.Log($"[EatActivity] {pet.petName}: 꿀을 먹는 중이므로 중단 불가능 상태로 설정");
+        // Debug.Log($"[EatActivity] {pet.petName}: 꿀을 먹는 중이므로 중단 불가능 상태로 설정");
             }
             
             // 배고픔이 해소되었는지 확인 (꿀 먹기 완료)
             if (isEatingHoney && pet.Needs.Hunger < 70f)
             {
                 isEatingHoney = false;
-                Debug.Log($"[EatActivity] {pet.petName}: 꿀 먹기 완료, 이제 도망갈 수 있음");
+        // Debug.Log($"[EatActivity] {pet.petName}: 꿀 먹기 완료, 이제 도망갈 수 있음");
             }
             
             feedingController.UpdateMovementToFood();

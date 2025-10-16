@@ -133,7 +133,7 @@ public class TreasureHuntManager : MonoBehaviour
     {
         allTreasureSpots.Clear();
         allTreasureSpots.AddRange(FindObjectsByType<TreasureSpot>(FindObjectsSortMode.None));
-        Debug.Log($"TreasureHuntManager: {allTreasureSpots.Count}개의 보물 스팟을 찾았습니다.");
+        // Debug.Log($"TreasureHuntManager: {allTreasureSpots.Count}개의 보물 스팟을 찾았습니다.");
     }
     
     /// <summary>
@@ -143,7 +143,7 @@ public class TreasureHuntManager : MonoBehaviour
     {
         if (isTreasureHuntActive)
         {
-            Debug.Log("이미 보물찾기가 진행 중입니다.");
+        // Debug.Log("이미 보물찾기가 진행 중입니다.");
             return;
         }
         
@@ -185,7 +185,7 @@ public class TreasureHuntManager : MonoBehaviour
         
         if (participatingPets.Count == 0)
         {
-            Debug.Log($"친밀도 {requiredAffection} 이상인 펫이 없어 보물찾기를 시작할 수 없습니다.");
+        // Debug.Log($"친밀도 {requiredAffection} 이상인 펫이 없어 보물찾기를 시작할 수 없습니다.");
             ShowFeedback($"친밀도 {requiredAffection} 이상인 펫이 필요합니다!");
             return;
         }
@@ -209,7 +209,7 @@ public class TreasureHuntManager : MonoBehaviour
             }
         }
         
-        Debug.Log($"[TreasureHuntManager] 초기화 완료: foundCount={foundTreasureCount}, totalCount={totalTreasureCount}, countedSpots={countedSpots.Count}");
+        // Debug.Log($"[TreasureHuntManager] 초기화 완료: foundCount={foundTreasureCount}, totalCount={totalTreasureCount}, countedSpots={countedSpots.Count}");
         
         isTreasureHuntActive = true;
         OnTreasureHuntStarted?.Invoke();
@@ -222,7 +222,7 @@ public class TreasureHuntManager : MonoBehaviour
         }
         timerCoroutine = StartCoroutine(TreasureHuntTimer());
         
-        Debug.Log($"보물찾기 시작! {participatingPets.Count}마리 참여, {totalTreasureCount}개 보물 생성, 제한시간 {treasureHuntDuration}초");
+        // Debug.Log($"보물찾기 시작! {participatingPets.Count}마리 참여, {totalTreasureCount}개 보물 생성, 제한시간 {treasureHuntDuration}초");
         ShowFeedback($"{participatingPets.Count}마리가 보물찾기를 시작합니다!");
     }
     
@@ -292,14 +292,14 @@ public class TreasureHuntManager : MonoBehaviour
                     // 수집 가능한 상태(내려놓은 보물)는 유지
                     if (treasure.IsDropped)
                     {
-                        Debug.Log($"[TreasureHuntManager] 수집 가능한 보물 유지: {treasure.gameObject.name}");
+        // Debug.Log($"[TreasureHuntManager] 수집 가능한 보물 유지: {treasure.gameObject.name}");
                         continue;
                     }
                     
                     // 아직 펫이 들고 있는 보물은 제거
                     if (treasure.IsCarried)
                     {
-                        Debug.Log($"[TreasureHuntManager] 펫이 들고 있는 보물 제거: {treasure.gameObject.name}");
+        // Debug.Log($"[TreasureHuntManager] 펫이 들고 있는 보물 제거: {treasure.gameObject.name}");
                         Destroy(treasure.gameObject);
                     }
                 }
@@ -326,7 +326,7 @@ public class TreasureHuntManager : MonoBehaviour
                         }
                         
                         pet.State.TrySetStatus(PetStatus.Idle);
-                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물찾기 종료, Idle로 전환");
+        // Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물찾기 종료, Idle로 전환");
                         
                         // AI 완전 리셋
                         if (pet.AI != null)
@@ -337,7 +337,7 @@ public class TreasureHuntManager : MonoBehaviour
                     // TreasureFound 상태인 펫들은 그대로 유지 - 보물을 내려놓고 축하 점프를 계속하도록
                     else if (pet.State.CurrentStatus == PetStatus.TreasureFound)
                     {
-                        Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물 찾은 펫은 계속 축하 중 (유지)");
+        // Debug.Log($"[TreasureHuntManager] {pet.petName}: 보물 찾은 펫은 계속 축하 중 (유지)");
                         // 아무것도 하지 않음 - 펫이 자연스럽게 보물을 내려놓고 축하 점프를 계속함
                         // 유저가 보물을 수집하면 그때 Idle로 전환됨
                     }
@@ -355,7 +355,7 @@ public class TreasureHuntManager : MonoBehaviour
             $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" : 
             $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
         
-        Debug.Log($"보물찾기 종료! {endMessage}");
+        // Debug.Log($"보물찾기 종료! {endMessage}");
         ShowFeedback(endMessage);
     }
     
@@ -446,11 +446,11 @@ public class TreasureHuntManager : MonoBehaviour
                 foundTreasureCount++;
                 shouldCount = true;
                 
-                Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 보물 카운팅 성공! (스팟: {spot.name}, 현재: {foundTreasureCount}/{totalTreasureCount})");
+        // Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 보물 카운팅 성공! (스팟: {spot.name}, 현재: {foundTreasureCount}/{totalTreasureCount})");
             }
             else
             {
-                Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 이미 카운팅된 보물 접근 - 중복 방지! (스팟: {spot.name}, HashSet: {countedSpots.Contains(spot)}, Flag: {spot.HasBeenCounted})");
+        // Debug.Log($"[TreasureHuntManager] {pet?.petName}이(가) 이미 카운팅된 보물 접근 - 중복 방지! (스팟: {spot.name}, HashSet: {countedSpots.Contains(spot)}, Flag: {spot.HasBeenCounted})");
                 return;
             }
         }
@@ -465,7 +465,7 @@ public class TreasureHuntManager : MonoBehaviour
         // UI 이벤트 발생 (보물 개수 업데이트)
         OnTreasureFound?.Invoke(foundTreasureCount, totalTreasureCount);
         
-        Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})");
+        // Debug.Log($"{pet?.petName}이(가) 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})");
         
         // 모든 보물을 찾았는지 확인
         if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
@@ -484,7 +484,7 @@ public class TreasureHuntManager : MonoBehaviour
         if (treasure != null && !droppedTreasures.Contains(treasure))
         {
             droppedTreasures.Add(treasure);
-            Debug.Log($"[TreasureHuntManager] 보물이 내려놓아짐. 현재 개수: {droppedTreasures.Count}");
+        // Debug.Log($"[TreasureHuntManager] 보물이 내려놓아짐. 현재 개수: {droppedTreasures.Count}");
             OnDroppedTreasureUpdate?.Invoke(droppedTreasures.Count);
         }
     }
@@ -497,7 +497,7 @@ public class TreasureHuntManager : MonoBehaviour
         if (treasure != null && droppedTreasures.Contains(treasure))
         {
             droppedTreasures.Remove(treasure);
-            Debug.Log($"[TreasureHuntManager] 보물이 수집됨. 남은 개수: {droppedTreasures.Count}");
+        // Debug.Log($"[TreasureHuntManager] 보물이 수집됨. 남은 개수: {droppedTreasures.Count}");
             OnDroppedTreasureUpdate?.Invoke(droppedTreasures.Count);
         }
     }
@@ -533,7 +533,7 @@ public class TreasureHuntManager : MonoBehaviour
             // 보물찾기가 아직 진행 중이면 다시 보물 찾기
             if (isTreasureHuntActive)
             {
-                Debug.Log($"{pet.petName}: 다른 보물을 찾으러 갑니다!");
+        // Debug.Log($"{pet.petName}: 다른 보물을 찾으러 갑니다!");
                 
                 // 보물찾기 상태 유지
                 pet.State.SetTreasureHuntingState(true);
@@ -550,7 +550,7 @@ public class TreasureHuntManager : MonoBehaviour
             else
             {
                 // 보물찾기가 종료되었으면 일상으로 복귀
-                Debug.Log($"{pet.petName}: 보물찾기 종료, 일상으로 복귀");
+        // Debug.Log($"{pet.petName}: 보물찾기 종료, 일상으로 복귀");
                 
                 pet.State.SetTreasureHuntingState(false);
                 pet.State.TrySetStatus(PetStatus.Idle);
@@ -566,7 +566,7 @@ public class TreasureHuntManager : MonoBehaviour
             }
         }
         
-        Debug.Log($"유저가 {pet?.petName}이(가) 찾은 보물을 수집했습니다! +{coins} 코인");
+        // Debug.Log($"유저가 {pet?.petName}이(가) 찾은 보물을 수집했습니다! +{coins} 코인");
     }
     
     private IEnumerator EndAfterDelay(float delay)

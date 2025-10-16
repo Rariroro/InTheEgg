@@ -120,7 +120,7 @@ public class TreasureHuntDebugButton : MonoBehaviour
     /// </summary>
     private void OnForceEndClick()
     {
-        Debug.Log("[DEBUG] 보물찾기 수동 종료 (보물과 펫 유지)");
+        // Debug.Log("[DEBUG] 보물찾기 수동 종료 (보물과 펫 유지)");
         
         if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
         {
@@ -136,7 +136,7 @@ public class TreasureHuntDebugButton : MonoBehaviour
     /// </summary>
     private void OnForceClearClick()
     {
-        Debug.Log("[DEBUG] 보물찾기 완전 초기화");
+        // Debug.Log("[DEBUG] 보물찾기 완전 초기화");
         
         if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.IsTreasureHuntActive)
         {
@@ -156,14 +156,14 @@ public class TreasureHuntDebugButton : MonoBehaviour
         {
             bool newState = !forceEndButton.gameObject.activeSelf;
             forceEndButton.gameObject.SetActive(newState);
-            Debug.Log($"[DEBUG] 수동 종료 버튼: {(newState ? "표시" : "숨김")}");
+        // Debug.Log($"[DEBUG] 수동 종료 버튼: {(newState ? "표시" : "숨김")}");
         }
         
         if (forceClearButton != null)
         {
             bool newState = !forceClearButton.gameObject.activeSelf;
             forceClearButton.gameObject.SetActive(newState);
-            Debug.Log($"[DEBUG] 완전 초기화 버튼: {(newState ? "표시" : "숨김")}");
+        // Debug.Log($"[DEBUG] 완전 초기화 버튼: {(newState ? "표시" : "숨김")}");
         }
     }
     
@@ -173,7 +173,7 @@ public class TreasureHuntDebugButton : MonoBehaviour
     private void OnHuntStarted()
     {
 #if UNITY_EDITOR
-        Debug.Log("[DEBUG] 보물찾기 시작 감지 - 디버그 버튼 활성화");
+        // Debug.Log("[DEBUG] 보물찾기 시작 감지 - 디버그 버튼 활성화");
         
         // 자동으로 버튼 표시
         if (forceEndButton != null)
@@ -193,7 +193,7 @@ public class TreasureHuntDebugButton : MonoBehaviour
     private void OnHuntEnded()
     {
 #if UNITY_EDITOR
-        Debug.Log("[DEBUG] 보물찾기 종료 감지 - 디버그 버튼 비활성화");
+        // Debug.Log("[DEBUG] 보물찾기 종료 감지 - 디버그 버튼 비활성화");
         
         // 자동으로 버튼 숨김
         if (forceEndButton != null)
@@ -213,7 +213,7 @@ public class TreasureHuntDebugButton : MonoBehaviour
     private void ShowDebugMessage(string message)
     {
 #if UNITY_EDITOR
-        Debug.Log($"[DEBUG] {message}");
+        // Debug.Log($"[DEBUG] {message}");
         
         // UI 피드백 (옵션)
         if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.coinFeedbackText != null)

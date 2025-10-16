@@ -90,7 +90,7 @@ public class CameraController : MonoBehaviour
             {
                 // 보물을 클릭한 경우 카메라 드래그 시작하지 않음
                 isDragging = false;
-                Debug.Log("[CameraController] 보물 클릭 감지 - 카메라 드래그 취소");
+        // Debug.Log("[CameraController] 보물 클릭 감지 - 카메라 드래그 취소");
                 return;
             }
             // 펫이 들려있으면 카메라 드래그 시작하지 않음
@@ -150,7 +150,7 @@ public class CameraController : MonoBehaviour
             // 터치 시작 시 보물을 터치했는지 확인
             if (CheckIfClickedOnTreasure())
             {
-                Debug.Log("[CameraController] 모바일: 보물 터치 감지 - 카메라 이동 취소");
+        // Debug.Log("[CameraController] 모바일: 보물 터치 감지 - 카메라 이동 취소");
                 return;
             }
 
@@ -244,7 +244,7 @@ public class CameraController : MonoBehaviour
             TreasureController treasure = hit.collider.GetComponent<TreasureController>();
             if (treasure != null)
             {
-                Debug.Log($"[CameraController] 보물 감지: {hit.collider.name}");
+        // Debug.Log($"[CameraController] 보물 감지: {hit.collider.name}");
                 // 보물의 수집 메서드 직접 호출
                 treasure.OnTreasureClicked();
                 return true;

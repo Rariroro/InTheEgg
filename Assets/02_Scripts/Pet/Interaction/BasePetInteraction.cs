@@ -18,7 +18,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
     public void StartInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log("StartInteraction");
+        // Debug.Log("StartInteraction");
         // 모이기 상태 체크 - 모이기 중이면 상호작용 시작하지 않음
         if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
@@ -28,7 +28,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             // Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
             return;
         }
-                Debug.Log("StartInteraction2");
+        // Debug.Log("StartInteraction2");
 
         // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
         StartCoroutine(InteractionLifecycle(pet1, pet2));
@@ -39,7 +39,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// </summary>
     private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
     {
-                        Debug.Log("InteractionLifecycle");
+        // Debug.Log("InteractionLifecycle");
 
         // 1. 사전 준비 단계
         // Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
@@ -49,11 +49,11 @@ public abstract class BasePetInteraction : MonoBehaviour
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet1.State.StartInteraction(pet2);
         pet1.State.SetInteractionLogic(this);
-                                Debug.Log("InteractionLifecycle2");
+        // Debug.Log("InteractionLifecycle2");
 
         pet2.State.StartInteraction(pet1);
         pet2.State.SetInteractionLogic(this);
-                        Debug.Log("InteractionLifecycle3");
+        // Debug.Log("InteractionLifecycle3");
 
         // 이동 중지
         pet1.StopMovement();
@@ -140,7 +140,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     // EndInteraction은 private 또는 protected로 변경하여 외부 호출을 막습니다.
     protected void EndInteraction(PetController pet1, PetController pet2)
     {
-        Debug.Log($"[{InteractionName}] EndInteraction 호출: {pet1?.petName} & {pet2?.petName}");
+        // Debug.Log($"[{InteractionName}] EndInteraction 호출: {pet1?.petName} & {pet2?.petName}");
         
         // 중복 호출 방지를 위한 체크
         bool pet1AlreadyClean = (pet1 == null || !pet1.State.IsInteracting);
@@ -148,7 +148,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         
         if (pet1AlreadyClean && pet2AlreadyClean)
         {
-            Debug.Log($"[{InteractionName}] 이미 상호작용이 종료된 상태, 중복 호출 무시");
+        // Debug.Log($"[{InteractionName}] 이미 상호작용이 종료된 상태, 중복 호출 무시");
             return;
         }
         
@@ -161,7 +161,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             PetInteractionManager.Instance.NotifyInteractionEnded(pet1, pet2);
         }
         
-        Debug.Log($"[{InteractionName}] EndInteraction 완료");
+        // Debug.Log($"[{InteractionName}] EndInteraction 완료");
     }
     // 상호작용 수행 코루틴
 
@@ -256,7 +256,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         if (pet == null) return;
 
-        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
+        // Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
         
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.EndInteraction();
@@ -313,7 +313,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 5. AI를 즉시 재평가하여 다음 행동 결정
         if (pet.AI != null)
         {
-            Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
+        // Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
             pet.AI.InterruptAndResetAI();  // 현재 활동 중단하고 새로 평가
             
             // 0.1초 후 AI 활동 보장
@@ -323,7 +323,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 추가 안전장치: 약간의 지연 후에도 다시 확인
         pet.StartCoroutine(DelayedBehaviorDecision(pet));
         
-        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
+        // Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
     }
     
     /// <summary>
