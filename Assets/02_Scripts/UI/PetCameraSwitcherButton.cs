@@ -55,6 +55,9 @@ public class PetCameraSwitcherButton : MonoBehaviour
             originalLocalPosition = mainCamera.transform.localPosition;
             originalLocalRotation = mainCamera.transform.localRotation;
         }
+
+        // 버튼 비주얼 초기화
+        UpdateButtonVisual("petCamera");
     }
 
     void Update()
@@ -186,6 +189,8 @@ public class PetCameraSwitcherButton : MonoBehaviour
             // 버튼 텍스트 원래대로 복원
             if (petCameraButtonText != null)
                 petCameraButtonText.text = "Pet Camera";
+
+            UpdateButtonVisual("petCamera");
         }
         else
         {
