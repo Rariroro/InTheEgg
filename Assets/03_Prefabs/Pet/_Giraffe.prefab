@@ -105,6 +105,8 @@ MonoBehaviour:
     currentInteractionLogic: {fileID: 0}
     gatherCommandVersion: 0
     waterDepthOffset: 0
+    isTreasureHuntActive: 0
+    treasureTargetPosition: {x: 0, y: 0, z: 0}
   petNeeds:
     hunger: 0
     sleepiness: 0
@@ -121,6 +123,7 @@ MonoBehaviour:
     environmentFoodAffectionMax: 7
     hungryThreshold: 70
     sleepyThreshold: 70
+  treasureHoldPoint: {fileID: 0}
 --- !u!195 &2467504241524988830
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -242,7 +245,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3759347436553402035, guid: 07f2a2132a6db46e2a97e9cbc954c3db, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0608
+      value: 0.0808
       objectReference: {fileID: 0}
     - target: {fileID: 3759347436553402035, guid: 07f2a2132a6db46e2a97e9cbc954c3db, type: 3}
       propertyPath: m_LocalRotation.w

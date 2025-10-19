@@ -139,7 +139,6 @@ MonoBehaviour:
     waterDepthOffset: 0
     isTreasureHuntActive: 0
     treasureTargetPosition: {x: 0, y: 0, z: 0}
-    carriedTreasure: {fileID: 0}
   petNeeds:
     hunger: 0
     sleepiness: 0
@@ -363,7 +362,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3759347436553402035, guid: 07f2a2132a6db46e2a97e9cbc954c3db, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0294
+      value: 0.0594
       objectReference: {fileID: 0}
     - target: {fileID: 3759347436553402035, guid: 07f2a2132a6db46e2a97e9cbc954c3db, type: 3}
       propertyPath: m_LocalRotation.w
