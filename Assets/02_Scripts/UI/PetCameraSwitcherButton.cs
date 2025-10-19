@@ -38,6 +38,10 @@ public class PetCameraSwitcherButton : MonoBehaviour
     private float currentYaw = 0f;
     private float currentPitch = 0f;
 
+    // 카메라 상태 저장 변수
+    private float savedMainCameraFOV = 50f;  // 기본 카메라의 FOV 저장
+    private const float PET_CAMERA_DEFAULT_FOV = 60f;  // 펫 카메라 기본 FOV
+
     void Awake()
     {
         if (Instance == null)
@@ -112,14 +116,24 @@ public class PetCameraSwitcherButton : MonoBehaviour
 
         Screen.orientation = ScreenOrientation.LandscapeLeft;
 
+        // 기본 카메라의 현재 FOV 저장
+        savedMainCameraFOV = mainCamera.fieldOfView;
+
         CameraController camController = mainCamera.GetComponent<CameraController>();
         if (camController != null)
             camController.enabled = false;
-        
+
         mainCamera.transform.SetParent(petCameraPoint);
         mainCamera.transform.localPosition = Vector3.zero;
         mainCamera.transform.localRotation = Quaternion.identity;
-        
+
+        // 펫 카메라용 기본 FOV로 설정
+        mainCamera.fieldOfView = PET_CAMERA_DEFAULT_FOV;
+
+        // 펫 카메라 회전 상태 초기화
+        currentYaw = 0f;
+        currentPitch = 0f;
+
         isInPetCameraMode = true;
         petCameraModeActivated = false;
 
@@ -139,17 +153,20 @@ public class PetCameraSwitcherButton : MonoBehaviour
     {
         if (mainCamera == null)
             return;
-        
+
         Screen.orientation = ScreenOrientation.Portrait;
-        
+
         mainCamera.transform.SetParent(originalParent);
         mainCamera.transform.localPosition = originalLocalPosition;
         mainCamera.transform.localRotation = originalLocalRotation;
-        
+
+        // 저장해둔 기본 카메라 FOV 복원
+        mainCamera.fieldOfView = savedMainCameraFOV;
+
         CameraController camController = mainCamera.GetComponent<CameraController>();
         if (camController != null)
             camController.enabled = true;
-        
+
         isInPetCameraMode = false;
         petCameraModeActivated = false;
 
