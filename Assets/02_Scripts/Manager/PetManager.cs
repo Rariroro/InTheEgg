@@ -36,6 +36,10 @@ public class PetManager : MonoBehaviour
     // 다음에 사용할 스폰 스팟 인덱스
     private int nextSpawnSpotIndex = 0;
 
+    // 순차 스폰을 위한 변수들
+    private int currentSpawnIndex = 0;
+    private bool isSpawningSequentially = false;
+
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
 
@@ -53,7 +57,53 @@ public class PetManager : MonoBehaviour
         }
         return gifts;
     }
-    
+
+    // 순차 스폰을 위한 public 메서드들
+    public int GetTotalPetCount()
+    {
+        if (PetSelectionManager.Instance != null)
+            return PetSelectionManager.Instance.selectedPetIds.Count;
+        return 0;
+    }
+
+    public int GetCurrentSpawnIndex()
+    {
+        return currentSpawnIndex;
+    }
+
+    public bool CanSpawnNextPet()
+    {
+        if (PetSelectionManager.Instance == null) return false;
+        return isSpawningSequentially && currentSpawnIndex < PetSelectionManager.Instance.selectedPetIds.Count;
+    }
+
+    // 다음 펫을 하나 스폰하는 메서드 (UI 버튼에서 호출)
+    public void SpawnNextPet()
+    {
+        if (!CanSpawnNextPet())
+        {
+            Debug.LogWarning("더 이상 스폰할 펫이 없습니다.");
+            return;
+        }
+
+        string petId = PetSelectionManager.Instance.selectedPetIds[currentSpawnIndex];
+
+        // 최초 등장 펫인지 확인
+        if (PetSelectionManager.Instance.IsPetFirstAppearance(petId))
+        {
+            // 최초 등장 펫은 선물로 스폰
+            SpawnGiftForPet(petId);
+        }
+        else
+        {
+            // 일반 펫은 바로 스폰
+            SpawnPet(petId, false);
+        }
+
+        currentSpawnIndex++;
+        Debug.Log($"펫 스폰: {petId} ({currentSpawnIndex}/{PetSelectionManager.Instance.selectedPetIds.Count})");
+    }
+
     // 터치 처리 최적화를 위한 변수
     private float lastTouchTime;
     private const float TOUCH_COOLDOWN = 0.1f;
@@ -72,7 +122,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
 {
     // EnvironmentManager 찾기
     EnvironmentManager environmentManager = FindObjectOfType<EnvironmentManager>();
-    
+
     if (environmentManager != null)
     {
         // EnvironmentManager가 초기화를 완료할 때까지 대기
@@ -84,18 +134,21 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         // EnvironmentManager가 없으면 기본 대기 시간
         yield return new WaitForSeconds(3f);
     }
-    
+
     // 추가 안전 대기
     yield return new WaitForSeconds(1f);
-    
-    // 이제 펫 스폰 시작
+
+    // PetChoice를 거친 경우: 순차 스폰 모드
     if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
     {
-        StartCoroutine(SpawnSelectedPetsWithEffects());
+        isSpawningSequentially = true;
+        currentSpawnIndex = 0;
+        Debug.Log($"펫 스폰 준비 완료. 총 {PetSelectionManager.Instance.selectedPetIds.Count}마리의 펫을 스폰할 수 있습니다.");
     }
+    // PetVillage에서 바로 시작한 경우: 모든 펫 자동 스폰
     else
     {
-        Debug.LogWarning("선택된 펫이 없거나 PetSelectionManager가 없습니다. 기본 동작으로 모든 펫을 스폰합니다.");
+        Debug.LogWarning("선택된 펫이 없습니다. 모든 펫을 스폰합니다.");
         SpawnAllPets();
     }
 }
