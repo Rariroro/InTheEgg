@@ -257,6 +257,7 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntEnded()
     {
         isHuntActive = false;
+        SetButtonInteractable(true);  // 버튼 다시 활성화
         CheckButtonAvailability();
 
         // 모든 UI 요소 숨기기

@@ -216,9 +216,9 @@ public class TreasureHuntDebugButton : MonoBehaviour
         // Debug.Log($"[DEBUG] {message}");
         
         // UI 피드백 (옵션)
-        if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.coinFeedbackText != null)
+        if (TreasureHuntManager.Instance != null && TreasureHuntManager.Instance.feedbackText != null)
         {
-            var feedbackText = TreasureHuntManager.Instance.coinFeedbackText;
+            var feedbackText = TreasureHuntManager.Instance.feedbackText;
             feedbackText.text = $"[DEBUG] {message}";
             feedbackText.color = Color.cyan;
             feedbackText.gameObject.SetActive(true);

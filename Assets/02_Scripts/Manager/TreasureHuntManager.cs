@@ -41,9 +41,12 @@ public class TreasureHuntManager : MonoBehaviour
     public float requiredAffection = 75f;
     
     [Header("UI")]
-    [Tooltip("코인 획득 시 표시할 UI 텍스트")]
-    public TMP_Text coinFeedbackText;
-    
+    [Tooltip("중요 안내 메시지 텍스트 (화면 중앙 고정)")]
+    public TMP_Text feedbackText;
+
+    [Tooltip("코인 획득 피드백 텍스트 (보물 위에 동적 표시)")]
+    public TMP_Text coinPopupText;
+
     [Tooltip("전체 코인 표시 UI")]
     public TMP_Text totalCoinsText;
     
@@ -517,10 +520,6 @@ public class TreasureHuntManager : MonoBehaviour
         {
             ShowCoinFeedback(coins, spot.transform.position);
         }
-        else if (pet != null)
-        {
-            ShowCoinFeedback(coins, pet.transform.position);
-        }
         
         // 코인 이벤트 발생
         OnCoinsCollected?.Invoke(coins);
@@ -617,20 +616,20 @@ public class TreasureHuntManager : MonoBehaviour
     /// </summary>
     private void ShowCoinFeedback(int coins, Vector3 worldPosition)
     {
-        if (coinFeedbackText != null)
+        if (coinPopupText != null)
         {
-            coinFeedbackText.text = $"+{coins}";
-            coinFeedbackText.gameObject.SetActive(true);
-            
+            coinPopupText.text = $"+{coins}";
+            coinPopupText.gameObject.SetActive(true);
+
             // 월드 좌표를 스크린 좌표로 변환
             if (Camera.main != null)
             {
                 Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition + Vector3.up * 2f);
-                coinFeedbackText.transform.position = screenPos;
+                coinPopupText.transform.position = screenPos;
             }
-            
+
             // 페이드 아웃 애니메이션
-            StartCoroutine(FadeOutText(coinFeedbackText, 2f));
+            StartCoroutine(FadeOutText(coinPopupText, 2f));
         }
     }
     
@@ -639,11 +638,11 @@ public class TreasureHuntManager : MonoBehaviour
     /// </summary>
     private void ShowFeedback(string message)
     {
-        if (coinFeedbackText != null)
+        if (feedbackText != null)
         {
-            coinFeedbackText.text = message;
-            coinFeedbackText.gameObject.SetActive(true);
-            StartCoroutine(HideTextAfterDelay(coinFeedbackText, 3f));
+            feedbackText.text = message;
+            feedbackText.gameObject.SetActive(true);
+            StartCoroutine(HideTextAfterDelay(feedbackText, 3f));
         }
     }
     
