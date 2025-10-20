@@ -205,17 +205,28 @@ public partial class PetController : MonoBehaviour
 
     private void OnDestroy()
     {
+        // 코루틴 정리
+        StopAllCoroutines();
+
+        // NavMeshAgent 정리
+        if (agent != null && agent.enabled)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+            agent.enabled = false;
+        }
+
         if (petState != null)
         {
             petState.OnStatusChanged -= OnPetStatusChanged;
         }
-        
+
         if (petNeeds != null)
         {
             petNeeds.OnEmotionRequired -= OnEmotionRequired;
             petNeeds.OnNeedCritical -= OnNeedCritical;
         }
-        
+
         if (PetInteractionManager.Instance != null)
         {
             PetInteractionManager.Instance.UnregisterPet(this);

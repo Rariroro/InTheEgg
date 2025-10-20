@@ -13,9 +13,6 @@ public class TreasureHuntButton : MonoBehaviour
     [Tooltip("보물찾기 버튼")]
     public Button treasureHuntButton;
 
-    [Tooltip("조건 안내 텍스트")]
-    public TMP_Text conditionText;
-    
     [Tooltip("보물 개수 표시 텍스트")]
     public TMP_Text treasureCountText;
     
@@ -39,7 +36,6 @@ public class TreasureHuntButton : MonoBehaviour
     private bool isHuntActive = false;
     private float checkInterval = 5f; // 5초마다 조건 체크 (성능 개선)
     private float checkTimer = 0f;
-    private bool shouldShowConditionText = false; // 조건 텍스트 표시 여부
     private Image buttonImage; // 버튼의 Image 컴포넌트
     private bool lastCanActivate = true; // 이전 활성화 상태 캐싱 (true로 시작하여 첫 체크 시 스프라이트 설정)
     private Sprite currentSprite = null; // 현재 설정된 스프라이트 캐싱
@@ -78,12 +74,6 @@ public class TreasureHuntButton : MonoBehaviour
         else
         {
             Debug.LogWarning("[TreasureHunt] 버튼이 할당되지 않았습니다!");
-        }
-
-        // 조건 텍스트 초기화
-        if (conditionText != null)
-        {
-            conditionText.gameObject.SetActive(false);
         }
 
         // 보물 개수와 타이머 텍스트 초기화
@@ -127,48 +117,23 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnButtonClick()
     {
         // Debug.Log("[TreasureHuntButton] 버튼 클릭!");
-        
+
         if (TreasureHuntManager.Instance == null)
         {
             Debug.LogError("TreasureHuntManager를 찾을 수 없습니다!");
             return;
         }
-        
+
         if (isHuntActive)
         {
             // 진행 중에는 버튼 동작 안 함 (시작 버튼만 제공)
         // Debug.Log("[TreasureHuntButton] 보물찾기가 이미 진행 중입니다.");
             return;
         }
-        else
-        {
-            // 친밀도 조건 체크
-            PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
-            int qualifiedPets = 0;
-            
-            foreach (var pet in allPets)
-            {
-                if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
-                {
-                    qualifiedPets++;
-                }
-            }
-            
-        // Debug.Log($"[TreasureHuntButton] 조건 체크: {qualifiedPets}마리 참여 가능");
-            
-            if (qualifiedPets > 0)
-            {
-                // 조건 만족 - 보물찾기 시작
-        // Debug.Log("[TreasureHuntButton] 조건 만족 - 보물찾기 시작");
-                TreasureHuntManager.Instance.StartTreasureHunt();
-            }
-            else
-            {
-                // 조건 불만족 - 조건 텍스트 잠시 표시
-        // Debug.Log("[TreasureHuntButton] 조건 불만족 - 조건 텍스트 표시");
-                ShowConditionTextTemporarily();
-            }
-        }
+
+        // 조건 체크는 Manager에서 처리하도록 위임
+        // Manager가 조건 불만족 시 피드백을 제공함
+        TreasureHuntManager.Instance.StartTreasureHunt();
     }
     
     /// <summary>
@@ -217,12 +182,6 @@ public class TreasureHuntButton : MonoBehaviour
             // 버튼 스프라이트 업데이트
             SetButtonSprite(canActivate ? normalSprite : inactiveSprite);
         }
-
-        // 조건 안내는 shouldShowConditionText가 true일 때만 표시
-        if (shouldShowConditionText)
-        {
-            UpdateConditionText(qualifiedPets, allPets.Length);
-        }
     }
     
     /// <summary>
@@ -260,84 +219,13 @@ public class TreasureHuntButton : MonoBehaviour
     }
     
     /// <summary>
-    /// 조건 안내 텍스트 업데이트
-    /// </summary>
-    private void UpdateConditionText(int qualified, int total)
-    {
-        if (conditionText == null) return;
-        
-        if (isHuntActive)
-        {
-            conditionText.gameObject.SetActive(true);
-            conditionText.text = $"<color=green>보물찾기 진행 중...</color>";
-        }
-        else if (qualified == 0)
-        {
-            conditionText.gameObject.SetActive(true);
-            conditionText.text = $"<color=red>친밀도 {requiredAffection} 이상 필요</color>\n현재: {qualified}/{total}마리";
-        }
-        else
-        {
-            // 조건을 만족할 때는 텍스트를 숨김 (버튼을 눌렀을 때만 보여줌)
-            conditionText.gameObject.SetActive(false);
-        }
-    }
-    
-    /// <summary>
-    /// 조건 텍스트를 잠시 표시했다가 숨기기
-    /// </summary>
-    private void ShowConditionTextTemporarily()
-    {
-        // Debug.Log("[TreasureHuntButton] ShowConditionTextTemporarily 호출");
-        shouldShowConditionText = true;
-        
-        // 현재 조건 체크 및 표시
-        PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
-        int qualifiedPets = 0;
-        
-        foreach (var pet in allPets)
-        {
-            if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
-            {
-                qualifiedPets++;
-            }
-        }
-        
-        // Debug.Log($"[TreasureHuntButton] 조건 텍스트 표시: {qualifiedPets}/{allPets.Length}마리");
-        UpdateConditionText(qualifiedPets, allPets.Length);
-        
-        // 3초 후 자동으로 숨기기
-        StartCoroutine(HideConditionTextAfterDelay(3f));
-    }
-    
-    /// <summary>
-    /// 지연 후 조건 텍스트 숨기기
-    /// </summary>
-    private System.Collections.IEnumerator HideConditionTextAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        shouldShowConditionText = false;
-        if (conditionText != null && !isHuntActive)
-        {
-            conditionText.gameObject.SetActive(false);
-        }
-    }
-    
-    /// <summary>
     /// 보물찾기 시작 이벤트 처리
     /// </summary>
     private void OnHuntStarted()
     {
         isHuntActive = true;
-        shouldShowConditionText = false; // 조건 텍스트 숨김
         SetButtonSprite(progressSprite);
         SetButtonInteractable(false);  // 진행 중에는 버튼 비활성화
-
-        // 조건 텍스트 숨기기
-        if (conditionText != null)
-        {
-            conditionText.gameObject.SetActive(false);
-        }
 
         // 보물 개수와 타이머 표시
         if (treasureCountText != null)
@@ -369,14 +257,9 @@ public class TreasureHuntButton : MonoBehaviour
     private void OnHuntEnded()
     {
         isHuntActive = false;
-        shouldShowConditionText = false;
         CheckButtonAvailability();
 
         // 모든 UI 요소 숨기기
-        if (conditionText != null)
-        {
-            conditionText.gameObject.SetActive(false);
-        }
         if (treasureCountText != null)
         {
             treasureCountText.gameObject.SetActive(false);

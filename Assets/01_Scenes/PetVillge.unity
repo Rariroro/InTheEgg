@@ -25240,6 +25240,63 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 59951852970970370, guid: 10f26a50f22647f41bbd47655db4fa7f, type: 3}
   m_PrefabInstance: {fileID: 499155056}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &499572203
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1361253149}
+    m_Modifications:
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -129.74571
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 19.39822
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -37.71538
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.36721414
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.91214347
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.06196672
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.17119673
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7108309724432713129, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+      propertyPath: m_Name
+      value: PetInteractionManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
 --- !u!1001 &504377358
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66624,6 +66681,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1624914625}
   - {fileID: 2124033966}
   - {fileID: 208607441}
   - {fileID: 1030082193}
@@ -76953,6 +77011,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623586088}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1624914625 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
+  m_PrefabInstance: {fileID: 499572203}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1625263936
 GameObject:
   m_ObjectHideFlags: 0
@@ -81778,7 +81841,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5c5b007f70cf34a3f8f4affa7808508e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2b7e584a1020949e8bac594de2a45ae5, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -95844,11 +95907,11 @@ MonoBehaviour:
   petCameraButtonText: {fileID: 7978929146412002123}
   iconImage: {fileID: 3399792215838518361}
   buttonBackgroundImage: {fileID: 4412931135752215511}
-  petCameraIcon: {fileID: 21300000, guid: 4ec405a8722884cec81482c45cd5f241, type: 3}
-  cameraIcon: {fileID: 21300000, guid: 1ed990419bed14cc8a9981288a33d018, type: 3}
+  petCameraIcon: {fileID: 21300000, guid: 1ed990419bed14cc8a9981288a33d018, type: 3}
+  cameraIcon: {fileID: 21300000, guid: 296eb9e672cc340c69f6070f6b31a6bb, type: 3}
   cancelIcon: {fileID: 21300000, guid: 296eb9e672cc340c69f6070f6b31a6bb, type: 3}
   normalButtonBackground: {fileID: 21300000, guid: 7240c0d166eb849899d1bbc12c3d2d36, type: 3}
-  activeButtonBackground: {fileID: 21300000, guid: 30d6a0d6f3b32405da9ff113866c34ac, type: 3}
+  activeButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
   cancelButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
   feedbackText: {fileID: 9049462943076198797}
   petCameraModeActivated: 0
@@ -113124,7 +113187,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -31, y: -31.3}
+  m_AnchoredPosition: {x: -31, y: -31.300049}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 1}
 --- !u!1 &2280294531024460025

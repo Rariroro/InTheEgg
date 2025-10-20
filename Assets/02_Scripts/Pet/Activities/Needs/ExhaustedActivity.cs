@@ -53,9 +53,8 @@ public class ExhaustedActivity : PetActivityAdapter
         searchTimer = 0f;
         
         Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 주변의 음식을 찾습니다.");
-        
+
         // 기존의 모든 행동 중지
-        pet.StopAllCoroutines();
         pet.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
         pet.GetComponent<PetSleepingController>()?.InterruptSleep();
         pet.GetComponent<PetTreeClimbingController>()?.ForceCancelClimbing();

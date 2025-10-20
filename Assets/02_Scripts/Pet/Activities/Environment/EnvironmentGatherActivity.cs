@@ -9,7 +9,11 @@ public class EnvironmentGatherActivity : PetActivityAdapter
 {
     private readonly NavMeshAgent agent;
     private bool isGathering; // 행동이 진행 중인지 추적
-    
+
+    // 코루틴 추적
+    private Coroutine enterSequenceCoroutine;
+    private Coroutine celebrationCoroutine;
+
     // 환경 모임 시 적용할 속도 배율
     private const float SPEED_MULTIPLIER = 3f;
     private const float CELEBRATION_DURATION = 5f; // 축하 시간
@@ -41,7 +45,7 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     public override void Start()
     {
         isGathering = true;
-        pet.StartCoroutine(EnterSequence());
+        enterSequenceCoroutine = pet.StartCoroutine(EnterSequence());
     }
     
     private IEnumerator EnterSequence()
@@ -84,19 +88,19 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         if (agent != null && agent.enabled && !agent.pathPending && agent.remainingDistance <= 2.5f)
         {
             isGathering = false; // 더 이상 이동 업데이트는 하지 않음
-            pet.StartCoroutine(CelebrateArrivalCoroutine());
+            celebrationCoroutine = pet.StartCoroutine(CelebrateArrivalCoroutine());
         }
     }
     
     public override void Stop()
     {
         // Debug.Log($"[EnvironmentGatherActivity] {pet.petName}: 환경 모이기 중단");
-        
+
         // 다른 고순위 행동에 의해 중단될 경우
         isGathering = false;
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.SetEnvironmentAttraction(false);
-        
+
         // 펫의 이동 속도를 원래대로 복구
         if (agent != null && agent.enabled)
         {
@@ -104,8 +108,18 @@ public class EnvironmentGatherActivity : PetActivityAdapter
             agent.acceleration = pet.baseAcceleration;
             agent.isStopped = false;
         }
-        
-        pet.StopAllCoroutines(); // 이 Activity에서 실행한 모든 코루틴 중지
+
+        // 이 Activity에서 실행한 코루틴들 중지
+        if (enterSequenceCoroutine != null)
+        {
+            pet.StopCoroutine(enterSequenceCoroutine);
+            enterSequenceCoroutine = null;
+        }
+        if (celebrationCoroutine != null)
+        {
+            pet.StopCoroutine(celebrationCoroutine);
+            celebrationCoroutine = null;
+        }
     }
     
     /// <summary>
