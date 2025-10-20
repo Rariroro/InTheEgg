@@ -508,18 +508,15 @@ public class TreasureHuntManager : MonoBehaviour
     /// <summary>
     /// 유저가 보물을 수집할 때 (코인 보상만 처리)
     /// </summary>
-    public void CollectTreasure(TreasureSpot spot, PetController pet)
+    public void CollectTreasure(Vector3 treasurePosition, PetController pet)
     {
         // 코인 보상
         int coins = Random.Range(minCoinReward, maxCoinReward + 1);
         totalCoins += coins;
-        
+
         // UI 업데이트
         UpdateCoinUI();
-        if (spot != null)
-        {
-            ShowCoinFeedback(coins, spot.transform.position);
-        }
+        ShowCoinFeedback(coins, treasurePosition);
         
         // 코인 이벤트 발생
         OnCoinsCollected?.Invoke(coins);

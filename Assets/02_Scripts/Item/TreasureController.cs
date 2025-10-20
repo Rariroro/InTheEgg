@@ -278,9 +278,9 @@ public class TreasureController : MonoBehaviour
         {
             // 내려놓은 보물 리스트에서 제거
             TreasureHuntManager.Instance.UnregisterDroppedTreasure(this);
-            
-            // parentSpot이 null이어도 수집 가능하도록 처리
-            TreasureHuntManager.Instance.CollectTreasure(parentSpot, carryingPet);
+
+            // 보물의 현재 위치 전달 (parentSpot이 null이어도 위치는 전달)
+            TreasureHuntManager.Instance.CollectTreasure(transform.position, carryingPet);
         }
         
         // 수집 효과
