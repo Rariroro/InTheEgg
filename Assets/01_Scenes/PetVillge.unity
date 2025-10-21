@@ -151763,6 +151763,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
+      propertyPath: successPopupPrefab
+      value: 
+      objectReference: {fileID: 122836, guid: e37a0a780af0744e5a244ba1dec39863, type: 3}
+    - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: treasureHuntDuration
       value: 147
       objectReference: {fileID: 0}

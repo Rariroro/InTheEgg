@@ -49,6 +49,10 @@ public class TreasureHuntManager : MonoBehaviour
 
     [Tooltip("전체 코인 표시 UI")]
     public TMP_Text totalCoinsText;
+
+    [Header("성공 팝업")]
+    [Tooltip("보물찾기 성공 시 표시할 팝업 프리팹")]
+    public GameObject successPopupPrefab;
     
     [Header("상태")]
     [SerializeField] private bool isTreasureHuntActive = false;
@@ -354,12 +358,19 @@ public class TreasureHuntManager : MonoBehaviour
         // 보물찾기 종료 시 내려놓은 보물 리스트는 유지 (유저가 수집할 수 있도록)
         // droppedTreasures.Clear(); // 이 부분은 제거
         
-        string endMessage = foundTreasureCount == totalTreasureCount ? 
-            $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" : 
+        string endMessage = foundTreasureCount == totalTreasureCount ?
+            $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" :
             $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
-        
+
         // Debug.Log($"보물찾기 종료! {endMessage}");
         ShowFeedback(endMessage);
+
+        // 시간 종료로 인한 종료일 때만 팝업 표시 (모든 보물을 찾아서 종료하는 경우는 이미 팝업을 표시했음)
+        // foundTreasureCount < totalTreasureCount 조건 추가하여 중복 방지
+        if (!clearAll && foundTreasureCount > 0 && foundTreasureCount < totalTreasureCount)
+        {
+            ShowSuccessPopup();
+        }
     }
     
     /// <summary>
@@ -474,6 +485,8 @@ public class TreasureHuntManager : MonoBehaviour
         if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
         {
             ShowFeedback("모든 보물을 찾았습니다!");
+            // 성공 팝업 표시
+            ShowSuccessPopup();
             // 잠시 후 종료 (펫과 보물은 유지)
             StartCoroutine(EndAfterDelay(2f));
         }
@@ -670,7 +683,59 @@ public class TreasureHuntManager : MonoBehaviour
         yield return new WaitForSeconds(delay);
         text.gameObject.SetActive(false);
     }
-    
+
+    /// <summary>
+    /// 보물찾기 성공 팝업 표시
+    /// </summary>
+    private void ShowSuccessPopup()
+    {
+        if (successPopupPrefab != null)
+        {
+            // Canvas 찾기
+            GameObject canvasObject = GameObject.Find("Canvas");
+            if (canvasObject == null)
+            {
+                Debug.LogError("Canvas를 찾을 수 없습니다!");
+                return;
+            }
+
+            // 팝업 생성
+            var popup = Instantiate(successPopupPrefab);
+            popup.SetActive(true);
+            popup.transform.localScale = Vector3.zero;
+            popup.transform.SetParent(canvasObject.transform, false);
+
+            // Ricimi.Popup 컴포넌트가 있으면 Open() 호출
+            var popupComponent = popup.GetComponent<Ricimi.Popup>();
+            if (popupComponent != null)
+            {
+                popupComponent.Open();
+            }
+
+            // 결과 텍스트 업데이트 (TMP_Text 컴포넌트들을 찾아서 업데이트)
+            var textComponents = popup.GetComponentsInChildren<TMPro.TMP_Text>();
+            foreach (var text in textComponents)
+            {
+                // 제목 텍스트 찾아서 업데이트
+                if (text.name.Contains("Title") || text.name.Contains("Headline"))
+                {
+                    text.text = "보물찾기 완료!";
+                }
+                // 결과 텍스트 찾아서 업데이트
+                else if (text.name.Contains("Description") || text.name.Contains("Content"))
+                {
+                    text.text = $"{totalTreasureCount}개 중 {foundTreasureCount}개 발견!\n+{totalCoins} 코인 획득!";
+                }
+            }
+
+            Debug.Log($"보물찾기 성공 팝업 표시: {foundTreasureCount}/{totalTreasureCount} 발견, +{totalCoins} 코인");
+        }
+        else
+        {
+            Debug.LogWarning("successPopupPrefab이 설정되지 않았습니다!");
+        }
+    }
+
     /// <summary>
     /// 코인 저장
     /// </summary>
