@@ -53,6 +53,10 @@ public class TreasureHuntManager : MonoBehaviour
     [Header("성공 팝업")]
     [Tooltip("보물찾기 성공 시 표시할 팝업 프리팹")]
     public GameObject successPopupPrefab;
+
+    [Tooltip("팝업이 차지할 화면 너비 비율 (0.6 = 화면의 60%)")]
+    [Range(0.2f, 0.9f)]
+    public float popupScreenRatio = 0.6f;
     
     [Header("상태")]
     [SerializeField] private bool isTreasureHuntActive = false;
@@ -699,11 +703,34 @@ public class TreasureHuntManager : MonoBehaviour
                 return;
             }
 
+            // 팝업을 감쌀 래퍼 오브젝트 생성 (애니메이션과 scale 충돌 방지)
+            GameObject wrapper = new("PopupWrapper");
+            wrapper.transform.SetParent(canvasObject.transform, false);
+            wrapper.AddComponent<RectTransform>();
+
             // 팝업 생성
             var popup = Instantiate(successPopupPrefab);
             popup.SetActive(true);
-            popup.transform.localScale = Vector3.zero;
-            popup.transform.SetParent(canvasObject.transform, false);
+            popup.transform.SetParent(wrapper.transform, false);
+
+            // Canvas 크기 기반 동적 scale 계산 (모든 기기에서 일관된 화면 비율 유지)
+            var canvasRect = canvasObject.GetComponent<RectTransform>();
+            if (canvasRect != null)
+            {
+                // 팝업의 원본 크기 가져오기
+                var popupRect = popup.GetComponent<RectTransform>();
+                if (popupRect != null)
+                {
+                    float popupWidth = popupRect.sizeDelta.x;
+
+                    // 목표: 팝업이 Canvas 너비의 X%를 차지하도록 scale 계산
+                    float targetWidth = canvasRect.sizeDelta.x * popupScreenRatio;
+                    float scale = targetWidth / popupWidth;
+
+                    // wrapper의 scale 조절 (애니메이션이 건드리지 않음)
+                    wrapper.transform.localScale = Vector3.one * scale;
+                }
+            }
 
             // Ricimi.Popup 컴포넌트가 있으면 Open() 호출
             var popupComponent = popup.GetComponent<Ricimi.Popup>();
@@ -719,7 +746,7 @@ public class TreasureHuntManager : MonoBehaviour
                 // 제목 텍스트 찾아서 업데이트
                 if (text.name.Contains("Title") || text.name.Contains("Headline"))
                 {
-                    text.text = "보물찾기 완료!";
+                    text.text = "SUCCESS!";
                 }
                 // 결과 텍스트 찾아서 업데이트
                 else if (text.name.Contains("Description") || text.name.Contains("Content"))
