@@ -17,6 +17,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/01_Scenes/TestInteraction.unity
     guid: e34b9f187c09841b585649aeb914610c
+  - enabled: 1
+    path: Assets/GUIPackCartoon/Demo/Scenes/Home.unity
+    guid: 00f1e0f6b9b97481ea836faf54ec7a60
+  - enabled: 1
+    path: Assets/GUIPackCartoon/Demo/Scenes/Icons.unity
+    guid: e1f4977597cf44b14902e8fb958d8b44
+  - enabled: 1
+    path: Assets/GUIPackCartoon/Demo/Scenes/Level.unity
+    guid: a595965d4d0484cc08178d38ac3de3f7
+  - enabled: 1
+    path: Assets/GUIPackCartoon/Demo/Scenes/UI Elements.unity
+    guid: 1dcf80d3c577f4e45b5112e6e829e535
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
