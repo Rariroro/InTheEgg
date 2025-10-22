@@ -38099,6 +38099,11 @@ Terrain:
   m_EnableHeightmapRayTracing: 1
   m_EnableTreesAndDetailsRayTracing: 0
   m_TreeMotionVectorModeOverride: 3
+--- !u!1 &764682109 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7529985883062829302, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
+  m_PrefabInstance: {fileID: 6841315476212195458}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &767536540 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8196202020897613135, guid: 2a860f7ca67c14642bfb21ee96c6867b, type: 3}
@@ -42532,6 +42537,33 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 931646964334491733, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
   m_PrefabInstance: {fileID: 6841315476212195458}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &881718095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 764682109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14a9245d02fe9411b945ace636d1dd57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coinPrefab: {fileID: 0}
+  coinSprite: {fileID: 21300000, guid: 55d1c8b9023084cb3822cb85a1d3b330, type: 3}
+  coinsPerAnimation: 5
+  coinSpawnDelay: 0.1
+  flyDuration: 1
+  curveHeight: 100
+  startScale: 1
+  endScale: 0.5
+  rotationSpeed: 360
+  pulseScale: 1.5
+  pulseDuration: 0.4
+  coinSound: {fileID: 0}
+  arrivalSound: {fileID: 0}
+  coinTargetImage: {fileID: 1413001655}
+  coinTargetText: {fileID: 0}
 --- !u!1 &883837680
 GameObject:
   m_ObjectHideFlags: 0
@@ -151650,6 +151682,10 @@ PrefabInstance:
       value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
+      propertyPath: coinImageUI
+      value: 
+      objectReference: {fileID: 1413001655}
+    - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: feedbackText
       value: 
       objectReference: {fileID: 9049462943076198797}
@@ -151696,7 +151732,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7529985883062829302, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 881718095}
   m_SourcePrefab: {fileID: 100100000, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
 --- !u!1001 &6847183909551637521
 PrefabInstance:

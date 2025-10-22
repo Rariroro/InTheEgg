@@ -85,6 +85,12 @@ public class TreasureHuntManager : MonoBehaviour
     private readonly object countLock = new object();  // 카운팅 동기화용 lock
     private HashSet<TreasureSpot> countedSpots = new HashSet<TreasureSpot>();  // 이미 카운팅된 스팟들
     
+    // 코인 카운트 애니메이션 관련 필드
+    private int displayedCoins = 0;  // 현재 표시되는 코인 수
+    private int targetCoins = 0;     // 목표 코인 수
+    private Coroutine countCoroutine;  // 카운트 코루틴
+    private float countSpeed = 0.02f;  // 카운트 속도 (초당 50개)
+
     // 프로퍼티
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
@@ -135,9 +141,20 @@ public class TreasureHuntManager : MonoBehaviour
         
         // 저장된 코인 로드 (선택사항)
         LoadCoins();
+
+        // 코인 카운트 애니메이션 초기화
+        displayedCoins = totalCoins;
+        targetCoins = totalCoins;
+
+        // 초기 텍스트 즉시 설정 (게임 시작 시 표시 보장)
+        if (totalCoinsText != null)
+        {
+            totalCoinsText.text = $"{totalCoins}";
+        }
+
         UpdateCoinUI();
     }
-    
+
     private void Start()
     {
         // 보물 프리팹 체크
@@ -547,14 +564,32 @@ public class TreasureHuntManager : MonoBehaviour
     {
         // 코인 보상
         int coins = Random.Range(minCoinReward, maxCoinReward + 1);
-        totalCoins += coins;
 
-        // UI 업데이트
-        UpdateCoinUI();
-        ShowCoinFeedback(coins, treasurePosition);
-        
-        // 코인 이벤트 발생
-        OnCoinsCollected?.Invoke(coins);
+        // 코인 날아가는 애니메이션 재생
+        if (CoinFlyAnimation.Instance != null)
+        {
+            // 획득 코인 텍스트도 함께 표시
+            ShowCoinFeedback(coins, treasurePosition);
+
+            CoinFlyAnimation.Instance.PlayCoinAnimation(treasurePosition, coins, () => {
+                // 애니메이션 완료 후 실제 코인 증가
+                totalCoins += coins;
+                UpdateCoinUI();
+
+                // 코인 이벤트 발생
+                OnCoinsCollected?.Invoke(coins);
+            });
+        }
+        else
+        {
+            // 애니메이션이 없으면 즉시 증가
+            totalCoins += coins;
+            UpdateCoinUI();
+            ShowCoinFeedback(coins, treasurePosition);
+
+            // 코인 이벤트 발생
+            OnCoinsCollected?.Invoke(coins);
+        }
         
         // 이 보물을 찾은 펫의 상태 처리
         if (pet != null)
@@ -633,14 +668,58 @@ public class TreasureHuntManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 코인 UI 업데이트
+    /// 코인 UI 업데이트 (애니메이션 적용)
     /// </summary>
     private void UpdateCoinUI()
     {
-        if (totalCoinsText != null)
+        targetCoins = totalCoins;
+
+        // 즉시 표시 (처음이거나 같을 때)
+        if (displayedCoins == targetCoins)
         {
-            totalCoinsText.text = $"{totalCoins}";
+            if (totalCoinsText != null)
+            {
+                totalCoinsText.text = $"{displayedCoins}";
+            }
+            return;  // 애니메이션 필요 없음
         }
+
+        // 차이가 있을 때만 애니메이션
+        countCoroutine ??= StartCoroutine(AnimateCoinCount());
+    }
+
+    /// <summary>
+    /// 코인 카운트 애니메이션
+    /// </summary>
+    private IEnumerator AnimateCoinCount()
+    {
+        while (displayedCoins != targetCoins)
+        {
+            // 차이가 큰 경우 더 빠르게 증가
+            int difference = targetCoins - displayedCoins;
+            int increment = 1;
+
+            if (Mathf.Abs(difference) > 50)
+                increment = 5;  // 50 이상 차이나면 5씩
+            else if (Mathf.Abs(difference) > 20)
+                increment = 2;  // 20 이상 차이나면 2씩
+
+            // 증가 또는 감소
+            if (displayedCoins < targetCoins)
+                displayedCoins = Mathf.Min(displayedCoins + increment, targetCoins);
+            else if (displayedCoins > targetCoins)
+                displayedCoins = Mathf.Max(displayedCoins - increment, targetCoins);
+
+            // UI 업데이트
+            if (totalCoinsText != null)
+            {
+                totalCoinsText.text = $"{displayedCoins}";
+            }
+
+            yield return new WaitForSeconds(countSpeed);
+        }
+
+        countCoroutine = null;
     }
     
     /// <summary>
@@ -736,14 +815,36 @@ public class TreasureHuntManager : MonoBehaviour
     {
         if (!bonusApplied && missionBonusCoins > 0)
         {
-            totalCoins += missionBonusCoins;
             bonusApplied = true;
 
-            // 코인 저장 및 UI 업데이트
-            SaveCoins();
-            UpdateCoinUI();
+            // 성공 팝업의 중앙 위치에서 코인 애니메이션 시작
+            if (CoinFlyAnimation.Instance != null)
+            {
+                // 화면 중앙 위치 계산
+                Vector3 screenCenter = new Vector3(Screen.width / 2f, Screen.height / 2f, 0);
 
-            Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
+                CoinFlyAnimation.Instance.PlayCoinAnimationFromScreen(screenCenter, missionBonusCoins, () => {
+                    // 애니메이션 완료 후 실제 코인 증가
+                    totalCoins += missionBonusCoins;
+
+                    // 코인 저장 및 UI 업데이트
+                    SaveCoins();
+                    UpdateCoinUI();
+
+                    Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
+                });
+            }
+            else
+            {
+                // 애니메이션이 없으면 즉시 증가
+                totalCoins += missionBonusCoins;
+
+                // 코인 저장 및 UI 업데이트
+                SaveCoins();
+                UpdateCoinUI();
+
+                Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
+            }
         }
     }
 
@@ -826,10 +927,20 @@ public class TreasureHuntManager : MonoBehaviour
                 // Close 버튼 찾기 (버튼 이름이나 부모 오브젝트 이름으로 판단)
                 if (button.name.Contains("Close") || button.name.Contains("Button"))
                 {
-                    // 기존 리스너를 유지하면서 새 리스너 추가
-                    button.onClick.AddListener(() => {
-                        ApplyBonusCoins();
-                    });
+                    // Popup 컴포넌트의 Close 이벤트를 감지하는 방식으로 변경
+                    var popupComp = popup.GetComponent<Ricimi.Popup>();
+                    if (popupComp != null)
+                    {
+                        // Popup이 닫힐 때 실행될 코루틴 시작
+                        StartCoroutine(WaitForPopupCloseAndApplyBonus(popup, button));
+                    }
+                    else
+                    {
+                        // Popup 컴포넌트가 없으면 기존 방식 사용
+                        button.onClick.AddListener(() => {
+                            ApplyBonusCoins();
+                        });
+                    }
                     break;  // 첫 번째 Close 버튼만 처리
                 }
             }
@@ -839,6 +950,39 @@ public class TreasureHuntManager : MonoBehaviour
         else
         {
             Debug.LogWarning("successPopupPrefab이 설정되지 않았습니다!");
+        }
+    }
+
+    /// <summary>
+    /// 팝업이 닫힐 때까지 대기 후 보너스 적용
+    /// </summary>
+    private IEnumerator WaitForPopupCloseAndApplyBonus(GameObject popup, Button closeButton)
+    {
+        bool buttonClicked = false;
+
+        // 버튼 클릭 이벤트 감지
+        UnityEngine.Events.UnityAction onClickAction = () => {
+            buttonClicked = true;
+        };
+
+        closeButton.onClick.AddListener(onClickAction);
+
+        // 버튼이 클릭되거나 팝업이 삭제될 때까지 대기
+        while (!buttonClicked && popup != null)
+        {
+            yield return null;
+        }
+
+        // 리스너 제거
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(onClickAction);
+        }
+
+        // 보너스 코인 적용 (한 번만 실행)
+        if (!bonusApplied && missionBonusCoins > 0)
+        {
+            ApplyBonusCoins();
         }
     }
 
@@ -872,7 +1016,14 @@ public class TreasureHuntManager : MonoBehaviour
     private void OnDestroy()
     {
         SaveCoins();
-        
+
+        // 카운트 코루틴 정리
+        if (countCoroutine != null)
+        {
+            StopCoroutine(countCoroutine);
+            countCoroutine = null;
+        }
+
         if (instance == this)
         {
             instance = null;
