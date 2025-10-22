@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
 using TMPro;
+using UnityEngine.UI;
 
 /// <summary>
 /// 보물찾기 시스템을 중앙에서 관리하는 매니저
@@ -68,6 +69,7 @@ public class TreasureHuntManager : MonoBehaviour
     [SerializeField] private bool isTreasureHuntActive = false;
     [SerializeField] private int totalCoins = 0;
     [SerializeField] private int missionBonusCoins = 0;  // 이번 미션의 보너스 코인
+    private bool bonusApplied = false;  // 보너스 중복 적용 방지
     [SerializeField] private List<TreasureSpot> allTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<TreasureSpot> activeTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<PetController> participatingPets = new List<PetController>();
@@ -217,6 +219,7 @@ public class TreasureHuntManager : MonoBehaviour
         totalTreasureCount = activeTreasureSpots.Count;
         remainingTime = treasureHuntDuration;
         missionBonusCoins = 0;  // 보너스 코인 초기화
+        bonusApplied = false;  // 보너스 적용 플래그 초기화
         droppedTreasures.Clear();  // 내려놓은 보물 리스트 초기화
         countedSpots.Clear();  // 카운팅된 스팟 초기화
         
@@ -717,15 +720,30 @@ public class TreasureHuntManager : MonoBehaviour
             int timeBonus = Mathf.RoundToInt(remainingTime) * bonusCoinsPerSecond;
             missionBonusCoins += timeBonus;
 
-            // 총 코인에 보너스 추가
-            totalCoins += missionBonusCoins;
-
             // Debug.Log($"보너스 코인 계산: 기본 {baseBonusCoins} + 시간 보너스 {timeBonus} = {missionBonusCoins}");
         }
         else
         {
             // 모든 보물을 찾지 못한 경우 부분 보너스 (선택사항)
             missionBonusCoins = 0;
+        }
+    }
+
+    /// <summary>
+    /// 보너스 코인을 전체 코인에 적용
+    /// </summary>
+    private void ApplyBonusCoins()
+    {
+        if (!bonusApplied && missionBonusCoins > 0)
+        {
+            totalCoins += missionBonusCoins;
+            bonusApplied = true;
+
+            // 코인 저장 및 UI 업데이트
+            SaveCoins();
+            UpdateCoinUI();
+
+            Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
         }
     }
 
@@ -798,6 +816,21 @@ public class TreasureHuntManager : MonoBehaviour
                 else if (text.name.Contains("Amount"))
                 {
                     text.text = $"{missionBonusCoins}";
+                }
+            }
+
+            // Close 버튼 찾아서 리스너 추가
+            var buttons = popup.GetComponentsInChildren<Button>();
+            foreach (var button in buttons)
+            {
+                // Close 버튼 찾기 (버튼 이름이나 부모 오브젝트 이름으로 판단)
+                if (button.name.Contains("Close") || button.name.Contains("Button"))
+                {
+                    // 기존 리스너를 유지하면서 새 리스너 추가
+                    button.onClick.AddListener(() => {
+                        ApplyBonusCoins();
+                    });
+                    break;  // 첫 번째 Close 버튼만 처리
                 }
             }
 

@@ -389,13 +389,12 @@ public class PersonalityReactionInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
 
         // NavMeshAgent 체크 후 이동
-        if (shyPet.agent != null && shyPet.agent.enabled && shyPet.agent.isOnNavMesh) {
-            shyPet.agent.isStopped = false;
+        if (SafeSetNavMeshAgent(shyPet, false)) {
             yield return StartCoroutine(QuickRetreat(shyPet, lazyPet.transform.position, retreatDistance, 1f));
 
             // 4단계: Shy가 멈춰서 돌아봄
             // Debug.Log($"[LazyShy] 단계4: {shyPet.petName}이 멈춰서 돌아봄");
-            shyPet.agent.isStopped = true;
+            SafeSetNavMeshAgent(shyPet, true);
         }
 
         yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, lazyPet, 0.5f));
@@ -403,16 +402,13 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 5단계: Shy가 조심스럽게 다시 접근
         // Debug.Log($"[LazyShy] 단계5: {shyPet.petName}이 조심스럽게 다시 접근");
-        if (shyPet.agent != null && shyPet.agent.enabled && shyPet.agent.isOnNavMesh) {
-            shyPet.agent.isStopped = false;
-            shyPet.agent.speed = shyPet.baseSpeed * 0.3f;
-            Vector3 sniffPoint = lazyPet.transform.position + lazyPet.transform.forward * 2f;
-            sniffPoint = FindValidPositionOnNavMesh(sniffPoint, 5f);
-            shyPet.agent.SetDestination(sniffPoint);
-            shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        Vector3 sniffPoint = lazyPet.transform.position + lazyPet.transform.forward * 2f;
+        sniffPoint = FindValidPositionOnNavMesh(sniffPoint, 5f);
 
+        if (SafeSetNavMeshAgent(shyPet, false, shyPet.baseSpeed * 0.3f, sniffPoint)) {
+            shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             yield return new WaitForSeconds(2f);
-            shyPet.agent.isStopped = true;
+            SafeSetNavMeshAgent(shyPet, true);
         } else {
             yield return new WaitForSeconds(2f);
         }
@@ -789,26 +785,26 @@ public class PersonalityReactionInteraction : BasePetInteraction
         yield return StartCoroutine(shyPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
         
-        shyPet.agent.isStopped = false;
-        yield return StartCoroutine(QuickRetreat(shyPet, bravePet.transform.position, firstRetreatDistance, 1f));
-        
+        if (SafeSetNavMeshAgent(shyPet, false)) {
+            yield return StartCoroutine(QuickRetreat(shyPet, bravePet.transform.position, firstRetreatDistance, 1f));
+        }
+
         // 3단계: Brave가 천천히 따라감
         // Debug.Log($"[ShyBrave] 단계3: {bravePet.petName}이 천천히 따라감");
-        bravePet.agent.isStopped = false;
-        bravePet.agent.speed = bravePet.baseSpeed * 0.7f;
-        bravePet.agent.SetDestination(shyPet.transform.position);
-        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        
+        if (SafeSetNavMeshAgent(bravePet, false, bravePet.baseSpeed * 0.7f, shyPet.transform.position)) {
+            bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        }
+
         yield return new WaitForSeconds(1.5f);
-        
+
         // 4단계: Shy가 멈춰서 돌아봄
         // Debug.Log($"[ShyBrave] 단계4: {shyPet.petName}이 멈춰서 돌아봄");
-        shyPet.agent.isStopped = true;
+        SafeSetNavMeshAgent(shyPet, true);
         yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
-        
+
         // 5단계: Brave가 점프하며 인사
         // Debug.Log($"[ShyBrave] 단계5: {bravePet.petName}이 점프하며 인사");
-        bravePet.agent.isStopped = true;
+        SafeSetNavMeshAgent(bravePet, true);
         bravePet.animationController.StopContinuousAnimation();
         yield return StartCoroutine(bravePet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
@@ -819,21 +815,19 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Vector3 fleePos = shyPet.transform.position + fleeDirection * finalFleeDistance;
         fleePos = FindValidPositionOnNavMesh(fleePos, 10f);
         
-        shyPet.agent.isStopped = false;
-        shyPet.agent.speed = shyPet.baseSpeed * 2f;
-        shyPet.agent.SetDestination(fleePos);
-        shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        
+        if (SafeSetNavMeshAgent(shyPet, false, shyPet.baseSpeed * 2f, fleePos)) {
+            shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        }
+
         // 7단계: Brave가 잠시 쫓다가 포기
         // Debug.Log($"[ShyBrave] 단계7: {bravePet.petName}이 잠시 쫓다가 포기");
-        bravePet.agent.isStopped = false;
-        bravePet.agent.speed = bravePet.baseSpeed * 1.5f;
-        bravePet.agent.SetDestination(shyPet.transform.position);
-        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        
+        if (SafeSetNavMeshAgent(bravePet, false, bravePet.baseSpeed * 1.5f, shyPet.transform.position)) {
+            bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        }
+
         yield return new WaitForSeconds(1f);
-        
-        bravePet.agent.isStopped = true;
+
+        SafeSetNavMeshAgent(bravePet, true);
         bravePet.animationController.StopContinuousAnimation();
         shyPet.animationController.StopContinuousAnimation();
         
@@ -1333,7 +1327,29 @@ public class PersonalityReactionInteraction : BasePetInteraction
     }
 
     // ===== 헬퍼 메서드들 =====
-    
+
+    /// <summary>
+    /// NavMeshAgent를 안전하게 설정하는 헬퍼 메서드
+    /// </summary>
+    private bool SafeSetNavMeshAgent(PetController pet, bool isStopped = false, float? speed = null, Vector3? destination = null)
+    {
+        if (pet == null || pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[SafeSetNavMeshAgent] {pet?.petName ?? "null"}의 NavMeshAgent가 유효하지 않음");
+            return false;
+        }
+
+        pet.agent.isStopped = isStopped;
+
+        if (speed.HasValue)
+            pet.agent.speed = speed.Value;
+
+        if (destination.HasValue && !isStopped)
+            pet.agent.SetDestination(destination.Value);
+
+        return true;
+    }
+
     /// <summary>
     /// 두 펫이 서로를 부드럽게 바라보도록 회전 (Walk 애니메이션 없이)
     /// </summary>
@@ -1638,7 +1654,14 @@ public class PersonalityReactionInteraction : BasePetInteraction
     private IEnumerator QuickRetreat(PetController pet, Vector3 awayFrom, float distance, float duration = 1f)
     {
         // Debug.Log($"[QuickRetreat] {pet.petName}이(가) 돌아서 도망 (거리: {distance}, 시간: {duration})");
-        
+
+        // NavMeshAgent 체크
+        if (pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[QuickRetreat] {pet.petName}의 NavMeshAgent가 유효하지 않음");
+            yield break;
+        }
+
         // agent 활성화 확인
         pet.agent.isStopped = false;  // 명시적으로 설정
         
