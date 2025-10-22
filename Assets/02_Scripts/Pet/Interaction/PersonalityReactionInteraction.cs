@@ -387,26 +387,35 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // Debug.Log($"[LazyShy] 단계3: {shyPet.petName}이 놀라서 도망");
         yield return StartCoroutine(shyPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-        shyPet.agent.isStopped = false;
-        yield return StartCoroutine(QuickRetreat(shyPet, lazyPet.transform.position, retreatDistance, 1f));
-        
-        // 4단계: Shy가 멈춰서 돌아봄
-        // Debug.Log($"[LazyShy] 단계4: {shyPet.petName}이 멈춰서 돌아봄");
-        shyPet.agent.isStopped = true;
+
+        // NavMeshAgent 체크 후 이동
+        if (shyPet.agent != null && shyPet.agent.enabled && shyPet.agent.isOnNavMesh) {
+            shyPet.agent.isStopped = false;
+            yield return StartCoroutine(QuickRetreat(shyPet, lazyPet.transform.position, retreatDistance, 1f));
+
+            // 4단계: Shy가 멈춰서 돌아봄
+            // Debug.Log($"[LazyShy] 단계4: {shyPet.petName}이 멈춰서 돌아봄");
+            shyPet.agent.isStopped = true;
+        }
+
         yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, lazyPet, 0.5f));
         yield return new WaitForSeconds(1f);
-        
+
         // 5단계: Shy가 조심스럽게 다시 접근
         // Debug.Log($"[LazyShy] 단계5: {shyPet.petName}이 조심스럽게 다시 접근");
-        shyPet.agent.isStopped = false;
-        shyPet.agent.speed = shyPet.baseSpeed * 0.3f;
-        Vector3 sniffPoint = lazyPet.transform.position + lazyPet.transform.forward * 2f;
-        sniffPoint = FindValidPositionOnNavMesh(sniffPoint, 5f);
-        shyPet.agent.SetDestination(sniffPoint);
-        shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        
-        yield return new WaitForSeconds(2f);
-        shyPet.agent.isStopped = true;
+        if (shyPet.agent != null && shyPet.agent.enabled && shyPet.agent.isOnNavMesh) {
+            shyPet.agent.isStopped = false;
+            shyPet.agent.speed = shyPet.baseSpeed * 0.3f;
+            Vector3 sniffPoint = lazyPet.transform.position + lazyPet.transform.forward * 2f;
+            sniffPoint = FindValidPositionOnNavMesh(sniffPoint, 5f);
+            shyPet.agent.SetDestination(sniffPoint);
+            shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+            yield return new WaitForSeconds(2f);
+            shyPet.agent.isStopped = true;
+        } else {
+            yield return new WaitForSeconds(2f);
+        }
         shyPet.animationController.StopContinuousAnimation();
         
         // 6단계: 냄새 맡기 동작

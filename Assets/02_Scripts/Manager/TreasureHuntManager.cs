@@ -27,9 +27,15 @@ public class TreasureHuntManager : MonoBehaviour
     [Header("보상 설정")]
     [Tooltip("보물 하나당 최소 코인")]
     public int minCoinReward = 10;
-    
+
     [Tooltip("보물 하나당 최대 코인")]
     public int maxCoinReward = 50;
+
+    [Tooltip("모든 보물을 찾았을 때 기본 보너스")]
+    public int baseBonusCoins = 100;
+
+    [Tooltip("남은 시간 1초당 보너스 코인")]
+    public int bonusCoinsPerSecond = 2;
     
     [Header("시간 설정")]
     [Tooltip("보물찾기 제한 시간 (초)")]
@@ -61,6 +67,7 @@ public class TreasureHuntManager : MonoBehaviour
     [Header("상태")]
     [SerializeField] private bool isTreasureHuntActive = false;
     [SerializeField] private int totalCoins = 0;
+    [SerializeField] private int missionBonusCoins = 0;  // 이번 미션의 보너스 코인
     [SerializeField] private List<TreasureSpot> allTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<TreasureSpot> activeTreasureSpots = new List<TreasureSpot>();
     [SerializeField] private List<PetController> participatingPets = new List<PetController>();
@@ -80,6 +87,7 @@ public class TreasureHuntManager : MonoBehaviour
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
     public int TotalCoins => totalCoins;
+    public int MissionBonusCoins => missionBonusCoins;  // 보너스 코인 프로퍼티
     public float RemainingTime => remainingTime;
     public int TotalTreasureCount => totalTreasureCount;
     public int FoundTreasureCount => foundTreasureCount;
@@ -208,6 +216,7 @@ public class TreasureHuntManager : MonoBehaviour
         foundTreasureCount = 0;
         totalTreasureCount = activeTreasureSpots.Count;
         remainingTime = treasureHuntDuration;
+        missionBonusCoins = 0;  // 보너스 코인 초기화
         droppedTreasures.Clear();  // 내려놓은 보물 리스트 초기화
         countedSpots.Clear();  // 카운팅된 스팟 초기화
         
@@ -373,6 +382,8 @@ public class TreasureHuntManager : MonoBehaviour
         // foundTreasureCount < totalTreasureCount 조건 추가하여 중복 방지
         if (!clearAll && foundTreasureCount > 0 && foundTreasureCount < totalTreasureCount)
         {
+            // 부분 완료 시 보너스 계산 (0이 될 수도 있음)
+            CalculateBonusCoins();
             ShowSuccessPopup();
         }
     }
@@ -489,6 +500,10 @@ public class TreasureHuntManager : MonoBehaviour
         if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
         {
             ShowFeedback("모든 보물을 찾았습니다!");
+
+            // 보너스 코인 계산 (모든 보물 찾았을 때)
+            CalculateBonusCoins();
+
             // 성공 팝업 표시
             ShowSuccessPopup();
             // 잠시 후 종료 (펫과 보물은 유지)
@@ -689,6 +704,32 @@ public class TreasureHuntManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 보너스 코인 계산
+    /// </summary>
+    private void CalculateBonusCoins()
+    {
+        if (foundTreasureCount >= totalTreasureCount)
+        {
+            // 기본 보너스
+            missionBonusCoins = baseBonusCoins;
+
+            // 시간 보너스 (남은 시간 초 단위로 계산)
+            int timeBonus = Mathf.RoundToInt(remainingTime) * bonusCoinsPerSecond;
+            missionBonusCoins += timeBonus;
+
+            // 총 코인에 보너스 추가
+            totalCoins += missionBonusCoins;
+
+            // Debug.Log($"보너스 코인 계산: 기본 {baseBonusCoins} + 시간 보너스 {timeBonus} = {missionBonusCoins}");
+        }
+        else
+        {
+            // 모든 보물을 찾지 못한 경우 부분 보너스 (선택사항)
+            missionBonusCoins = 0;
+        }
+    }
+
+    /// <summary>
     /// 보물찾기 성공 팝업 표시
     /// </summary>
     private void ShowSuccessPopup()
@@ -751,11 +792,16 @@ public class TreasureHuntManager : MonoBehaviour
                 // 결과 텍스트 찾아서 업데이트
                 else if (text.name.Contains("Description") || text.name.Contains("Content"))
                 {
-                    text.text = $"{totalTreasureCount}개 중 {foundTreasureCount}개 발견!\n+{totalCoins} 코인 획득!";
+                    text.text = $"{totalTreasureCount}개 중 {foundTreasureCount}개 발견!\n성공 보너스 코인: +{missionBonusCoins}";
+                }
+                // Amount Text 오브젝트 찾아서 업데이트
+                else if (text.name.Contains("Amount"))
+                {
+                    text.text = $"{missionBonusCoins}";
                 }
             }
 
-            Debug.Log($"보물찾기 성공 팝업 표시: {foundTreasureCount}/{totalTreasureCount} 발견, +{totalCoins} 코인");
+            Debug.Log($"보물찾기 성공 팝업 표시: {foundTreasureCount}/{totalTreasureCount} 발견, 보너스 +{missionBonusCoins} 코인");
         }
         else
         {
