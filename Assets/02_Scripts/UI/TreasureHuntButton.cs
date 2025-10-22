@@ -258,6 +258,21 @@ public class TreasureHuntButton : MonoBehaviour
     {
         isHuntActive = false;
         SetButtonInteractable(true);  // 버튼 다시 활성화
+
+        // progressSprite에서 벗어나기 위해 강제로 스프라이트 변경
+        // CheckButtonAvailability()가 조건을 체크하기 전에 즉시 적용
+        PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
+        bool canActivate = false;
+        foreach (var pet in allPets)
+        {
+            if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
+            {
+                canActivate = true;
+                break;
+            }
+        }
+        SetButtonSprite(canActivate ? normalSprite : inactiveSprite);
+
         CheckButtonAvailability();
 
         // 모든 UI 요소 숨기기

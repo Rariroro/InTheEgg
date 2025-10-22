@@ -200,7 +200,20 @@ public class TreasureHuntManager : MonoBehaviour
                 return;
             }
         }
-        
+
+        // 이전 보물찾기에서 남은 보물들 삭제
+        if (droppedTreasures.Count > 0)
+        {
+            foreach (var treasure in droppedTreasures)
+            {
+                if (treasure != null && treasure.gameObject != null)
+                {
+                    Destroy(treasure.gameObject);
+                }
+            }
+            droppedTreasures.Clear();
+        }
+
         // 참여 가능한 펫 찾기
         PetController[] allPets = FindObjectsByType<PetController>(FindObjectsSortMode.None);
         participatingPets.Clear();
@@ -387,24 +400,16 @@ public class TreasureHuntManager : MonoBehaviour
         
         isTreasureHuntActive = false;
         OnTreasureHuntEnded?.Invoke();
-        
+
         // 보물찾기 종료 시 내려놓은 보물 리스트는 유지 (유저가 수집할 수 있도록)
         // droppedTreasures.Clear(); // 이 부분은 제거
-        
-        string endMessage = foundTreasureCount == totalTreasureCount ?
-            $"모든 보물을 찾았습니다! ({foundTreasureCount}/{totalTreasureCount})" :
-            $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
 
-        // Debug.Log($"보물찾기 종료! {endMessage}");
-        ShowFeedback(endMessage);
-
-        // 시간 종료로 인한 종료일 때만 팝업 표시 (모든 보물을 찾아서 종료하는 경우는 이미 팝업을 표시했음)
-        // foundTreasureCount < totalTreasureCount 조건 추가하여 중복 방지
-        if (!clearAll && foundTreasureCount > 0 && foundTreasureCount < totalTreasureCount)
+        // 모든 보물을 찾은 경우는 성공 팝업이 이미 표시되었으므로 feedbackText 표시 안 함
+        if (foundTreasureCount < totalTreasureCount)
         {
-            // 부분 완료 시 보너스 계산 (0이 될 수도 있음)
-            CalculateBonusCoins();
-            ShowSuccessPopup();
+            string endMessage = $"시간이 종료되었습니다! ({foundTreasureCount}/{totalTreasureCount} 찾음)";
+            // Debug.Log($"보물찾기 종료! {endMessage}");
+            ShowFeedback(endMessage);
         }
     }
     
@@ -519,12 +524,10 @@ public class TreasureHuntManager : MonoBehaviour
         // 모든 보물을 찾았는지 확인
         if (foundTreasureCount >= totalTreasureCount && isTreasureHuntActive)
         {
-            ShowFeedback("모든 보물을 찾았습니다!");
-
             // 보너스 코인 계산 (모든 보물 찾았을 때)
             CalculateBonusCoins();
 
-            // 성공 팝업 표시
+            // 성공 팝업 표시 (feedbackText 대신 팝업으로 알림)
             ShowSuccessPopup();
             // 잠시 후 종료 (펫과 보물은 유지)
             StartCoroutine(EndAfterDelay(2f));
@@ -911,7 +914,7 @@ public class TreasureHuntManager : MonoBehaviour
                 // 결과 텍스트 찾아서 업데이트
                 else if (text.name.Contains("Description") || text.name.Contains("Content"))
                 {
-                    text.text = $"{totalTreasureCount}개 중 {foundTreasureCount}개 발견!\n성공 보너스 코인: +{missionBonusCoins}";
+                    text.text = $"모든 보물을 찾았습니다!\n{totalTreasureCount}개 중 {foundTreasureCount}개 발견! 성공 보너스 코인:";
                 }
                 // Amount Text 오브젝트 찾아서 업데이트
                 else if (text.name.Contains("Amount"))

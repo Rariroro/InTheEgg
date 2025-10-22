@@ -151703,11 +151703,11 @@ PrefabInstance:
       objectReference: {fileID: 9049462943076198797}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: maxTreasureCount
-      value: 1
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: minTreasureCount
-      value: 1
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: successPopupPrefab
@@ -151719,7 +151719,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: treasureHuntDuration
-      value: 147
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: 'allTreasureSpots.Array.data[0]'
