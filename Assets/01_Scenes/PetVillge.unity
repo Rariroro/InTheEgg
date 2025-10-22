@@ -25103,63 +25103,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 59951852970970370, guid: 10f26a50f22647f41bbd47655db4fa7f, type: 3}
   m_PrefabInstance: {fileID: 499155056}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &499572203
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1361253149}
-    m_Modifications:
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -129.74571
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 19.39822
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -37.71538
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.36721414
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0.91214347
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.06196672
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0.17119673
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7108309724432713129, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-      propertyPath: m_Name
-      value: PetInteractionManager
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
 --- !u!1001 &504377358
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -66481,7 +66424,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1624914625}
   - {fileID: 2124033966}
   - {fileID: 208607441}
   - {fileID: 1030082193}
@@ -76811,11 +76753,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623586088}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &1624914625 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4562928858349846267, guid: 0bed32b2b669944deb70ba0d2b0779c5, type: 3}
-  m_PrefabInstance: {fileID: 499572203}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1625263936
 GameObject:
   m_ObjectHideFlags: 0
@@ -151703,11 +151640,11 @@ PrefabInstance:
       objectReference: {fileID: 9049462943076198797}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: maxTreasureCount
-      value: 7
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: minTreasureCount
-      value: 7
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: successPopupPrefab
@@ -151719,7 +151656,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: treasureHuntDuration
-      value: 30
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: 'allTreasureSpots.Array.data[0]'
