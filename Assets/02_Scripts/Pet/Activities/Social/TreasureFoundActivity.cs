@@ -209,39 +209,65 @@ public class TreasureFoundActivity : PetActivityAdapter
     private void FindCarriedTreasure()
     {
         // Debug.Log($"[TreasureFound] {pet.petName}: 보물 찾기 시작");
-        
+
         // 펫의 모든 자식에서 TreasureController 찾기
         TreasureController[] treasures = pet.GetComponentsInChildren<TreasureController>();
         // Debug.Log($"[TreasureFound] {pet.petName}: 찾은 TreasureController 수: {treasures.Length}");
-        
+
         foreach (var tc in treasures)
         {
             if (tc != null)
             {
         // Debug.Log($"[TreasureFound] {pet.petName}: 보물 발견 - IsCarried: {tc.IsCarried}, CarryingPet: {tc.CarryingPet?.petName}");
-                
+
                 // IsCarried 체크를 제거하고 CarryingPet으로 확인
                 if (tc.CarryingPet == pet)
                 {
                     carriedTreasure = tc.gameObject;
         // Debug.Log($"[TreasureFound] {pet.petName}: 내 보물 확인! 위치: {carriedTreasure.transform.parent?.name}");
-                    
-                    // TreasureSpot 찾기
+
+                    // TreasureSpot 찾기 - 두 가지 방법 시도
                     TreasureSpot[] spots = Object.FindObjectsOfType<TreasureSpot>();
                     foreach (var spot in spots)
                     {
+                        // 방법 1: CurrentTreasure로 매칭 (기존 방식)
                         if (spot.CurrentTreasure == carriedTreasure)
                         {
                             targetSpot = spot;
-        // Debug.Log($"[TreasureFound] {pet.petName}: TreasureSpot 찾음: {spot.name}");
+        // Debug.Log($"[TreasureFound] {pet.petName}: TreasureSpot 찾음 (CurrentTreasure 매칭): {spot.name}");
                             break;
                         }
+                        // 방법 2: 펫이 점유한 스팟 확인 (백업)
+                        else if (spot.IsOccupied && !spot.HasTreasure)
+                        {
+                            // 이 펫이 점유한 스팟인지 확인 (occupyingPet은 private이므로 간접 확인)
+                            // HasTreasure가 false이고 IsOccupied가 true면 이 펫이 가져간 것
+                            targetSpot = spot;
+        // Debug.Log($"[TreasureFound] {pet.petName}: TreasureSpot 찾음 (점유 상태로 추정): {spot.name}");
+                            break;
+                        }
+                    }
+
+                    // targetSpot을 못 찾은 경우 가장 가까운 스팟 사용
+                    if (targetSpot == null && spots.Length > 0)
+                    {
+                        float minDistance = float.MaxValue;
+                        foreach (var spot in spots)
+                        {
+                            float distance = Vector3.Distance(pet.transform.position, spot.transform.position);
+                            if (distance < minDistance)
+                            {
+                                minDistance = distance;
+                                targetSpot = spot;
+                            }
+                        }
+        // Debug.Log($"[TreasureFound] {pet.petName}: 가장 가까운 TreasureSpot 사용: {targetSpot?.name}");
                     }
                     return;
                 }
             }
         }
-        
+
         // Debug.Log($"[TreasureFound] {pet.petName}: 보물을 찾지 못함!");
     }
     
@@ -478,19 +504,32 @@ public class TreasureFoundActivity : PetActivityAdapter
         // 최종 위치 설정
         if (treasureToAnimate == null) yield break;
         treasureToAnimate.transform.position = targetPos;
-        
-        // 바운스 효과 추가
-        yield return BounceEffect(treasureToAnimate, targetPos);
-        
-        // 최종 처리
-        droppedTreasureObject = treasureToAnimate;
-        carriedTreasure = null;
-        
-        // 수집 가능하게 설정
-        TreasureController treasureController = droppedTreasureObject?.GetComponent<TreasureController>();
-        if (treasureController != null)
+
+        // 바운스 효과 추가 (보물이 여전히 존재하는 경우에만)
+        if (treasureToAnimate != null)
         {
-            treasureController.EnableCollection();
+            yield return BounceEffect(treasureToAnimate, targetPos);
+        }
+
+        // 최종 처리 (보물이 여전히 존재하는 경우에만)
+        if (treasureToAnimate != null)
+        {
+            droppedTreasureObject = treasureToAnimate;
+            carriedTreasure = null;
+
+            // 수집 가능하게 설정
+            TreasureController treasureController = treasureToAnimate.GetComponent<TreasureController>();
+            if (treasureController != null)
+            {
+                treasureController.EnableCollection();
+            }
+        }
+        else
+        {
+            // 보물이 이미 수집되어 사라진 경우
+            droppedTreasureObject = null;
+            carriedTreasure = null;
+            // Debug.Log($"[TreasureFound] {pet.petName}: 보물이 애니메이션 중 수집되어 사라졌습니다.");
         }
         
         // Debug.Log($"[TreasureFound] {pet.petName}: 보물을 자연스럽게 떨어뜨렸습니다!");

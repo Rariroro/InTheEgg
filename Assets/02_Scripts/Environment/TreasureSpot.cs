@@ -38,7 +38,25 @@ public class TreasureSpot : MonoBehaviour
     // 프로퍼티
     public bool HasTreasure => hasTreasure && currentTreasure != null;
     public bool IsOccupied => occupyingPet != null;
-    public bool IsAvailable => HasTreasure && !IsOccupied;  // 보물이 있고 아직 차지되지 않은 경우만 true
+    public bool IsAvailable
+    {
+        get
+        {
+            // 보물이 있고, 아직 차지되지 않았으며, 보물이 다른 펫에게 들려있지 않은 경우만 true
+            if (!HasTreasure || IsOccupied)
+                return false;
+
+            // 추가 검증: currentTreasure가 다른 펫에게 들려있는지 확인
+            if (currentTreasure != null)
+            {
+                TreasureController tc = currentTreasure.GetComponent<TreasureController>();
+                if (tc != null && tc.IsCarried)
+                    return false;  // 다른 펫이 들고 있으면 사용 불가
+            }
+
+            return true;
+        }
+    }
     public GameObject CurrentTreasure => currentTreasure;
     public Vector3 WaitingPosition => waitingPoint != null ? waitingPoint.position : transform.position + Vector3.forward * 2f;
     public bool HasBeenCounted => hasBeenCounted;
@@ -171,6 +189,22 @@ public class TreasureSpot : MonoBehaviour
         hasBeenCounted = false;
         // Debug.Log($"[TreasureSpot] {name} 카운팅 플래그 리셋");
     }
+
+    /// <summary>
+    /// 펫이 보물을 가져갔을 때 즉시 상태 업데이트 (다른 펫의 접근 차단)
+    /// </summary>
+    public void MarkTreasureRemoved()
+    {
+        lock (spotLock)
+        {
+            // hasTreasure를 false로 설정하여 다른 펫의 접근 차단
+            hasTreasure = false;
+            // currentTreasure 참조는 유지 (TreasureFoundActivity가 targetSpot을 찾는데 필요)
+            // Clear() 메서드가 IsCarried/IsDropped 체크를 하므로 안전함
+            // occupyingPet은 유지 (펫이 운반 완료할 때까지)
+            // Debug.Log($"[TreasureSpot] {name}: 보물 제거 마킹 완료 - 다른 펫 접근 차단 (currentTreasure 참조는 유지)");
+        }
+    }
     
     /// <summary>
     /// 보물 획득 처리
@@ -196,19 +230,20 @@ public class TreasureSpot : MonoBehaviour
     {
         lock (spotLock)
         {
+            // currentTreasure가 null이면 이미 펫이 가져간 것이므로 처리 불필요
             if (currentTreasure != null)
             {
                 // 보물 컨트롤러 확인
                 TreasureController treasureController = currentTreasure.GetComponent<TreasureController>();
-                
-                // 펫이 내려놓은 보물은 삭제하지 않음
-                if (treasureController != null && treasureController.IsDropped)
+
+                // 펫이 내려놓은 보물이나 들고 있는 보물은 삭제하지 않음
+                if (treasureController != null && (treasureController.IsDropped || treasureController.IsCarried))
                 {
-        // Debug.Log($"[TreasureSpot] 펫이 내려놓은 보물은 유지: {currentTreasure.name}");
+        // Debug.Log($"[TreasureSpot] 펫이 처리한 보물은 유지: {currentTreasure.name}, IsDropped={treasureController.IsDropped}, IsCarried={treasureController.IsCarried}");
                     // currentTreasure 참조만 해제 (오브젝트는 유지)
                     currentTreasure = null;
                 }
-                // 아직 스팟에 있거나 펫이 들고 있는 보물만 삭제
+                // 아직 스팟에 있는 미발견 보물만 삭제
                 else
                 {
         // Debug.Log($"[TreasureSpot] 미발견 보물 제거: {currentTreasure?.name}");
@@ -219,7 +254,7 @@ public class TreasureSpot : MonoBehaviour
                     currentTreasure = null;
                 }
             }
-            
+
             hasTreasure = false;
             occupyingPet = null;
             hasBeenCounted = false;

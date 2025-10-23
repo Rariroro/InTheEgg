@@ -123,9 +123,10 @@ public class TreasureController : MonoBehaviour
     /// </summary>
     public void SetInitialState(bool shouldRotate = false)
     {
+        // shouldRotate가 false이면 회전하지 않도록 시작 위치만 고정
+        // isDropped는 false로 유지 (펫이 찾기 전이므로)
         if (!shouldRotate)
         {
-            isDropped = true;  // 회전하지 않도록 설정
             // 시작 위치 저장
             startPosition = transform.position;
         }

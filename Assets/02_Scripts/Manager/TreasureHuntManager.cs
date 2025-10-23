@@ -336,25 +336,29 @@ public class TreasureHuntManager : MonoBehaviour
                 }
             }
             
-            // 펫이 아직 들고 있는 보물만 제거 (내려놓은 보물은 유지)
+            // 펫이 찾은 보물들은 모두 유지 (들고 있거나 내려놓은 상태 모두)
             TreasureController[] allTreasures = FindObjectsOfType<TreasureController>();
             foreach (var treasure in allTreasures)
             {
                 if (treasure != null && treasure.gameObject != null)
                 {
-                    // 수집 가능한 상태(내려놓은 보물)는 유지
+                    // 내려놓은 보물 유지
                     if (treasure.IsDropped)
                     {
         // Debug.Log($"[TreasureHuntManager] 수집 가능한 보물 유지: {treasure.gameObject.name}");
                         continue;
                     }
-                    
-                    // 아직 펫이 들고 있는 보물은 제거
+
+                    // 펫이 들고 있는 보물도 유지 (펫이 자연스럽게 내려놓을 수 있도록)
                     if (treasure.IsCarried)
                     {
-        // Debug.Log($"[TreasureHuntManager] 펫이 들고 있는 보물 제거: {treasure.gameObject.name}");
-                        Destroy(treasure.gameObject);
+        // Debug.Log($"[TreasureHuntManager] 펫이 들고 있는 보물 유지 (자연스럽게 내려놓을 예정): {treasure.gameObject.name}");
+                        continue;
                     }
+
+                    // 아무도 들고 있지 않고, 내려놓지도 않은 보물만 제거 (미발견 보물)
+        // Debug.Log($"[TreasureHuntManager] 미발견 보물 제거: {treasure.gameObject.name}");
+                    Destroy(treasure.gameObject);
                 }
             }
             

@@ -551,7 +551,7 @@ public class TreasureHuntActivity : PetActivityAdapter
         if (targetSpot != null && targetSpot.CurrentTreasure != null)
         {
             GameObject treasure = targetSpot.CurrentTreasure;
-            
+
             // 1순위: 펫에 설정된 treasureHoldPoint 사용
             if (pet.treasureHoldPoint != null)
             {
@@ -575,7 +575,7 @@ public class TreasureHuntActivity : PetActivityAdapter
                     treasure.transform.localPosition = Vector3.up * 1.5f;
                 }
             }
-            
+
             // TreasureController의 StartCarrying 호출
             TreasureController treasureController = treasure.GetComponent<TreasureController>();
             if (treasureController != null)
@@ -584,14 +584,18 @@ public class TreasureHuntActivity : PetActivityAdapter
                 // IsCarried는 읽기 전용이므로 StartCarrying에서 설정됨
         // Debug.Log($"[TreasureHunt] {pet.petName}: StartCarrying 호출 완료 - IsCarried: {treasureController.IsCarried}, CarryingPet: {treasureController.CarryingPet?.petName}");
             }
-            
+
+            // 즉시 TreasureSpot에서 보물 제거 마킹 (다른 펫의 접근 차단)
+            targetSpot.MarkTreasureRemoved();
+
             // 매니저에 보물 찾음 알림
             if (TreasureHuntManager.Instance != null)
             {
                 TreasureHuntManager.Instance.OnPetFoundTreasure(targetSpot, pet);
             }
-            
-            // targetSpot은 유지 - TreasureFoundActivity가 사용할 수 있도록
+
+            // targetSpot 참조는 TreasureFoundActivity가 위치를 알 수 있도록 유지
+            // 하지만 TreasureSpot의 currentTreasure는 이미 null로 설정됨 (MarkTreasureRemoved에서)
         }
         
         // 기쁨 표현

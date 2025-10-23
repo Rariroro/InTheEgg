@@ -120110,6 +120110,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3545859983614805198, guid: 38b55db65fee64202b1b1a586d99125a, type: 3}
+      propertyPath: hasTreasure
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3545859983614805198, guid: 38b55db65fee64202b1b1a586d99125a, type: 3}
+      propertyPath: hasBeenCounted
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6777987719970608275, guid: 38b55db65fee64202b1b1a586d99125a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.97
