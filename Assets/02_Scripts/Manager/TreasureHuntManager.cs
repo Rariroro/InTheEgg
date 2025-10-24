@@ -898,7 +898,7 @@ public class TreasureHuntManager : MonoBehaviour
                 // 결과 텍스트 찾아서 업데이트
                 else if (text.name.Contains("Description") || text.name.Contains("Content"))
                 {
-                    text.text = $"모든 보물을 찾았습니다!\n{totalTreasureCount}개 중 {foundTreasureCount}개 발견! 성공 보너스 코인:";
+                    text.text = $"모든 보물을 찾았습니다!\n 성공 보너스 코인 획득:";
                 }
                 // Amount Text 오브젝트 찾아서 업데이트
                 else if (text.name.Contains("Amount"))
@@ -919,7 +919,7 @@ public class TreasureHuntManager : MonoBehaviour
                     if (popupComp != null)
                     {
                         // Popup이 닫힐 때 실행될 코루틴 시작
-                        StartCoroutine(WaitForPopupCloseAndApplyBonus(popup, button));
+                        StartCoroutine(WaitForPopupCloseAndApplyBonus(popup, wrapper, button));
                     }
                     else
                     {
@@ -943,7 +943,7 @@ public class TreasureHuntManager : MonoBehaviour
     /// <summary>
     /// 팝업이 닫힐 때까지 대기 후 보너스 적용
     /// </summary>
-    private IEnumerator WaitForPopupCloseAndApplyBonus(GameObject popup, Button closeButton)
+    private IEnumerator WaitForPopupCloseAndApplyBonus(GameObject popup, GameObject wrapper, Button closeButton)
     {
         bool buttonClicked = false;
 
@@ -970,6 +970,12 @@ public class TreasureHuntManager : MonoBehaviour
         if (!bonusApplied && missionBonusCoins > 0)
         {
             ApplyBonusCoins();
+        }
+
+        // PopupWrapper 제거
+        if (wrapper != null)
+        {
+            Destroy(wrapper);
         }
     }
 
