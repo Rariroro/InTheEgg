@@ -95890,10 +95890,10 @@ MonoBehaviour:
   buttonContainer: {fileID: 2431138902095347578}
   mainCamera: {fileID: 0}
   cameraMoveDuration: 1
-  cameraZoomDistance: 15
-  cameraHeight: 8
-  environmentCameraZoomDistance: 20
-  environmentCameraHeight: 15
+  cameraZoomDistance: 20
+  cameraHeight: 10
+  environmentCameraZoomDistance: 50
+  environmentCameraHeight: 20
   giftTypeIcons:
   - giftType: pet
     icon: {fileID: 21300000, guid: 0b26b4d08bb04438188cbf6ee6967deb, type: 3}
@@ -151648,11 +151648,11 @@ PrefabInstance:
       objectReference: {fileID: 9049462943076198797}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: maxTreasureCount
-      value: 10
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: minTreasureCount
-      value: 10
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5386556166281257173, guid: 8fcf44d5cb30546abaca5433fa6235b5, type: 3}
       propertyPath: successPopupPrefab

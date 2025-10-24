@@ -43,7 +43,9 @@ public class GiftBoxUIManager : MonoBehaviour
     
     // 카메라 관련 변수
     private GameObject cameraParent; // CameraController 오브젝트 참조
+    private CameraController cameraController; // CameraController 컴포넌트 참조
     private bool isCameraMoving = false;
+    private bool originalLimitCameraMovement; // 원래 limitCameraMovement 값 저장
 
     // 버튼 클릭 직전 카메라 상태 저장
     private Vector3 lastCameraPosition;
@@ -72,7 +74,7 @@ public class GiftBoxUIManager : MonoBehaviour
         // CameraController의 자식 카메라 찾기
         if (mainCamera == null)
         {
-            CameraController cameraController = FindObjectOfType<CameraController>();
+            cameraController = FindObjectOfType<CameraController>();
             if (cameraController != null)
             {
                 cameraParent = cameraController.gameObject;
@@ -371,6 +373,13 @@ public class GiftBoxUIManager : MonoBehaviour
     {
         isCameraMoving = true;
 
+        // CameraController의 limitCameraMovement 비활성화
+        if (cameraController != null)
+        {
+            originalLimitCameraMovement = cameraController.limitCameraMovement;
+            cameraController.limitCameraMovement = false;
+        }
+
         Vector3 startPos = mainCamera.transform.position;
         Quaternion startRot = mainCamera.transform.rotation;
         float startFOV = mainCamera.fieldOfView; // 현재 FOV 값 저장
@@ -425,6 +434,12 @@ public class GiftBoxUIManager : MonoBehaviour
 
         // 버튼 클릭 직전 위치로 복귀 (저장된 last 위치 사용)
         yield return MoveCameraToPosition(lastCameraPosition, lastCameraRotation, lastCameraFOV, lastCameraParentPosition);
+
+        // CameraController의 limitCameraMovement 원래 값으로 복원
+        if (cameraController != null)
+        {
+            cameraController.limitCameraMovement = originalLimitCameraMovement;
+        }
 
         isCameraMoving = false;
     }
