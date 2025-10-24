@@ -1826,7 +1826,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -8.66}
-  m_SizeDelta: {x: 350, y: 50}
+  m_SizeDelta: {x: 450, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8324839402163969693
 CanvasRenderer:
@@ -1856,7 +1856,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Level # score:'
+  m_text: "\uBAA8\uB4E0 \uBCF4\uBB3C\uC744 \uCC3E\uC558\uC2B5\uB2C8\uB2E4!\n\uC131\uACF5
+    \uBCF4\uB108\uC2A4 \uCF54\uC778 \uD68D\uB4DD!!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 2eaeeab912a604ac79da6fa55304a9b0, type: 2}
   m_sharedMaterial: {fileID: -854818010035391922, guid: 2eaeeab912a604ac79da6fa55304a9b0, type: 2}
@@ -1883,10 +1884,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 44.75
-  m_fontSizeBase: 36
+  m_fontSize: 34.9
+  m_fontSizeBase: 34.9
   m_fontWeight: 400
-  m_enableAutoSizing: 1
+  m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1

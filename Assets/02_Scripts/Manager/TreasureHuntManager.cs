@@ -898,7 +898,7 @@ public class TreasureHuntManager : MonoBehaviour
                 // 결과 텍스트 찾아서 업데이트
                 else if (text.name.Contains("Description") || text.name.Contains("Content"))
                 {
-                    text.text = $"모든 보물을 찾았습니다!\n 성공 보너스 코인 획득:";
+                    text.text = $"모든 보물을 찾았습니다!\n 성공 보너스 코인 획득!!";
                 }
                 // Amount Text 오브젝트 찾아서 업데이트
                 else if (text.name.Contains("Amount"))
