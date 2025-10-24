@@ -73,7 +73,6 @@ public class TreasureHuntActivity : PetActivityAdapter
     
     public override void Start()
     {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 시작!");
         
         // 모든 상태 변수 명시적 초기화
         targetSpot = null;
@@ -97,7 +96,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             if (UnityEngine.AI.NavMesh.SamplePosition(pet.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
             {
                 agent.Warp(hit.position);
-        // Debug.Log($"[TreasureHunt] {pet.petName}: Agent를 NavMesh 위치로 워프: {hit.position}");
             }
             else
             {
@@ -138,7 +136,6 @@ public class TreasureHuntActivity : PetActivityAdapter
         // 보물찾기가 종료되면 즉시 Stop 호출하여 완전히 중단
         if (!pet.State.IsTreasureHuntActive)
         {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료 감지, 활동 완전 중단");
             isSearching = false;
             
             // Stop 메서드 호출하여 정리
@@ -161,7 +158,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 // 탐색 중이고 타겟이 있으면 재설정
                 if (targetSpot != null)
                 {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 탐색 목적지 유실! 재설정 - {targetSpot.name}");
                     agent.SetDestination(targetSpot.transform.position);
                 }
             }
@@ -196,7 +192,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 // 경로가 없고 1초 이상 지났으면 재계산 중으로 표시
                 isPathRecalculating = true;
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 경로 재계산 중 (경로 없음)");
             }
             
             // 접근 시간 추적
@@ -204,7 +199,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             if (distance <= 3f && distance > 0.1f && approachStartTime == 0f)
             {
                 approachStartTime = Time.time;
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물 접근 시작 (거리: {distance:F1}m)");
             }
             
             // 목표 지점 도착 체크 (더 엄격한 조건)
@@ -235,7 +229,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 
                 if (!canPickup)
                 {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 차단 - {blockReason}");
                     return;
                 }
                 
@@ -245,7 +238,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                     return;
                 }
                 
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 조건 충족 (거리: {agent.remainingDistance:F1}m)");
                 
                 // 이 지점에 보물이 있는지 확인
                 if (targetSpot.HasTreasure)
@@ -254,7 +246,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                     if (targetSpot.TryCollect(pet))
                     {
                         // 성공: 보물 획득 후 TreasureFound 상태로 전환
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물 획득 성공! TreasureFound 상태로 전환");
                         approachStartTime = 0f;  // 리셋
                         isTransitioningToFound = true;  // 전환 시작
                         isSearching = false;  // Update 즉시 중단
@@ -265,7 +256,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                     else
                     {
                         // 실패: 다른 펫이 먼저 가져감
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 도착했지만 이미 다른 펫이 보물을 가져감 (TryCollect 실패)");
                         approachStartTime = 0f;  // 리셋
                         
                         // 즉시 다른 보물 찾기
@@ -275,7 +265,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 else
                 {
                     // 보물이 이미 없음
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물이 이미 없음");
                     approachStartTime = 0f;  // 리셋
                     FindNewTarget();
                 }
@@ -303,7 +292,6 @@ public class TreasureHuntActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물찾기 종료");
         
         // 모든 플래그 및 참조 완전 리셋
         isTransitioningToFound = false;
@@ -374,14 +362,12 @@ public class TreasureHuntActivity : PetActivityAdapter
             if (!targetSpot.TryOccupy(pet))
             {
                 // 다른 펫이 이미 예약함 - 다른 보물 찾기
-        // Debug.Log($"{pet.petName}: {targetSpot.name}은 이미 다른 펫이 예약함. 다른 보물 찾기");
                 targetSpot = null;
                 FindNewTarget();
                 return;
             }
             
             // 성공적으로 예약한 경우만 이동 시작
-        // Debug.Log($"{pet.petName}: {targetSpot.name} 보물 예약 성공!");
             
             // 보물 발견! 속도 증가
             if (agent != null && agent.enabled && agent.isOnNavMesh)
@@ -391,7 +377,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 agent.isStopped = false;
             }
             
-        // Debug.Log($"{pet.petName}: 새 보물 타겟 설정 - {targetSpot.name}");
         }
         else
         {
@@ -401,7 +386,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 agent.speed = pet.Movement.walkSpeed * SEARCH_SPEED_MULTIPLIER;
             }
             WanderRandomly();
-        // Debug.Log($"{pet.petName}: 근처에 보물이 없어 배회 탐색 시작");
         }
     }
     
@@ -412,7 +396,6 @@ public class TreasureHuntActivity : PetActivityAdapter
     {
         if (targetSpot == null || !targetSpot.HasTreasure)
         {
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 주기적 체크에서 타겟 무효 감지 (0.5초 간격)");
             FindNewTarget();
         }
     }
@@ -477,13 +460,11 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             // 마지막 목표가 있고 아직 멀리 있으면 그것을 기준으로
             basePosition = lastWanderTarget;
-        // Debug.Log($"{pet.petName}: 마지막 목표 기준 이동 (거리: {Vector3.Distance(lastWanderTarget, pet.transform.position):F1}m)");
         }
         else
         {
             // 그렇지 않으면 현재 위치 기준
             basePosition = pet.transform.position;
-        // Debug.Log($"{pet.petName}: 현재 위치 기준 이동");
         }
         
         Vector3 targetPosition = basePosition + wanderDirection * distance;
@@ -505,7 +486,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             Vector3 actualDirection = (hit.position - pet.transform.position).normalized;
             float actualDistance = Vector3.Distance(pet.transform.position, hit.position);
             
-        // Debug.Log($"{pet.petName}: 배회 이동 - 실제방향: {actualDirection}, 실제거리: {actualDistance:F1}m, 목표: {hit.position}");
         }
         else
         {
@@ -522,7 +502,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 agent.SetDestination(hit.position);
                 agent.isStopped = false;
                 lastWanderTarget = hit.position;
-        // Debug.Log($"{pet.petName}: 대체 경로로 이동 - 목표: {hit.position}");
             }
         }
     }
@@ -582,7 +561,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             {
                 treasureController.StartCarrying(pet);
                 // IsCarried는 읽기 전용이므로 StartCarrying에서 설정됨
-        // Debug.Log($"[TreasureHunt] {pet.petName}: StartCarrying 호출 완료 - IsCarried: {treasureController.IsCarried}, CarryingPet: {treasureController.CarryingPet?.petName}");
             }
 
             // 즉시 TreasureSpot에서 보물 제거 마킹 (다른 펫의 접근 차단)
@@ -602,7 +580,6 @@ public class TreasureHuntActivity : PetActivityAdapter
         pet.ShowEmotion(EmotionType.Happy);
         
         // 이제 보물이 부착되었으므로 상태 전환
-        // Debug.Log($"[TreasureHunt] {pet.petName}: 보물 부착 완료, TreasureFound 상태로 전환");
         pet.State.TrySetStatus(PetStatus.TreasureFound);
         
         // AI에게 즉시 재평가 요청 - 새로운 Activity로 전환하도록
@@ -611,7 +588,6 @@ public class TreasureHuntActivity : PetActivityAdapter
             pet.AI.InterruptAndResetAI();
         }
         
-        // Debug.Log($"[TreasureHunt] {pet.petName}: TreasureFound 상태로 전환 완료!");
     }
     
     /// <summary>
