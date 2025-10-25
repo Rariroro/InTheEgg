@@ -91,6 +91,9 @@ public class TreasureHuntManager : MonoBehaviour
     private Coroutine countCoroutine;  // 카운트 코루틴
     private float countSpeed = 0.02f;  // 카운트 속도 (초당 50개)
 
+    // WaitForSeconds 캐싱 (성능 최적화)
+    private readonly WaitForSeconds waitForPopupCleanup = new WaitForSeconds(0.1f);
+
     // 프로퍼티
     public bool IsTreasureHuntActive => isTreasureHuntActive;
     public List<TreasureSpot> ActiveTreasureSpots => activeTreasureSpots;
@@ -135,10 +138,10 @@ public class TreasureHuntManager : MonoBehaviour
             return;
         }
         instance = this;
-        
+
         // 씬의 모든 TreasureSpot 수집
         RefreshTreasureSpots();
-        
+
         // 저장된 코인 로드 (선택사항)
         LoadCoins();
 
@@ -153,6 +156,24 @@ public class TreasureHuntManager : MonoBehaviour
         }
 
         UpdateCoinUI();
+
+        // 게임 시작 시 남아있는 PopupBackground 정리
+        StartCoroutine(CleanupPopupBackgroundsOnStart());
+    }
+
+    /// <summary>
+    /// 게임 시작 시 남아있는 PopupBackground 정리
+    /// </summary>
+    private IEnumerator CleanupPopupBackgroundsOnStart()
+    {
+        // Canvas가 생성될 때까지 대기
+        yield return null;
+
+        GameObject canvasObject = GameObject.Find("Canvas");
+        if (canvasObject != null)
+        {
+            CleanupExistingPopupBackgrounds(canvasObject);
+        }
     }
 
     private void Start()
@@ -850,6 +871,9 @@ public class TreasureHuntManager : MonoBehaviour
                 return;
             }
 
+            // 기존 PopupBackground가 있으면 먼저 제거 (이전 팝업의 잔재 정리)
+            CleanupExistingPopupBackgrounds(canvasObject);
+
             // 팝업을 감쌀 래퍼 오브젝트 생성 (애니메이션과 scale 충돌 방지)
             GameObject wrapper = new("PopupWrapper");
             wrapper.transform.SetParent(canvasObject.transform, false);
@@ -941,6 +965,24 @@ public class TreasureHuntManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 기존 PopupBackground 오브젝트 정리
+    /// </summary>
+    private void CleanupExistingPopupBackgrounds(GameObject canvasObject)
+    {
+        if (canvasObject == null) return;
+
+        Transform[] children = canvasObject.GetComponentsInChildren<Transform>(true);
+        foreach (Transform child in children)
+        {
+            if (child != null && (child.name == "PopupBackground" || child.name.Contains("PopupBackground")))
+            {
+                Debug.Log($"[TreasureHunt] 기존 PopupBackground 제거: {child.name}");
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    /// <summary>
     /// 팝업이 닫힐 때까지 대기 후 보너스 적용
     /// </summary>
     private IEnumerator WaitForPopupCloseAndApplyBonus(GameObject popup, GameObject wrapper, Button closeButton)
@@ -976,6 +1018,24 @@ public class TreasureHuntManager : MonoBehaviour
         if (wrapper != null)
         {
             Destroy(wrapper);
+        }
+
+        // PopupBackground 제거 (Ricimi Popup이 생성한 배경 오브젝트)
+        yield return waitForPopupCleanup;  // 팝업 애니메이션 완료 대기
+
+        GameObject canvasObject = GameObject.Find("Canvas");
+        if (canvasObject != null)
+        {
+            // Canvas 하위의 모든 PopupBackground 찾아서 제거
+            Transform[] children = canvasObject.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in children)
+            {
+                if (child.name == "PopupBackground" || child.name.Contains("PopupBackground"))
+                {
+                    Debug.Log($"[TreasureHunt] PopupBackground 제거: {child.name}");
+                    Destroy(child.gameObject);
+                }
+            }
         }
     }
 
