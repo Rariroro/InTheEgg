@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -19,18 +20,23 @@ public class TreasureSpot : MonoBehaviour
     [Header("상태")]
     [SerializeField] private bool hasTreasure = false;
     [SerializeField] private bool hasBeenCounted = false;  // 이미 카운팅되었는지 추적
-    
+
     [Tooltip("런타임에 자동 관리됨 - 이 스팟에 생성된 보물 오브젝트 참조\n" +
              "보물이 생성되면 자동으로 할당되고, 수집되면 null이 됩니다.\n" +
              "인스펙터에서 수동 설정 불필요")]
     [SerializeField] private GameObject currentTreasure;  // 현재 이 위치에 있는 보물 인스턴스
-    
+
     [Tooltip("런타임에 자동 관리됨 - 이 보물을 차지한(발견한) 펫\n" +
              "여러 펫이 동시에 같은 보물에 접근하는 것을 방지합니다.\n" +
              "먼저 도착한 펫만 보물을 가질 수 있도록 소유권을 관리합니다.\n" +
              "인스펙터에서 수동 설정 불필요")]
     [SerializeField] private PetController occupyingPet;  // 이 보물 스팟을 점유한 펫
-    
+
+    // 점유 타임아웃 시스템
+    private float occupyTime = 0f;  // 점유 시작 시간
+    private const float OCCUPY_TIMEOUT = 10f;  // 10초 타임아웃
+    private Coroutine timeoutCoroutine;
+
     // 동시성 제어를 위한 lock 객체
     private readonly object spotLock = new object();
     
@@ -114,19 +120,55 @@ public class TreasureSpot : MonoBehaviour
     }
     
     /// <summary>
-    /// 펫이 이 위치를 점유 (동시성 제어 강화)
+    /// 펫이 이 위치를 점유 (동시성 제어 강화 + 타임아웃)
     /// </summary>
     public bool TryOccupy(PetController pet)
     {
         lock (spotLock)
         {
+            // 타임아웃 체크
             if (IsOccupied && occupyingPet != pet)
             {
-                return false;
+                // 타임아웃 시간이 지났으면 자동 해제
+                if (Time.time - occupyTime > OCCUPY_TIMEOUT)
+                {
+                    Debug.Log($"[TreasureSpot] 점유 타임아웃! {occupyingPet?.petName}의 점유 해제");
+                    ReleaseInternal();
+                }
+                else
+                {
+                    return false;
+                }
             }
-            
+
             occupyingPet = pet;
+            occupyTime = Time.time;
+
+            // 타임아웃 코루틴 시작
+            if (timeoutCoroutine != null)
+            {
+                StopCoroutine(timeoutCoroutine);
+            }
+            timeoutCoroutine = StartCoroutine(OccupyTimeoutCoroutine(pet));
+
             return true;
+        }
+    }
+
+    /// <summary>
+    /// 점유 타임아웃 코루틴
+    /// </summary>
+    private IEnumerator OccupyTimeoutCoroutine(PetController pet)
+    {
+        yield return new WaitForSeconds(OCCUPY_TIMEOUT);
+
+        lock (spotLock)
+        {
+            if (occupyingPet == pet)
+            {
+                Debug.Log($"[TreasureSpot] {pet.petName}의 점유가 타임아웃되었습니다.");
+                ReleaseInternal();
+            }
         }
     }
     
@@ -163,8 +205,23 @@ public class TreasureSpot : MonoBehaviour
         {
             if (occupyingPet == pet)
             {
-                occupyingPet = null;
+                ReleaseInternal();
             }
+        }
+    }
+
+    /// <summary>
+    /// 내부 점유 해제 (lock 내부에서 호출)
+    /// </summary>
+    private void ReleaseInternal()
+    {
+        occupyingPet = null;
+        occupyTime = 0f;
+
+        if (timeoutCoroutine != null)
+        {
+            StopCoroutine(timeoutCoroutine);
+            timeoutCoroutine = null;
         }
     }
     
@@ -247,18 +304,32 @@ public class TreasureSpot : MonoBehaviour
             }
 
             hasTreasure = false;
-            occupyingPet = null;
             hasBeenCounted = false;
+            ReleaseInternal();
         }
     }
     
     // 에디터에서 시각화
     private void OnDrawGizmos()
     {
-        // 보물 스팟 위치
-        Gizmos.color = hasTreasure ? Color.yellow : Color.cyan;
+        // 보물 스팟 위치 - 상태에 따라 색상 변경
+        if (IsOccupied)
+        {
+            // 점유 중이면 빨간색
+            Gizmos.color = Color.red;
+        }
+        else if (hasTreasure)
+        {
+            // 보물이 있으면 노란색
+            Gizmos.color = Color.yellow;
+        }
+        else
+        {
+            // 비어있으면 청록색
+            Gizmos.color = Color.cyan;
+        }
         Gizmos.DrawWireSphere(transform.position, 0.5f);
-        
+
         // 대기 위치
         if (waitingPoint != null)
         {
@@ -273,17 +344,41 @@ public class TreasureSpot : MonoBehaviour
             Gizmos.DrawWireSphere(defaultWaitingPos, 0.3f);
             Gizmos.DrawLine(transform.position, defaultWaitingPos);
         }
-        
-        // 확률 표시
+
+        // 상태 정보 표시
         #if UNITY_EDITOR
-        UnityEditor.Handles.Label(transform.position + Vector3.up * 1f, 
-            $"보물 확률: {treasureProbability}%");
+        string statusInfo = $"확률: {treasureProbability}%";
+        if (hasTreasure)
+        {
+            statusInfo += "\n보물: O";
+        }
+        if (IsOccupied)
+        {
+            statusInfo += $"\n점유: {occupyingPet?.petName ?? "Unknown"}";
+            if (occupyTime > 0)
+            {
+                float remainingTime = OCCUPY_TIMEOUT - (Time.time - occupyTime);
+                if (remainingTime > 0)
+                {
+                    statusInfo += $"\n남은시간: {remainingTime:F1}초";
+                }
+            }
+        }
+        UnityEditor.Handles.Label(transform.position + Vector3.up * 1f, statusInfo);
         #endif
     }
-    
+
     private void OnDrawGizmosSelected()
     {
+        // 선택되었을 때 더 큰 원 표시
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, 1f);
+
+        // 점유 중인 펫과의 연결선 표시
+        if (IsOccupied && occupyingPet != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(transform.position, occupyingPet.transform.position);
+        }
     }
 }

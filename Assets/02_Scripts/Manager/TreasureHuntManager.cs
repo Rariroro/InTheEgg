@@ -16,13 +16,13 @@ public class TreasureHuntManager : MonoBehaviour
     [Header("보물 설정")]
     [Tooltip("보물로 사용할 프리팹")]
     public GameObject treasurePrefab;
-    
+
     [Tooltip("최소 보물 개수")]
-    [Range(1, 10)]
+    [Range(1, 17)]
     public int minTreasureCount = 2;
     
     [Tooltip("최대 보물 개수")]
-    [Range(1, 10)]
+    [Range(1, 17)]
     public int maxTreasureCount = 5;
     
     [Header("보상 설정")]

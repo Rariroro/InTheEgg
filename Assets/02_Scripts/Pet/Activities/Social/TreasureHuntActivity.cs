@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
 /// 펫의 보물찾기 탐색 활동을 담당하는 클래스
@@ -29,15 +30,25 @@ public class TreasureHuntActivity : PetActivityAdapter
     private Vector3 lastWanderTarget = Vector3.zero;
     private const float MIN_WANDER_DISTANCE = 30f;
     private const float MAX_WANDER_DISTANCE = 50f;
+
+    // 막힘 감지 시스템
+    private Vector3 lastPositionForStuck;
+    private float stuckTimer = 0f;
+    private const float STUCK_THRESHOLD = 3f;  // 3초 동안 움직이지 않으면 막힌 것으로 판단
+    private const float MIN_MOVE_DISTANCE = 1f;  // 최소 이동 거리
+    private HashSet<TreasureSpot> blacklistedSpots = new HashSet<TreasureSpot>();  // 도달 불가능한 보물 목록
     
     // 보물찾기 속도 배율
     private const float SEARCH_SPEED_MULTIPLIER = 2f;
     private const float FOUND_SPEED_MULTIPLIER = 3f;
     private const float ANGULAR_SPEED_MULTIPLIER = 3f;
     private const float ACCELERATION_MULTIPLIER = 3f;
-    
+
     // 탐색 거리 설정
     private const float SEARCH_DISTANCE = 70f;
+    private const float NEAR_SCAN_DISTANCE = 10f;  // 근거리 스캔 거리
+    private const float NEAR_SCAN_INTERVAL = 0.2f;  // 근거리 스캔 주기
+    private float nearScanTimer = 0f;
     
     public override string Name => "TreasureHunt";
     public override bool IsInterruptible => !pet.State.IsTreasureHuntActive; // 보물찾기 종료 시 중단 가능
@@ -73,7 +84,7 @@ public class TreasureHuntActivity : PetActivityAdapter
     
     public override void Start()
     {
-        
+
         // 모든 상태 변수 명시적 초기화
         targetSpot = null;
         isSearching = true;
@@ -85,6 +96,10 @@ public class TreasureHuntActivity : PetActivityAdapter
         isWandering = false;
         wanderAttempts = 0;
         lastWanderTarget = Vector3.zero;
+        nearScanTimer = 0f;
+        stuckTimer = 0f;
+        lastPositionForStuck = pet.transform.position;
+        blacklistedSpots.Clear();
         
         // agent가 NavMesh에 있는지 확인
         if (agent != null && agent.enabled && !agent.isOnNavMesh)
@@ -132,15 +147,15 @@ public class TreasureHuntActivity : PetActivityAdapter
     public override void Update()
     {
         if (!isSearching) return;
-        
+
         // 보물찾기가 종료되면 즉시 Stop 호출하여 완전히 중단
         if (!pet.State.IsTreasureHuntActive)
         {
             isSearching = false;
-            
+
             // Stop 메서드 호출하여 정리
             Stop();
-            
+
             // AI에게 재평가 요청
             if (pet.AI != null)
             {
@@ -148,6 +163,9 @@ public class TreasureHuntActivity : PetActivityAdapter
             }
             return;
         }
+
+        // 막힘 감지
+        CheckIfStuck();
         
         // agent 목적지 유실 체크 및 복구 (NavMesh 상태 확인 추가)
         if (agent != null && agent.enabled && agent.isOnNavMesh && !agent.isStopped)
@@ -168,7 +186,15 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             moveController.HandleRotation();
         }
-        
+
+        // 근거리 보물 스캔 (더 자주 체크)
+        nearScanTimer += Time.deltaTime;
+        if (nearScanTimer >= NEAR_SCAN_INTERVAL)
+        {
+            nearScanTimer = 0f;
+            ScanForNearbyTreasure();
+        }
+
         // 주기적으로 타겟 재검색
         searchTimer += Time.deltaTime;
         if (searchTimer >= SEARCH_INTERVAL)
@@ -339,23 +365,202 @@ public class TreasureHuntActivity : PetActivityAdapter
     }
     
     /// <summary>
+    /// 막힘 감지
+    /// </summary>
+    private void CheckIfStuck()
+    {
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh) return;
+        if (targetSpot == null) return;  // 타겟이 없으면 체크 불필요
+
+        // 이동 거리 계산
+        float movedDistance = Vector3.Distance(pet.transform.position, lastPositionForStuck);
+
+        if (movedDistance < MIN_MOVE_DISTANCE)
+        {
+            stuckTimer += Time.deltaTime;
+
+            if (stuckTimer >= STUCK_THRESHOLD)
+            {
+                Debug.Log($"[TreasureHunt] {pet.petName}: 막힘 감지! 타겟 변경");
+
+                // 현재 타겟을 블랙리스트에 추가
+                if (targetSpot != null)
+                {
+                    blacklistedSpots.Add(targetSpot);
+                    targetSpot.Release(pet);
+                    targetSpot = null;
+                }
+
+                // 타이머 리셋
+                stuckTimer = 0f;
+                lastPositionForStuck = pet.transform.position;
+
+                // 새로운 타겟 찾기
+                FindNewTarget();
+            }
+        }
+        else
+        {
+            // 이동했으면 타이머 리셋
+            stuckTimer = 0f;
+            lastPositionForStuck = pet.transform.position;
+        }
+    }
+
+    /// <summary>
+    /// 근거리 보물 스캔 - 더 가까운 보물이 있으면 타겟 변경
+    /// </summary>
+    private void ScanForNearbyTreasure()
+    {
+        if (TreasureHuntManager.Instance == null) return;
+
+        // agent 상태 체크 및 NavMesh 복귀 시도
+        if (agent == null || !agent.enabled) return;
+
+        if (!agent.isOnNavMesh)
+        {
+            // NavMesh에 없으면 복귀 시도
+            if (!TryReturnToNavMesh())
+            {
+                return;
+            }
+        }
+
+        var activeTreasures = TreasureHuntManager.Instance.ActiveTreasureSpots;
+        TreasureSpot closestSpot = null;
+        float closestDistance = float.MaxValue;
+
+        foreach (var spot in activeTreasures)
+        {
+            // 블랙리스트에 있는 보물은 무시
+            if (blacklistedSpots.Contains(spot)) continue;
+
+            // 사용 가능한 보물만 체크
+            if (spot == null || !spot.IsAvailable) continue;
+
+            float distance = Vector3.Distance(pet.transform.position, spot.transform.position);
+
+            // 근거리 범위 내의 보물만 체크
+            if (distance <= NEAR_SCAN_DISTANCE && distance < closestDistance)
+            {
+                // NavMesh 경로가 실제로 있는지 확인 (agent 상태 체크 추가)
+                if (agent != null && agent.enabled && agent.isOnNavMesh)
+                {
+                    NavMeshPath path = new NavMeshPath();
+                    if (agent.CalculatePath(spot.transform.position, path))
+                    {
+                        if (path.status == NavMeshPathStatus.PathComplete)
+                        {
+                            closestSpot = spot;
+                            closestDistance = distance;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 더 가까운 보물을 찾았고, 현재 타겟보다 가까우면 변경
+        if (closestSpot != null)
+        {
+            float currentDistance = targetSpot != null ?
+                Vector3.Distance(pet.transform.position, targetSpot.transform.position) : float.MaxValue;
+
+            if (closestDistance < currentDistance - 2f)  // 2m 이상 가까우면 변경
+            {
+                Debug.Log($"[TreasureHunt] {pet.petName}: 더 가까운 보물 발견! ({closestDistance:F1}m)");
+
+                // 이전 타겟 해제
+                if (targetSpot != null)
+                {
+                    targetSpot.Release(pet);
+                }
+
+                // 새 타겟으로 변경
+                targetSpot = closestSpot;
+                if (targetSpot.TryOccupy(pet))
+                {
+                    agent.SetDestination(targetSpot.transform.position);
+                    agent.speed = pet.Movement.walkSpeed * FOUND_SPEED_MULTIPLIER;
+                }
+                else
+                {
+                    targetSpot = null;  // 점유 실패 시 다시 찾기
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// 새로운 타겟 찾기
     /// </summary>
     private void FindNewTarget()
     {
         if (TreasureHuntManager.Instance == null) return;
-        
+
+        // agent 상태 체크
+        if (agent == null || !agent.enabled) return;
+
+        if (!agent.isOnNavMesh)
+        {
+            // NavMesh에 없으면 복귀 시도
+            if (!TryReturnToNavMesh())
+            {
+                Debug.LogWarning($"[TreasureHunt] {pet.petName}: NavMesh 복귀 실패");
+                return;
+            }
+        }
+
         // 이전 타겟 해제
         if (targetSpot != null)
         {
             targetSpot.Release(pet);
             targetSpot = null;
         }
-        
-        // 보물 탐색 (70m)
-        targetSpot = TreasureHuntManager.Instance.FindNearestAvailableSpot(
-            pet.transform.position, SEARCH_DISTANCE);
-        
+
+        // 모든 활성 보물 중에서 최적의 타겟 찾기
+        var activeTreasures = TreasureHuntManager.Instance.ActiveTreasureSpots;
+        TreasureSpot bestSpot = null;
+        float bestScore = float.MaxValue;
+
+        foreach (var spot in activeTreasures)
+        {
+            // 블랙리스트에 있는 보물은 무시
+            if (blacklistedSpots.Contains(spot)) continue;
+
+            // 사용 가능한 보물만 체크
+            if (spot == null || !spot.IsAvailable) continue;
+
+            float distance = Vector3.Distance(pet.transform.position, spot.transform.position);
+
+            // 탐색 거리 제한
+            if (distance > SEARCH_DISTANCE) continue;
+
+            // NavMesh 경로가 실제로 있는지 확인 (agent 상태 체크 추가)
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            {
+                NavMeshPath path = new NavMeshPath();
+                if (agent.CalculatePath(spot.transform.position, path))
+                {
+                    if (path.status == NavMeshPathStatus.PathComplete)
+                    {
+                        // 경로 길이 계산 (실제 이동 거리)
+                        float pathLength = GetPathLength(path);
+
+                        // 점수 계산 (직선 거리와 경로 길이의 조합)
+                        float score = pathLength * 0.7f + distance * 0.3f;
+
+                        if (score < bestScore)
+                        {
+                            bestScore = score;
+                            bestSpot = spot;
+                        }
+                    }
+                }
+            }
+        }
+
+        targetSpot = bestSpot;
+
         if (targetSpot != null)
         {
             // 즉시 이 보물을 점유 시도 (예약)
@@ -366,9 +571,10 @@ public class TreasureHuntActivity : PetActivityAdapter
                 FindNewTarget();
                 return;
             }
-            
+
             // 성공적으로 예약한 경우만 이동 시작
-            
+            Debug.Log($"[TreasureHunt] {pet.petName}: 새 타겟 설정 (거리: {Vector3.Distance(pet.transform.position, targetSpot.transform.position):F1}m)");
+
             // 보물 발견! 속도 증가
             if (agent != null && agent.enabled && agent.isOnNavMesh)
             {
@@ -376,7 +582,6 @@ public class TreasureHuntActivity : PetActivityAdapter
                 agent.SetDestination(targetSpot.transform.position);
                 agent.isStopped = false;
             }
-            
         }
         else
         {
@@ -387,6 +592,57 @@ public class TreasureHuntActivity : PetActivityAdapter
             }
             WanderRandomly();
         }
+    }
+
+    /// <summary>
+    /// NavMesh 경로의 실제 길이 계산
+    /// </summary>
+    private float GetPathLength(NavMeshPath path)
+    {
+        float length = 0f;
+        if (path.corners.Length < 2) return 0f;
+
+        for (int i = 1; i < path.corners.Length; i++)
+        {
+            length += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+        }
+
+        return length;
+    }
+
+    /// <summary>
+    /// NavMesh에서 벗어난 경우 가장 가까운 위치로 복귀 시도
+    /// </summary>
+    private bool TryReturnToNavMesh()
+    {
+        NavMeshHit hit;
+        float searchRadius = 5f;
+
+        // 가장 가까운 NavMesh 위치 찾기
+        if (NavMesh.SamplePosition(pet.transform.position, out hit, searchRadius, NavMesh.AllAreas))
+        {
+            // agent를 NavMesh 위치로 워프
+            if (agent != null && agent.enabled)
+            {
+                agent.Warp(hit.position);
+                Debug.Log($"[TreasureHunt] {pet.petName}: NavMesh로 복귀 성공");
+                return true;
+            }
+        }
+
+        // 더 넓은 범위로 재시도
+        searchRadius = 10f;
+        if (NavMesh.SamplePosition(pet.transform.position, out hit, searchRadius, NavMesh.AllAreas))
+        {
+            if (agent != null && agent.enabled)
+            {
+                agent.Warp(hit.position);
+                Debug.Log($"[TreasureHunt] {pet.petName}: NavMesh로 복귀 성공 (확장 범위)");
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /// <summary>
@@ -605,6 +861,57 @@ public class TreasureHuntActivity : PetActivityAdapter
         }
         
         return null;
+    }
+
+    /// <summary>
+    /// 디버그 시각화 (에디터에서만)
+    /// </summary>
+    public void OnDrawGizmos()
+    {
+        if (!isSearching) return;
+        if (pet == null) return;
+
+        // 현재 타겟과의 연결선
+        if (targetSpot != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(pet.transform.position + Vector3.up * 0.5f,
+                          targetSpot.transform.position + Vector3.up * 0.5f);
+
+            // 타겟 위치에 구 표시
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(targetSpot.transform.position, 0.8f);
+        }
+
+        // 근거리 스캔 범위 표시
+        Gizmos.color = new Color(0, 1, 0, 0.2f);
+        Gizmos.DrawWireSphere(pet.transform.position, NEAR_SCAN_DISTANCE);
+
+        // 막힘 상태 표시
+        if (stuckTimer > 0)
+        {
+            Gizmos.color = Color.Lerp(Color.yellow, Color.red, stuckTimer / STUCK_THRESHOLD);
+            Gizmos.DrawWireSphere(pet.transform.position, 1f + stuckTimer * 0.5f);
+        }
+
+        #if UNITY_EDITOR
+        // 상태 정보 표시
+        string debugInfo = $"{pet.petName}\n";
+        if (targetSpot != null)
+        {
+            float distance = Vector3.Distance(pet.transform.position, targetSpot.transform.position);
+            debugInfo += $"타겟: {distance:F1}m\n";
+        }
+        else if (isWandering)
+        {
+            debugInfo += "배회 중\n";
+        }
+        if (stuckTimer > 0)
+        {
+            debugInfo += $"막힘: {stuckTimer:F1}초";
+        }
+        UnityEditor.Handles.Label(pet.transform.position + Vector3.up * 2f, debugInfo);
+        #endif
     }
 }
 
