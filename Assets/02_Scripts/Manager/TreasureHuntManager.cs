@@ -51,8 +51,8 @@ public class TreasureHuntManager : MonoBehaviour
     [Tooltip("중요 안내 메시지 텍스트 (화면 중앙 고정)")]
     public TMP_Text feedbackText;
 
-    [Tooltip("코인 획득 피드백 텍스트 (보물 위에 동적 표시)")]
-    public TMP_Text coinPopupText;
+    [Tooltip("코인 획득 피드백 텍스트 프리팹 (동적 생성용)")]
+    public GameObject coinPopupPrefab;
 
     [Tooltip("전체 코인 표시 UI")]
     public TMP_Text totalCoinsText;
@@ -732,24 +732,46 @@ public class TreasureHuntManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 코인 획득 피드백 표시
+    /// 코인 획득 피드백 표시 (동적 생성)
     /// </summary>
     private void ShowCoinFeedback(int coins, Vector3 worldPosition)
     {
-        if (coinPopupText != null)
+        if (coinPopupPrefab == null)
         {
-            coinPopupText.text = $"+{coins}";
-            coinPopupText.gameObject.SetActive(true);
+            Debug.LogWarning("coinPopupPrefab이 설정되지 않았습니다!");
+            return;
+        }
+
+        // Canvas 찾기
+        GameObject canvasObject = GameObject.Find("Canvas");
+        if (canvasObject == null)
+        {
+            Debug.LogError("Canvas를 찾을 수 없습니다!");
+            return;
+        }
+
+        // 코인 팝업 인스턴스 생성
+        GameObject coinPopupInstance = Instantiate(coinPopupPrefab, canvasObject.transform);
+        TMP_Text coinText = coinPopupInstance.GetComponent<TMP_Text>();
+
+        if (coinText != null)
+        {
+            coinText.text = $"+{coins}";
 
             // 월드 좌표를 스크린 좌표로 변환
             if (Camera.main != null)
             {
                 Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition + Vector3.up * 2f);
-                coinPopupText.transform.position = screenPos;
+                coinPopupInstance.transform.position = screenPos;
             }
 
-            // 페이드 아웃 애니메이션
-            StartCoroutine(FadeOutText(coinPopupText, 2f));
+            // 페이드 아웃 애니메이션 (완료 후 오브젝트 삭제)
+            StartCoroutine(FadeOutTextAndDestroy(coinText, coinPopupInstance, 2f));
+        }
+        else
+        {
+            Debug.LogError("coinPopupPrefab에 TMP_Text 컴포넌트가 없습니다!");
+            Destroy(coinPopupInstance);
         }
     }
     
@@ -771,21 +793,49 @@ public class TreasureHuntManager : MonoBehaviour
         float elapsed = 0f;
         Color originalColor = text.color;
         Vector3 startPos = text.transform.position;
-        
+
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
-            
+
             // 위로 이동하면서 페이드 아웃
             text.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f - t);
             text.transform.position = startPos + Vector3.up * (t * 50f);
-            
+
             yield return null;
         }
-        
+
         text.gameObject.SetActive(false);
         text.color = originalColor;
+    }
+
+    /// <summary>
+    /// 페이드 아웃 후 오브젝트 삭제 (동적 생성된 코인 팝업용)
+    /// </summary>
+    private IEnumerator FadeOutTextAndDestroy(TMP_Text text, GameObject objectToDestroy, float duration)
+    {
+        float elapsed = 0f;
+        Color originalColor = text.color;
+        Vector3 startPos = text.transform.position;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            // 위로 이동하면서 페이드 아웃
+            text.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f - t);
+            text.transform.position = startPos + Vector3.up * (t * 50f);
+
+            yield return null;
+        }
+
+        // 애니메이션 완료 후 오브젝트 삭제
+        if (objectToDestroy != null)
+        {
+            Destroy(objectToDestroy);
+        }
     }
     
     private IEnumerator HideTextAfterDelay(TMP_Text text, float delay)
