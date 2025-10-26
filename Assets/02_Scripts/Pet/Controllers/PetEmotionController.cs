@@ -37,7 +37,7 @@ public class PetEmotionController : MonoBehaviour
         if (petController != null && petController.Needs != null)
         {
             bool isHungry = petController.Needs.Hunger >= 70f;
-            
+
             if (isHungry && !hungerEmotionPaused)
             {
                 if (!isShowingHungerEmotion)
@@ -61,6 +61,17 @@ public class PetEmotionController : MonoBehaviour
             {
                 // 배고픔이 해결되면 감정 중단
                 StopShowingHungerEmotion();
+            }
+        }
+
+        // 보물 감정 파티클 재생 관리
+        if (isTreasureEmotionActive && activeParticle != null)
+        {
+            ParticleSystem ps = activeParticle.GetComponent<ParticleSystem>();
+            if (ps != null && !ps.isPlaying)
+            {
+                // 파티클이 멈추면 다시 재생
+                ps.Play();
             }
         }
     }
