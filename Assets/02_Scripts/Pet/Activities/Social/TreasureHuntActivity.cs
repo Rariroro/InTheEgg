@@ -787,28 +787,19 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             GameObject treasure = targetSpot.CurrentTreasure;
 
-            // 1순위: 펫에 설정된 treasureHoldPoint 사용
+            // treasureHoldPoint 사용 (없으면 경고)
             if (pet.treasureHoldPoint != null)
             {
                 treasure.transform.SetParent(pet.treasureHoldPoint);
                 treasure.transform.localPosition = Vector3.zero;
                 treasure.transform.localRotation = Quaternion.identity;
             }
-            // 2순위: 본 찾기
             else
             {
-                Transform mouthBone = FindMouthBone();
-                if (mouthBone != null)
-                {
-                    treasure.transform.SetParent(mouthBone);
-                    treasure.transform.localPosition = Vector3.forward * 0.3f;
-                }
-                else
-                {
-                    // 3순위: 펫 위에 띄우기
-                    treasure.transform.SetParent(pet.transform);
-                    treasure.transform.localPosition = Vector3.up * 1.5f;
-                }
+                Debug.LogWarning($"[TreasureHunt] {pet.petName}: treasureHoldPoint가 설정되지 않았습니다!");
+                // 기본 위치로 펫 Transform 사용
+                treasure.transform.SetParent(pet.transform);
+                treasure.transform.localPosition = Vector3.up * 1.5f;
             }
 
             // TreasureController의 StartCarrying 호출

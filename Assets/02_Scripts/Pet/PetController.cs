@@ -127,6 +127,16 @@ public partial class PetController : MonoBehaviour
                 petModelTransform = transform.GetChild(0);
             }
         }
+
+        // TreasureHoldPoint 자동 검색 (인스펙터에서 할당되지 않은 경우)
+        if (treasureHoldPoint == null)
+        {
+            treasureHoldPoint = transform.Find("TreasureHoldPoint");
+            if (treasureHoldPoint == null)
+            {
+                Debug.LogWarning($"[PetController] {petName}: TreasureHoldPoint를 찾을 수 없습니다. 보물찾기 기능이 제한될 수 있습니다.");
+            }
+        }
         
         // 펫 타입과 이름이 일치하지 않거나 기본 이름인 경우 업데이트
         if (profile.name != profile.type.ToString() || profile.name == "Buddy")
