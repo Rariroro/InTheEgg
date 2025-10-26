@@ -242,9 +242,16 @@ public class TreasureHuntManager : MonoBehaviour
             if (pet != null && pet.Needs != null && pet.Needs.Affection >= requiredAffection)
             {
                 participatingPets.Add(pet);
+
+                // 이전 보물 감정 중단
+                if (pet.emotionController != null)
+                {
+                    pet.emotionController.StopTreasureEmotion();
+                }
+
                 // 펫을 보물찾기 상태로 전환
                 pet.State.SetTreasureHuntingState(true);
-                
+
                 // AI 즉시 업데이트
                 if (pet.AI != null)
                 {

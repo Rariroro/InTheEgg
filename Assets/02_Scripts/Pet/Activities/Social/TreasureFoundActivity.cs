@@ -155,7 +155,13 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Stop()
     {
-        
+
+        // 보물 감정 중단
+        if (pet.emotionController != null)
+        {
+            pet.emotionController.StopTreasureEmotion();
+        }
+
         // 축하 코루틴 정리
         if (celebrationCoroutine != null)
         {
