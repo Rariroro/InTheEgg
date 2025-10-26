@@ -139,9 +139,10 @@ public class TreasureHuntActivity : PetActivityAdapter
         {
             pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
         }
-        
-        // 호기심 이모티콘 표시
+
+        // 처음엔 놀라고, 이후 보물찾기 생각 표시
         pet.ShowEmotion(EmotionType.Surprised);
+        pet.StartCoroutine(ShowTreasureHuntThought());
     }
     
     public override void Update()
@@ -823,8 +824,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             // 하지만 TreasureSpot의 currentTreasure는 이미 null로 설정됨 (MarkTreasureRemoved에서)
         }
         
-        // 기쁨 표현
-        pet.ShowEmotion(EmotionType.Happy);
+        // 보물 발견 감정 표현
+        pet.ShowEmotion(EmotionType.Tresure);
         
         // 이제 보물이 부착되었으므로 상태 전환
         pet.State.TrySetStatus(PetStatus.TreasureFound);
@@ -852,6 +853,21 @@ public class TreasureHuntActivity : PetActivityAdapter
         }
         
         return null;
+    }
+
+    /// <summary>
+    /// 보물찾기 생각 풍선 표시 (놀람 이후)
+    /// </summary>
+    private IEnumerator ShowTreasureHuntThought()
+    {
+        // 놀람 표정이 사라질 때까지 대기 (1초)
+        yield return new WaitForSeconds(1f);
+
+        // 보물찾기 생각 표시 (지속)
+        if (isSearching && pet.State.IsTreasureHuntActive)
+        {
+            pet.ShowEmotion(EmotionType.Thought_TresureHunt);
+        }
     }
 
     /// <summary>
