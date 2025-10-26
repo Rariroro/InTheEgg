@@ -84,7 +84,7 @@ public class TreasureFoundActivity : PetActivityAdapter
     
     public override void Start()
     {
-        
+
         // 모든 상태 변수 명시적 초기화
         targetSpot = null;
         carriedTreasure = null;
@@ -95,7 +95,10 @@ public class TreasureFoundActivity : PetActivityAdapter
         celebrationCoroutine = null;
         lastPosition = pet.transform.position;
         stuckTimer = 0f;
-        
+
+        // 보물 감정 표시 (지속)
+        pet.ShowEmotion(EmotionType.Tresure);
+
         // 보물 정보 가져오기
         FindCarriedTreasure();
         
@@ -585,23 +588,26 @@ public class TreasureFoundActivity : PetActivityAdapter
                 pet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
             }
 
-            // 감정 표현
-            if (Random.value < 0.3f)
-            {
-                pet.ShowEmotion(EmotionType.Love);
-            }
+            // 보물 감정이 계속 유지됨 (Love 감정 제거)
 
             yield return new WaitForSeconds(CELEBRATION_WAIT_TIME);
         }
-        
-        
+
+
         // 보물이 수집된 경우에만 Idle로 전환
         if (droppedTreasureObject == null)
         {
             isCelebrating = false;
             hasDroppedTreasure = false;
+
+            // 보물 감정 중단
+            if (pet.emotionController != null)
+            {
+                pet.emotionController.StopTreasureEmotion();
+            }
+
             pet.State.TrySetStatus(PetStatus.Idle);
-            
+
             // AI 재평가
             if (pet.AI != null)
             {

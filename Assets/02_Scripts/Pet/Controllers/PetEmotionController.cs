@@ -19,6 +19,9 @@ public class PetEmotionController : MonoBehaviour
     private float hungerEmotionTimer = 0f;
     private float hungerEmotionChangeInterval = 7f; // 7초마다 음식 종류 변경
     private bool hungerEmotionPaused = false; // 다른 감정으로 인한 일시 중단
+
+    // 보물 감정 관련
+    private bool isTreasureEmotionActive = false; // 보물 발견 시 활성화
     
     // 참조
     private PetController petController;
@@ -113,6 +116,11 @@ public class PetEmotionController : MonoBehaviour
     /// </summary>
     public void ShowEmotion(EmotionType emotion, float duration = 10f)
     {
+        // 보물 감정이 활성 중이면 보물 감정만 허용
+        if (isTreasureEmotionActive && !IsTreasureEmotion(emotion))
+        {
+            return; // 다른 감정은 차단
+        }
 
         // Debug.Log("감정 실행됨");
         // 음식 감정이 아닌 다른 감정이면 배고픔 감정 일시 중단
@@ -120,7 +128,14 @@ public class PetEmotionController : MonoBehaviour
         {
             hungerEmotionPaused = true;
         }
-        
+
+        // 보물 감정이면 플래그 설정
+        if (IsTreasureEmotion(emotion))
+        {
+            isTreasureEmotionActive = true;
+            duration = 999f; // 무제한으로 설정
+        }
+
         // 모든 경우에 기존 감정을 먼저 제거 (음식 감정 포함)
         HideEmotion();
 
@@ -128,17 +143,17 @@ public class PetEmotionController : MonoBehaviour
         {
             Transform targetTransform = emotionOrigin != null ? emotionOrigin : transform;
             // Debug.Log($"[PetEmotionController] {petController.petName}: 감정 표시 - {emotion}, emotionOrigin 사용: {emotionOrigin != null}, 타겟 위치: {targetTransform.position}");
-            
+
             GameObject emotionObject = EmotionManager.Instance.ShowPetEmotion(petController, emotion, duration);
-            
+
             if (emotionObject != null)
             {
                 // 파티클 시스템을 activeParticle에 저장합니다.
                 activeParticle = emotionObject;
                 // Debug.Log($"[PetEmotionController] {petController.petName}: 파티클 생성됨. 위치: {emotionObject.transform.position}");
-                
-                // 음식 감정이 아닌 경우에만 타이머 설정
-                if (!IsFoodEmotion(emotion) && duration > 0)
+
+                // 음식 감정이나 보물 감정이 아닌 경우에만 타이머 설정
+                if (!IsFoodEmotion(emotion) && !IsTreasureEmotion(emotion) && duration > 0)
                 {
                     StartCoroutine(RestoreHungerEmotionAfterDelay(duration));
                 }
@@ -288,6 +303,26 @@ public class PetEmotionController : MonoBehaviour
                emotion == EmotionType.Thought_Food_Grain ||
                emotion == EmotionType.Thought_Food_Fruit ||
                emotion == EmotionType.Thought_Food_Vegetable;
+    }
+
+    /// <summary>
+    /// 보물 관련 감정인지 확인
+    /// </summary>
+    private bool IsTreasureEmotion(EmotionType emotion)
+    {
+        return emotion == EmotionType.Tresure;
+    }
+
+    /// <summary>
+    /// 보물 감정 중단 (유저가 보물 수집 시 호출)
+    /// </summary>
+    public void StopTreasureEmotion()
+    {
+        if (isTreasureEmotionActive)
+        {
+            isTreasureEmotionActive = false;
+            HideEmotion();
+        }
     }
     
     /// <summary>

@@ -824,8 +824,8 @@ public class TreasureHuntActivity : PetActivityAdapter
             // 하지만 TreasureSpot의 currentTreasure는 이미 null로 설정됨 (MarkTreasureRemoved에서)
         }
         
-        // 보물 발견 감정 표현
-        pet.ShowEmotion(EmotionType.Tresure);
+        // 보물 발견 감정 표현 (지속)
+        pet.ShowEmotion(EmotionType.Tresure, 999f);
         
         // 이제 보물이 부착되었으므로 상태 전환
         pet.State.TrySetStatus(PetStatus.TreasureFound);
