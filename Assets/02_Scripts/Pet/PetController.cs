@@ -219,10 +219,14 @@ public partial class PetController : MonoBehaviour
         StopAllCoroutines();
 
         // NavMeshAgent 정리
-        if (agent != null && agent.enabled)
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.isStopped = true;
             agent.ResetPath();
+        }
+
+        if (agent != null)
+        {
             agent.enabled = false;
         }
 
