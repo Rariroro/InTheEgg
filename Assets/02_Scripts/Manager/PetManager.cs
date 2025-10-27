@@ -263,8 +263,10 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                     
                     // 약간 위에서 스폰하여 지면에 확실히 닿도록 함
                     spawnPosition.y += 0.5f;
-                    
-                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, Quaternion.identity);
+
+                    // 180도 회전하여 카메라를 향하도록 스폰
+                    Quaternion rotation = Quaternion.Euler(0, 180, 0);
+                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
 
                     if (withFirstAppearanceEffect)
                     {
@@ -312,7 +314,9 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
                     // 약간 위에서 스폰하여 지면에 확실히 닿도록 함
                     spawnPosition.y += 0.5f;
 
-                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, Quaternion.identity);
+                    // 180도 회전하여 카메라를 향하도록 스폰
+                    Quaternion rotation = Quaternion.Euler(0, 180, 0);
+                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
 
                     if (withFirstAppearanceEffect)
                     {
@@ -665,7 +669,10 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             if (petPrefabs[i] != null)
             {
                 Vector3 randomPosition = GetRandomPositionOnNavMesh();
-                GameObject pet = Instantiate(petPrefabs[i], randomPosition, Quaternion.identity);
+
+                // 180도 회전하여 카메라를 향하도록 스폰
+                Quaternion rotation = Quaternion.Euler(0, 180, 0);
+                GameObject pet = Instantiate(petPrefabs[i], randomPosition, rotation);
             }
         }
     }

@@ -230,8 +230,10 @@ namespace LegendaryPet
                     {
                         randomPosition = hit.position;
                     }
-                    
-                    GameObject legendObject = Instantiate(legendaryPetPrefabs[i], randomPosition, Quaternion.identity);
+
+                    // 180도 회전하여 카메라를 향하도록 스폰
+                    Quaternion rotation = Quaternion.Euler(0, 180, 0);
+                    GameObject legendObject = Instantiate(legendaryPetPrefabs[i], randomPosition, rotation);
                     LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
                     
                     if (controller != null)
@@ -392,9 +394,11 @@ namespace LegendaryPet
                 {
                     Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
                 }
-                
+
+                // 180도 회전하여 카메라를 향하도록 스폰
+                Quaternion rotation = Quaternion.Euler(0, 180, 0);
                 // 레전드 펫 스폰
-                GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], spawnPosition, Quaternion.identity);
+                GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], spawnPosition, rotation);
                 LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
                 
                 if (controller != null)
