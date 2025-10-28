@@ -610,11 +610,7 @@ namespace LegendaryPet
             // 컨트롤러에 날아다니는 상태 설정 (이제 animator가 준비됨)
             controller.SetFlying(true);
 
-            // ===== 카메라 줌인 시작 =====
-            // 카메라를 펫 위치로 줌인 (1초)
-            yield return StartCoroutine(ZoomCameraToTarget(appearPos, $"{controller.PetName} 등장"));
-
-            // B 좌표 등장 효과 (카메라가 줌인된 상태에서)
+            // B 좌표 등장 효과 (펫 등장과 동시에)
             if (appearanceEffectPrefab != null)
             {
                 GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.Euler(-90, 0, 0));
@@ -624,6 +620,10 @@ namespace LegendaryPet
                     Destroy(appearEffect, 5f);
                 }
             }
+
+            // ===== 카메라 줌인 시작 =====
+            // 카메라를 펫 위치로 줌인 (1초)
+            yield return StartCoroutine(ZoomCameraToTarget(appearPos, $"{controller.PetName} 등장"));
 
             // 불꽃놀이 효과
             if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
