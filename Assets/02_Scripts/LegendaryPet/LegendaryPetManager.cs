@@ -582,7 +582,10 @@ namespace LegendaryPet
                 yield break;
             }
 
-            // 컨트롤러에 날아다니는 상태 설정
+            // 즉시 초기화 (애니메이터와 traits 설정)
+            controller.InitializeImmediate();
+
+            // 컨트롤러에 날아다니는 상태 설정 (이제 animator가 준비됨)
             controller.SetFlying(true);
 
             // B 좌표 등장 효과

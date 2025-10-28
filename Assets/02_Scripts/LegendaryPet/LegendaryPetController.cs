@@ -56,6 +56,15 @@ namespace LegendaryPet
         public NavMeshAgent Agent => agent;
         public Animator Animator => animator;
 
+        // 즉시 초기화 메서드 (스폰 시 바로 호출용)
+        public void InitializeImmediate()
+        {
+            // Awake와 Start에서 하는 작업을 즉시 실행
+            InitializeTraits();
+            InitializeComponents();
+            Debug.Log($"[LegendaryPet] {petName}: 즉시 초기화 완료 - Animator: {animator != null}, flyAnimIndex: {traits.flyAnimIndex}");
+        }
+
         // 날아다니는 상태 설정
         public void SetFlying(bool flying)
         {
@@ -65,6 +74,38 @@ namespace LegendaryPet
             if (agent != null)
             {
                 agent.enabled = !flying;
+            }
+
+            // animator가 없으면 찾기 시도
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>(true);
+                if (animator != null && !animator.enabled)
+                {
+                    animator.enabled = true;
+                }
+                Debug.Log($"[LegendaryPet] {petName}: Animator 재검색 - 결과: {animator != null}");
+            }
+
+            // 애니메이션 설정
+            if (animator != null && animator.runtimeAnimatorController != null)
+            {
+                if (flying && traits.flyAnimIndex > 0)
+                {
+                    // 날아가는 애니메이션 재생
+                    animator.SetInteger("animation", traits.flyAnimIndex);
+                    Debug.Log($"[LegendaryPet] {petName}: 비행 애니메이션 재생 (index: {traits.flyAnimIndex}, petType: {petType})");
+                }
+                else
+                {
+                    // 기본 애니메이션으로 복귀 (idle)
+                    animator.SetInteger("animation", 0);
+                    Debug.Log($"[LegendaryPet] {petName}: 기본 애니메이션으로 복귀");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[LegendaryPet] {petName}: Animator 또는 AnimatorController를 찾을 수 없음 - Animator: {animator != null}, Controller: {animator != null && animator.runtimeAnimatorController != null}");
             }
         }
         
