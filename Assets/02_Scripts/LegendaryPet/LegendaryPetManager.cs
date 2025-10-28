@@ -665,6 +665,15 @@ namespace LegendaryPet
             if (petObject == null || flightWaypoints == null || flightWaypoints.Length < 2)
                 yield break;
 
+            // 트레일 이펙트 생성 (전체 비행 구간 동안 1개만)
+            GameObject trail = null;
+            if (flyingTrailPrefab != null && petObject != null)
+            {
+                trail = Instantiate(flyingTrailPrefab, petObject.transform.position, Quaternion.identity);
+                trail.transform.SetParent(petObject.transform);
+                Debug.Log("[LegendaryPetManager] Flying trail 생성");
+            }
+
             // B(0) → C(1) → D(2) → F(3) 순차 비행
             for (int i = 1; i < flightWaypoints.Length; i++)
             {
@@ -679,6 +688,14 @@ namespace LegendaryPet
                 // {
                 //     yield return new WaitForSeconds(0.2f);
                 // }
+            }
+
+            // 비행 종료 후 트레일 즉시 제거
+            if (trail != null)
+            {
+                trail.transform.SetParent(null);
+                Destroy(trail, 0.1f);
+                Debug.Log("[LegendaryPetManager] Flying trail 제거");
             }
         }
 
@@ -699,18 +716,6 @@ namespace LegendaryPet
                 {
                     navMeshEndPos = hit.position;
                     // 비행 경로는 원래 목표 위치 사용, NavMesh 위치는 나중에 사용
-                }
-            }
-
-            // 트레일 이펙트 추가 (안전하게)
-            GameObject trail = null;
-            if (flyingTrailPrefab != null && petObject != null)
-            {
-                trail = Instantiate(flyingTrailPrefab, petObject.transform.position, Quaternion.identity);
-                // 부모 설정 (메모리 안전성)
-                if (trail != null)
-                {
-                    trail.transform.SetParent(petObject.transform);
                 }
             }
 
@@ -835,22 +840,6 @@ namespace LegendaryPet
             {
                 // 중간 경유지에서는 간단한 효과만
                 Debug.Log($"[LegendaryPetManager] 경유지 통과: {endPos}");
-            }
-
-            // 트레일 이펙트 제거 (최종 목적지에서만, 안전하게)
-            if (trail != null && isFinalDestination)
-            {
-                // 부모 해제 전 null 체크
-                if (trail.transform != null)
-                {
-                    trail.transform.SetParent(null);
-                }
-
-                // 안전한 파괴
-                if (Application.isPlaying)
-                {
-                    Destroy(trail, 2f);
-                }
             }
         }
 
