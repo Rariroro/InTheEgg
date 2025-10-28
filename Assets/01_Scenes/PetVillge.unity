@@ -85093,7 +85093,7 @@ MonoBehaviour:
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
   giftPrefab: {fileID: 1920111936519340, guid: 5d6d392351378457bbb7849925498e79, type: 3}
-  celebrationEffectPrefab: {fileID: 0}
+  celebrationEffectPrefab: {fileID: 123268, guid: d1870651fa4a849cba6a775902ade9e1, type: 3}
   giftSpawnDelay: 0.5
   fireworkPrefabs: []
   giftSpawnPosition: {x: -137.83, y: 18.01, z: 226.82}
@@ -85102,8 +85102,8 @@ MonoBehaviour:
   - {x: -138, y: 79, z: 313}
   - {x: -138, y: 79, z: 243}
   - {x: -141, y: 13.1, z: 172}
-  appearanceEffectPrefab: {fileID: 0}
-  flyingTrailPrefab: {fileID: 0}
+  appearanceEffectPrefab: {fileID: 181232, guid: 720625f29ea1744faa40950d7034312b, type: 3}
+  flyingTrailPrefab: {fileID: 129572, guid: e05e9ef56cf36455bbf36bbb0b4d7eb0, type: 3}
   flyingSpeed: 10
   flyingHeightCurve:
     serializedVersion: 2
