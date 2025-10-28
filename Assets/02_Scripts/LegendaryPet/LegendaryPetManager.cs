@@ -612,11 +612,11 @@ namespace LegendaryPet
                 // 각 구간별 비행
                 yield return StartCoroutine(FlyPetToDestination(petObject, controller, destination, isLastWaypoint));
 
-                // 마지막 경유지가 아니면 잠시 대기 (선택사항)
-                if (!isLastWaypoint)
-                {
-                    yield return new WaitForSeconds(0.2f);
-                }
+                // 대기 시간 제거 - 끊김 현상 방지
+                // if (!isLastWaypoint)
+                // {
+                //     yield return new WaitForSeconds(0.2f);
+                // }
             }
         }
 
@@ -669,9 +669,11 @@ namespace LegendaryPet
                 targetRotation = Quaternion.Euler(0, targetYAngle, 0);
             }
 
-            while (journey <= 1f)
+            while (journey < 1f)
             {
                 journey += Time.deltaTime * flyingSpeed / distance;
+                journey = Mathf.Clamp01(journey); // 오버슈팅 방지
+
                 float curveValue = flyingHeightCurve.Evaluate(journey);
 
                 // 포물선 경로 계산
@@ -693,8 +695,12 @@ namespace LegendaryPet
                 yield return null;
             }
 
-            // 최종 위치 설정
-            petObject.transform.position = endPos;
+            // 최종 위치 설정 - 최종 목적지에서만 적용
+            if (isFinalDestination)
+            {
+                petObject.transform.position = endPos;
+            }
+            // 중간 경유지에서는 자연스럽게 다음 구간으로 연결
 
             // 최종 목적지에서만 NavMeshAgent 활성화
             if (isFinalDestination)
