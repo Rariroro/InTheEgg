@@ -750,28 +750,38 @@ namespace LegendaryPet
             // 최종 목적지에서만 NavMeshAgent 활성화
             if (isFinalDestination)
             {
-                // 이미 부드럽게 착륙했으므로 강제 위치 설정 제거
-                // petObject.transform.position은 이미 navMeshEndPos에 가까운 위치
+                // 1. 먼저 정확한 NavMesh 위치로 이동
+                petObject.transform.position = navMeshEndPos;
 
-                // 날아다니는 상태 해제
-                controller.SetFlying(false);
+                // 2. 한 프레임 대기 (위치 안정화)
+                yield return null;
 
-                // NavMeshAgent 재활성화 (안전하게)
+                // 3. agent 상태 준비
                 if (agent != null)
                 {
-                    // 현재 위치가 이미 NavMesh 위치에 가까우므로
-                    petObject.transform.position = navMeshEndPos;
-
-                    // 활성화 전 설정
-                    agent.updatePosition = true;
+                    agent.updatePosition = false; // 위치 업데이트 일시 중지
                     agent.updateRotation = true;
-                    agent.enabled = true;
+                }
 
-                    // 이미 올바른 위치에 있으므로 Warp 필요 없음
-                    // Warp는 순간이동을 유발할 수 있음
-                    if (agent.enabled && agent.isOnNavMesh)
+                // 4. 날아다니는 상태 해제
+                controller.SetFlying(false);
+
+                // 5. agent 활성화 후 위치 동기화
+                if (agent != null && agent.enabled)
+                {
+                    // 한 프레임 대기 (agent 활성화 안정화)
+                    yield return null;
+
+                    if (agent.isOnNavMesh)
                     {
-                        // agent.Warp(navMeshEndPos); 제거
+                        // NavMesh에 있으면 위치 업데이트 재개
+                        agent.updatePosition = true;
+                    }
+                    else
+                    {
+                        // NavMesh에 없으면 Warp로 재배치
+                        agent.Warp(navMeshEndPos);
+                        agent.updatePosition = true;
                     }
                 }
 

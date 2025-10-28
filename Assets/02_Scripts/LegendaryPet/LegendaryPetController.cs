@@ -21,11 +21,12 @@ namespace LegendaryPet
         private NavMeshAgent agent;
         private Animator animator;
         private LegendaryPetAI ai;
-        
+
         [Header("상태")]
         [SerializeField] private bool isActive = true;
         [SerializeField] private bool isMoving = false;
         [SerializeField] private bool isFlying = false;
+        private bool isInitialized = false; // 중복 초기화 방지
         
         [Header("비행 설정")]
         [SerializeField] private float flyHeight = 5f;           // 비행 높이
@@ -59,9 +60,13 @@ namespace LegendaryPet
         // 즉시 초기화 메서드 (스폰 시 바로 호출용)
         public void InitializeImmediate()
         {
+            // 이미 초기화되었으면 무시
+            if (isInitialized) return;
+
             // Awake와 Start에서 하는 작업을 즉시 실행
             InitializeTraits();
             InitializeComponents();
+            isInitialized = true;
             Debug.Log($"[LegendaryPet] {petName}: 즉시 초기화 완료 - Animator: {animator != null}, flyAnimIndex: {traits.flyAnimIndex}");
         }
 
@@ -70,24 +75,31 @@ namespace LegendaryPet
         {
             isFlying = flying;
 
-            // NavMeshAgent 활성/비활성화
+            // NavMeshAgent 안전한 활성/비활성화
             if (agent != null)
             {
-                agent.enabled = !flying;
-            }
-
-            // animator가 없으면 찾기 시도
-            if (animator == null)
-            {
-                animator = GetComponentInChildren<Animator>(true);
-                if (animator != null && !animator.enabled)
+                if (flying && agent.enabled)
                 {
-                    animator.enabled = true;
+                    // 비행 시작: agent 비활성화
+                    if (agent.isOnNavMesh)
+                    {
+                        agent.isStopped = true;
+                        agent.ResetPath();
+                    }
+                    agent.updatePosition = false;
+                    agent.updateRotation = false;
+                    agent.enabled = false;
                 }
-                Debug.Log($"[LegendaryPet] {petName}: Animator 재검색 - 결과: {animator != null}");
+                else if (!flying && !agent.enabled)
+                {
+                    // 비행 종료: 단계적 활성화
+                    agent.enabled = true;
+                    // updatePosition은 FlyPetToDestination에서 나중에 활성화
+                    // 여기서는 enabled만 true로 설정
+                }
             }
 
-            // 애니메이션 설정
+            // 애니메이션 설정 (animator가 초기화되어 있어야 함)
             if (animator != null && animator.runtimeAnimatorController != null)
             {
                 if (flying && traits.flyAnimIndex > 0)
@@ -103,10 +115,6 @@ namespace LegendaryPet
                     Debug.Log($"[LegendaryPet] {petName}: 기본 애니메이션으로 복귀");
                 }
             }
-            else
-            {
-                Debug.LogWarning($"[LegendaryPet] {petName}: Animator 또는 AnimatorController를 찾을 수 없음 - Animator: {animator != null}, Controller: {animator != null && animator.runtimeAnimatorController != null}");
-            }
         }
         
         private void Awake()
@@ -117,8 +125,12 @@ namespace LegendaryPet
         
         private void Start()
         {
-            // Components는 Start에서 초기화
-            InitializeComponents();
+            // 이미 InitializeImmediate()로 초기화되지 않았으면 초기화
+            if (!isInitialized)
+            {
+                InitializeComponents();
+                isInitialized = true;
+            }
             StartCoroutine(DelayedStart());
         }
         
@@ -171,8 +183,12 @@ namespace LegendaryPet
         
         private void InitializeComponents()
         {
-            // NavMeshAgent 설정
-            agent = GetComponent<NavMeshAgent>();
+            // NavMeshAgent 설정 (캐싱)
+            if (agent == null)
+            {
+                agent = GetComponent<NavMeshAgent>();
+            }
+
             if (agent != null)
             {
                 agent.speed = traits.moveSpeed;
@@ -184,12 +200,15 @@ namespace LegendaryPet
                 agent.updatePosition = true;
                 agent.updateUpAxis = false;
             }
-            
-            // Animator 설정 (자식 오브젝트에서 검색)
-            animator = GetComponentInChildren<Animator>(true);
-            if (animator != null && !animator.enabled)
+
+            // Animator 설정 (한 번만 검색)
+            if (animator == null)
             {
-                animator.enabled = true;
+                animator = GetComponentInChildren<Animator>(true);
+                if (animator != null && !animator.enabled)
+                {
+                    animator.enabled = true;
+                }
             }
         }
         
