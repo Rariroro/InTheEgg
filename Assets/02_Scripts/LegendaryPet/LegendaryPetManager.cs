@@ -98,6 +98,25 @@ namespace LegendaryPet
         [Header("특수 효과 설정")]
         [SerializeField] private bool globalEffectsEnabled = true;
         [SerializeField] private float effectIntensityMultiplier = 1f;
+
+        [Header("카메라 설정")]
+        [SerializeField] private float cameraZoomFOV = 30f;           // 줌인 시 FOV
+        [SerializeField] private float cameraZoomHeight = 10f;        // 펫 위 카메라 높이
+        [SerializeField] private float cameraZoomDistance = 15f;      // 펫으로부터 거리
+        [SerializeField] private float cameraMoveDuration = 1f;       // 카메라 이동 시간
+        [SerializeField] private float legendaryShowDuration = 2f;    // 펫을 보여주는 시간
+
+        // 카메라 참조
+        private Camera mainCamera;
+        private CameraController cameraController;
+        private GameObject cameraParent;
+
+        // 카메라 원래 상태 저장
+        private Vector3 originalCameraPosition;
+        private Quaternion originalCameraRotation;
+        private float originalCameraFOV;
+        private Vector3 originalCameraParentPosition;
+        private bool originalLimitCameraMovement;
         
         // 이벤트
         public delegate void LegendaryPetEvent(LegendaryPetController pet);
@@ -116,11 +135,14 @@ namespace LegendaryPet
                 Destroy(gameObject);
                 return;
             }
-            
+
             instance = this;
             DontDestroyOnLoad(gameObject);
             applicationIsQuitting = false;
-            
+
+            // 카메라 찾기 및 초기화
+            InitializeCamera();
+
         // Debug.Log("[LegendaryPetManager] 매니저 초기화 완료");
         }
         
@@ -588,7 +610,11 @@ namespace LegendaryPet
             // 컨트롤러에 날아다니는 상태 설정 (이제 animator가 준비됨)
             controller.SetFlying(true);
 
-            // B 좌표 등장 효과
+            // ===== 카메라 줌인 시작 =====
+            // 카메라를 펫 위치로 줌인 (1초)
+            yield return StartCoroutine(ZoomCameraToTarget(appearPos, $"{controller.PetName} 등장"));
+
+            // B 좌표 등장 효과 (카메라가 줌인된 상태에서)
             if (appearanceEffectPrefab != null)
             {
                 GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.identity);
@@ -618,8 +644,16 @@ namespace LegendaryPet
                 }
             }
 
-            // 잠시 대기 (등장 모션)
-            yield return new WaitForSeconds(1f);
+            // 펫을 보여주는 시간 (2초)
+            Debug.Log($"[LegendaryPetManager] {controller.PetName}을(를) 보여주는 중...");
+            yield return new WaitForSeconds(legendaryShowDuration);
+
+            // ===== 카메라 줌아웃 =====
+            // 원래 위치로 카메라 복귀 (1초)
+            yield return StartCoroutine(RestoreCameraPosition());
+
+            // 잠시 대기 후 비행 시작
+            yield return new WaitForSeconds(0.5f);
 
             // B → C → D → F 순차적으로 날아가기
             yield return StartCoroutine(FlyPetThroughWaypoints(legendObject, controller));
@@ -989,7 +1023,163 @@ namespace LegendaryPet
             }
             return gifts;
         }
-        
+
+        // 카메라 초기화
+        private void InitializeCamera()
+        {
+            // CameraController 찾기
+            cameraController = FindObjectOfType<CameraController>();
+            if (cameraController != null)
+            {
+                cameraParent = cameraController.gameObject;
+                mainCamera = cameraController.GetComponentInChildren<Camera>();
+                if (mainCamera == null)
+                {
+                    Debug.LogWarning("[LegendaryPetManager] CameraController에서 자식 카메라를 찾을 수 없습니다. Camera.main 사용");
+                    mainCamera = Camera.main;
+                }
+            }
+            else
+            {
+                mainCamera = Camera.main;
+            }
+        }
+
+        // 카메라를 특정 위치로 줌인
+        private IEnumerator ZoomCameraToTarget(Vector3 targetPosition, string targetName)
+        {
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("[LegendaryPetManager] 카메라가 없어서 줌인을 할 수 없습니다.");
+                yield break;
+            }
+
+            // 현재 카메라 상태 저장
+            SaveCameraState();
+
+            // CameraController의 limitCameraMovement 비활성화
+            if (cameraController != null)
+            {
+                originalLimitCameraMovement = cameraController.limitCameraMovement;
+                cameraController.limitCameraMovement = false;
+            }
+
+            Vector3 startPos = mainCamera.transform.position;
+            Quaternion startRot = mainCamera.transform.rotation;
+            float startFOV = mainCamera.fieldOfView;
+            Vector3 startParentPos = cameraParent != null ? cameraParent.transform.position : Vector3.zero;
+
+            // 목표 위치 계산
+            Vector3 offset = new Vector3(0, cameraZoomHeight, -cameraZoomDistance);
+            Vector3 targetCameraPos = targetPosition + offset;
+
+            // 타겟을 바라보는 회전 계산
+            Quaternion targetRot = Quaternion.LookRotation(targetPosition - targetCameraPos);
+
+            // 카메라 부모를 타겟 위치로 이동시킬 목표 위치
+            Vector3 targetParentPos = new Vector3(targetPosition.x, startParentPos.y, targetPosition.z);
+
+            Debug.Log($"[LegendaryPetManager] 카메라 줌인 시작: {targetName}");
+
+            // 부드러운 줌인
+            float elapsed = 0f;
+            while (elapsed < cameraMoveDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / cameraMoveDuration;
+
+                // Ease In Out 곡선
+                t = t * t * (3f - 2f * t);
+
+                // 카메라 부모 이동
+                if (cameraParent != null)
+                {
+                    cameraParent.transform.position = Vector3.Lerp(startParentPos, targetParentPos, t);
+                }
+
+                mainCamera.transform.position = Vector3.Lerp(startPos, targetCameraPos, t);
+                mainCamera.transform.rotation = Quaternion.Slerp(startRot, targetRot, t);
+                mainCamera.fieldOfView = Mathf.Lerp(startFOV, cameraZoomFOV, t);
+
+                yield return null;
+            }
+
+            // 최종 위치 설정
+            if (cameraParent != null)
+            {
+                cameraParent.transform.position = targetParentPos;
+            }
+            mainCamera.transform.position = targetCameraPos;
+            mainCamera.transform.rotation = targetRot;
+            mainCamera.fieldOfView = cameraZoomFOV;
+        }
+
+        // 카메라를 원래 위치로 복귀
+        private IEnumerator RestoreCameraPosition()
+        {
+            if (mainCamera == null) yield break;
+
+            Vector3 startPos = mainCamera.transform.position;
+            Quaternion startRot = mainCamera.transform.rotation;
+            float startFOV = mainCamera.fieldOfView;
+            Vector3 startParentPos = cameraParent != null ? cameraParent.transform.position : Vector3.zero;
+
+            Debug.Log("[LegendaryPetManager] 카메라 원래 위치로 복귀");
+
+            float elapsed = 0f;
+            while (elapsed < cameraMoveDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / cameraMoveDuration;
+
+                // Ease In Out 곡선
+                t = t * t * (3f - 2f * t);
+
+                // 카메라 부모 이동
+                if (cameraParent != null)
+                {
+                    cameraParent.transform.position = Vector3.Lerp(startParentPos, originalCameraParentPosition, t);
+                }
+
+                mainCamera.transform.position = Vector3.Lerp(startPos, originalCameraPosition, t);
+                mainCamera.transform.rotation = Quaternion.Slerp(startRot, originalCameraRotation, t);
+                mainCamera.fieldOfView = Mathf.Lerp(startFOV, originalCameraFOV, t);
+
+                yield return null;
+            }
+
+            // 최종 위치 설정
+            if (cameraParent != null)
+            {
+                cameraParent.transform.position = originalCameraParentPosition;
+            }
+            mainCamera.transform.position = originalCameraPosition;
+            mainCamera.transform.rotation = originalCameraRotation;
+            mainCamera.fieldOfView = originalCameraFOV;
+
+            // CameraController의 limitCameraMovement 원래 값으로 복원
+            if (cameraController != null)
+            {
+                cameraController.limitCameraMovement = originalLimitCameraMovement;
+            }
+        }
+
+        // 카메라 상태 저장
+        private void SaveCameraState()
+        {
+            if (mainCamera != null)
+            {
+                originalCameraPosition = mainCamera.transform.position;
+                originalCameraRotation = mainCamera.transform.rotation;
+                originalCameraFOV = mainCamera.fieldOfView;
+
+                if (cameraParent != null)
+                {
+                    originalCameraParentPosition = cameraParent.transform.position;
+                }
+            }
+        }
+
         // 디버그 명령어
         [ContextMenu("Spawn Test Legendary Pet")]
         private void DebugSpawnTest()
@@ -998,6 +1188,17 @@ namespace LegendaryPet
             {
                 string testId = $"legend_{(1).ToString("D3")}"; // legend_001
                 SpawnLegendaryPet(testId, true);
+            }
+        }
+
+        [ContextMenu("Test Camera Zoom Sequence")]
+        private void DebugTestCameraZoom()
+        {
+            // 선물 없이 직접 3단계 스폰 시스템 테스트
+            if (legendaryPetPrefabs != null && legendaryPetPrefabs.Length > 0)
+            {
+                string testId = "pet_legend_001";
+                StartCoroutine(SpawnLegendaryPetWithThreeStageSystem(testId));
             }
         }
         
