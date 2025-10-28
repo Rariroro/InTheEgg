@@ -617,7 +617,7 @@ namespace LegendaryPet
             // B 좌표 등장 효과 (카메라가 줌인된 상태에서)
             if (appearanceEffectPrefab != null)
             {
-                GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.identity);
+                GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.Euler(-90, 0, 0));
                 appearEffect.transform.localScale = Vector3.one * 2f;
                 if (Application.isPlaying)
                 {
