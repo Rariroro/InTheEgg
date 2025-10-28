@@ -268,7 +268,10 @@ namespace LegendaryPet
                     else
                     {
                         Debug.LogError($"[LegendaryPetManager] 프리팹 {i}에 LegendaryPetController가 없습니다");
-                        Destroy(legendObject);
+                        if (Application.isPlaying)
+                        {
+                            Destroy(legendObject);
+                        }
                     }
                 }
             }
@@ -431,15 +434,21 @@ namespace LegendaryPet
                     if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
                     {
                         GameObject effect = Instantiate(firstAppearanceEffectPrefab, spawnPosition, Quaternion.identity);
-                        Destroy(effect, 5f);
+                        if (Application.isPlaying)
+                        {
+                            Destroy(effect, 5f);
+                        }
                     }
-                    
+
         // Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
                 }
                 else
                 {
                     Debug.LogError($"[LegendaryPetManager] {legendaryPetId}: LegendaryPetController를 찾을 수 없습니다");
-                    Destroy(legendObject);
+                    if (Application.isPlaying)
+                    {
+                        Destroy(legendObject);
+                    }
                 }
             }
             else
@@ -511,11 +520,17 @@ namespace LegendaryPet
             if (celebrationEffectPrefab != null)
             {
                 GameObject celebration = Instantiate(celebrationEffectPrefab, giftPos, Quaternion.identity);
-                Destroy(celebration, 5f);
+                if (Application.isPlaying)
+                {
+                    Destroy(celebration, 5f);
+                }
             }
 
             // 선물 오브젝트 제거
-            Destroy(gift);
+            if (Application.isPlaying)
+            {
+                Destroy(gift);
+            }
 
             // 약간의 딜레이
             yield return new WaitForSeconds(0.3f);
@@ -542,24 +557,28 @@ namespace LegendaryPet
             // 180도 회전하여 카메라를 향하도록 스폰
             Quaternion rotation = Quaternion.Euler(0, 180, 0);
 
-            // NavMesh 경고 방지: 임시 위치에서 생성 후 이동
-            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], Vector3.zero, rotation);
+            // 직접 목표 위치에서 생성 (메모리 오류 방지)
+            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], appearPos, rotation);
 
-            // NavMeshAgent 즉시 비활성화
+            // NavMeshAgent 안전하게 비활성화
             NavMeshAgent spawnedAgent = legendObject.GetComponent<NavMeshAgent>();
             if (spawnedAgent != null)
             {
+                // 메모리 오류 방지: 컴포넌트 완전 비활성화
                 spawnedAgent.enabled = false;
+                spawnedAgent.updatePosition = false;
+                spawnedAgent.updateRotation = false;
+                spawnedAgent.updateUpAxis = false;
             }
-
-            // 실제 위치로 이동
-            legendObject.transform.position = appearPos;
 
             LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
             if (controller == null)
             {
                 Debug.LogError($"[LegendaryPetManager] LegendaryPetController를 찾을 수 없습니다");
-                Destroy(legendObject);
+                if (Application.isPlaying)
+                {
+                    Destroy(legendObject);
+                }
                 yield break;
             }
 
@@ -571,7 +590,10 @@ namespace LegendaryPet
             {
                 GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.identity);
                 appearEffect.transform.localScale = Vector3.one * 2f;
-                Destroy(appearEffect, 5f);
+                if (Application.isPlaying)
+                {
+                    Destroy(appearEffect, 5f);
+                }
             }
 
             // 불꽃놀이 효과
@@ -585,7 +607,10 @@ namespace LegendaryPet
                         appearPos + Vector3.up * 5f + fireworkOffset,
                         Quaternion.identity
                     );
-                    Destroy(firework, 10f);
+                    if (Application.isPlaying)
+                    {
+                        Destroy(firework, 10f);
+                    }
                     yield return new WaitForSeconds(0.2f);
                 }
             }
@@ -635,12 +660,16 @@ namespace LegendaryPet
                 endPos = hit.position;
             }
 
-            // 트레일 이펙트 추가
+            // 트레일 이펙트 추가 (안전하게)
             GameObject trail = null;
-            if (flyingTrailPrefab != null)
+            if (flyingTrailPrefab != null && petObject != null)
             {
                 trail = Instantiate(flyingTrailPrefab, petObject.transform.position, Quaternion.identity);
-                trail.transform.SetParent(petObject.transform);
+                // 부모 설정 (메모리 안전성)
+                if (trail != null)
+                {
+                    trail.transform.SetParent(petObject.transform);
+                }
             }
 
             // NavMeshAgent 일시 비활성화
@@ -708,18 +737,29 @@ namespace LegendaryPet
                 // 날아다니는 상태 해제
                 controller.SetFlying(false);
 
-                // NavMeshAgent 재활성화
+                // NavMeshAgent 재활성화 (안전하게)
                 if (agent != null)
                 {
+                    // 활성화 전 설정
+                    agent.updatePosition = true;
+                    agent.updateRotation = true;
                     agent.enabled = true;
-                    agent.Warp(endPos);
+
+                    // Warp 전 짧은 대기
+                    if (agent.enabled && agent.isOnNavMesh)
+                    {
+                        agent.Warp(endPos);
+                    }
                 }
 
                 // 착지 효과
                 if (firstAppearanceEffectPrefab != null)
                 {
                     GameObject landEffect = Instantiate(firstAppearanceEffectPrefab, endPos, Quaternion.identity);
-                    Destroy(landEffect, 3f);
+                    if (Application.isPlaying)
+                    {
+                        Destroy(landEffect, 3f);
+                    }
                 }
 
                 Debug.Log($"[LegendaryPetManager] 펫이 최종 목적지(F)에 도착: {endPos}, Flying 상태 해제");
@@ -730,11 +770,20 @@ namespace LegendaryPet
                 Debug.Log($"[LegendaryPetManager] 경유지 통과: {endPos}");
             }
 
-            // 트레일 이펙트 제거 (최종 목적지에서만)
+            // 트레일 이펙트 제거 (최종 목적지에서만, 안전하게)
             if (trail != null && isFinalDestination)
             {
-                trail.transform.SetParent(null);
-                Destroy(trail, 2f);
+                // 부모 해제 전 null 체크
+                if (trail.transform != null)
+                {
+                    trail.transform.SetParent(null);
+                }
+
+                // 안전한 파괴
+                if (Application.isPlaying)
+                {
+                    Destroy(trail, 2f);
+                }
             }
         }
 
@@ -792,9 +841,12 @@ namespace LegendaryPet
         public void RemoveLegendaryPet(LegendaryPetController pet)
         {
             if (pet == null) return;
-            
+
             UnregisterLegendaryPet(pet);
-            Destroy(pet.gameObject);
+            if (Application.isPlaying)
+            {
+                Destroy(pet.gameObject);
+            }
         }
         
         public void RemoveAllLegendaryPets()
@@ -1030,7 +1082,7 @@ namespace LegendaryPet
             {
                 foreach (var gift in pendingGifts.Keys)
                 {
-                    if (gift != null)
+                    if (gift != null && Application.isPlaying)
                     {
                         Destroy(gift);
                     }

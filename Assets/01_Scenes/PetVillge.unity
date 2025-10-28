@@ -85101,7 +85101,7 @@ MonoBehaviour:
   - {x: -170, y: 102.3, z: 298.5}
   - {x: -170.3, y: 120, z: 298.5}
   - {x: -170.3, y: 120, z: 264.54}
-  - {x: -156, y: 9.38, z: 155.6}
+  - {x: -156, y: 11.4, z: 171.5}
   appearanceEffectPrefab: {fileID: 0}
   flyingTrailPrefab: {fileID: 0}
   flyingSpeed: 10
