@@ -67,18 +67,25 @@ namespace LegendaryPet
         {
             // 초기 대기
             yield return new WaitForSeconds(2f);
-            
+
             while (enabled)
             {
+                // 날아다니는 상태나 NavMeshAgent가 비활성화된 상태에서는 AI 동작 중지
+                if (controller.IsFlying || (agent != null && !agent.enabled))
+                {
+                    yield return new WaitForSeconds(1f);
+                    continue;
+                }
+
                 if (!controller.IsActive)
                 {
                     yield return new WaitForSeconds(1f);
                     continue;
                 }
-                
+
                 // 다음 행동 결정
                 yield return StartCoroutine(DecideNextAction());
-                
+
                 // 행동 완료 대기
                 while (Time.time < nextActionTime)
                 {
@@ -113,20 +120,32 @@ namespace LegendaryPet
         
         private IEnumerator WanderToNewPosition()
         {
+            // NavMeshAgent 체크
+            if (agent == null || !agent.enabled)
+            {
+                yield break;
+            }
+
             Vector3 destination = GetWanderDestination();
-            
+
             if (destination != Vector3.zero)
             {
                 controller.MoveTo(destination);
-                
+
                 // 목적지 도달까지 대기
-                while (agent.pathPending || 
-                       (agent.hasPath && agent.remainingDistance > agent.stoppingDistance))
+                while (agent.enabled && agent.pathPending ||
+                       (agent.enabled && agent.hasPath && agent.remainingDistance > agent.stoppingDistance))
                 {
                     yield return new WaitForSeconds(0.5f);
-                    
+
+                    // NavMeshAgent가 비활성화되면 중단
+                    if (!agent.enabled)
+                    {
+                        yield break;
+                    }
+
                     // 막힌 경우 새로운 목적지 설정
-                    if (agent.pathStatus == NavMeshPathStatus.PathPartial || 
+                    if (agent.pathStatus == NavMeshPathStatus.PathPartial ||
                         agent.pathStatus == NavMeshPathStatus.PathInvalid)
                     {
                         destination = GetWanderDestination();

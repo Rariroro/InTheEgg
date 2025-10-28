@@ -55,6 +55,18 @@ namespace LegendaryPet
         public bool IsFlying => isFlying;
         public NavMeshAgent Agent => agent;
         public Animator Animator => animator;
+
+        // 날아다니는 상태 설정
+        public void SetFlying(bool flying)
+        {
+            isFlying = flying;
+
+            // NavMeshAgent 활성/비활성화
+            if (agent != null)
+            {
+                agent.enabled = !flying;
+            }
+        }
         
         private void Awake()
         {
@@ -73,23 +85,42 @@ namespace LegendaryPet
         {
             // NavMesh 배치 대기
             yield return new WaitForSeconds(0.5f);
-            
-            if (agent != null && agent.isOnNavMesh)
+
+            // 날아다니는 상태이거나 NavMesh에 있을 때 초기화
+            if (isFlying || (agent != null && agent.enabled && agent.isOnNavMesh))
             {
                 ai = GetComponent<LegendaryPetAI>();
                 if (ai == null)
                 {
                     ai = gameObject.AddComponent<LegendaryPetAI>();
                 }
-                
+
                 // 레전드 펫 매니저에 등록
                 if (LegendaryPetManager.Instance != null)
                 {
                     LegendaryPetManager.Instance.RegisterLegendaryPet(this);
                 }
-                
+
                 SetupVisualEffects();
-        // Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료");
+                Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료 - Flying: {isFlying}");
+            }
+            else if (agent == null || !agent.enabled)
+            {
+                // NavMeshAgent가 비활성화된 상태에서도 초기화 진행
+                ai = GetComponent<LegendaryPetAI>();
+                if (ai == null)
+                {
+                    ai = gameObject.AddComponent<LegendaryPetAI>();
+                }
+
+                // 레전드 펫 매니저에 등록
+                if (LegendaryPetManager.Instance != null)
+                {
+                    LegendaryPetManager.Instance.RegisterLegendaryPet(this);
+                }
+
+                SetupVisualEffects();
+                Debug.Log($"[LegendaryPet] {petName} ({petType}) NavMeshAgent 비활성화 상태로 초기화");
             }
             else
             {
@@ -249,8 +280,8 @@ namespace LegendaryPet
         
         public void MoveTo(Vector3 destination)
         {
-            if (!isActive || agent == null || !agent.isOnNavMesh) return;
-            
+            if (!isActive || agent == null || !agent.enabled || !agent.isOnNavMesh) return;
+
             agent.SetDestination(destination);
             agent.isStopped = false;
             SetMoving(true);

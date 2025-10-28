@@ -58,15 +58,17 @@ namespace LegendaryPet
         public float giftSpawnDelay = 0.5f; // 선물 스폰 딜레이
         public List<GameObject> fireworkPrefabs = new List<GameObject>(); // 불꽃놀이 프리팹들
 
-        [Header("3단계 스폰 시스템")]
+        [Header("5단계 스폰 시스템")]
         [Tooltip("A 좌표: Gift가 생성될 위치")]
         public Vector3 giftSpawnPosition = new Vector3(0, 0, 10);
 
-        [Tooltip("B 좌표: 펫이 등장할 위치")]
-        public Vector3 petAppearPosition = new Vector3(0, 5, 0);
-
-        [Tooltip("C 좌표: 펫이 최종적으로 이동할 위치")]
-        public Vector3 petFinalPosition = new Vector3(0, 0, -10);
+        [Tooltip("비행 경로 웨이포인트 (B→C→D→F)")]
+        public Vector3[] flightWaypoints = new Vector3[4] {
+            new Vector3(0, 5, 0),    // B: 펫 등장 위치
+            new Vector3(5, 3, 5),    // C: 첫 번째 경유지
+            new Vector3(-5, 2, 0),   // D: 두 번째 경유지
+            new Vector3(0, 0, -10)   // F: 최종 착륙 위치
+        };
 
         [Tooltip("B좌표 등장 시 사용할 특별 이펙트")]
         public GameObject appearanceEffectPrefab;
@@ -534,25 +536,35 @@ namespace LegendaryPet
                 yield break;
             }
 
-            // B 좌표에서 펫 생성
-            Vector3 appearPos = petAppearPosition;
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(appearPos, out hit, 100f, NavMesh.AllAreas))
-            {
-                appearPos = hit.position;
-            }
+            // B 좌표에서 펫 생성 (NavMesh 체크 없이)
+            Vector3 appearPos = flightWaypoints[0]; // B 좌표
 
             // 180도 회전하여 카메라를 향하도록 스폰
             Quaternion rotation = Quaternion.Euler(0, 180, 0);
-            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], appearPos, rotation);
-            LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
 
+            // NavMesh 경고 방지: 임시 위치에서 생성 후 이동
+            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], Vector3.zero, rotation);
+
+            // NavMeshAgent 즉시 비활성화
+            NavMeshAgent spawnedAgent = legendObject.GetComponent<NavMeshAgent>();
+            if (spawnedAgent != null)
+            {
+                spawnedAgent.enabled = false;
+            }
+
+            // 실제 위치로 이동
+            legendObject.transform.position = appearPos;
+
+            LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
             if (controller == null)
             {
                 Debug.LogError($"[LegendaryPetManager] LegendaryPetController를 찾을 수 없습니다");
                 Destroy(legendObject);
                 yield break;
             }
+
+            // 컨트롤러에 날아다니는 상태 설정
+            controller.SetFlying(true);
 
             // B 좌표 등장 효과
             if (appearanceEffectPrefab != null)
@@ -581,12 +593,35 @@ namespace LegendaryPet
             // 잠시 대기 (등장 모션)
             yield return new WaitForSeconds(1f);
 
-            // C 좌표로 날아가기
-            yield return StartCoroutine(FlyPetToDestination(legendObject, controller, petFinalPosition));
+            // B → C → D → F 순차적으로 날아가기
+            yield return StartCoroutine(FlyPetThroughWaypoints(legendObject, controller));
         }
 
-        // 펫을 목적지로 날아가게 하는 코루틴
-        private IEnumerator FlyPetToDestination(GameObject petObject, LegendaryPetController controller, Vector3 destination)
+        // 여러 경유지를 거쳐 날아가는 코루틴
+        private IEnumerator FlyPetThroughWaypoints(GameObject petObject, LegendaryPetController controller)
+        {
+            if (petObject == null || flightWaypoints == null || flightWaypoints.Length < 2)
+                yield break;
+
+            // B(0) → C(1) → D(2) → F(3) 순차 비행
+            for (int i = 1; i < flightWaypoints.Length; i++)
+            {
+                Vector3 destination = flightWaypoints[i];
+                bool isLastWaypoint = (i == flightWaypoints.Length - 1);
+
+                // 각 구간별 비행
+                yield return StartCoroutine(FlyPetToDestination(petObject, controller, destination, isLastWaypoint));
+
+                // 마지막 경유지가 아니면 잠시 대기 (선택사항)
+                if (!isLastWaypoint)
+                {
+                    yield return new WaitForSeconds(0.2f);
+                }
+            }
+        }
+
+        // 펫을 목적지로 날아가게 하는 코루틴 (개별 구간)
+        private IEnumerator FlyPetToDestination(GameObject petObject, LegendaryPetController controller, Vector3 destination, bool isFinalDestination = true)
         {
             if (petObject == null) yield break;
 
@@ -619,6 +654,21 @@ namespace LegendaryPet
             float journey = 0f;
             float distance = Vector3.Distance(startPos, endPos);
 
+            // 시작 회전과 목표 회전 계산 (Y축만 회전)
+            Vector3 direction = (endPos - startPos);
+            direction.y = 0; // Y 성분 제거하여 수평 방향만 계산
+            direction = direction.normalized;
+
+            Quaternion startRotation = petObject.transform.rotation;
+            Quaternion targetRotation = startRotation;
+
+            if (direction != Vector3.zero)
+            {
+                // Y축 회전만 계산
+                float targetYAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                targetRotation = Quaternion.Euler(0, targetYAngle, 0);
+            }
+
             while (journey <= 1f)
             {
                 journey += Time.deltaTime * flyingSpeed / distance;
@@ -630,12 +680,15 @@ namespace LegendaryPet
 
                 petObject.transform.position = currentPos;
 
-                // 목적지 방향을 바라보도록 회전
-                Vector3 direction = (endPos - startPos).normalized;
-                if (direction != Vector3.zero)
-                {
-                    petObject.transform.rotation = Quaternion.LookRotation(direction);
-                }
+                // Y축만 부드럽게 회전 (처음 50% 동안 회전 완료)
+                float rotationProgress = Mathf.Min(journey * 2f, 1f);
+                petObject.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, rotationProgress);
+
+                // X, Z축 강제 고정 (안전장치)
+                Vector3 currentEuler = petObject.transform.eulerAngles;
+                currentEuler.x = 0;
+                currentEuler.z = 0;
+                petObject.transform.eulerAngles = currentEuler;
 
                 yield return null;
             }
@@ -643,28 +696,40 @@ namespace LegendaryPet
             // 최종 위치 설정
             petObject.transform.position = endPos;
 
-            // NavMeshAgent 재활성화
-            if (agent != null)
+            // 최종 목적지에서만 NavMeshAgent 활성화
+            if (isFinalDestination)
             {
-                agent.enabled = true;
-                agent.Warp(endPos);
+                // 날아다니는 상태 해제
+                controller.SetFlying(false);
+
+                // NavMeshAgent 재활성화
+                if (agent != null)
+                {
+                    agent.enabled = true;
+                    agent.Warp(endPos);
+                }
+
+                // 착지 효과
+                if (firstAppearanceEffectPrefab != null)
+                {
+                    GameObject landEffect = Instantiate(firstAppearanceEffectPrefab, endPos, Quaternion.identity);
+                    Destroy(landEffect, 3f);
+                }
+
+                Debug.Log($"[LegendaryPetManager] 펫이 최종 목적지(F)에 도착: {endPos}, Flying 상태 해제");
+            }
+            else
+            {
+                // 중간 경유지에서는 간단한 효과만
+                Debug.Log($"[LegendaryPetManager] 경유지 통과: {endPos}");
             }
 
-            // 트레일 이펙트 제거
-            if (trail != null)
+            // 트레일 이펙트 제거 (최종 목적지에서만)
+            if (trail != null && isFinalDestination)
             {
                 trail.transform.SetParent(null);
                 Destroy(trail, 2f);
             }
-
-            // 착지 효과
-            if (firstAppearanceEffectPrefab != null)
-            {
-                GameObject landEffect = Instantiate(firstAppearanceEffectPrefab, endPos, Quaternion.identity);
-                Destroy(landEffect, 3f);
-            }
-
-            Debug.Log($"[LegendaryPetManager] 펫이 C좌표에 도착: {endPos}");
         }
 
         // 레전드 펫 인덱스 가져오기 헬퍼 메서드
@@ -863,30 +928,58 @@ namespace LegendaryPet
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f);
             Gizmos.DrawWireSphere(transform.position, spawnRadius);
 
-            // 3단계 스폰 위치 표시
+            // 5단계 스폰 위치 표시
             // A 좌표 (Gift 위치) - 빨간색
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(giftSpawnPosition, 1f);
             Gizmos.DrawWireCube(giftSpawnPosition + Vector3.up * 2f, Vector3.one * 0.5f);
             DrawGizmoLabel(giftSpawnPosition + Vector3.up * 3f, "A: Gift");
 
-            // B 좌표 (펫 등장 위치) - 노란색
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(petAppearPosition, 1f);
-            Gizmos.DrawWireCube(petAppearPosition + Vector3.up * 2f, Vector3.one * 0.5f);
-            DrawGizmoLabel(petAppearPosition + Vector3.up * 3f, "B: Appear");
+            // 비행 경로 웨이포인트 표시
+            if (flightWaypoints != null && flightWaypoints.Length > 0)
+            {
+                string[] waypointLabels = new string[] { "B: Appear", "C: Waypoint 1", "D: Waypoint 2", "F: Final" };
+                Color[] waypointColors = new Color[] {
+                    Color.yellow,       // B: 노란색
+                    new Color(1f, 0.5f, 0f),  // C: 주황색
+                    new Color(0.5f, 0f, 1f),  // D: 보라색
+                    Color.green         // F: 초록색
+                };
 
-            // C 좌표 (최종 위치) - 초록색
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(petFinalPosition, 1f);
-            Gizmos.DrawWireCube(petFinalPosition + Vector3.up * 2f, Vector3.one * 0.5f);
-            DrawGizmoLabel(petFinalPosition + Vector3.up * 3f, "C: Final");
+                for (int i = 0; i < flightWaypoints.Length && i < waypointColors.Length; i++)
+                {
+                    Vector3 waypoint = flightWaypoints[i];
+                    Gizmos.color = waypointColors[i];
+                    Gizmos.DrawWireSphere(waypoint, 1f);
+                    Gizmos.DrawWireCube(waypoint + Vector3.up * 2f, Vector3.one * 0.5f);
 
-            // 경로 표시 (A -> B -> C)
-            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
-            Gizmos.DrawLine(giftSpawnPosition, petAppearPosition);
-            Gizmos.color = new Color(0f, 1f, 0.5f, 0.5f);
-            Gizmos.DrawLine(petAppearPosition, petFinalPosition);
+                    if (i < waypointLabels.Length)
+                    {
+                        DrawGizmoLabel(waypoint + Vector3.up * 3f, waypointLabels[i]);
+                    }
+                }
+
+                // 경로 표시 (A → B → C → D → F)
+                // A → B
+                Gizmos.color = new Color(1f, 0f, 0f, 0.5f);
+                if (flightWaypoints.Length > 0)
+                {
+                    Gizmos.DrawLine(giftSpawnPosition, flightWaypoints[0]);
+                }
+
+                // B → C → D → F
+                for (int i = 0; i < flightWaypoints.Length - 1; i++)
+                {
+                    float t = (float)i / (flightWaypoints.Length - 1);
+                    Gizmos.color = Color.Lerp(new Color(1f, 1f, 0f, 0.5f), new Color(0f, 1f, 0f, 0.5f), t);
+                    Gizmos.DrawLine(flightWaypoints[i], flightWaypoints[i + 1]);
+
+                    // 화살표 표시 (방향성)
+                    Vector3 direction = (flightWaypoints[i + 1] - flightWaypoints[i]).normalized;
+                    Vector3 midPoint = (flightWaypoints[i] + flightWaypoints[i + 1]) * 0.5f;
+                    DrawArrow(midPoint, direction, 0.5f);
+                }
+            }
 
             // 현재 레전드 펫 위치 표시
             Gizmos.color = Color.cyan;
@@ -897,6 +990,18 @@ namespace LegendaryPet
                     Gizmos.DrawWireCube(pet.transform.position + Vector3.up * 2f, Vector3.one * 0.3f);
                 }
             }
+        }
+
+        // 화살표 그리기 헬퍼 메서드
+        private void DrawArrow(Vector3 position, Vector3 direction, float size)
+        {
+            if (direction == Vector3.zero) return;
+
+            Vector3 right = Vector3.Cross(Vector3.up, direction).normalized * size;
+            Vector3 left = -right;
+
+            Gizmos.DrawLine(position, position - direction * size + right * 0.5f);
+            Gizmos.DrawLine(position, position - direction * size + left * 0.5f);
         }
 
         // Gizmo 라벨 그리기 헬퍼 메서드
