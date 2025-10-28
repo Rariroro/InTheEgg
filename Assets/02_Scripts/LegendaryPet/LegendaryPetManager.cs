@@ -652,12 +652,17 @@ namespace LegendaryPet
 
             Vector3 startPos = petObject.transform.position;
             Vector3 endPos = destination;
+            Vector3 navMeshEndPos = endPos; // NavMesh 위치 저장용
 
-            // NavMesh에서 최종 위치 확인
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(endPos, out hit, 100f, NavMesh.AllAreas))
+            // 최종 목적지에서만 NavMesh 위치 확인 (실제 착륙 위치)
+            if (isFinalDestination)
             {
-                endPos = hit.position;
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(endPos, out hit, 100f, NavMesh.AllAreas))
+                {
+                    navMeshEndPos = hit.position;
+                    // 비행 경로는 원래 목표 위치 사용, NavMesh 위치는 나중에 사용
+                }
             }
 
             // 트레일 이펙트 추가 (안전하게)
@@ -707,7 +712,22 @@ namespace LegendaryPet
 
                 // 포물선 경로 계산
                 Vector3 currentPos = Vector3.Lerp(startPos, endPos, journey);
-                currentPos.y += curveValue * 5f; // 최대 높이 5 유닛
+
+                // 최종 목적지에서는 착륙을 부드럽게 처리
+                if (isFinalDestination && journey > 0.8f)
+                {
+                    // 마지막 20%에서 높이를 점진적으로 감소
+                    float landingProgress = (journey - 0.8f) / 0.2f; // 0 to 1
+                    float heightMultiplier = 1f - landingProgress; // 1 to 0
+                    currentPos.y += curveValue * 5f * heightMultiplier;
+
+                    // NavMesh 위치로 부드럽게 전환
+                    currentPos = Vector3.Lerp(currentPos, navMeshEndPos, landingProgress * 0.5f);
+                }
+                else
+                {
+                    currentPos.y += curveValue * 5f; // 최대 높이 5 유닛
+                }
 
                 petObject.transform.position = currentPos;
 
@@ -724,31 +744,31 @@ namespace LegendaryPet
                 yield return null;
             }
 
-            // 최종 위치 설정 - 최종 목적지에서만 적용
-            if (isFinalDestination)
-            {
-                petObject.transform.position = endPos;
-            }
-            // 중간 경유지에서는 자연스럽게 다음 구간으로 연결
-
             // 최종 목적지에서만 NavMeshAgent 활성화
             if (isFinalDestination)
             {
+                // 이미 부드럽게 착륙했으므로 강제 위치 설정 제거
+                // petObject.transform.position은 이미 navMeshEndPos에 가까운 위치
+
                 // 날아다니는 상태 해제
                 controller.SetFlying(false);
 
                 // NavMeshAgent 재활성화 (안전하게)
                 if (agent != null)
                 {
+                    // 현재 위치가 이미 NavMesh 위치에 가까우므로
+                    petObject.transform.position = navMeshEndPos;
+
                     // 활성화 전 설정
                     agent.updatePosition = true;
                     agent.updateRotation = true;
                     agent.enabled = true;
 
-                    // Warp 전 짧은 대기
+                    // 이미 올바른 위치에 있으므로 Warp 필요 없음
+                    // Warp는 순간이동을 유발할 수 있음
                     if (agent.enabled && agent.isOnNavMesh)
                     {
-                        agent.Warp(endPos);
+                        // agent.Warp(navMeshEndPos); 제거
                     }
                 }
 

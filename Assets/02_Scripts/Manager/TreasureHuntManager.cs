@@ -20,10 +20,11 @@ public class TreasureHuntManager : MonoBehaviour
     [Tooltip("최소 보물 개수")]
     [Range(1, 17)]
     public int minTreasureCount = 2;
-    
+
     [Tooltip("최대 보물 개수")]
     [Range(1, 17)]
     public int maxTreasureCount = 5;
+    
     
     [Header("보상 설정")]
     [Tooltip("보물 하나당 최소 코인")]
