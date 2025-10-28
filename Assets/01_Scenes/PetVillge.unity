@@ -26105,6 +26105,10 @@ PrefabInstance:
       value: 11
       objectReference: {fileID: 0}
     - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: giftPrefabs.Array.size
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
       propertyPath: 'spawnSpots.Array.data[0]'
       value: 
       objectReference: {fileID: 925178951}
@@ -26145,9 +26149,89 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1222017037}
     - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: cc3df846879424a7fa6d0025aed0fc3b, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 590ae616cb94f431980b2955d8b970d9, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: b8e090ade03824cb1b04fdb777e4e0dd, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[3]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: b98bbf8af454d41c5ac01f455dc18fc0, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[4]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: b3beb90cfcba14418be0e7cfbe0f7302, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[5]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 8a7b542feb98f458eb0422bd92881123, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[6]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 303f33389054c4914b17f5aa852e01b8, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[7]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 1e72c628ec9ef438c9bec6ffe666f7a3, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[8]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 032f4b27c31d74c4a80771c6e16a00f3, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[9]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: ef77d97749fb0425ea5f931ff98e78bd, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
       propertyPath: 'spawnSpots.Array.data[10]'
       value: 
       objectReference: {fileID: 1790373144}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[10]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: ab01b60fc6cb34f16aa39fca3611826f, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[11]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 1f68f9821ccb04a0d9af557340e5e343, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[12]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 9656f9f9c29754ba392a3467a7d73243, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[13]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 562f6f036ba324da7bb179b257c6fb8a, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[14]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: c4f15187198554460b5cadadb8eae5e9, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[15]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 853c141bce4434cfba83046e931059c7, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[16]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 9b544015142934a88a49e3d0b1f8132b, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[17]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 3fa306dd7a99b433d8664904d2ef3df5, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[18]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 6095f80c8931e43689422f115dd9c70d, type: 3}
+    - target: {fileID: 7060560280600710464, guid: ba379ecd0f49c4415aa1c1c1a5fcc360, type: 3}
+      propertyPath: 'giftPrefabs.Array.data[19]'
+      value: 
+      objectReference: {fileID: 2462992809979899394, guid: 8619cce6abe6a451ebbc7691deeb639c, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -84888,6 +84972,36 @@ MonoBehaviour:
   celebrationEffectPrefab: {fileID: 0}
   giftSpawnDelay: 0.5
   fireworkPrefabs: []
+  giftSpawnPosition: {x: 0, y: 0, z: 10}
+  petAppearPosition: {x: 0, y: 5, z: 0}
+  petFinalPosition: {x: 0, y: 0, z: -10}
+  appearanceEffectPrefab: {fileID: 0}
+  flyingTrailPrefab: {fileID: 0}
+  flyingSpeed: 10
+  flyingHeightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   navMeshWaitTime: 3
   legendaryPets: []
   globalEffectsEnabled: 1

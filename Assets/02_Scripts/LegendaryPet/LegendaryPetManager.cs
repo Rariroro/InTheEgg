@@ -57,6 +57,28 @@ namespace LegendaryPet
         public GameObject celebrationEffectPrefab; // 축하 효과 파티클 프리팹
         public float giftSpawnDelay = 0.5f; // 선물 스폰 딜레이
         public List<GameObject> fireworkPrefabs = new List<GameObject>(); // 불꽃놀이 프리팹들
+
+        [Header("3단계 스폰 시스템")]
+        [Tooltip("A 좌표: Gift가 생성될 위치")]
+        public Vector3 giftSpawnPosition = new Vector3(0, 0, 10);
+
+        [Tooltip("B 좌표: 펫이 등장할 위치")]
+        public Vector3 petAppearPosition = new Vector3(0, 5, 0);
+
+        [Tooltip("C 좌표: 펫이 최종적으로 이동할 위치")]
+        public Vector3 petFinalPosition = new Vector3(0, 0, -10);
+
+        [Tooltip("B좌표 등장 시 사용할 특별 이펙트")]
+        public GameObject appearanceEffectPrefab;
+
+        [Tooltip("날아가는 동안 표시될 트레일 이펙트")]
+        public GameObject flyingTrailPrefab;
+
+        [Tooltip("펫이 날아가는 속도")]
+        public float flyingSpeed = 10f;
+
+        [Tooltip("펫이 날아가는 높이 커브")]
+        public AnimationCurve flyingHeightCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
         
         [Header("NavMesh 대기 설정")]
         public float navMeshWaitTime = 3f; // NavMesh 베이크 대기 시간
@@ -424,7 +446,7 @@ namespace LegendaryPet
             }
         }
         
-        // 선물로 레전드 펫 스폰
+        // 선물로 레전드 펫 스폰 (3단계 시스템 적용)
         private void SpawnGiftForLegendaryPet(string legendaryPetId)
         {
             if (giftPrefab == null)
@@ -433,64 +455,257 @@ namespace LegendaryPet
                 SpawnLegendaryPet(legendaryPetId, true);
                 return;
             }
-            
-            Vector3 giftPosition = GetRandomSpawnPosition();
-            
+
+            // A 좌표에 선물 생성 (giftSpawnPosition 사용)
+            Vector3 giftPosition = giftSpawnPosition;
+
             // NavMesh 위치 찾기
             NavMeshHit hit;
             if (NavMesh.SamplePosition(giftPosition, out hit, 50f, NavMesh.AllAreas))
             {
                 giftPosition = hit.position;
             }
-            
-            // 선물 생성
+
+            // 선물 생성 (A 좌표)
             GameObject gift = Instantiate(giftPrefab, giftPosition + Vector3.up * 0.5f, Quaternion.identity);
-            
+
+            // 선물 회전 애니메이션 추가
+            StartCoroutine(RotateGift(gift));
+
             // 선물 딕셔너리에 추가
             pendingGifts.Add(gift, legendaryPetId);
-            
-        // Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - 위치: {giftPosition}");
+
+            Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - A좌표: {giftPosition}");
+        }
+
+        // 선물 회전 애니메이션 코루틴
+        private IEnumerator RotateGift(GameObject gift)
+        {
+            while (gift != null && pendingGifts.ContainsKey(gift))
+            {
+                gift.transform.Rotate(0, 30 * Time.deltaTime, 0);
+
+                // 위아래 흔들림 효과
+                float bobbing = Mathf.Sin(Time.time * 2f) * 0.1f;
+                gift.transform.position += Vector3.up * bobbing;
+
+                yield return null;
+            }
         }
         
-        // 선물 열기 코루틴
+        // 선물 열기 코루틴 (3단계 시스템)
         private IEnumerator OpenGiftCoroutine(GameObject gift, string legendaryPetId)
         {
             if (gift == null || !pendingGifts.ContainsKey(gift))
                 yield break;
-            
-            Vector3 giftPosition = gift.transform.position;
-            
+
+            // 선물 위치 저장 (A 좌표)
+            Vector3 giftPos = gift.transform.position;
+
             // 선물 제거
             pendingGifts.Remove(gift);
-            
-            // 축하 효과
+
+            // A 좌표에서 축하 효과
             if (celebrationEffectPrefab != null)
             {
-                GameObject celebration = Instantiate(celebrationEffectPrefab, giftPosition, Quaternion.identity);
+                GameObject celebration = Instantiate(celebrationEffectPrefab, giftPos, Quaternion.identity);
                 Destroy(celebration, 5f);
             }
-            
+
+            // 선물 오브젝트 제거
+            Destroy(gift);
+
+            // 약간의 딜레이
+            yield return new WaitForSeconds(0.3f);
+
+            // B 좌표에서 펫 등장
+            yield return StartCoroutine(SpawnLegendaryPetWithThreeStageSystem(legendaryPetId));
+
+            Debug.Log($"[LegendaryPetManager] 3단계 스폰 완료: {legendaryPetId}");
+        }
+
+        // 3단계 스폰 시스템 코루틴
+        private IEnumerator SpawnLegendaryPetWithThreeStageSystem(string legendaryPetId)
+        {
+            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
+            if (legendIndex < 0 || legendIndex >= legendaryPetPrefabs.Length)
+            {
+                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 인덱스: {legendIndex}");
+                yield break;
+            }
+
+            // B 좌표에서 펫 생성
+            Vector3 appearPos = petAppearPosition;
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(appearPos, out hit, 100f, NavMesh.AllAreas))
+            {
+                appearPos = hit.position;
+            }
+
+            // 180도 회전하여 카메라를 향하도록 스폰
+            Quaternion rotation = Quaternion.Euler(0, 180, 0);
+            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], appearPos, rotation);
+            LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
+
+            if (controller == null)
+            {
+                Debug.LogError($"[LegendaryPetManager] LegendaryPetController를 찾을 수 없습니다");
+                Destroy(legendObject);
+                yield break;
+            }
+
+            // B 좌표 등장 효과
+            if (appearanceEffectPrefab != null)
+            {
+                GameObject appearEffect = Instantiate(appearanceEffectPrefab, appearPos, Quaternion.identity);
+                appearEffect.transform.localScale = Vector3.one * 2f;
+                Destroy(appearEffect, 5f);
+            }
+
             // 불꽃놀이 효과
             if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
             {
-                GameObject firework = Instantiate(
-                    fireworkPrefabs[Random.Range(0, fireworkPrefabs.Count)],
-                    giftPosition + Vector3.up * 5f,
-                    Quaternion.identity
-                );
-                Destroy(firework, 10f);
+                for (int i = 0; i < Mathf.Min(3, fireworkPrefabs.Count); i++)
+                {
+                    Vector3 fireworkOffset = new Vector3(Random.Range(-3f, 3f), 0, Random.Range(-3f, 3f));
+                    GameObject firework = Instantiate(
+                        fireworkPrefabs[Random.Range(0, fireworkPrefabs.Count)],
+                        appearPos + Vector3.up * 5f + fireworkOffset,
+                        Quaternion.identity
+                    );
+                    Destroy(firework, 10f);
+                    yield return new WaitForSeconds(0.2f);
+                }
             }
-            
-            // 선물 오브젝트 제거
-            Destroy(gift);
-            
-            // 약간의 딜레이 후 펫 스폰
-            yield return new WaitForSeconds(0.5f);
-            
-            // 레전드 펫 스폰
-            SpawnLegendaryPetAtPosition(legendaryPetId, giftPosition, true);
-            
-        // Debug.Log($"[LegendaryPetManager] 선물 열기 완료: {legendaryPetId}");
+
+            // 잠시 대기 (등장 모션)
+            yield return new WaitForSeconds(1f);
+
+            // C 좌표로 날아가기
+            yield return StartCoroutine(FlyPetToDestination(legendObject, controller, petFinalPosition));
+        }
+
+        // 펫을 목적지로 날아가게 하는 코루틴
+        private IEnumerator FlyPetToDestination(GameObject petObject, LegendaryPetController controller, Vector3 destination)
+        {
+            if (petObject == null) yield break;
+
+            Vector3 startPos = petObject.transform.position;
+            Vector3 endPos = destination;
+
+            // NavMesh에서 최종 위치 확인
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(endPos, out hit, 100f, NavMesh.AllAreas))
+            {
+                endPos = hit.position;
+            }
+
+            // 트레일 이펙트 추가
+            GameObject trail = null;
+            if (flyingTrailPrefab != null)
+            {
+                trail = Instantiate(flyingTrailPrefab, petObject.transform.position, Quaternion.identity);
+                trail.transform.SetParent(petObject.transform);
+            }
+
+            // NavMeshAgent 일시 비활성화
+            NavMeshAgent agent = petObject.GetComponent<NavMeshAgent>();
+            if (agent != null)
+            {
+                agent.enabled = false;
+            }
+
+            // 날아가기 애니메이션
+            float journey = 0f;
+            float distance = Vector3.Distance(startPos, endPos);
+
+            while (journey <= 1f)
+            {
+                journey += Time.deltaTime * flyingSpeed / distance;
+                float curveValue = flyingHeightCurve.Evaluate(journey);
+
+                // 포물선 경로 계산
+                Vector3 currentPos = Vector3.Lerp(startPos, endPos, journey);
+                currentPos.y += curveValue * 5f; // 최대 높이 5 유닛
+
+                petObject.transform.position = currentPos;
+
+                // 목적지 방향을 바라보도록 회전
+                Vector3 direction = (endPos - startPos).normalized;
+                if (direction != Vector3.zero)
+                {
+                    petObject.transform.rotation = Quaternion.LookRotation(direction);
+                }
+
+                yield return null;
+            }
+
+            // 최종 위치 설정
+            petObject.transform.position = endPos;
+
+            // NavMeshAgent 재활성화
+            if (agent != null)
+            {
+                agent.enabled = true;
+                agent.Warp(endPos);
+            }
+
+            // 트레일 이펙트 제거
+            if (trail != null)
+            {
+                trail.transform.SetParent(null);
+                Destroy(trail, 2f);
+            }
+
+            // 착지 효과
+            if (firstAppearanceEffectPrefab != null)
+            {
+                GameObject landEffect = Instantiate(firstAppearanceEffectPrefab, endPos, Quaternion.identity);
+                Destroy(landEffect, 3f);
+            }
+
+            Debug.Log($"[LegendaryPetManager] 펫이 C좌표에 도착: {endPos}");
+        }
+
+        // 레전드 펫 인덱스 가져오기 헬퍼 메서드
+        private int GetLegendaryPetIndex(string legendaryPetId)
+        {
+            // pet_legend_XXX 형식 지원
+            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
+            {
+                string numberPart = legendaryPetId.Substring(11);
+                if (int.TryParse(numberPart, out int number))
+                {
+                    return number - 1;
+                }
+            }
+            // 기존 형식들도 지원
+            else if (legendaryPetId.StartsWith("unicorn"))
+            {
+                string numberPart = legendaryPetId.Replace("unicorn", "");
+                if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
+                {
+                    return unicornNumber - 1;
+                }
+            }
+            else if (legendaryPetId.StartsWith("dragon"))
+            {
+                string numberPart = legendaryPetId.Replace("dragon", "");
+                if (int.TryParse(numberPart, out int dragonNumber) && dragonNumber >= 1 && dragonNumber <= 5)
+                {
+                    return dragonNumber + 4;
+                }
+            }
+            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
+            {
+                string numberPart = legendaryPetId.Substring(7);
+                if (int.TryParse(numberPart, out int number))
+                {
+                    return number - 1;
+                }
+            }
+
+            return -1;
         }
         
         // 기존 OpenGift 메서드 (외부에서 호출용)
@@ -647,17 +862,49 @@ namespace LegendaryPet
             // 스폰 반경 표시
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f);
             Gizmos.DrawWireSphere(transform.position, spawnRadius);
-            
-            // 현재 레전드 펫 위치 표시
+
+            // 3단계 스폰 위치 표시
+            // A 좌표 (Gift 위치) - 빨간색
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(giftSpawnPosition, 1f);
+            Gizmos.DrawWireCube(giftSpawnPosition + Vector3.up * 2f, Vector3.one * 0.5f);
+            DrawGizmoLabel(giftSpawnPosition + Vector3.up * 3f, "A: Gift");
+
+            // B 좌표 (펫 등장 위치) - 노란색
             Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(petAppearPosition, 1f);
+            Gizmos.DrawWireCube(petAppearPosition + Vector3.up * 2f, Vector3.one * 0.5f);
+            DrawGizmoLabel(petAppearPosition + Vector3.up * 3f, "B: Appear");
+
+            // C 좌표 (최종 위치) - 초록색
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(petFinalPosition, 1f);
+            Gizmos.DrawWireCube(petFinalPosition + Vector3.up * 2f, Vector3.one * 0.5f);
+            DrawGizmoLabel(petFinalPosition + Vector3.up * 3f, "C: Final");
+
+            // 경로 표시 (A -> B -> C)
+            Gizmos.color = new Color(1f, 0.5f, 0f, 0.5f);
+            Gizmos.DrawLine(giftSpawnPosition, petAppearPosition);
+            Gizmos.color = new Color(0f, 1f, 0.5f, 0.5f);
+            Gizmos.DrawLine(petAppearPosition, petFinalPosition);
+
+            // 현재 레전드 펫 위치 표시
+            Gizmos.color = Color.cyan;
             foreach (var pet in legendaryPets)
             {
                 if (pet != null)
                 {
-                    Gizmos.DrawWireCube(pet.transform.position + Vector3.up * 2f, Vector3.one * 0.5f);
-                    Gizmos.DrawLine(transform.position, pet.transform.position);
+                    Gizmos.DrawWireCube(pet.transform.position + Vector3.up * 2f, Vector3.one * 0.3f);
                 }
             }
+        }
+
+        // Gizmo 라벨 그리기 헬퍼 메서드
+        private void DrawGizmoLabel(Vector3 position, string text)
+        {
+#if UNITY_EDITOR
+            UnityEditor.Handles.Label(position, text);
+#endif
         }
         
         private void OnDestroy()

@@ -19,7 +19,7 @@ public class PetManager : MonoBehaviour
     public float firstAppearanceDelay = 0.5f; // 최초 등장 펫들 사이의 딜레이
 
     [Header("선물 시스템")]
-    public GameObject giftPrefab; // 선물 프리팹
+    public GameObject[] giftPrefabs; // 선물 프리팹들 (여러 egg 중 랜덤 선택)
     public GameObject celebrationEffectPrefab; // 축하 효과 파티클 프리팹
     public float giftSpawnDelay = 0.5f; // 선물 스폰 딜레이
     public List<GameObject> fireworkPrefabs = new List<GameObject>(); // 불꽃놀이 프리팹들
@@ -439,18 +439,40 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     
     private void SpawnGiftForPet(string petId)
     {
-        if (giftPrefab == null)
+        // 배열 null 체크 및 빈 배열 체크
+        if (giftPrefabs == null || giftPrefabs.Length == 0)
         {
             Debug.LogError("선물 프리팹이 할당되지 않았습니다!");
             SpawnPet(petId, true);
             return;
         }
 
+        // 배열에서 null이 아닌 프리팹들만 필터링
+        List<GameObject> validPrefabs = new List<GameObject>();
+        foreach (GameObject prefab in giftPrefabs)
+        {
+            if (prefab != null)
+            {
+                validPrefabs.Add(prefab);
+            }
+        }
+
+        // 유효한 프리팹이 없는 경우
+        if (validPrefabs.Count == 0)
+        {
+            Debug.LogError("유효한 선물 프리팹이 없습니다!");
+            SpawnPet(petId, true);
+            return;
+        }
+
+        // 유효한 프리팹 중에서 랜덤 선택
+        GameObject selectedGiftPrefab = validPrefabs[Random.Range(0, validPrefabs.Count)];
+
         // 선물 스폰 위치 - 스폰 스팟 사용
         Vector3 giftPosition = GetNextSpawnPosition();
         giftPosition.y += 5f; // 선물을 공중에 띄움
 
-        GameObject gift = Instantiate(giftPrefab, giftPosition, giftPrefab.transform.rotation);
+        GameObject gift = Instantiate(selectedGiftPrefab, giftPosition, selectedGiftPrefab.transform.rotation);
 
         // 선물 회전 애니메이션
         StartCoroutine(RotateGift(gift));
