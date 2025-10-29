@@ -502,7 +502,7 @@ namespace LegendaryPet
             // 선물 생성 (A 좌표)
             GameObject gift = Instantiate(giftPrefab, giftPosition + Vector3.up * 0.5f, Quaternion.identity);
 
-            // 선물 회전 애니메이션 추가
+            // 선물 회전 애니메이션 추가 - 첫 프레임 대기는 코루틴 내부에서 처리
             StartCoroutine(RotateGift(gift));
 
             // 선물 딕셔너리에 추가
@@ -514,13 +514,22 @@ namespace LegendaryPet
         // 선물 회전 애니메이션 코루틴
         private IEnumerator RotateGift(GameObject gift)
         {
+            // 첫 프레임 대기 - Transform 초기화 완료를 위해 중요!
+            yield return null;
+
+            if (gift == null || !pendingGifts.ContainsKey(gift))
+                yield break;
+
+            // 초기 위치 저장 (누적 방지를 위해 필수)
+            Vector3 originalPosition = gift.transform.position;
+
             while (gift != null && pendingGifts.ContainsKey(gift))
             {
                 gift.transform.Rotate(0, 30 * Time.deltaTime, 0);
 
-                // 위아래 흔들림 효과
+                // 위아래 흔들림 효과 - 절대 위치로 설정 (누적 방지)
                 float bobbing = Mathf.Sin(Time.time * 2f) * 0.1f;
-                gift.transform.position += Vector3.up * bobbing;
+                gift.transform.position = originalPosition + Vector3.up * bobbing;
 
                 yield return null;
             }
@@ -584,13 +593,20 @@ namespace LegendaryPet
 
             // NavMeshAgent 안전하게 비활성화
             NavMeshAgent spawnedAgent = legendObject.GetComponent<NavMeshAgent>();
-            if (spawnedAgent != null)
+            if (spawnedAgent != null && spawnedAgent.enabled)
             {
-                // 메모리 오류 방지: 컴포넌트 완전 비활성화
-                spawnedAgent.enabled = false;
-                spawnedAgent.updatePosition = false;
-                spawnedAgent.updateRotation = false;
-                spawnedAgent.updateUpAxis = false;
+                // 메모리 오류 방지: 컴포넌트 완전 비활성화 전 상태 확인
+                try
+                {
+                    spawnedAgent.updatePosition = false;
+                    spawnedAgent.updateRotation = false;
+                    spawnedAgent.updateUpAxis = false;
+                    spawnedAgent.enabled = false;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"[LegendaryPetManager] NavMeshAgent 비활성화 중 오류: {e.Message}");
+                }
             }
 
             LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();

@@ -484,14 +484,23 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     
     private IEnumerator RotateGift(GameObject gift)
     {
+        // 첫 프레임 대기 - Transform 초기화 완료를 위해 중요!
+        yield return null;
+
+        if (gift == null || !pendingGifts.ContainsKey(gift))
+            yield break;
+
+        // 초기 위치 저장 (누적 방지를 위해 필수)
+        Vector3 originalPosition = gift.transform.position;
+
         while (gift != null && pendingGifts.ContainsKey(gift))
         {
             gift.transform.Rotate(0, 30 * Time.deltaTime, 0);
-            
-            // 위아래 흔들림 효과
+
+            // 위아래 흔들림 효과 - 절대 위치로 설정 (누적 방지)
             float bobbing = Mathf.Sin(Time.time * 2f) * 0.1f;
-            gift.transform.position += Vector3.up * bobbing;
-            
+            gift.transform.position = originalPosition + Vector3.up * bobbing;
+
             yield return null;
         }
     }

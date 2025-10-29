@@ -85092,7 +85092,7 @@ MonoBehaviour:
   maxLegendaryPets: 21
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
-  giftPrefab: {fileID: 1920111936519340, guid: 5d6d392351378457bbb7849925498e79, type: 3}
+  giftPrefab: {fileID: 1180577895617214, guid: df38b6bd385294b91aed38205ace2f6b, type: 3}
   celebrationEffectPrefab: {fileID: 123268, guid: d1870651fa4a849cba6a775902ade9e1, type: 3}
   giftSpawnDelay: 0.5
   fireworkPrefabs: []
