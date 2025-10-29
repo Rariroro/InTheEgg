@@ -54,6 +54,7 @@ namespace LegendaryPet
         
         [Header("선물 시스템")]
         public GameObject giftPrefab; // 선물 프리팹
+        public GameObject groundEffectPrefab; // 바닥 파티클 효과
         public GameObject celebrationEffectPrefab; // 축하 효과 파티클 프리팹
         public float giftSpawnDelay = 0.5f; // 선물 스폰 딜레이
         public List<GameObject> fireworkPrefabs = new List<GameObject>(); // 불꽃놀이 프리팹들
@@ -90,6 +91,9 @@ namespace LegendaryPet
         
         // 대기 중인 선물들과 해당 레전드 펫 정보를 저장하는 딕셔너리
         private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
+
+        // 선물과 바닥 효과를 연결하는 딕셔너리
+        private Dictionary<GameObject, GameObject> giftGroundEffects = new Dictionary<GameObject, GameObject>();
         
         // 터치 처리 최적화를 위한 변수
         private float lastTouchTime;
@@ -502,6 +506,14 @@ namespace LegendaryPet
             // 선물 생성 (A 좌표)
             GameObject gift = Instantiate(giftPrefab, giftPosition + Vector3.up * 0.5f, Quaternion.identity);
 
+            // 바닥 효과 생성
+            if (groundEffectPrefab != null)
+            {
+                GameObject groundEffect = Instantiate(groundEffectPrefab, giftPosition, Quaternion.identity);
+                giftGroundEffects.Add(gift, groundEffect);
+                Debug.Log($"[LegendaryPetManager] 바닥 효과 생성: {giftPosition}");
+            }
+
             // 선물 회전 애니메이션 추가 - 첫 프레임 대기는 코루틴 내부에서 처리
             StartCoroutine(RotateGift(gift));
 
@@ -546,6 +558,17 @@ namespace LegendaryPet
 
             // 선물 제거
             pendingGifts.Remove(gift);
+
+            // 바닥 효과 제거
+            if (giftGroundEffects.ContainsKey(gift))
+            {
+                GameObject groundEffect = giftGroundEffects[gift];
+                giftGroundEffects.Remove(gift);
+                if (groundEffect != null && Application.isPlaying)
+                {
+                    Destroy(groundEffect);
+                }
+            }
 
             // A 좌표에서 축하 효과
             if (celebrationEffectPrefab != null)
@@ -1327,6 +1350,19 @@ namespace LegendaryPet
                     }
                 }
                 pendingGifts.Clear();
+            }
+
+            // 바닥 효과 정리
+            if (giftGroundEffects != null)
+            {
+                foreach (var groundEffect in giftGroundEffects.Values)
+                {
+                    if (groundEffect != null && Application.isPlaying)
+                    {
+                        Destroy(groundEffect);
+                    }
+                }
+                giftGroundEffects.Clear();
             }
             
             // 레전드 펫 리스트 정리
