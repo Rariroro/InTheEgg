@@ -726,6 +726,13 @@ namespace LegendaryPet
             
             isFlying = false;
             flyingCoroutine = null;
+
+            // 착륙 완료 후 AI에 지면 위치 업데이트
+            LegendaryPetAI legendaryAI = GetComponent<LegendaryPetAI>();
+            if (legendaryAI != null)
+            {
+                legendaryAI.UpdateSpawnPosition(transform.position);
+            }
         }
         
         private void Update()

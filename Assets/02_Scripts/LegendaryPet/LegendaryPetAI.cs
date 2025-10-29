@@ -41,9 +41,26 @@ namespace LegendaryPet
         {
             controller = GetComponent<LegendaryPetController>();
             agent = GetComponent<NavMeshAgent>();
-            spawnPosition = transform.position;
+            // spawnPosition은 Start에서 설정
         }
-        
+
+        private void Start()
+        {
+            // 지면 위치 찾기 - 공중에서 스폰된 경우를 대비
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1000f))
+            {
+                spawnPosition = hit.point;
+                Debug.Log($"[LegendaryPetAI] {controller.PetName}: 지면 spawnPosition 설정 - {spawnPosition}");
+            }
+            else
+            {
+                // Raycast 실패 시 현재 위치 사용
+                spawnPosition = transform.position;
+                Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 지면을 찾을 수 없음, 현재 위치 사용 - {spawnPosition}");
+            }
+        }
+
         private void OnEnable()
         {
             if (aiCoroutine != null)
@@ -431,9 +448,9 @@ namespace LegendaryPet
                     continue; // 너무 멀면 다시 시도
                 }
                 
-                // NavMesh 상에 유효한 위치인지 확인
+                // NavMesh 상에 유효한 위치인지 확인 - 검색 범위 확대 (30f → 100f)
                 NavMeshHit navHit;
-                if (NavMesh.SamplePosition(candidateDestination, out navHit, 30f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(candidateDestination, out navHit, 100f, NavMesh.AllAreas))
                 {
                     destination = navHit.position;
                     foundValidDestination = true;
@@ -446,22 +463,48 @@ namespace LegendaryPet
             if (!foundValidDestination)
             {
                 NavMeshHit navHit;
-                if (NavMesh.SamplePosition(spawnPosition, out navHit, 50f, NavMesh.AllAreas))
+                // 검색 범위를 더 크게 확대 (50f → 200f)
+                if (NavMesh.SamplePosition(spawnPosition, out navHit, 200f, NavMesh.AllAreas))
                 {
                     destination = navHit.position;
                     Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 기본 비행 목적지 (스폰 위치) 사용");
                 }
                 else
                 {
-                    // 최후의 수단: 현재 위치 사용
-                    destination = transform.position;
-                    Debug.LogError($"[LegendaryPetAI] {controller.PetName}: 비행 목적지 생성 실패, 현재 위치 사용");
+                    // 최후의 수단: 현재 위치에서 아래로 레이캐스트하여 지면 찾기
+                    RaycastHit groundHit;
+                    if (Physics.Raycast(transform.position, Vector3.down, out groundHit, 1000f))
+                    {
+                        // 지면에서 NavMesh 위치 찾기
+                        if (NavMesh.SamplePosition(groundHit.point, out navHit, 100f, NavMesh.AllAreas))
+                        {
+                            destination = navHit.position;
+                            Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 지면 기반 비행 목적지 사용");
+                        }
+                        else
+                        {
+                            destination = transform.position;
+                            Debug.LogError($"[LegendaryPetAI] {controller.PetName}: 비행 목적지 생성 실패, 현재 위치 사용");
+                        }
+                    }
+                    else
+                    {
+                        destination = transform.position;
+                        Debug.LogError($"[LegendaryPetAI] {controller.PetName}: 지면을 찾을 수 없음, 현재 위치 사용");
+                    }
                 }
             }
             
             return destination;
         }
-        
+
+        // 착륙 완료 시 spawnPosition 업데이트 (외부에서 호출)
+        public void UpdateSpawnPosition(Vector3 groundPosition)
+        {
+            spawnPosition = groundPosition;
+            Debug.Log($"[LegendaryPetAI] {controller.PetName}: spawnPosition 업데이트 - {spawnPosition}");
+        }
+
         // 패턴 변경 메서드 (외부에서 호출 가능)
         public void SetMovementPattern(MovementPattern pattern)
         {
