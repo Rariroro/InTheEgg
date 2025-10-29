@@ -504,12 +504,12 @@ namespace LegendaryPet
             }
 
             // 선물 생성 (A 좌표)
-            GameObject gift = Instantiate(giftPrefab, giftPosition + Vector3.up * 0.5f, Quaternion.identity);
+            GameObject gift = Instantiate(giftPrefab, giftPosition + Vector3.up * 3f, Quaternion.identity);
 
             // 바닥 효과 생성
             if (groundEffectPrefab != null)
             {
-                GameObject groundEffect = Instantiate(groundEffectPrefab, giftPosition, Quaternion.identity);
+                GameObject groundEffect = Instantiate(groundEffectPrefab, giftPosition, Quaternion.Euler(-90, 0, 0));
                 giftGroundEffects.Add(gift, groundEffect);
                 Debug.Log($"[LegendaryPetManager] 바닥 효과 생성: {giftPosition}");
             }
