@@ -43,7 +43,6 @@ GameObject:
   - component: {fileID: 9176488973010557032}
   - component: {fileID: 4727659986079265530}
   - component: {fileID: 6185518803889987716}
-  - component: {fileID: 4942542597058844872}
   m_Layer: 0
   m_Name: Egg 12
   m_TagString: Untagged
@@ -110,34 +109,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1.33, z: 1}
-  m_Center: {x: 0, y: 0.98, z: 0}
---- !u!54 &4942542597058844872
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2462992809979899394}
-  serializedVersion: 4
-  m_Mass: 5
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 80
-  m_CollisionDetection: 0
+  m_Center: {x: 0, y: 0.68, z: 0}
 --- !u!1 &6423457988293678649
 GameObject:
   m_ObjectHideFlags: 0
@@ -183,7 +155,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5274067912468308802, guid: a2d9700695de4490bb94d31021b8fbac, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 5274067912468308802, guid: a2d9700695de4490bb94d31021b8fbac, type: 3}
       propertyPath: m_LocalPosition.y

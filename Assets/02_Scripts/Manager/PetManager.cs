@@ -470,7 +470,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
 
         // 선물 스폰 위치 - 스폰 스팟 사용
         Vector3 giftPosition = GetNextSpawnPosition();
-        giftPosition.y += 5f; // 선물을 공중에 띄움
+        // giftPosition.y += 0.5f; // 지면에서 약간 위에 배치
 
         GameObject gift = Instantiate(selectedGiftPrefab, giftPosition, selectedGiftPrefab.transform.rotation);
 
