@@ -94,7 +94,11 @@ namespace LegendaryPet
 
         // 선물과 바닥 효과를 연결하는 딕셔너리
         private Dictionary<GameObject, GameObject> giftGroundEffects = new Dictionary<GameObject, GameObject>();
-        
+
+        // 순차 스폰을 위한 변수들
+        private int currentLegendSpawnIndex = 0;
+        private bool isSpawningSequentially = false;
+
         // 터치 처리 최적화를 위한 변수
         private float lastTouchTime;
         private const float TOUCH_COOLDOWN = 0.1f;
@@ -216,51 +220,20 @@ namespace LegendaryPet
             
             // 추가 안전 대기
             yield return new WaitForSeconds(1f);
-            
-            // 이제 레전드 펫 스폰 시작
-            if (LegendaryPetSelectionManager.Instance != null && 
+
+            // PetChoice를 거친 경우: 순차 스폰 모드
+            if (LegendaryPetSelectionManager.Instance != null &&
                 LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count > 0)
             {
-                StartCoroutine(SpawnSelectedLegendsWithEffects());
+                isSpawningSequentially = true;
+                currentLegendSpawnIndex = 0;
+                Debug.Log($"[LegendaryPetManager] 레전드펫 스폰 준비 완료. 총 {LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count}마리의 레전드펫을 스폰할 수 있습니다.");
             }
+            // PetVillage에서 바로 시작한 경우: 모든 레전드 펫 자동 스폰
             else
             {
-                Debug.LogWarning("[LegendaryPetManager] 선택된 레전드 펫이 없거나 LegendaryPetSelectionManager가 없습니다. 기본 동작으로 모든 레전드 펫을 스폰합니다.");
+                Debug.LogWarning("[LegendaryPetManager] 선택된 레전드 펫이 없습니다. 모든 레전드 펫을 스폰합니다.");
                 SpawnAllLegendaryPets();
-            }
-        }
-        
-        // 선택된 레전드 펫을 효과와 함께 스폰하는 코루틴
-        private IEnumerator SpawnSelectedLegendsWithEffects()
-        {
-            // 일반 레전드 펫과 최초 등장 레전드 펫을 분리
-            List<string> normalLegends = new List<string>();
-            List<string> firstAppearanceLegends = new List<string>();
-            
-            foreach (string legendId in LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds)
-            {
-                if (LegendaryPetSelectionManager.Instance.IsLegendaryPetFirstAppearance(legendId))
-                {
-                    firstAppearanceLegends.Add(legendId);
-                }
-                else
-                {
-                    normalLegends.Add(legendId);
-                }
-            }
-            
-            // 먼저 일반 레전드 펫들을 스폰
-            foreach (string legendId in normalLegends)
-            {
-                SpawnLegendaryPet(legendId, false);
-            }
-            
-            // 최초 등장 레전드 펫들을 딜레이를 두고 효과와 함께 스폰
-            // 최초 등장 레전드 펫들은 선물로 스폰
-            foreach (string legendId in firstAppearanceLegends)
-            {
-                SpawnGiftForLegendaryPet(legendId);
-                yield return new WaitForSeconds(giftSpawnDelay);
             }
         }
         
@@ -1039,7 +1012,7 @@ namespace LegendaryPet
         
         // 선물 개수 반환 (PetManager와 동일한 인터페이스)
         public int GetPendingGiftCount() => pendingGifts.Count;
-        
+
         // 선물 리스트 반환
         public List<GameObject> GetPendingGiftList()
         {
@@ -1050,6 +1023,52 @@ namespace LegendaryPet
                     gifts.Add(gift);
             }
             return gifts;
+        }
+
+        // 순차 스폰을 위한 public 메서드들 (PetManager와 동일한 인터페이스)
+        public int GetTotalLegendaryPetCount()
+        {
+            if (LegendaryPetSelectionManager.Instance != null)
+                return LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count;
+            return 0;
+        }
+
+        public int GetCurrentLegendSpawnIndex()
+        {
+            return currentLegendSpawnIndex;
+        }
+
+        public bool CanSpawnNextLegendaryPet()
+        {
+            if (LegendaryPetSelectionManager.Instance == null) return false;
+            return isSpawningSequentially && currentLegendSpawnIndex < LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count;
+        }
+
+        // 다음 레전드펫을 하나 스폰하는 메서드 (UI 버튼에서 호출)
+        public void SpawnNextLegendaryPet()
+        {
+            if (!CanSpawnNextLegendaryPet())
+            {
+                Debug.LogWarning("[LegendaryPetManager] 더 이상 스폰할 레전드펫이 없습니다.");
+                return;
+            }
+
+            string legendId = LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds[currentLegendSpawnIndex];
+
+            // 최초 등장 레전드펫인지 확인
+            if (LegendaryPetSelectionManager.Instance.IsLegendaryPetFirstAppearance(legendId))
+            {
+                // 최초 등장 레전드펫은 선물로 스폰
+                SpawnGiftForLegendaryPet(legendId);
+            }
+            else
+            {
+                // 일반 레전드펫은 바로 스폰
+                SpawnLegendaryPet(legendId, false);
+            }
+
+            currentLegendSpawnIndex++;
+            Debug.Log($"[LegendaryPetManager] 레전드펫 스폰: {legendId} ({currentLegendSpawnIndex}/{LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count})");
         }
 
         // 카메라 초기화
