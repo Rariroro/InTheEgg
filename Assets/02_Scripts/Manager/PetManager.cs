@@ -527,8 +527,8 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         // 축하 효과 파티클 실행
         if (celebrationEffectPrefab != null)
         {
-            GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position, Quaternion.identity);
-            celebration.transform.localScale = Vector3.one * 1.5f;
+            GameObject celebration = Instantiate(celebrationEffectPrefab, gift.transform.position+ Vector3.up * 2f, Quaternion.identity);
+            celebration.transform.localScale = Vector3.one * 3f;
             Destroy(celebration, 5f);
         }
         

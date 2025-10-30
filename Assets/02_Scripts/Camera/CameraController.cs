@@ -13,6 +13,13 @@ public class CameraController : MonoBehaviour
     public float maxX = 500f;   // 최대 X 좌표
     public float minZ = -500f;  // 최소 Z 좌표
     public float maxZ = 500f;   // 최대 Z 좌표
+
+    [Header("카메라 애니메이션 잠금")]
+    private bool isCameraAnimating = false;
+
+    // 카메라 애니메이션 상태 속성 (읽기 전용)
+    public bool IsCameraAnimating => isCameraAnimating;
+
     private Camera childCamera;
     private Vector3 lastPanPosition;
     private int fingerId = -1;
@@ -229,15 +236,15 @@ public class CameraController : MonoBehaviour
     bool CheckIfClickedOnTreasure()
     {
         if (childCamera == null) return false;
-        
+
         // 마우스 위치에서 레이 발사
         Ray ray = childCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
-        
+
         // DroppedItem 레이어만 검사
         int droppedItemLayer = LayerMask.NameToLayer("DroppedItem");
         int layerMask = 1 << droppedItemLayer;
-        
+
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
         {
             // TreasureController가 있는지 확인
@@ -250,7 +257,23 @@ public class CameraController : MonoBehaviour
                 return true;
             }
         }
-        
+
         return false;
+    }
+
+    /// <summary>
+    /// 카메라 애니메이션 시작 시 잠금 (다른 시스템의 카메라 조작 차단)
+    /// </summary>
+    public void LockCamera()
+    {
+        isCameraAnimating = true;
+    }
+
+    /// <summary>
+    /// 카메라 애니메이션 종료 시 잠금 해제
+    /// </summary>
+    public void UnlockCamera()
+    {
+        isCameraAnimating = false;
     }
 }

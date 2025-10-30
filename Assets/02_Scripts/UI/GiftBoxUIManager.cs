@@ -333,6 +333,13 @@ public class GiftBoxUIManager : MonoBehaviour
     // 선물 버튼 클릭 시
     private void OnGiftButtonClicked(string giftType)
     {
+        // 카메라가 다른 애니메이션 중이면 무시
+        if (cameraController != null && cameraController.IsCameraAnimating)
+        {
+            Debug.Log("[GiftBoxUIManager] 카메라 애니메이션 중 - 버튼 클릭 무시");
+            return;
+        }
+
         if (isCameraMoving) return;
 
         List<GameObject> gifts = activeGifts[giftType];
@@ -373,9 +380,10 @@ public class GiftBoxUIManager : MonoBehaviour
     {
         isCameraMoving = true;
 
-        // CameraController의 limitCameraMovement 비활성화
+        // 카메라 잠금 (다른 시스템의 카메라 조작 차단)
         if (cameraController != null)
         {
+            cameraController.LockCamera();
             originalLimitCameraMovement = cameraController.limitCameraMovement;
             cameraController.limitCameraMovement = false;
         }
@@ -435,10 +443,11 @@ public class GiftBoxUIManager : MonoBehaviour
         // 버튼 클릭 직전 위치로 복귀 (저장된 last 위치 사용)
         yield return MoveCameraToPosition(lastCameraPosition, lastCameraRotation, lastCameraFOV, lastCameraParentPosition);
 
-        // CameraController의 limitCameraMovement 원래 값으로 복원
+        // CameraController의 limitCameraMovement 원래 값으로 복원 및 카메라 잠금 해제
         if (cameraController != null)
         {
             cameraController.limitCameraMovement = originalLimitCameraMovement;
+            cameraController.UnlockCamera();
         }
 
         isCameraMoving = false;

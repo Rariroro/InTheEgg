@@ -66,7 +66,7 @@ public class PetSpawnSpot : MonoBehaviour
 
         // 추가 펫들은 원형으로 배치
         float angle = (offsetMultiplier - 1) * (360f / 8f); // 최대 8개까지 원형 배치
-        float distance = spotRadius + (offsetMultiplier * 1f); // 점진적으로 거리 증가
+        float distance = spotRadius + (offsetMultiplier * 3f); // 점진적으로 거리 증가
 
         Vector3 offset = new Vector3(
             Mathf.Cos(angle * Mathf.Deg2Rad) * distance,

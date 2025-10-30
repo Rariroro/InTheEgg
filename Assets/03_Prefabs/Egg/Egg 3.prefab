@@ -42,7 +42,8 @@ GameObject:
   m_Component:
   - component: {fileID: 9176488973010557032}
   - component: {fileID: 4727659986079265530}
-  - component: {fileID: 6185518803889987716}
+  - component: {fileID: 2172346874028766325}
+  - component: {fileID: -8646168735198343388}
   m_Layer: 0
   m_Name: Egg 3
   m_TagString: Untagged
@@ -89,8 +90,8 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!65 &6185518803889987716
-BoxCollider:
+--- !u!136 &2172346874028766325
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -107,9 +108,27 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.59
+  m_Height: 1.4
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.72, z: 0}
+--- !u!208 &-8646168735198343388
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2462992809979899394}
+  m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1.33, z: 1}
-  m_Center: {x: 0, y: 0.68, z: 0}
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0.56, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1 &6423457988293678649
 GameObject:
   m_ObjectHideFlags: 0
