@@ -533,6 +533,13 @@ namespace LegendaryPet
             if (gift == null || !pendingGifts.ContainsKey(gift))
                 yield break;
 
+            // ===== 즉시 카메라 잠금 (연속 터치 차단) =====
+            if (cameraController != null)
+            {
+                cameraController.LockCamera();
+                Debug.Log("[LegendaryPetManager] 선물 오픈 시작 - 카메라 잠금");
+            }
+
             // 선물 위치 저장 (A 좌표)
             Vector3 giftPos = gift.transform.position;
 
@@ -1111,10 +1118,9 @@ namespace LegendaryPet
             // 현재 카메라 상태 저장
             SaveCameraState();
 
-            // 카메라 잠금 (다른 시스템의 카메라 조작 차단)
+            // 카메라 이동 제한만 해제 (LockCamera는 OpenGiftCoroutine에서 이미 호출됨)
             if (cameraController != null)
             {
-                cameraController.LockCamera();
                 originalLimitCameraMovement = cameraController.limitCameraMovement;
                 cameraController.limitCameraMovement = false;
             }
