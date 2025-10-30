@@ -177,19 +177,26 @@ namespace LegendaryPet
             if (Input.GetMouseButtonDown(0))
             {
                 lastTouchTime = Time.time;
-                
+
+                // 카메라가 다른 애니메이션 중이면 선물 터치 무시
+                if (cameraController != null && cameraController.IsCameraAnimating)
+                {
+                    Debug.Log("[LegendaryPetManager] 카메라 애니메이션 중 - 선물 터치 무시");
+                    return;
+                }
+
                 if (Camera.main == null) return;
-                
+
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
-                
+
                 // Ignore Raycast 레이어를 제외한 모든 레이어와 충돌 검사
                 int layerMask = ~LayerMask.GetMask("Ignore Raycast");
-                
+
                 if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
                 {
                     GameObject hitObject = hit.collider.gameObject;
-                    
+
                     // 터치한 오브젝트가 대기 중인 선물인지 확인
                     if (pendingGifts.ContainsKey(hitObject))
                     {
@@ -1104,9 +1111,10 @@ namespace LegendaryPet
             // 현재 카메라 상태 저장
             SaveCameraState();
 
-            // CameraController의 limitCameraMovement 비활성화
+            // 카메라 잠금 (다른 시스템의 카메라 조작 차단)
             if (cameraController != null)
             {
+                cameraController.LockCamera();
                 originalLimitCameraMovement = cameraController.limitCameraMovement;
                 cameraController.limitCameraMovement = false;
             }
@@ -1204,10 +1212,11 @@ namespace LegendaryPet
             mainCamera.transform.rotation = originalCameraRotation;
             mainCamera.fieldOfView = originalCameraFOV;
 
-            // CameraController의 limitCameraMovement 원래 값으로 복원
+            // CameraController의 limitCameraMovement 원래 값으로 복원 및 카메라 잠금 해제
             if (cameraController != null)
             {
                 cameraController.limitCameraMovement = originalLimitCameraMovement;
+                cameraController.UnlockCamera();
             }
         }
 
