@@ -21,6 +21,10 @@ public class PetCameraSwitcherButton : MonoBehaviour
     public Sprite activeButtonBackground;     // 활성화 버튼 배경
     public Sprite cancelButtonBackground;     // 취소 버튼 배경
 
+    [Header("Fade Settings")]
+    public Image fadePanel;                       // 화면 전환용 검은 패널 (Inspector에서 할당)
+    private float fadeDuration = 0.2f;            // 페이드 인/아웃 시간 (0.15초 → 0.2초로 증가)
+
     // 기존에 사용한 피드백 텍스트 변수 (PetGatheringController와 동일한 역할)
     public TMP_Text feedbackText;
 
@@ -108,14 +112,78 @@ public class PetCameraSwitcherButton : MonoBehaviour
         petCameraModeActivated = false;
     }
 
+    // 페이드 인 (검은 화면으로 전환)
+    private IEnumerator FadeToBlack(float duration)
+    {
+        if (fadePanel == null) yield break;
+
+        fadePanel.gameObject.SetActive(true);
+        Color color = fadePanel.color;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            color.a = Mathf.Lerp(0f, 1f, elapsed / duration);
+            fadePanel.color = color;
+            yield return null;
+        }
+
+        color.a = 1f;
+        fadePanel.color = color;
+    }
+
+    // 페이드 아웃 (검은 화면에서 밝아짐)
+    private IEnumerator FadeFromBlack(float duration)
+    {
+        if (fadePanel == null) yield break;
+
+        Color color = fadePanel.color;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            color.a = Mathf.Lerp(1f, 0f, elapsed / duration);
+            fadePanel.color = color;
+            yield return null;
+        }
+
+        color.a = 0f;
+        fadePanel.color = color;
+        fadePanel.gameObject.SetActive(false);
+    }
+
     // 펫의 CameraPoint로 카메라 전환 (가로 모드)
     public void SwitchToPetCamera(Transform petCameraPoint)
     {
         if (mainCamera == null || petCameraPoint == null)
             return;
 
+        StartCoroutine(SwitchToPetCameraWithFade(petCameraPoint));
+    }
+
+    private IEnumerator SwitchToPetCameraWithFade(Transform petCameraPoint)
+    {
+        // 1. 페이드 인 (검은 화면으로)
+        yield return FadeToBlack(fadeDuration);
+
+        // 2. 화면 회전 시작
         Screen.orientation = ScreenOrientation.LandscapeLeft;
 
+        // 3. 화면 회전 완료까지 동적 대기
+        float maxWaitTime = 1.0f;
+        float elapsedTime = 0f;
+        while (Screen.orientation != ScreenOrientation.LandscapeLeft && elapsedTime < maxWaitTime)
+        {
+            yield return null;
+            elapsedTime += Time.deltaTime;
+        }
+
+        // 4. 추가 안정화 대기
+        yield return new WaitForSeconds(0.1f);
+
+        // 5. 카메라 설정
         // 기본 카메라의 현재 FOV 저장
         savedMainCameraFOV = mainCamera.fieldOfView;
 
@@ -141,11 +209,15 @@ public class PetCameraSwitcherButton : MonoBehaviour
             petCameraButtonText.text = "Camera";
 
         UpdateButtonVisual("camera");
-              // 피드백 텍스트 숨김
-            if (feedbackText != null)
-            {
-                feedbackText.gameObject.SetActive(false);
-            }
+
+        // 피드백 텍스트 숨김
+        if (feedbackText != null)
+        {
+            feedbackText.gameObject.SetActive(false);
+        }
+
+        // 6. 페이드 아웃 (펫 시점 공개)
+        yield return FadeFromBlack(fadeDuration);
     }
 
     // 기존 쿼터뷰 카메라로 복귀 (세로 모드)
@@ -154,8 +226,30 @@ public class PetCameraSwitcherButton : MonoBehaviour
         if (mainCamera == null)
             return;
 
+        StartCoroutine(SwitchBackToMainCameraWithFade());
+    }
+
+    private IEnumerator SwitchBackToMainCameraWithFade()
+    {
+        // 1. 페이드 인 (검은 화면으로)
+        yield return FadeToBlack(fadeDuration);
+
+        // 2. 화면 회전 시작
         Screen.orientation = ScreenOrientation.Portrait;
 
+        // 3. 화면 회전 완료까지 동적 대기
+        float maxWaitTime = 1.0f;
+        float elapsedTime = 0f;
+        while (Screen.orientation != ScreenOrientation.Portrait && elapsedTime < maxWaitTime)
+        {
+            yield return null;
+            elapsedTime += Time.deltaTime;
+        }
+
+        // 4. 추가 안정화 대기
+        yield return new WaitForSeconds(0.1f);
+
+        // 5. 카메라 설정 복원
         mainCamera.transform.SetParent(originalParent);
         mainCamera.transform.localPosition = originalLocalPosition;
         mainCamera.transform.localRotation = originalLocalRotation;
@@ -174,6 +268,9 @@ public class PetCameraSwitcherButton : MonoBehaviour
             petCameraButtonText.text = "Pet Camera";
 
         UpdateButtonVisual("petCamera");
+
+        // 6. 페이드 아웃 (메인 카메라 공개)
+        yield return FadeFromBlack(fadeDuration);
     }
 
     // 피드백 텍스트를 일정 시간 후 숨김 처리하는 코루틴
