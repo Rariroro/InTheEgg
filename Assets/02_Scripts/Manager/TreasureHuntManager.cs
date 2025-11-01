@@ -698,19 +698,32 @@ public class TreasureHuntManager : MonoBehaviour
             {
                 totalCoinsText.text = $"{displayedCoins}";
             }
+
+            // 기존 코루틴이 실행 중이면 정지
+            if (countCoroutine != null)
+            {
+                StopCoroutine(countCoroutine);
+                countCoroutine = null;
+            }
             return;  // 애니메이션 필요 없음
         }
 
-        // 차이가 있을 때만 애니메이션
-        countCoroutine ??= StartCoroutine(AnimateCoinCount());
+        // 차이가 있을 때만 애니메이션 (중복 실행 방지)
+        if (countCoroutine == null)
+        {
+            countCoroutine = StartCoroutine(AnimateCoinCount());
+        }
     }
 
     /// <summary>
-    /// 코인 카운트 애니메이션
+    /// 코인 카운트 애니메이션 (중복 실행 방지)
     /// </summary>
     private IEnumerator AnimateCoinCount()
     {
-        while (displayedCoins != targetCoins)
+        // 중복 실행 방지를 위한 플래그
+        bool isAnimating = true;
+
+        while (displayedCoins != targetCoins && isAnimating)
         {
             // 차이가 큰 경우 더 빠르게 증가
             int difference = targetCoins - displayedCoins;
@@ -734,9 +747,19 @@ public class TreasureHuntManager : MonoBehaviour
             }
 
             yield return new WaitForSeconds(countSpeed);
+
+            // 코루틴이 중단되어야 하는지 확인
+            if (countCoroutine == null)
+            {
+                isAnimating = false;
+            }
         }
 
-        countCoroutine = null;
+        // 안전하게 참조 해제
+        if (countCoroutine != null)
+        {
+            countCoroutine = null;
+        }
     }
     
     /// <summary>
@@ -819,22 +842,35 @@ public class TreasureHuntManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 페이드 아웃 후 오브젝트 삭제 (동적 생성된 코인 팝업용)
+    /// 페이드 아웃 후 오브젝트 삭제 (동적 생성된 코인 팝업용, null 체크 강화)
     /// </summary>
     private IEnumerator FadeOutTextAndDestroy(TMP_Text text, GameObject objectToDestroy, float duration)
     {
+        // text나 objectToDestroy가 null이면 즉시 종료
+        if (text == null || objectToDestroy == null)
+        {
+            if (objectToDestroy != null)
+            {
+                Destroy(objectToDestroy);
+            }
+            yield break;
+        }
+
         float elapsed = 0f;
         Color originalColor = text.color;
         Vector3 startPos = text.transform.position;
 
-        while (elapsed < duration)
+        while (elapsed < duration && text != null)
         {
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
 
             // 위로 이동하면서 페이드 아웃
-            text.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f - t);
-            text.transform.position = startPos + Vector3.up * (t * 50f);
+            if (text != null)
+            {
+                text.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f - t);
+                text.transform.position = startPos + Vector3.up * (t * 50f);
+            }
 
             yield return null;
         }

@@ -307,44 +307,50 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         {
             return new List<Vector3>(cachedPlanePoints[plane]);
         }
-        
+
         List<Vector3> affectedPoints = new List<Vector3>();
         Bounds planeWorldBounds = GetPlaneWorldBounds(plane);
-        
+
         // 동적 샘플링 - 작은 플레인은 적은 샘플
         float planeArea = planeWorldBounds.size.x * planeWorldBounds.size.z;
         int totalSamples = Mathf.Clamp(Mathf.RoundToInt(planeArea * samplesPerUnit), 20, 100);
-        
-        // 배치 레이캐스트 준비 (Temp 사용으로 변경 - 즉시 해제되는 작업이므로)
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(totalSamples, Allocator.Temp);
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(totalSamples, Allocator.Temp);
-        
-        List<Vector3> samplePoints = GenerateSamplePoints(plane, totalSamples);
-        
-        for (int i = 0; i < totalSamples; i++)
+
+        // 배치 레이캐스트 준비 (TempJob 사용 - 4프레임 제한 해결)
+        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(totalSamples, Allocator.TempJob);
+        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(totalSamples, Allocator.TempJob);
+
+        try
         {
-            Vector3 origin = samplePoints[i] + Vector3.up * 0.5f;
-            commands[i] = new RaycastCommand(origin, Vector3.down, 1000f, LayerMask.GetMask("Terrain"));
-        }
-        
-        // 배치 레이캐스트 실행
-        JobHandle handle = RaycastCommand.ScheduleBatch(commands, results, 1);
-        handle.Complete();
-        
-        for (int i = 0; i < results.Length; i++)
-        {
-            if (results[i].collider != null)
+            List<Vector3> samplePoints = GenerateSamplePoints(plane, totalSamples);
+
+            for (int i = 0; i < totalSamples; i++)
             {
-                affectedPoints.Add(results[i].point);
+                Vector3 origin = samplePoints[i] + Vector3.up * 0.5f;
+                commands[i] = new RaycastCommand(origin, Vector3.down, 1000f, LayerMask.GetMask("Terrain"));
+            }
+
+            // 배치 레이캐스트 실행 - 즉시 Complete 호출
+            JobHandle handle = RaycastCommand.ScheduleBatch(commands, results, 1);
+            handle.Complete();  // 즉시 완료 대기 - 메모리 누수 방지
+
+            for (int i = 0; i < results.Length; i++)
+            {
+                if (results[i].collider != null)
+                {
+                    affectedPoints.Add(results[i].point);
+                }
             }
         }
-        
-        commands.Dispose();
-        results.Dispose();
-        
+        finally
+        {
+            // 예외 발생 시에도 반드시 메모리 해제
+            if (commands.IsCreated) commands.Dispose();
+            if (results.IsCreated) results.Dispose();
+        }
+
         // 결과 캐싱
         cachedPlanePoints[plane] = new List<Vector3>(affectedPoints);
-        
+
         return affectedPoints;
     }
 

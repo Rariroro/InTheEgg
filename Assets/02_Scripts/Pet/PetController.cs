@@ -215,21 +215,7 @@ public partial class PetController : MonoBehaviour
 
     private void OnDestroy()
     {
-        // 코루틴 정리
-        StopAllCoroutines();
-
-        // NavMeshAgent 정리
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-        }
-
-        if (agent != null)
-        {
-            agent.enabled = false;
-        }
-
+        // 이벤트 리스너 먼저 해제 (메모리 누수 방지)
         if (petState != null)
         {
             petState.OnStatusChanged -= OnPetStatusChanged;
@@ -241,9 +227,31 @@ public partial class PetController : MonoBehaviour
             petNeeds.OnNeedCritical -= OnNeedCritical;
         }
 
+        // 코루틴 정리
+        StopAllCoroutines();
+
+        // InteractionManager에서 등록 해제
         if (PetInteractionManager.Instance != null)
         {
             PetInteractionManager.Instance.UnregisterPet(this);
+        }
+
+        // NavMeshAgent 정리 (안전하게)
+        if (agent != null)
+        {
+            try
+            {
+                if (agent.enabled && agent.isOnNavMesh)
+                {
+                    agent.isStopped = true;
+                    agent.ResetPath();
+                }
+                agent.enabled = false;
+            }
+            catch
+            {
+                // NavMeshAgent가 이미 파괴되었거나 접근할 수 없는 경우 무시
+            }
         }
     }
     

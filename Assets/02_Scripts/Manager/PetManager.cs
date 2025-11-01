@@ -633,54 +633,69 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         pet.transform.localScale = originalScale;
     }
 
-    // 글로우 효과 코루틴 (새로 추가)
+    // 글로우 효과 코루틴 (Material 인스턴스 관리 개선)
     private IEnumerator GlowEffect(GameObject pet)
     {
         Renderer[] renderers = pet.GetComponentsInChildren<Renderer>();
-        Color originalEmission = Color.black;
+        List<Material> createdMaterials = new List<Material>();
+        Dictionary<Renderer, Color> originalEmissions = new Dictionary<Renderer, Color>();
         bool hasEmissiveMaterial = false;
 
-        // 머터리얼이 Emission을 지원하는지 확인
-        foreach (Renderer renderer in renderers)
+        try
         {
-            if (renderer.material.HasProperty("_EmissionColor"))
-            {
-                originalEmission = renderer.material.GetColor("_EmissionColor");
-                hasEmissiveMaterial = true;
-                break;
-            }
-        }
-
-        if (hasEmissiveMaterial)
-        {
-            float duration = 2f;
-            float elapsed = 0f;
-            Color glowColor = Color.yellow * 2f; // 밝은 노란색
-
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float intensity = Mathf.Sin(elapsed * Mathf.PI / duration);
-                
-                foreach (Renderer renderer in renderers)
-                {
-                    if (renderer.material.HasProperty("_EmissionColor"))
-                    {
-                        renderer.material.SetColor("_EmissionColor", Color.Lerp(originalEmission, glowColor, intensity));
-                    }
-                }
-                
-                yield return null;
-            }
-
-            // 원래 색상으로 복원
+            // 머터리얼이 Emission을 지원하는지 확인 및 원본 색상 저장
             foreach (Renderer renderer in renderers)
             {
-                if (renderer.material.HasProperty("_EmissionColor"))
+                // renderer.material 접근 시 Material 인스턴스가 생성됨
+                Material mat = renderer.material;
+                if (mat != null && mat.HasProperty("_EmissionColor"))
                 {
-                    renderer.material.SetColor("_EmissionColor", originalEmission);
+                    createdMaterials.Add(mat);
+                    originalEmissions[renderer] = mat.GetColor("_EmissionColor");
+                    hasEmissiveMaterial = true;
                 }
             }
+
+            if (hasEmissiveMaterial)
+            {
+                float duration = 2f;
+                float elapsed = 0f;
+                Color glowColor = Color.yellow * 2f; // 밝은 노란색
+
+                while (elapsed < duration && pet != null)
+                {
+                    elapsed += Time.deltaTime;
+                    float intensity = Mathf.Sin(elapsed * Mathf.PI / duration);
+
+                    foreach (var kvp in originalEmissions)
+                    {
+                        if (kvp.Key != null && kvp.Key.material != null)
+                        {
+                            kvp.Key.material.SetColor("_EmissionColor", Color.Lerp(kvp.Value, glowColor, intensity));
+                        }
+                    }
+
+                    yield return null;
+                }
+
+                // 원래 색상으로 복원
+                foreach (var kvp in originalEmissions)
+                {
+                    if (kvp.Key != null && kvp.Key.material != null)
+                    {
+                        kvp.Key.material.SetColor("_EmissionColor", kvp.Value);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            // Material 인스턴스 정리 (메모리 누수 방지)
+            // 주의: 실제로는 Material이 Renderer에 의해 관리되므로
+            // 여기서 Destroy하면 안됨. Renderer가 파괴될 때 자동 정리됨.
+            // 하지만 리스트는 정리해야 함
+            createdMaterials.Clear();
+            originalEmissions.Clear();
         }
     }
 

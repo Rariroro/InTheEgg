@@ -46,7 +46,14 @@ namespace LegendaryPet
         [SerializeField] private ParticleSystem glowEffect;
         [SerializeField] private ParticleSystem auraEffect;
         [SerializeField] private Light petLight;
-        
+
+        // Raycast 캐싱 시스템 (메모리 누수 방지)
+        private float cachedGroundHeight = 0f;
+        private Vector3 cachedGroundCheckPosition = Vector3.zero;
+        private float lastGroundCheckTime = 0f;
+        private const float GROUND_CHECK_INTERVAL = 0.3f; // 0.3초마다만 지면 체크
+        private const float MAX_RAYCAST_DISTANCE = 100f; // 200f → 100f로 단축
+
         // 프로퍼티
         public LegendaryPetType PetType => petType;
         public string PetName => petName;
@@ -279,22 +286,45 @@ namespace LegendaryPet
             }
         }
         
-        // 지형 높이를 가져오는 헬퍼 메서드
+        // 지형 높이를 가져오는 헬퍼 메서드 (캐싱 적용)
         private float GetGroundHeight(Vector3 position)
         {
-            RaycastHit hit;
-            // 위에서 아래로 레이캐스트를 쏴서 지형 높이 확인
-            if (Physics.Raycast(new Vector3(position.x, 100f, position.z), Vector3.down, out hit, 200f))
+            // 캐시된 값 사용 가능 여부 확인
+            float distanceFromLastCheck = Vector3.Distance(position, cachedGroundCheckPosition);
+            bool isCacheValid = (Time.time - lastGroundCheckTime) < GROUND_CHECK_INTERVAL
+                                && distanceFromLastCheck < 5f; // 5m 이내면 같은 위치로 간주
+
+            if (isCacheValid)
             {
+                // 캐시된 높이 반환
+                return cachedGroundHeight + (position.y - cachedGroundCheckPosition.y);
+            }
+
+            // 새로운 Raycast 수행 (거리 단축)
+            RaycastHit hit;
+            if (Physics.Raycast(new Vector3(position.x, position.y + 50f, position.z),
+                               Vector3.down, out hit, MAX_RAYCAST_DISTANCE))
+            {
+                // 캐시 업데이트
+                cachedGroundHeight = hit.point.y;
+                cachedGroundCheckPosition = position;
+                lastGroundCheckTime = Time.time;
                 return hit.point.y;
             }
+
             // 레이캐스트가 실패하면 NavMesh 높이 사용
             NavMeshHit navHit;
             if (NavMesh.SamplePosition(position, out navHit, 10f, NavMesh.AllAreas))
             {
+                // 캐시 업데이트
+                cachedGroundHeight = navHit.position.y;
+                cachedGroundCheckPosition = position;
+                lastGroundCheckTime = Time.time;
                 return navHit.position.y;
             }
-            return position.y;
+
+            // 캐시된 값이 있으면 사용, 없으면 현재 높이
+            return cachedGroundHeight > 0 ? cachedGroundHeight : position.y;
         }
         
         public void SetActive(bool active)
@@ -424,14 +454,20 @@ namespace LegendaryPet
         private IEnumerator FlyToDestination()
         {
             isFlying = true;
-            
-            // NavMeshAgent 비활성화
+
+            // NavMeshAgent 안전한 비활성화 (Job System 정리)
             if (agent != null && agent.enabled)
             {
                 if (agent.isOnNavMesh)
                 {
                     agent.isStopped = true;
+                    agent.ResetPath(); // 경로 정리
                 }
+
+                // Job 완료를 위한 프레임 대기
+                yield return null;
+                yield return null;
+
                 agent.enabled = false;
             }
             
@@ -629,59 +665,61 @@ namespace LegendaryPet
             float targetHeight = targetLandingPos.y;
             Vector3 startPos = new Vector3(currentPos.x, actualHeight, currentPos.z); // 정확한 시작 위치
             Vector3 endPos = targetLandingPos;
-            
+
             // 하강 시간 계산 (거리에 비례)
             float descendDistance = Mathf.Abs(startHeight - targetHeight);
             float descendTime = Mathf.Max(0.5f, descendDistance / (descendSpeed * 3f)); // 최소 0.5초
-            
-        // Debug.Log($"[LegendaryPet] {petName}: 하강 시작 - 시작 높이: {startHeight:F2}, 목표 높이: {targetHeight:F2}, 예상 시간: {descendTime:F2}초");
-            
+
             float elapsed = 0f;
-            
+            float lastRaycastTime = 0f;
+            const float LANDING_RAYCAST_INTERVAL = 0.1f; // 0.1초마다만 Raycast (매 프레임 → 0.1초 간격)
+
             while (elapsed < descendTime)
             {
                 elapsed += Time.deltaTime;
                 float t = elapsed / descendTime;
-                
+
                 // Ease-out 곡선 적용 (착지 직전 감속)
                 float easedT = 1f - Mathf.Pow(1f - t, 3f);
-                
+
                 // 위치 보간 (XYZ 모두 함께)
                 Vector3 currentPosition = Vector3.Lerp(startPos, endPos, easedT);
-                
-                // 착지 직전에 다시 한번 지면 체크 (동적 지형 대응)
-                if (t > 0.8f) // 80% 이상 진행됐을 때
+
+                // 착지 직전에 주기적으로 지면 체크 (최적화: 매 프레임 → 0.1초 간격)
+                if (t > 0.8f && (Time.time - lastRaycastTime) > LANDING_RAYCAST_INTERVAL)
                 {
-                    if (Physics.Raycast(new Vector3(currentPosition.x, currentPosition.y + 1f, currentPosition.z), 
+                    if (Physics.Raycast(new Vector3(currentPosition.x, currentPosition.y + 1f, currentPosition.z),
                                        Vector3.down, out groundHit, 5f))
                     {
                         // 실시간으로 착지 높이 조정
                         if (groundHit.point.y > targetHeight)
                         {
-        // Debug.Log($"[LegendaryPet] {petName}: 지면 높이 재조정 - {targetHeight:F2} → {groundHit.point.y:F2}");
                             targetHeight = groundHit.point.y;
                             endPos.y = targetHeight;
+
+                            // 캐시 업데이트
+                            cachedGroundHeight = groundHit.point.y;
+                            cachedGroundCheckPosition = currentPosition;
+                            lastGroundCheckTime = Time.time;
                         }
                     }
+                    lastRaycastTime = Time.time;
                 }
-                
+
                 transform.position = currentPosition;
-                
-                // 디버그용 현재 높이 출력 (매 10프레임마다)
-                if (Time.frameCount % 10 == 0)
-                {
-        // Debug.Log($"[LegendaryPet] {petName}: 하강 중 - 진행도: {(t*100):F0}%, 현재 높이: {currentPosition.y:F2}");
-                }
-                
                 yield return null;
             }
             
             // 착륙 완료 - 최종 위치 미세 조정만 수행
             // 이미 부드럽게 착륙했으므로 강제 위치 설정하지 않음
             
-            // NavMeshAgent 재활성화
+            // NavMeshAgent 재활성화 (Job System 정리 시간 확보)
             if (agent != null)
             {
+                // Job 정리를 위한 프레임 대기
+                yield return null;
+                yield return null;
+
                 // 활성화 전에 위치 확인
                 if (NavMesh.SamplePosition(transform.position, out navHit, 5f, NavMesh.AllAreas))
                 {
@@ -693,9 +731,10 @@ namespace LegendaryPet
                         transform.position = Vector3.Lerp(transform.position, navHit.position, 0.5f);
                     }
                 }
-                
+
+                // NavMeshAgent 활성화
                 agent.enabled = true;
-                
+
                 // agent가 완전히 활성화되도록 충분한 대기
                 yield return new WaitForSeconds(0.1f);
                 

@@ -27,6 +27,13 @@ namespace LegendaryPet
         private Coroutine aiCoroutine;
         private Vector3 spawnPosition;
         private float nextActionTime;
+
+        // Raycast 캐싱 시스템 (메모리 누수 방지)
+        private float cachedGroundHeight = 0f;
+        private Vector3 cachedGroundPosition = Vector3.zero;
+        private float lastGroundCheckTime = 0f;
+        private const float GROUND_CHECK_INTERVAL = 0.5f; // 0.5초마다만 지면 체크
+        private const float MAX_RAYCAST_DISTANCE = 100f; // 1000f → 100f로 단축
         
         public enum MovementPattern
         {
@@ -46,17 +53,24 @@ namespace LegendaryPet
 
         private void Start()
         {
-            // 지면 위치 찾기 - 공중에서 스폰된 경우를 대비
+            // 지면 위치 찾기 - 공중에서 스폰된 경우를 대비 (최적화: 거리 단축)
             RaycastHit hit;
-            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1000f))
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, MAX_RAYCAST_DISTANCE))
             {
                 spawnPosition = hit.point;
+                // 캐싱 시스템 초기화
+                cachedGroundPosition = hit.point;
+                cachedGroundHeight = hit.point.y;
+                lastGroundCheckTime = Time.time;
                 Debug.Log($"[LegendaryPetAI] {controller.PetName}: 지면 spawnPosition 설정 - {spawnPosition}");
             }
             else
             {
                 // Raycast 실패 시 현재 위치 사용
                 spawnPosition = transform.position;
+                cachedGroundPosition = transform.position;
+                cachedGroundHeight = transform.position.y;
+                lastGroundCheckTime = Time.time;
                 Debug.LogWarning($"[LegendaryPetAI] {controller.PetName}: 지면을 찾을 수 없음, 현재 위치 사용 - {spawnPosition}");
             }
         }
@@ -471,9 +485,9 @@ namespace LegendaryPet
                 }
                 else
                 {
-                    // 최후의 수단: 현재 위치에서 아래로 레이캐스트하여 지면 찾기
+                    // 최후의 수단: 현재 위치에서 아래로 레이캐스트하여 지면 찾기 (거리 단축)
                     RaycastHit groundHit;
-                    if (Physics.Raycast(transform.position, Vector3.down, out groundHit, 1000f))
+                    if (Physics.Raycast(transform.position, Vector3.down, out groundHit, MAX_RAYCAST_DISTANCE))
                     {
                         // 지면에서 NavMesh 위치 찾기
                         if (NavMesh.SamplePosition(groundHit.point, out navHit, 100f, NavMesh.AllAreas))

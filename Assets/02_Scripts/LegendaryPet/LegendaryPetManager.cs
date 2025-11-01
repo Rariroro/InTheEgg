@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -94,6 +95,12 @@ namespace LegendaryPet
 
         // 선물과 바닥 효과를 연결하는 딕셔너리
         private Dictionary<GameObject, GameObject> giftGroundEffects = new Dictionary<GameObject, GameObject>();
+
+        // 선물 회전 코루틴을 관리하는 딕셔너리 (메모리 누수 방지)
+        private Dictionary<GameObject, Coroutine> giftRotationCoroutines = new Dictionary<GameObject, Coroutine>();
+
+        // 실행 중인 비행 코루틴들을 관리하는 리스트 (메모리 누수 방지)
+        private List<Coroutine> flyingCoroutines = new List<Coroutine>();
 
         // 순차 스폰을 위한 변수들
         private int currentLegendSpawnIndex = 0;
@@ -494,8 +501,9 @@ namespace LegendaryPet
                 Debug.Log($"[LegendaryPetManager] 바닥 효과 생성: {giftPosition}");
             }
 
-            // 선물 회전 애니메이션 추가 - 첫 프레임 대기는 코루틴 내부에서 처리
-            StartCoroutine(RotateGift(gift));
+            // 선물 회전 애니메이션 추가 - 코루틴 참조 저장 (메모리 누수 방지)
+            Coroutine rotationCoroutine = StartCoroutine(RotateGift(gift));
+            giftRotationCoroutines[gift] = rotationCoroutine;
 
             // 선물 딕셔너리에 추가
             pendingGifts.Add(gift, legendaryPetId);
@@ -682,7 +690,9 @@ namespace LegendaryPet
             yield return new WaitForSeconds(0.5f);
 
             // B → C → D → F 순차적으로 날아가기
-            yield return StartCoroutine(FlyPetThroughWaypoints(legendObject, controller));
+            Coroutine flyingCoroutine = StartCoroutine(FlyPetThroughWaypoints(legendObject, controller));
+            flyingCoroutines.Add(flyingCoroutine);
+            yield return flyingCoroutine;
         }
 
         // 여러 경유지를 거쳐 날아가는 코루틴
@@ -1368,15 +1378,44 @@ namespace LegendaryPet
         
         private void OnDestroy()
         {
+            // 모든 코루틴 즉시 정지 (메모리 누수 방지)
+            StopAllCoroutines();
+
             if (instance == this)
             {
                 instance = null;
             }
-            
+
+            // 선물 회전 코루틴 정리
+            if (giftRotationCoroutines != null)
+            {
+                foreach (var kvp in giftRotationCoroutines)
+                {
+                    if (kvp.Value != null)
+                    {
+                        StopCoroutine(kvp.Value);
+                    }
+                }
+                giftRotationCoroutines.Clear();
+            }
+
+            // 비행 코루틴 정리
+            if (flyingCoroutines != null)
+            {
+                foreach (var coroutine in flyingCoroutines)
+                {
+                    if (coroutine != null)
+                    {
+                        StopCoroutine(coroutine);
+                    }
+                }
+                flyingCoroutines.Clear();
+            }
+
             // 대기 중인 선물 정리
             if (pendingGifts != null)
             {
-                foreach (var gift in pendingGifts.Keys)
+                foreach (var gift in pendingGifts.Keys.ToList())
                 {
                     if (gift != null && Application.isPlaying)
                     {
@@ -1389,7 +1428,7 @@ namespace LegendaryPet
             // 바닥 효과 정리
             if (giftGroundEffects != null)
             {
-                foreach (var groundEffect in giftGroundEffects.Values)
+                foreach (var groundEffect in giftGroundEffects.Values.ToList())
                 {
                     if (groundEffect != null && Application.isPlaying)
                     {
@@ -1398,13 +1437,13 @@ namespace LegendaryPet
                 }
                 giftGroundEffects.Clear();
             }
-            
+
             // 레전드 펫 리스트 정리
             if (legendaryPets != null)
             {
                 legendaryPets.Clear();
             }
-            
+
             // 이벤트 구독 해제
             OnLegendaryPetSpawned = null;
             OnLegendaryPetRemoved = null;

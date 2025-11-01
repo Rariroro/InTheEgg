@@ -118,9 +118,16 @@ public class EmotionManager : MonoBehaviour
             Transform parentTransform = pet.petModelTransform != null ? pet.petModelTransform : pet.transform;
             particleInstance.transform.SetParent(parentTransform);
 
+            // 파티클 생명주기 관리 개선 (메모리 누수 방지)
             if (duration > 0)
             {
                 Destroy(particleInstance, duration);
+            }
+            else
+            {
+                // duration이 0이거나 음수면 기본 시간 후 제거 (메모리 누수 방지)
+                Destroy(particleInstance, 10f);
+                Debug.LogWarning($"[EmotionManager] 파티클 {emotion}의 duration이 {duration}입니다. 10초 후 자동 제거됩니다.");
             }
             return particleInstance;
         }
