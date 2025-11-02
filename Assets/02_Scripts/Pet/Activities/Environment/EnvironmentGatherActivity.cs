@@ -36,8 +36,18 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 환경 모이기는 높은 우선순위 (일반 모이기보다는 낮음)
+
+        // 급한 욕구가 있으면 우선순위를 낮춤
+        if (needs != null)
+        {
+            // 매우 배고프거나 매우 졸릴 때는 환경 이벤트 참여 억제
+            if (needs.Hunger >= 85f || needs.Sleepiness >= 85f)
+            {
+                return 5.0f; // 욕구가 급할 때는 낮은 우선순위
+            }
+        }
+
+        // 일반 상황에서는 중간 우선순위
         return 15.0f;
     }
     

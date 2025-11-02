@@ -79,21 +79,23 @@ public class ButterflyPlayActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 기본 욕구가 급한 경우 낮은 우선순위
-        if (needs.Hunger > 70f || needs.Sleepiness > 80f)
-            return 5f;
-            
+
+        // 기본 욕구가 급한 경우 완전히 차단
+        if (needs != null && (needs.Hunger > 70f || needs.Sleepiness > 80f))
+        {
+            return 0f; // 배고프거나 졸리면 나비와 놀지 않음
+        }
+
         // 나비가 가까이 있을수록 높은 우선순위
         if (targetButterfly != null)
         {
             float distance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
             float distancePriority = Mathf.Lerp(20f, 10f, distance / DETECTION_RANGE);
-            
+
             // Playful 성격 보너스
             return distancePriority + 5f;
         }
-        
+
         return 15f; // 기본 놀이 우선순위
     }
     

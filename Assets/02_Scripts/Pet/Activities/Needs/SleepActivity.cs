@@ -45,15 +45,28 @@ public class SleepActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 이미 잠을 자거나 잠잘 곳을 찾는 중이라면 높은 우선순위
+
+        // 이미 잠을 자거나 잠잘 곳을 찾는 중이라면 매우 높은 우선순위
         if (sleepingController.IsSleepingOrSeeking())
-            return 2.0f;
-            
+            return 30.0f; // 수면 중에는 거의 중단되지 않도록
+
         // 졸림 수치에 비례하여 우선순위 증가
         float sleepiness = needs != null ? needs.Sleepiness : pet.Needs.Sleepiness;
-        // 기본 우선순위 0.2f를 부여하고, 졸음 수치에 따라 점진적으로 증가
-        return 0.2f + ((sleepiness - 70f) / 30f); // 0.2 ~ 1.2
+
+        // 생존 본능을 반영한 우선순위
+        // 70일 때: 8.0, 85일 때: 15.0, 100일 때: 25.0
+        if (sleepiness >= 85f)
+        {
+            // 매우 졸림 - 긴급 수준
+            return 15.0f + ((sleepiness - 85f) / 15f * 10.0f); // 15.0 ~ 25.0
+        }
+        else if (sleepiness >= 70f)
+        {
+            // 졸림 시작 - 중간 수준
+            return 8.0f + ((sleepiness - 70f) / 15f * 7.0f); // 8.0 ~ 15.0
+        }
+
+        return 0f;
     }
     
     

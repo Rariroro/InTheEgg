@@ -62,17 +62,28 @@ public class EatActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 이미 먹고 있거나 찾으러 가는 중이라면 높은 우선순위
+
+        // 이미 먹고 있거나 찾으러 가는 중이라면 매우 높은 우선순위
         if (feedingController.IsEatingOrSeeking())
-            return 2.0f;
-            
+            return 35.0f; // 먹는 중에는 거의 중단되지 않도록
+
         // 배고픔 수치에 비례하여 우선순위 증가
         float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
-        
-        // 배고픔 70 이상이면 기본 0.5 + 추가 우선순위
-        // 70일 때: 0.5, 85일 때: 1.0, 100일 때: 1.5
-        return 0.5f + ((hunger - 70f) / 30f); // 0.5 ~ 1.5
+
+        // 생존 본능을 반영한 우선순위
+        // 70일 때: 12.0, 85일 때: 20.0, 100일 때: 30.0
+        if (hunger >= 85f)
+        {
+            // 매우 배고픔 - 긴급 수준
+            return 20.0f + ((hunger - 85f) / 15f * 10.0f); // 20.0 ~ 30.0
+        }
+        else if (hunger >= 70f)
+        {
+            // 배고픔 시작 - 중간 수준
+            return 12.0f + ((hunger - 70f) / 15f * 8.0f); // 12.0 ~ 20.0
+        }
+
+        return 0f;
     }
     
     public override void Start()
