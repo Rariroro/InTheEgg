@@ -167,9 +167,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
     public override void Update()
     {
         // 감정 표현 (한 번만)
-        if (!hasShowedEmotion && emotionManager != null)
+        if (!hasShowedEmotion)
         {
-            emotionManager.ShowPetEmotion(pet, EmotionType.Thought_Butterfly, PLAY_DURATION);
+            // PetEmotionController를 통해 감정 표시 (기존 감정 자동 제거)
+            pet.ShowEmotion(EmotionType.Thought_Butterfly, 999f);
             hasShowedEmotion = true;
         }
 
