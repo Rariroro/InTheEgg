@@ -49680,7 +49680,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
       propertyPath: emotionAssets.Array.size
-      value: 28
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
       propertyPath: emotionAssets.Array.data[24].emotionType
@@ -49699,6 +49699,10 @@ PrefabInstance:
       value: 28
       objectReference: {fileID: 0}
     - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: emotionAssets.Array.data[28].emotionType
+      value: 29
+      objectReference: {fileID: 0}
+    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
       propertyPath: emotionAssets.Array.data[24].particlePrefab
       value: 
       objectReference: {fileID: 118748, guid: 7373e1bee2c884cf4be35b699da18ad9, type: 3}
@@ -49714,6 +49718,10 @@ PrefabInstance:
       propertyPath: emotionAssets.Array.data[27].particlePrefab
       value: 
       objectReference: {fileID: 118748, guid: 6793101deea5943eb8db59651f9fe339, type: 3}
+    - target: {fileID: 9115458806445942368, guid: e307c1dbcf0ab4e818b125d3735491a3, type: 3}
+      propertyPath: emotionAssets.Array.data[28].particlePrefab
+      value: 
+      objectReference: {fileID: 118748, guid: 7b6df2aad803442c0a2d6784195989ea, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
