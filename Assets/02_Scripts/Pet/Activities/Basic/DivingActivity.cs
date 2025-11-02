@@ -205,6 +205,8 @@ public class DivingActivity : PetActivityAdapter
             return;
         }
 
+        // 다이빙 지점으로 이동 시작할 때 Thought_Diving 감정 표시
+        pet.ShowEmotion(EmotionType.Thought_Diving, 10f);
 
         divingCoroutine = pet.StartCoroutine(MoveToSpotAndDive());
     }
@@ -435,10 +437,9 @@ public class DivingActivity : PetActivityAdapter
         jumpTargetPosition.y = waterSurfaceY;
 
         // ===== Phase 5: 다이빙 시작 =====
-        
-        // 다이빙 전 즐거운 감정 표현
-        pet.ShowEmotion(EmotionType.Happy);
-        
+
+        // 점프 직전에는 감정 표시 없음 (기존 Thought_Diving 자동 제거됨)
+
         // 점프 애니메이션 재생
         if (pet.animator != null)
         {
@@ -485,7 +486,7 @@ public class DivingActivity : PetActivityAdapter
         }
 
         // ===== Phase 7: 물 속 행동 트리거 =====
-        
+
         // PetWaterBehaviorController에 다이빙 시퀀스 시작 알림
         // 이 컨트롤러가 물 속에서의 특별한 행동을 처리
         var waterController = pet.GetComponent<PetWaterBehaviorController>();
@@ -495,7 +496,10 @@ public class DivingActivity : PetActivityAdapter
             waterController.StartDivingSequence(waterSurfaceY);
             // 물 속 행동 시퀀스 시작 (수영, 물방울 효과 등)
         }
-        
+
+        // 물 속에 들어간 후 Happy 감정 표시
+        pet.ShowEmotion(EmotionType.Happy, 3f);
+
         // 물 속에서 3초간 대기 (다이빙 연출)
         yield return new WaitForSeconds(3f);
 

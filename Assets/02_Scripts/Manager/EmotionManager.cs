@@ -33,7 +33,8 @@ public enum EmotionType
     Thought_TresureHunt,  // 보물찾기 중 생각 (프리팹 이름과 일치)
     Tresure,              // 보물 발견 (프리팹 이름과 일치)
     Thought_Butterfly,    // 나비 놀이 중 생각
-    Thought_ClimbingTree  // 나무 오르기 중 생각
+    Thought_ClimbingTree, // 나무 오르기 중 생각
+    Thought_Diving        // 다이빙 중 생각
 }
 
 // 감정 아이콘 관리 클래스
