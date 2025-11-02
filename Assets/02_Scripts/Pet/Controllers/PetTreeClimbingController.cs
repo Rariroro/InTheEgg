@@ -107,8 +107,8 @@ public class PetTreeClimbingController : PetControllerBase
         // ★★★ 행동 잠금 시작 ★★★
         petController.State.SetActionLocked(true);
 
-        // 나무로 이동 시작할 때 Thought_ClimbingTree 감정 표시
-        petController.ShowEmotion(EmotionType.Thought_ClimbingTree, 5f);
+        // 나무로 이동 시작할 때 Thought_ClimbingTree 감정 표시 (활동 종료까지 지속)
+        petController.ShowEmotion(EmotionType.Thought_ClimbingTree, 999f);
 
         Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
 

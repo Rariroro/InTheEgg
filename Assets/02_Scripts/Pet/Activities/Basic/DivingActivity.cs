@@ -205,8 +205,8 @@ public class DivingActivity : PetActivityAdapter
             return;
         }
 
-        // 다이빙 지점으로 이동 시작할 때 Thought_Diving 감정 표시
-        pet.ShowEmotion(EmotionType.Thought_Diving, 10f);
+        // 다이빙 지점으로 이동 시작할 때 Thought_Diving 감정 표시 (점프 직전까지 지속)
+        pet.ShowEmotion(EmotionType.Thought_Diving, 999f);
 
         divingCoroutine = pet.StartCoroutine(MoveToSpotAndDive());
     }
