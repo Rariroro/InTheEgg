@@ -199,20 +199,23 @@ public class ButterflyPlayActivity : PetActivityAdapter
     public override void Stop()
     {
         // Debug.Log($"[ButterflyPlayActivity] {pet.petName}의 나비 놀이 종료");
-        
+
         // 코루틴 정지
         if (playCoroutine != null)
         {
             pet.StopCoroutine(playCoroutine);
             playCoroutine = null;
         }
-        
+
+        // 나비 놀이 감정 제거
+        pet.HideEmotion();
+
         // 속도 원래대로
         if (pet.agent != null)
         {
             pet.agent.speed = pet.baseSpeed;
         }
-        
+
         // 애니메이션 잠금 해제
         pet.State.SetActionLocked(false);
         

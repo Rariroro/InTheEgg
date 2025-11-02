@@ -113,7 +113,10 @@ public class ClimbTreeActivity : PetActivityAdapter
     public override void Stop()
     {
         // Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 중단");
-        
+
+        // 나무 오르기 감정 제거
+        pet.HideEmotion();
+
         // 다른 고순위 행동에 의해 중단될 경우, 나무타기 상태를 강제로 취소
         climbingController.ForceCancelClimbing();
     }

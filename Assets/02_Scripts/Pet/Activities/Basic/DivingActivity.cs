@@ -555,6 +555,9 @@ public class DivingActivity : PetActivityAdapter
             // 코루틴 중단 완료
         }
 
+        // 다이빙 감정 제거
+        pet.HideEmotion();
+
         // 상태 플래그 초기화
         isMovingToSpot = false;
         isDiving = false;
