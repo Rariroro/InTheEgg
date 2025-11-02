@@ -56,12 +56,26 @@ public class PetAnimationController : PetControllerBase
         // 애니메이션 속도 동기화
         SyncAnimationSpeed();
 
-        // 특수 애니메이션이나 연속 애니메이션이 재생 중이면 자동 애니메이션 업데이트 건너뛰기
+        // 특수 애니메이션이 재생 중이면 건너뛰기
+        if (isSpecialAnimationPlaying)
+            return;
+
         // 나무를 찾아 이동 중일 때도 자동 업데이트 건너뛰기
         var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
-        if (isSpecialAnimationPlaying || isContinuousAnimationPlaying || 
-            (treeClimbingController != null && treeClimbingController.IsSearchingForTree()))
+        if (treeClimbingController != null && treeClimbingController.IsSearchingForTree())
             return;
+
+        // 연속 애니메이션 중이어도 Walk/Run은 자동 업데이트 허용
+        if (isContinuousAnimationPlaying)
+        {
+            // Walk/Run 애니메이션은 이동 상태와 동기화 필요
+            if (continuousAnimationType == PetAnimationType.Walk ||
+                continuousAnimationType == PetAnimationType.Run)
+            {
+                UpdateMovementAnimation();  // 이동 상태 확인 및 업데이트
+            }
+            return;
+        }
 
         // 이동 상태에 따른 자동 애니메이션 설정
         UpdateMovementAnimation();

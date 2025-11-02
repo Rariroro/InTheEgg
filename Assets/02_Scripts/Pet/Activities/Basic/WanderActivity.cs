@@ -265,13 +265,17 @@ public class WanderActivity : PetActivityAdapter
         
         try { pet.agent.isStopped = true; }
         catch { /* 예외 무시 */ }
-        
+
         var anim = pet.GetComponent<PetAnimationController>();
-        if (anim != null)
+        // Walking/Running이 아닐 때만 애니메이션 정지
+        if (state != BehaviorState.Walking && state != BehaviorState.Running)
         {
-            anim.StopContinuousAnimation();
+            if (anim != null)
+            {
+                anim.StopContinuousAnimation();
+            }
         }
-        
+
         switch (state)
         {
             case BehaviorState.Idle:
@@ -290,8 +294,9 @@ public class WanderActivity : PetActivityAdapter
                     walkSpeed *= 0.8f; // 게으른 펫은 더 천천히
                 else if (pet.personality == PetAIProperties.Personality.Brave)
                     walkSpeed *= 1.1f; // 용감한 펫은 더 빠르게
-                    
+
                 SafeSetAgentMovement(walkSpeed, false);
+                anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
                 SetRandomDestination();
                 break;
                 
@@ -302,8 +307,9 @@ public class WanderActivity : PetActivityAdapter
                     runSpeed *= 1.2f; // 수줍은 펫은 도망갈 때 더 빠르게
                 else if (pet.personality == PetAIProperties.Personality.Playful)
                     runSpeed *= 1.3f; // 장난기 많은 펫은 뛸 때 더 신나게
-                    
+
                 SafeSetAgentMovement(runSpeed, false);
+                anim?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
                 SetRandomDestination();
                 break;
                 

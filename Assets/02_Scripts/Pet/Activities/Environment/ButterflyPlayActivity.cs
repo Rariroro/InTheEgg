@@ -167,10 +167,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // 감정 표현 (한 번만)
         if (!hasShowedEmotion && emotionManager != null)
         {
-            emotionManager.ShowPetEmotion(pet, EmotionType.Happy, 3f);
+            emotionManager.ShowPetEmotion(pet, EmotionType.Thought_Butterfly, PLAY_DURATION);
             hasShowedEmotion = true;
         }
-        
+
         // 나비가 사라졌는지 체크
         if (targetButterfly == null || !targetButterfly.activeInHierarchy)
         {
@@ -178,7 +178,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
             isPlayingWithButterfly = false;
             return;
         }
-        
+
         // 놀이 시간 초과 체크
         if (Time.time - playStartTime > PLAY_DURATION)
         {
@@ -186,7 +186,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
             isPlayingWithButterfly = false;
             return;
         }
-        
+
         // 방향 전환 처리
         if (pet.movementController != null)
         {
@@ -394,12 +394,6 @@ public class ButterflyPlayActivity : PetActivityAdapter
             }
             
             playTime += 2f;
-            
-            // 가끔 기쁨 표현
-            if (Random.Range(0f, 1f) < 0.3f && emotionManager != null)
-            {
-                emotionManager.ShowPetEmotion(pet, EmotionType.Happy, 1f);
-            }
         }
     }
     

@@ -31,7 +31,8 @@ public enum EmotionType
     Thought_Food_Fruit,
     Thought_Food_Vegetable,
     Thought_TresureHunt,  // 보물찾기 중 생각 (프리팹 이름과 일치)
-    Tresure               // 보물 발견 (프리팹 이름과 일치)
+    Tresure,              // 보물 발견 (프리팹 이름과 일치)
+    Thought_Butterfly     // 나비 놀이 중 생각
 }
 
 // 감정 아이콘 관리 클래스
