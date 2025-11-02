@@ -73,6 +73,10 @@ public class SleepActivity : PetActivityAdapter
     public override void Start()
     {
         // Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 시작 (졸림: {pet.Needs.Sleepiness:F1})");
+
+        // 졸림 감정 즉시 표시
+        pet.ShowEmotion(EmotionType.Sleepy, 999f);
+
         isPreparingToSleep = sleepingController.TryStartSleepingSequence();
         searchTimer = 0f;
     }
@@ -94,13 +98,10 @@ public class SleepActivity : PetActivityAdapter
                 
                 // PetMovementController를 통해 더 넓은 반경으로 목적지를 설정
                 pet.GetComponent<PetMovementController>()?.SetRandomDestination(SLEEP_SEARCH_RADIUS);
-                
-                // 졸리다는 감정 표현을 주기적으로 표시
-                if (pet.emotionController != null)
-                {
-                    pet.emotionController.ShowEmotion(EmotionType.Sleepy, WIDE_WANDER_INTERVAL);
-                }
-                
+
+                // 감정은 이미 Start()에서 표시했으므로 중복 표시 제거
+                // (기존 코드 제거)
+
                 // 다시 잠잘 곳 탐색을 시도
                 isPreparingToSleep = sleepingController.TryStartSleepingSequence();
             }
@@ -115,6 +116,10 @@ public class SleepActivity : PetActivityAdapter
     public override void Stop()
     {
         // Debug.Log($"[SleepActivity] {pet.petName}: 수면 활동 종료");
+
+        // 졸림 감정 제거
+        pet.HideEmotion();
+
         sleepingController.InterruptSleep();
     }
 }

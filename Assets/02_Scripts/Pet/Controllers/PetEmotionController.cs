@@ -183,6 +183,10 @@ public class PetEmotionController : MonoBehaviour
             Destroy(activeParticle);
             activeParticle = null;
         }
+
+        // 배고픔 감정 일시 중단 상태 해제
+        // Activity 전환 시 자동으로 재활성화되도록
+        hungerEmotionPaused = false;
     }
     
     /// <summary>

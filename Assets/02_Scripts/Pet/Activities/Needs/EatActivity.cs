@@ -92,7 +92,10 @@ public class EatActivity : PetActivityAdapter
         searchTimer = 0f;
         isWandering = false;
         searchFailureCount = 0; // 탐색 실패 횟수 초기화
-        
+
+        // 배고픔 감정 즉시 표시
+        pet.ShowEmotion(EmotionType.Hungry, 999f);
+
         // 초기 탐색 범위로 음식 탐색 시작
         float initialRadius = CalculateSearchRadius();
         if (!feedingController.TryStartFeedingSequence(initialRadius))
@@ -183,6 +186,10 @@ public class EatActivity : PetActivityAdapter
     public override void Stop()
     {
         // Debug.Log($"[EatActivity] {pet.petName}: 식사 활동 종료");
+
+        // 배고픔 감정 제거
+        pet.HideEmotion();
+
         // 먹이 찾기 중단
         feedingController.CancelFeeding();
         isWandering = false;
