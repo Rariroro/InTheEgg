@@ -107,6 +107,9 @@ public class PetTreeClimbingController : PetControllerBase
         // ★★★ 행동 잠금 시작 ★★★
         petController.State.SetActionLocked(true);
 
+        // 나무로 이동 시작할 때 Thought_ClimbingTree 감정 표시
+        petController.ShowEmotion(EmotionType.Thought_ClimbingTree, 5f);
+
         Transform nearestTree = TreeManager.Instance.FindNearestAvailableTree(transform.position, treeDetectionRadius);
 
         if (nearestTree != null && TreeManager.Instance.OccupyTree(nearestTree, petController))
@@ -119,6 +122,9 @@ public class PetTreeClimbingController : PetControllerBase
                 // 1. 나무 오르기
                 // ClimbUpPhase 내부에서는 isActionLocked를 제어할 필요가 없어졌습니다.
                 yield return StartCoroutine(ClimbUpPhase(nearestTree));
+
+                // 나무에 올라간 후 Thought_ClimbingTree 감정 제거 (이미 표시 중인 감정이 자동으로 사라짐)
+                // 새로운 감정(Happy)은 RestOnTree에서 표시됨
 
                 // 2. 나무 위에서 휴식
                 yield return StartCoroutine(RestOnTree());
@@ -265,28 +271,12 @@ private IEnumerator LookAroundOnTree()
 }
 
 /// <summary>
-/// 성격별 나무 위 감정 표현
+/// 나무 위 감정 표현 (모든 성격 동일하게 Happy)
 /// </summary>
 private void ShowTreeEmotionByPersonality()
 {
-    switch (petController.personality)
-    {
-        case PetAIProperties.Personality.Lazy:
-            petController.ShowEmotion(EmotionType.Sleepy, 3f);
-            break;
-        case PetAIProperties.Personality.Playful:
-            petController.ShowEmotion(EmotionType.Happy, 3f);
-            break;
-        case PetAIProperties.Personality.Brave:
-            petController.ShowEmotion(EmotionType.Happy, 2f);
-            break;
-        case PetAIProperties.Personality.Shy:
-            // 수줍은 성격은 조용히 있음
-            break;
-        default:
-            petController.ShowEmotion(EmotionType.Happy, 2f);
-            break;
-    }
+    // 모든 성격의 펫이 나무에 올라가면 Happy 감정을 표시
+    petController.ShowEmotion(EmotionType.Happy, 3f);
 }
 
     /// <summary>
