@@ -3,10 +3,35 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 # InTheEgg - AI 협업 가이드
+
+## 🚨 핵심 원칙
 - 한글로 소통
 - **중요: 무조건 동의하지 말고, 실제 최적의 방법을 고려해서 대답하기**
 - **사용자 제안이 최선이 아니면 더 나은 대안 제시하기**
 - **기술적으로 잘못된 부분은 명확히 지적하기**
+
+## 📌 빠른 참조
+
+### 절대 규칙 (위반 시 버그 발생)
+```csharp
+// ❌ 절대 금지
+pet.isHolding                           // 직접 속성 접근
+GameObject.Find("Pet")                  // 런타임 검색
+transform.position = newPos              // 펫 직접 이동
+Instantiate(effect)                     // 풀링 없이 생성
+
+// ✅ 올바른 방법
+pet.State.IsHolding                     // State 프로퍼티 사용
+petManager.GetPet()                     // 캐시된 참조
+movementController.MoveTo(newPos)       // 컨트롤러 사용
+EffectPool.Instance.Get()               // Object Pool 사용
+```
+
+### 성능 핵심 포인트
+- **Update 주기**: AI (0.5초), 상태체크 (1초), 욕구 (2초)
+- **Object Pool 필수**: 이펙트, 이모티콘, UI 팝업
+- **캐싱 필수**: FindObject 결과, GetComponent 결과
+- **메모리**: 컬렉션 재사용, StringBuilder 사용
 
 ## 프로젝트 개요
 Unity 기반의 펫 시뮬레이션 게임으로, 다양한 동물 펫들이 AI를 통해 자율적으로 행동하고 상호작용하는 프로젝트입니다. Unity 6000.0 버전을 사용하며 Universal Render Pipeline(URP)로 구성되어 있습니다.
@@ -140,7 +165,145 @@ public enum PetStatus {
 
 ## 개발 가이드라인
 
-### 코드 컨벤션
+### 🎯 성능 최적화 가이드라인
+
+#### Object Pooling
+```csharp
+// 잘못된 예: 매번 새로운 오브젝트 생성
+GameObject effect = Instantiate(effectPrefab);
+Destroy(effect, 2f);
+
+// 올바른 예: Object Pool 사용
+GameObject effect = EffectPool.Instance.Get();
+StartCoroutine(ReturnToPoolAfter(effect, 2f));
+```
+- **필수 적용 대상**: 이펙트, 프로젝타일, UI 팝업, 감정 이모티콘
+- **Pool 크기**: 동시 사용 최대 개수의 1.5배로 설정
+- **자동 반환**: 사용 후 반드시 Pool에 반환
+
+#### Update 최적화
+```csharp
+// 잘못된 예: 매 프레임 무거운 연산
+void Update() {
+    GameObject[] allPets = GameObject.FindGameObjectsWithTag("Pet");
+    // ...
+}
+
+// 올바른 예: 캐싱과 주기적 업데이트
+private float updateTimer = 0f;
+private const float UPDATE_INTERVAL = 0.5f;
+
+void Update() {
+    updateTimer += Time.deltaTime;
+    if (updateTimer >= UPDATE_INTERVAL) {
+        updateTimer = 0f;
+        UpdatePetLogic();
+    }
+}
+```
+- **Update 사용 최소화**: 꼭 필요한 경우만 사용
+- **주기적 업데이트**: AI는 0.5초, 상태 체크는 1초 간격
+- **캐싱 필수**: FindObject 계열 메서드 결과는 반드시 캐싱
+
+#### 메모리 관리
+```csharp
+// 잘못된 예: 매번 새로운 배열 할당
+public Pet[] GetNearbyPets() {
+    return nearbyPets.ToArray(); // GC 발생
+}
+
+// 올바른 예: 재사용 가능한 컬렉션
+private readonly List<Pet> nearbyPetsCache = new List<Pet>();
+public List<Pet> GetNearbyPets() {
+    nearbyPetsCache.Clear();
+    nearbyPetsCache.AddRange(nearbyPets);
+    return nearbyPetsCache;
+}
+```
+- **문자열 연결**: StringBuilder 사용 (3개 이상 연결 시)
+- **컬렉션 재사용**: Clear() 후 재사용
+- **구조체 활용**: 작은 데이터는 struct 사용 고려
+
+#### 렌더링 최적화
+- **DrawCall 최소화**: 같은 머티리얼 사용, 배칭 활용
+- **LOD 설정**: 거리별 상세도 조절
+- **컬링 마스크**: 카메라별 렌더링 레이어 분리
+- **텍스처 압축**: 플랫폼별 최적 압축 포맷 사용
+
+### 📋 코드 품질 및 일관성 기준
+
+#### 네이밍 컨벤션
+```csharp
+// 클래스: PascalCase
+public class PetController { }
+
+// 인터페이스: I + PascalCase
+public interface IPetActivity { }
+
+// 메서드: PascalCase
+public void UpdateMovement() { }
+
+// 변수: camelCase
+private float movementSpeed;
+
+// 상수: UPPER_SNAKE_CASE
+private const float MAX_SPEED = 10f;
+
+// 프로퍼티: PascalCase
+public bool IsMoving { get; private set; }
+```
+
+#### 코드 구조 규칙
+- **메서드 크기**: 최대 30줄 (화면 하나에 보이는 크기)
+- **클래스 크기**: 최대 300줄 (복잡한 경우 partial class로 분리)
+- **순환 복잡도**: 최대 10 (if/for/while 중첩 제한)
+- **매개변수 개수**: 최대 4개 (더 필요하면 객체로 묶기)
+
+#### 주석 작성 규칙
+```csharp
+/// <summary>
+/// 펫의 우선순위를 계산합니다.
+/// </summary>
+/// <param name="state">현재 펫 상태</param>
+/// <param name="needs">펫의 욕구 상태</param>
+/// <returns>0-100 사이의 우선순위 값</returns>
+public float GetPriority(PetState state, PetNeeds needs) {
+    // 긴급 상황 체크 (우선순위 50+)
+    if (needs.Hunger > 90f) {
+        return 60f; // 매우 배고픔
+    }
+
+    // TODO: 날씨 시스템 구현 후 날씨 영향 추가
+    // FIXME: 특정 성격의 펫에서 우선순위 계산 오류
+
+    return basePriority;
+}
+```
+- **public 메서드**: XML 문서 주석 필수
+- **복잡한 로직**: 인라인 주석으로 설명
+- **TODO/FIXME**: 추후 작업 필요 사항 표시
+- **매직 넘버 금지**: 상수로 정의하고 의미 설명
+
+#### 에러 처리
+```csharp
+// 잘못된 예: 에러 무시
+try {
+    LoadPetData();
+} catch { }
+
+// 올바른 예: 적절한 에러 처리
+try {
+    LoadPetData();
+} catch (FileNotFoundException e) {
+    Debug.LogError($"펫 데이터 파일을 찾을 수 없습니다: {e.Message}");
+    LoadDefaultPetData();
+} catch (Exception e) {
+    Debug.LogError($"펫 데이터 로드 중 오류 발생: {e}");
+    throw; // 복구 불가능한 경우 재발생
+}
+```
+
+### 기존 코드 컨벤션
 1. **상태 접근**: 항상 `pet.State.속성명` 패턴 사용
 2. **감정 표현**: `pet.ShowEmotion()` 메서드 사용 (PetEmotionController가 처리)
 3. **null 체크**: 펫 관련 작업 시 항상 null 체크 수행
@@ -193,7 +356,36 @@ public class NewActivity : PetActivityAdapter {
 }
 ```
 
-### 주의사항
+### ⚠️ 중요 규칙 체크리스트
+
+#### 필수 준수 사항 (MUST)
+- [ ] **상태 접근은 반드시 State 프로퍼티 사용**: `pet.State.IsHolding` ✅ / `pet.isHolding` ❌
+- [ ] **Activity는 반드시 PetAI.RegisterActivities()에 등록**
+- [ ] **NavMeshAgent 제어는 반드시 PetMovementController 사용**
+- [ ] **감정 표현은 반드시 PetEmotionController.ShowEmotion() 사용**
+- [ ] **펫 데이터 접근 시 반드시 null 체크 수행**
+- [ ] **코루틴 종료 시 반드시 StopCoroutine() 호출**
+- [ ] **Object Pool 대상은 반드시 풀링 사용** (이펙트, 이모티콘 등)
+
+#### 금지 사항 (MUST NOT)
+- [ ] **GameObject.Find() 사용 금지** → 캐싱 또는 참조 사용
+- [ ] **매 프레임 new 할당 금지** → 재사용 가능한 객체 사용
+- [ ] **Update()에서 무거운 연산 금지** → 주기적 업데이트 사용
+- [ ] **직접 Transform 조작 금지** (펫 이동 시) → NavMeshAgent 사용
+- [ ] **매직 넘버 사용 금지** → 상수로 정의
+- [ ] **try-catch로 에러 숨기기 금지** → 적절한 에러 처리
+- [ ] **Interactions 폴더의 기존 구현 수정 금지** → 상속으로 확장
+
+#### 권장 사항 (SHOULD)
+- [ ] **메서드는 30줄 이내로 작성**
+- [ ] **클래스는 300줄 이내로 유지** (초과 시 partial class 고려)
+- [ ] **public 메서드에 XML 주석 작성**
+- [ ] **복잡한 로직에 인라인 주석 추가**
+- [ ] **기능 추가 시 별도 컨트롤러 생성 고려**
+- [ ] **문자열 3개 이상 연결 시 StringBuilder 사용**
+- [ ] **성능 크리티컬한 부분은 프로파일러로 검증**
+
+### 기존 주의사항
 1. **직접 속성 접근 금지**: `pet.isHolding` (X) → `pet.State.IsHolding` (O)
 2. **PetController는 partial class**: 분리된 파일에서 확장 가능
 3. **컨트롤러 단일 책임**: 기능 추가 시 별도 컨트롤러 생성 고려
@@ -223,11 +415,43 @@ Unity -batchmode -quit -projectPath . -buildTarget iOS
 Unity -batchmode -quit -projectPath . -buildTarget Android
 ```
 
-### 디버깅 팁
-1. **상태 확인**: PetState의 CurrentStatus 로그 출력
-2. **AI 디버깅**: PetAI.UpdateAI() 메서드에 브레이크포인트 설정
-3. **상호작용 디버깅**: BasePetInteraction의 로그 확인
-4. **Activity 디버깅**: IPetActivity 구현체의 CanStart, GetPriority 메서드 확인
+### 🔍 디버깅 및 트러블슈팅
+
+#### 일반적인 문제 해결
+| 문제 | 원인 | 해결방법 |
+|------|------|----------|
+| 펫이 움직이지 않음 | NavMesh 문제 | NavMesh 재생성, Agent 설정 확인 |
+| Activity가 시작되지 않음 | 우선순위 너무 낮음 | GetPriority() 값 조정 (최소 1.0f) |
+| 감정이 표시되지 않음 | EmotionController 없음 | PetEmotionController 컴포넌트 확인 |
+| 메모리 누수 | 코루틴 미정리 | StopCoroutine() 호출 확인 |
+| 프레임 드롭 | Update 과부하 | 주기적 업데이트로 변경 |
+
+#### 디버깅 체크포인트
+```csharp
+// 1. 상태 확인
+Debug.Log($"Pet Status: {pet.State.CurrentStatus}");
+Debug.Log($"Current Activity: {pet.AI.CurrentActivity?.Name ?? "None"}");
+
+// 2. AI 우선순위 확인
+foreach(var activity in pet.AI.Activities) {
+    float priority = activity.GetPriority(pet.State, pet.Needs);
+    Debug.Log($"{activity.Name}: {priority}");
+}
+
+// 3. 성능 프로파일링
+Profiler.BeginSample("PetAI.UpdateAI");
+UpdateAI();
+Profiler.EndSample();
+
+// 4. 메모리 체크
+Debug.Log($"Total Memory: {System.GC.GetTotalMemory(false) / 1024 / 1024} MB");
+```
+
+#### 브레이크포인트 위치
+1. **PetAI.UpdateAI()**: AI 의사결정 과정
+2. **PetActivityAdapter.CanStart()**: 활동 시작 조건
+3. **PetMovementController.MoveTo()**: 이동 문제
+4. **BasePetInteraction.StartInteraction()**: 상호작용 시작
 
 ## 향후 계획
 

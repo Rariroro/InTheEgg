@@ -93,21 +93,19 @@ public class EatActivity : PetActivityAdapter
         isWandering = false;
         searchFailureCount = 0; // 탐색 실패 횟수 초기화
 
-        // 배고픔 감정 즉시 표시
-        pet.ShowEmotion(EmotionType.Hungry, 999f);
-
         // 초기 탐색 범위로 음식 탐색 시작
         float initialRadius = CalculateSearchRadius();
         if (!feedingController.TryStartFeedingSequence(initialRadius))
         {
             // Debug.Log($"[EatActivity] {pet.petName}: 주변 {initialRadius:F0}m에 음식이 없습니다. 광역 탐색을 시작합니다.");
             searchFailureCount++;
-            // 음식을 못 찾으면 즉시 배회 시작
+            // 음식을 못 찾으면 PetEmotionController가 식성에 따른 음식 감정 자동 표시
             WanderToFindFood();
         }
         else
         {
-            // 음식을 찾으면 실패 횟수 리셋
+            // 음식을 찾으면 Hungry 감정으로 변경
+            pet.ShowEmotion(EmotionType.Hungry, 999f);
             searchFailureCount = 0;
         }
     }
@@ -168,7 +166,7 @@ public class EatActivity : PetActivityAdapter
             {
                 searchFailureCount++; // 실패 횟수 증가
                 // Debug.Log($"[EatActivity] {pet.petName}: 탐색 실패 {searchFailureCount}회, 현재 범위: {currentRadius:F0}m");
-                
+
                 // 여전히 음식을 찾지 못했다면 계속 배회
                 if (!isWandering)
                 {
@@ -177,7 +175,8 @@ public class EatActivity : PetActivityAdapter
             }
             else
             {
-                // 음식을 찾으면 실패 횟수 리셋
+                // 음식을 찾으면 Hungry 감정으로 변경
+                pet.ShowEmotion(EmotionType.Hungry, 999f);
                 searchFailureCount = 0;
             }
         }
