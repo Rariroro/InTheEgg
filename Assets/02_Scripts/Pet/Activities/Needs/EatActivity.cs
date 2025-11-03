@@ -1,4 +1,5 @@
 using UnityEngine;
+using InTheEgg.Constants;
 
 /// <summary>
 /// 펫의 식사 활동을 담당하는 클래스
@@ -65,22 +66,26 @@ public class EatActivity : PetActivityAdapter
 
         // 이미 먹고 있거나 찾으러 가는 중이라면 매우 높은 우선순위
         if (feedingController.IsEatingOrSeeking())
-            return 35.0f; // 먹는 중에는 거의 중단되지 않도록
+            return EmotionConstants.PRIORITY_EATING_IN_PROGRESS; // 35.0f
 
         // 배고픔 수치에 비례하여 우선순위 증가
         float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
 
         // 생존 본능을 반영한 우선순위
-        // 70일 때: 12.0, 85일 때: 20.0, 100일 때: 30.0
-        if (hunger >= 85f)
+        if (hunger >= 90f)
         {
-            // 매우 배고픔 - 긴급 수준
-            return 20.0f + ((hunger - 85f) / 15f * 10.0f); // 20.0 ~ 30.0
+            // 극도로 배고픔 - 긴급
+            return EmotionConstants.PRIORITY_EATING_VERY_HUNGRY; // 60.0f
+        }
+        else if (hunger >= 85f)
+        {
+            // 매우 배고픔 - 높은 우선순위
+            return EmotionConstants.PRIORITY_HIGH_MIN + ((hunger - 85f) / 5f * 10.0f); // 20.0 ~ 30.0
         }
         else if (hunger >= 70f)
         {
-            // 배고픔 시작 - 중간 수준
-            return 12.0f + ((hunger - 70f) / 15f * 8.0f); // 12.0 ~ 20.0
+            // 배고픔 시작 - 중간 우선순위
+            return EmotionConstants.PRIORITY_EATING_MODERATELY_HUNGRY; // 20.0f
         }
 
         return 0f;
@@ -105,7 +110,7 @@ public class EatActivity : PetActivityAdapter
         else
         {
             // 음식을 찾으면 Hungry 감정으로 변경
-            pet.ShowEmotion(EmotionType.Hungry, 999f);
+            pet.ShowEmotion(EmotionType.Hungry, EmotionConstants.DURATION_PERSISTENT);
             searchFailureCount = 0;
         }
     }

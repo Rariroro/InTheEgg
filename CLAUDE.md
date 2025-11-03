@@ -496,6 +496,66 @@ Debug.Log($"Total Memory: {System.GC.GetTotalMemory(false) / 1024 / 1024} MB");
   - PetTreeClimbingController: 나무 오르기 행동
   - PetWaterBehaviorController: 물 속 행동 및 깊이 제어
 
+### 감정 시스템 가이드라인
+
+#### Activity에서 감정 표시 규칙
+1. **Start()**: 활동 시작 시 주요 감정 표시
+   - 지속 시간: `EmotionConstants.DURATION_PERSISTENT` (999f) 사용
+   - 활동이 끝날 때까지 유지
+2. **Update()**: 조건부 감정만 표시
+   - `hasShowedEmotion` 플래그로 중복 방지
+   - 특정 상황에서만 임시 감정 표시
+3. **Stop()**: 반드시 `pet.HideEmotion()` 호출
+   - Activity 종료 시 감정 정리
+
+#### Duration 상수 가이드
+```csharp
+// EmotionConstants에 정의된 상수 사용
+DURATION_PERSISTENT (999f) // 활동 중 계속 유지
+DURATION_VERY_SHORT (1f)   // 순간적 반응 (놀람, 발견)
+DURATION_SHORT (3f)        // 짧은 반응 (기쁨, 만족)
+DURATION_MEDIUM (5f)       // 중간 길이 (알림, 상태 표시)
+DURATION_LONG (10f)        // 기본값
+```
+
+#### 우선순위 상수 가이드
+```csharp
+// 긴급 (50+): 생존 관련, 보물 발견
+PRIORITY_EMERGENCY_MIN (50f)
+
+// 높음 (20-49): 중요한 욕구, 특별 이벤트
+PRIORITY_HIGH_MIN (20f)
+PRIORITY_HIGH_MAX (49f)
+
+// 중간 (10-19): 일반 활동, 환경 상호작용
+PRIORITY_MEDIUM_MIN (10f)
+PRIORITY_MEDIUM_MAX (19f)
+
+// 낮음 (1-9): 배회, 기본 행동
+PRIORITY_LOW_MIN (1f)
+PRIORITY_LOW_MAX (9f)
+```
+
+#### 감정 타입 네이밍 규칙
+- `Thought_*`: 생각 풍선 형태의 감정 (활동 계획/의도 표시)
+  - 예: `Thought_ClimbingTree`, `Thought_Food_Meat`
+- 기타: 순간적 감정 표현
+  - 예: `Happy`, `Sad`, `Angry`
+
+#### NavMesh 확장 메서드 사용
+```csharp
+// 이전 방식 (중복 코드)
+if (agent != null && agent.enabled && agent.isOnNavMesh)
+
+// 새로운 방식 (확장 메서드)
+if (agent.IsReady())
+
+// 기타 유용한 확장 메서드
+agent.TrySetDestination(target);
+agent.HasReachedDestination();
+agent.IsStuck();
+```
+
 ### 상호작용 시스템
 - **BasePetInteraction**: 모든 펫 간 상호작용의 기본 클래스
 - **다양한 상호작용 유형**: Chase, Fight, Race, Walk Together 등

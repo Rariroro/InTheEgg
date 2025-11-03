@@ -1,5 +1,7 @@
 using UnityEngine;
+using InTheEgg.Constants;
 using PetAIProperties = PetTraits;
+
 /// <summary>
 /// 펫의 나무 오르기 활동을 담당하는 클래스
 /// </summary>
@@ -47,23 +49,26 @@ public class ClimbTreeActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
+
         // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 높은 우선순위
         if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
         {
             // SelectedAction(5.5f)보다 높은 우선순위로 설정
             return 6.0f;
         }
-        
-        // 나무 오르기 시작 확률
-        return 0.3f;
+
+        // 나무 오르기 시작 확률 (낮은 우선순위)
+        return EmotionConstants.PRIORITY_CLIMB_TREE * 0.06f;  // 0.3f
     }
     
     
     public override void Start()
     {
         // Debug.Log($"[ClimbTreeActivity] {pet.petName}: 나무 오르기 활동 시작");
-        
+
+        // 나무 오르기 생각 감정 표시 (활동 중 지속)
+        pet.ShowEmotion(EmotionType.Thought_ClimbingTree, EmotionConstants.DURATION_PERSISTENT);
+
         // 이미 나무 위에 있는 상태에서 이 액션이 다시 시작될 수 있으므로,
         // isClimbingTree가 false일 때만 새로 나무를 찾도록 함
         if (!pet.State.IsClimbingTree)
