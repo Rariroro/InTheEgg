@@ -78,10 +78,8 @@ public class EnvironmentManager : MonoBehaviour
     private List<GameObject> spawnedEnvironments = new List<GameObject>();
     public bool IsInitializationComplete { get; private set; } = false;
 
-    // ===== 나비 파티클 캐싱 시스템 =====
-    private static GameObject cachedButterfly;
-    private static float lastButterflyCheckTime = -999f;
-    private const float BUTTERFLY_CACHE_INTERVAL = 5f; // 5초마다 갱신
+    // ===== 환경별 특수 오브젝트 참조 =====
+    private static List<GameObject> flowersEnvironmentButterflies = new List<GameObject>(); // FlowersEnvironment의 모든 나비 파티클
 
     private void Awake()
     {
@@ -284,6 +282,35 @@ public class EnvironmentManager : MonoBehaviour
         {
             EnvironmentPetAttractor.Instance.OnEnvironmentSpawned(environmentId, environment.transform.position);
         }
+
+        // ★★★ FlowersEnvironment 스폰 시 모든 나비 참조 저장 ★★★
+        if (environmentId == "env_flowers")
+        {
+            int butterflyCount = 0;
+
+            // 모든 자식 오브젝트에서 나비 파티클 찾기
+            Transform[] allChildren = environment.GetComponentsInChildren<Transform>(true);
+            foreach (Transform child in allChildren)
+            {
+                // 태그 또는 이름으로 나비 식별
+                if (child.CompareTag("ButterflyParticle") || child.name.Contains("Butterfly"))
+                {
+                    flowersEnvironmentButterflies.Add(child.gameObject);
+                    butterflyCount++;
+                    Debug.Log($"[EnvironmentManager] 나비 참조 저장: {child.name}");
+                }
+            }
+
+            if (butterflyCount > 0)
+            {
+                Debug.Log($"[EnvironmentManager] FlowersEnvironment에서 총 {butterflyCount}개의 나비 저장 완료");
+            }
+            else
+            {
+                Debug.LogWarning($"[EnvironmentManager] FlowersEnvironment에서 나비를 찾을 수 없습니다.");
+            }
+        }
+
         if (withFirstAppearanceEffect)
         {
             ApplyFirstAppearanceEffect(environment);
@@ -787,44 +814,24 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 나비 파티클 오브젝트를 캐싱하여 반환
-    /// 5초마다 한 번씩만 씬을 검색하여 성능 최적화
+    /// FlowersEnvironment의 모든 나비 파티클 오브젝트 반환
+    /// 스폰 시 저장된 참조를 반환하므로 검색 불필요 (성능 최적화)
     /// </summary>
-    /// <returns>나비 파티클 GameObject, 없으면 null</returns>
-    public static GameObject GetButterflyParticle()
+    /// <returns>활성화된 나비 파티클 GameObject 리스트</returns>
+    public static List<GameObject> GetAllButterflies()
     {
-        // 5초마다 한 번씩만 갱신
-        if (Time.time - lastButterflyCheckTime > BUTTERFLY_CACHE_INTERVAL)
+        // 활성화된 나비만 필터링하여 반환
+        List<GameObject> activeButterflies = new List<GameObject>();
+
+        foreach (GameObject butterfly in flowersEnvironmentButterflies)
         {
-            lastButterflyCheckTime = Time.time;
-
-            // ButterflyParticle 태그로 찾기 시도
-            GameObject[] butterflies = GameObject.FindGameObjectsWithTag("ButterflyParticle");
-
-            if (butterflies.Length > 0)
+            if (butterfly != null && butterfly.activeInHierarchy)
             {
-                // 활성화된 첫 번째 나비 사용
-                foreach (GameObject butterfly in butterflies)
-                {
-                    if (butterfly != null && butterfly.activeInHierarchy)
-                    {
-                        cachedButterfly = butterfly;
-                        return cachedButterfly;
-                    }
-                }
+                activeButterflies.Add(butterfly);
             }
-
-            // 태그로 못 찾으면 이름으로 폴백
-            cachedButterfly = GameObject.Find("ButterflyParticle");
         }
 
-        // 캐시된 나비가 여전히 유효한지 확인
-        if (cachedButterfly != null && !cachedButterfly.activeInHierarchy)
-        {
-            cachedButterfly = null;
-        }
-
-        return cachedButterfly;
+        return activeButterflies;
     }
 
     private void OnDestroy()
@@ -834,7 +841,7 @@ public class EnvironmentManager : MonoBehaviour
         environmentPrefabs.Clear();
         spawnedEnvironments.Clear();
 
-        // 나비 캐시 정리
-        cachedButterfly = null;
+        // 나비 참조 정리
+        flowersEnvironmentButterflies.Clear();
     }
 }

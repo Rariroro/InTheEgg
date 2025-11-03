@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using PetAIProperties = PetTraits;
 
 /// <summary>
@@ -23,15 +24,19 @@ public class ButterflyPlayActivity : PetActivityAdapter
     private float lastPlayTime = -60f;
     private Coroutine playCoroutine;
 
+    // ===== WaitForSeconds 캐싱 (성능 최적화) =====
+    private WaitForSeconds waitPoint1Sec;
+    private WaitForSeconds waitPoint5Sec;
+
     // ===== 놀이 설정 상수 =====
     // NOTE: InTheEgg.Constants.ButterflyConstants에 정의된 상수 사용
     private const float DETECTION_RANGE = 20f;          // 나비 감지 범위
-    private const float PLAY_DISTANCE = 3f;             // 나비와 놀기 시작하는 거리
+    private const float PLAY_DISTANCE = 2.5f;           // 나비와 놀기 시작하는 거리 (적당히 가까운 거리)
     private const float PLAY_DURATION = 45f;            // 놀이 지속 시간
     private const float PLAY_COOLDOWN = 120f;           // 놀이 쿨다운 (2분)
     private const float CHASE_SPEED_MULTIPLIER = 1.2f;  // 나비를 쫓을 때 속도 증가
     private const float PLAY_INTEREST_CHANCE = 0.5f;    // 나비에게 관심을 가질 확률
-    private const float CHASE_UPDATE_INTERVAL = 0.5f;   // 목표 위치 갱신 간격 (최적화: 0.2→0.5초)
+    // NOTE: CHASE_UPDATE_INTERVAL은 waitPoint5Sec(0.5초)로 대체됨
     private const float PLAY_AROUND_DURATION = 10f;     // 나비 주변 놀이 시간
     private const float JUMP_DURATION = 1.5f;           // 점프 지속 시간
     private const float OBSERVE_DURATION = 1.5f;        // 관찰 시간
@@ -51,6 +56,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
         animationController = pet.GetComponent<PetAnimationController>();
         movementController = pet.GetComponent<PetMovementController>();
         emotionManager = EmotionManager.Instance;
+
+        // WaitForSeconds 캐싱 (성능 최적화)
+        waitPoint1Sec = new WaitForSeconds(0.1f);
+        waitPoint5Sec = new WaitForSeconds(0.5f);
     }
 
     public override bool CanStart(PetState state, PetNeeds needs)
@@ -177,7 +186,6 @@ public class ButterflyPlayActivity : PetActivityAdapter
         playCoroutine = pet.StartCoroutine(PlayWithButterfly());
         // Debug.Log($"[ButterflyPlayActivity] PlayWithButterfly 코루틴 시작됨");
     }
-
     public override void Update()
     {
         // 최적화: 감정 표시는 Start()로 이동
@@ -245,28 +253,49 @@ public class ButterflyPlayActivity : PetActivityAdapter
     }
 
     /// <summary>
-    /// EnvironmentManager의 캐싱 시스템을 사용하여 나비를 찾음
-    /// 최적화: 씬 검색을 5초마다 1번으로 감소 (기존: 0.5초마다)
-    /// 성능 개선: 초당 20번 → 0.2번 검색 (100배 개선)
+    /// EnvironmentManager에 저장된 모든 나비 중 가장 가까운 나비를 찾음
+    /// 최적화: 씬 검색 없이 저장된 참조 사용 (스폰 시 1회만 검색)
+    /// 성능 개선: 초당 20번 검색 → 0번 검색 (거리 계산만)
     /// </summary>
     private void FindNearestButterfly()
     {
-        // EnvironmentManager의 캐싱 시스템 사용 (5초마다 갱신)
-        GameObject butterfly = EnvironmentManager.GetButterflyParticle();
+        // EnvironmentManager에서 모든 활성화된 나비 가져오기
+        List<GameObject> butterflies = EnvironmentManager.GetAllButterflies();
 
-        if (butterfly != null && butterfly.activeInHierarchy)
+        if (butterflies == null || butterflies.Count == 0)
         {
-            // 감지 범위 내에 있는지 확인
+            targetButterfly = null;
+            return;
+        }
+
+        // 가장 가까운 나비 찾기
+        GameObject nearestButterfly = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (GameObject butterfly in butterflies)
+        {
+            if (butterfly == null || !butterfly.activeInHierarchy)
+                continue;
+
             float distance = Vector3.Distance(pet.transform.position, butterfly.transform.position);
-            if (distance < DETECTION_RANGE)
+
+            // 감지 범위 내에 있고 가장 가까운 나비
+            if (distance < DETECTION_RANGE && distance < nearestDistance)
             {
-                targetButterfly = butterfly;
-        // Debug.Log($"[ButterflyPlayActivity] 나비 발견: {distance:F1}m 거리");
-                return;
+                nearestDistance = distance;
+                nearestButterfly = butterfly;
             }
         }
 
-        targetButterfly = null;
+        if (nearestButterfly != null)
+        {
+            targetButterfly = nearestButterfly;
+            Debug.Log($"[ButterflyPlayActivity] {pet.petName}: 가장 가까운 나비 발견! 거리: {nearestDistance:F1}m, 나비: {nearestButterfly.name}");
+        }
+        else
+        {
+            targetButterfly = null;
+        }
     }
 
     private IEnumerator PlayWithButterfly()
@@ -331,13 +360,48 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 }
 
                 // 최적화: 목표 위치 갱신 간격 증가 (0.2초 → 0.5초)
-                yield return new WaitForSeconds(CHASE_UPDATE_INTERVAL);
+                yield return waitPoint5Sec;  // 캐싱된 WaitForSeconds 사용
             }
             else
             {
-        // Debug.Log($"[PlayWithButterfly] 나비 근처 도착! 놀이 시작");
-                // 나비 주변에서 놀기
+        // Debug.Log($"[PlayWithButterfly] 나비 근처 도착! 정지 대기 중...");
+
+                // ✅ 1단계: NavMeshAgent가 완전히 멈출 때까지 대기
+                float waitTime = 0f;
+                const float maxWaitTime = 2f;  // 최대 2초 대기
+                const float stopVelocityThreshold = 0.1f;  // 정지 판정 속도
+
+                while (pet.agent != null &&
+                       pet.agent.velocity.magnitude > stopVelocityThreshold &&
+                       waitTime < maxWaitTime)
+                {
+                    yield return waitPoint1Sec;  // 캐싱된 WaitForSeconds 사용
+                    waitTime += 0.1f;
+                }
+
+        // Debug.Log($"[PlayWithButterfly] 펫 정지 완료 (대기 시간: {waitTime:F1}초)");
+
+                // ✅ 2단계: 나비 방향으로 회전
+                if (targetButterfly != null)
+                {
+                    Vector3 lookDirection = (targetButterfly.transform.position - pet.transform.position).normalized;
+                    lookDirection.y = 0;  // 수평 회전만
+
+                    if (lookDirection != Vector3.zero)
+                    {
+                        Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+                        pet.transform.rotation = Quaternion.Slerp(
+                            pet.transform.rotation,
+                            targetRotation,
+                            0.8f  // 부드러운 회전
+                        );
+                    }
+                }
+
+                // ✅ 3단계: 나비 주변에서 놀기 시작
+        Debug.Log($"[PlayWithButterfly] 놀이 시작!");
                 yield return PlayAroundButterfly();
+
                 // PlayAroundButterfly가 끝나면 바로 다시 거리 체크 (대기 없이)
                 continue;
             }
