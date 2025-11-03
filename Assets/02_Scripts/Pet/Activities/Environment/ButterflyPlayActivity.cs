@@ -19,6 +19,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
     private bool isPlayingWithButterfly = false;
     private bool hasShowedEmotion = false;
 
+    // ===== Stuck 감지 변수 =====
+    private int stuckCounter = 0;
+    private const int MAX_STUCK_COUNT = 10;  // 5초간 (0.5초 × 10) 도착 못하면 포기
+
     // ===== 놀이 상태 관리 =====
     private float playStartTime;
     private float lastPlayTime = -60f;
@@ -27,13 +31,15 @@ public class ButterflyPlayActivity : PetActivityAdapter
     // ===== WaitForSeconds 캐싱 (성능 최적화) =====
     private WaitForSeconds waitPoint1Sec;
     private WaitForSeconds waitPoint5Sec;
+    private WaitForSeconds wait1Sec;
 
     // ===== 놀이 설정 상수 =====
     // NOTE: InTheEgg.Constants.ButterflyConstants에 정의된 상수 사용
     private const float DETECTION_RANGE = 20f;          // 나비 감지 범위
-    private const float PLAY_DISTANCE = 2.5f;           // 나비와 놀기 시작하는 거리 (적당히 가까운 거리)
+    private const float PLAY_DISTANCE = 1.2f;           // 나비와 놀기 시작하는 거리 (나비 바로 앞)
+    private const float CHASE_RESTART_DISTANCE = 5f;    // 추적 재시작 거리 (히스테리시스)
     private const float PLAY_DURATION = 45f;            // 놀이 지속 시간
-    private const float PLAY_COOLDOWN = 120f;           // 놀이 쿨다운 (2분)
+    private const float PLAY_COOLDOWN = 0f;           // 놀이 쿨다운 (2분)
     private const float CHASE_SPEED_MULTIPLIER = 1.2f;  // 나비를 쫓을 때 속도 증가
     private const float PLAY_INTEREST_CHANCE = 0.5f;    // 나비에게 관심을 가질 확률
     // NOTE: CHASE_UPDATE_INTERVAL은 waitPoint5Sec(0.5초)로 대체됨
@@ -60,6 +66,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // WaitForSeconds 캐싱 (성능 최적화)
         waitPoint1Sec = new WaitForSeconds(0.1f);
         waitPoint5Sec = new WaitForSeconds(0.5f);
+        wait1Sec = new WaitForSeconds(1f);
     }
 
     public override bool CanStart(PetState state, PetNeeds needs)
@@ -124,6 +131,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         isPlayingWithButterfly = true;
         hasShowedEmotion = false;
         playStartTime = Time.time;
+        stuckCounter = 0;  // Stuck 카운터 초기화
 
         // 나비가 설정되어 있는지 확인
         if (targetButterfly == null)
@@ -188,7 +196,14 @@ public class ButterflyPlayActivity : PetActivityAdapter
     }
     public override void Update()
     {
-        // 최적화: 감정 표시는 Start()로 이동
+        // ✅ 유저가 펫을 들었는지 체크 (최우선)
+        if (pet.State.IsHolding)
+        {
+            Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 유저에게 들려서 나비 놀이 중단");
+            isPlayingWithButterfly = false;
+            return;
+        }
+
         // 나비가 사라졌는지 체크
         if (targetButterfly == null || !targetButterfly.activeInHierarchy)
         {
@@ -238,6 +253,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         isPlayingWithButterfly = false;
         lastPlayTime = Time.time;
         targetButterfly = null;
+        stuckCounter = 0;  // Stuck 카운터 초기화
 
         // 애니메이션 정지
         if (animationController != null)
@@ -312,11 +328,15 @@ public class ButterflyPlayActivity : PetActivityAdapter
         while (targetButterfly != null && isPlayingWithButterfly)
         {
             float distance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
-        // Debug.Log($"[PlayWithButterfly] 현재 거리: {distance:F1}m, PLAY_DISTANCE: {PLAY_DISTANCE}m");
+        // Debug.Log($"[PlayWithButterfly] 현재 거리: {distance:F1}m");
 
-            if (distance > PLAY_DISTANCE)
+            if (distance > CHASE_RESTART_DISTANCE)
             {
-        // Debug.Log($"[PlayWithButterfly] 나비에게 이동 중...");
+        // Debug.Log($"[PlayWithButterfly] 나비가 너무 멀어짐 ({distance:F1}m > {CHASE_RESTART_DISTANCE}m), 다시 추적");
+
+                // 이전 거리 저장 (Stuck 감지용)
+                float previousDistance = distance;
+
                 // 나비에게 이동
                 if (pet.agent != null && pet.agent.enabled)
                 {
@@ -361,10 +381,33 @@ public class ButterflyPlayActivity : PetActivityAdapter
 
                 // 최적화: 목표 위치 갱신 간격 증가 (0.2초 → 0.5초)
                 yield return waitPoint5Sec;  // 캐싱된 WaitForSeconds 사용
+
+                // Stuck 감지: 거리가 줄어들지 않으면 카운터 증가
+                if (targetButterfly != null)
+                {
+                    float newDistance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
+
+                    if (newDistance >= previousDistance - 0.5f)  // 0.5m 이상 줄지 않음
+                    {
+                        stuckCounter++;
+                // Debug.Log($"[PlayWithButterfly] Stuck 감지: {stuckCounter}/{MAX_STUCK_COUNT} (거리: {previousDistance:F1}m → {newDistance:F1}m)");
+
+                        if (stuckCounter >= MAX_STUCK_COUNT)
+                        {
+                            Debug.LogWarning($"[PlayWithButterfly] {pet.petName}: 나비에게 도달 불가능. 놀이 종료.");
+                            isPlayingWithButterfly = false;
+                            yield break;
+                        }
+                    }
+                    else
+                    {
+                        stuckCounter = 0;  // 거리가 줄어들면 리셋
+                    }
+                }
             }
-            else
+            else if (distance <= PLAY_DISTANCE)
             {
-        // Debug.Log($"[PlayWithButterfly] 나비 근처 도착! 정지 대기 중...");
+        // Debug.Log($"[PlayWithButterfly] 나비 근처 도착! ({distance:F1}m <= {PLAY_DISTANCE}m) 놀이 시작");
 
                 // ✅ 1단계: NavMeshAgent가 완전히 멈출 때까지 대기
                 float waitTime = 0f;
@@ -402,8 +445,45 @@ public class ButterflyPlayActivity : PetActivityAdapter
         Debug.Log($"[PlayWithButterfly] 놀이 시작!");
                 yield return PlayAroundButterfly();
 
+                // ✅ 4단계: NavMeshAgent 강제 정지 (Run 애니메이션 반복 방지)
+                if (pet.agent != null && pet.agent.enabled)
+                {
+                    pet.agent.ResetPath();  // 경로 초기화로 정지
+                    // Debug.Log($"[PlayWithButterfly] NavMeshAgent 경로 초기화 완료");
+                }
+
+                // 애니메이션도 Idle로 변경
+                if (animationController != null)
+                {
+                    animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+                }
+
                 // PlayAroundButterfly가 끝나면 바로 다시 거리 체크 (대기 없이)
                 continue;
+            }
+            else
+            {
+                // 1.2m ~ 5m 사이: Walk로 천천히 접근 (계속 이동!)
+        // Debug.Log($"[PlayWithButterfly] 중간 거리 ({distance:F1}m), Walk로 접근");
+
+                // 나비에게 계속 이동
+                if (pet.agent != null && pet.agent.enabled)
+                {
+                    if (pet.agent.isOnNavMesh)
+                    {
+                        pet.agent.SetDestination(targetButterfly.transform.position);
+                        pet.agent.speed = pet.baseSpeed * 0.8f;  // 속도 감소 (천천히)
+                    }
+                }
+
+                // Walk 애니메이션
+                if (animationController != null)
+                {
+                    animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                }
+
+                // 1초 대기 후 다시 거리 체크
+                yield return wait1Sec;  // 캐싱된 WaitForSeconds 사용
             }
         }
 
