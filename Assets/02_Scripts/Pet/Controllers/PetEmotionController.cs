@@ -13,13 +13,6 @@ public class PetEmotionController : MonoBehaviour
     
     // 현재 활성화된 감정 표현
     private GameObject activeParticle;
-    
-    // 배고픔 감정 관련
-    private bool isShowingHungerEmotion = false;
-    private EmotionType currentFoodEmotion;
-    private float hungerEmotionTimer = 0f;
-    private float hungerEmotionChangeInterval = EmotionConstants.HUNGER_EMOTION_MIN_INTERVAL; // 7초부터 시작
-    private bool isHungerEmotionPaused = false; // 다른 감정으로 인한 일시 중단 (네이밍 일관성)
 
     // 보물 감정 관련
     private bool isTreasureEmotionActive = false; // 보물 발견 시 활성화
@@ -34,50 +27,7 @@ public class PetEmotionController : MonoBehaviour
     
     private void Update()
     {
-        UpdateHungerEmotion();
         UpdateTreasureEmotion();
-    }
-
-    /// <summary>
-    /// 배고픔 감정 자동 시스템을 업데이트합니다.
-    /// </summary>
-    private void UpdateHungerEmotion()
-    {
-        // Early return으로 중첩 제거
-        if (petController == null || petController.Needs == null)
-            return;
-
-        bool isHungry = petController.Needs.Hunger >= EmotionConstants.HUNGER_EMOTION_THRESHOLD;
-
-        // 배고프지 않은데 표시 중이면 중단
-        if (!isHungry && isShowingHungerEmotion)
-        {
-            StopShowingHungerEmotion();
-            return;
-        }
-
-        // 배고프지만 일시 중단 중이면 패스
-        if (!isHungry || isHungerEmotionPaused)
-            return;
-
-        // 배고픔 감정 시작
-        if (!isShowingHungerEmotion)
-        {
-            StartShowingHungerEmotion();
-            return;
-        }
-
-        // 일정 시간마다 음식 종류 변경
-        hungerEmotionTimer += Time.deltaTime;
-        if (hungerEmotionTimer >= hungerEmotionChangeInterval)
-        {
-            hungerEmotionTimer = 0f;
-            hungerEmotionChangeInterval = UnityEngine.Random.Range(
-                EmotionConstants.HUNGER_EMOTION_MIN_INTERVAL,
-                EmotionConstants.HUNGER_EMOTION_MAX_INTERVAL
-            );
-            ChangeHungerEmotion();
-        }
     }
 
     /// <summary>
@@ -181,12 +131,6 @@ public class PetEmotionController : MonoBehaviour
     /// </summary>
     private void ProcessEmotionFlags(EmotionType emotion, ref float duration)
     {
-        // 음식 감정이 아닌 경우 배고픔 감정 일시 중단
-        if (!IsFoodEmotion(emotion) && isShowingHungerEmotion)
-        {
-            isHungerEmotionPaused = true;
-        }
-
         // 보물 감정 특별 처리
         if (IsTreasureEmotion(emotion))
         {
@@ -210,13 +154,6 @@ public class PetEmotionController : MonoBehaviour
             return;
 
         activeParticle = emotionObject;
-
-        // 임시 감정인 경우 복원 타이머 설정
-        bool isTemporary = !IsFoodEmotion(emotion) && !IsTreasureEmotion(emotion);
-        if (isTemporary && duration > 0 && duration != EmotionConstants.DURATION_PERSISTENT)
-        {
-            StartCoroutine(RestoreHungerEmotionAfterDelay(duration));
-        }
     }
 
     /// <summary>
@@ -230,10 +167,6 @@ public class PetEmotionController : MonoBehaviour
             Destroy(activeParticle);
             activeParticle = null;
         }
-
-        // 배고픔 감정 일시 중단 상태 해제
-        // Activity 전환 시 자동으로 재활성화되도록
-        isHungerEmotionPaused = false;
     }
     
     /// <summary>
@@ -296,79 +229,6 @@ public class PetEmotionController : MonoBehaviour
     {
         return emotionOrigin;
     }
-    
-    /// <summary>
-    /// 배고픔 감정 표시 시작
-    /// </summary>
-    private void StartShowingHungerEmotion()
-    {
-        isShowingHungerEmotion = true;
-        isHungerEmotionPaused = false;
-        hungerEmotionTimer = 0f;
-        hungerEmotionChangeInterval = UnityEngine.Random.Range(
-            EmotionConstants.HUNGER_EMOTION_MIN_INTERVAL,
-            EmotionConstants.HUNGER_EMOTION_MAX_INTERVAL
-        );
-
-        currentFoodEmotion = GetRandomFoodEmotionByDiet();
-        ShowEmotion(currentFoodEmotion, EmotionConstants.DURATION_PERSISTENT);
-    }
-
-    /// <summary>
-    /// 배고픔 감정 종류 변경
-    /// </summary>
-    private void ChangeHungerEmotion()
-    {
-        if (!isHungerEmotionPaused)
-        {
-            currentFoodEmotion = GetRandomFoodEmotionByDiet();
-            ShowEmotion(currentFoodEmotion, EmotionConstants.DURATION_PERSISTENT);
-        }
-    }
-
-    /// <summary>
-    /// 배고픔 감정 표시 중단
-    /// </summary>
-    private void StopShowingHungerEmotion()
-    {
-        isShowingHungerEmotion = false;
-        isHungerEmotionPaused = false;
-        if (IsFoodEmotion(currentFoodEmotion))
-        {
-            HideEmotion();
-        }
-    }
-
-    /// <summary>
-    /// 다른 감정 표시 후 배고픔 감정 복원
-    /// </summary>
-    private System.Collections.IEnumerator RestoreHungerEmotionAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        if (isShowingHungerEmotion && isHungerEmotionPaused)
-        {
-            isHungerEmotionPaused = false;
-            // 배고픔 상태가 계속되면 음식 감정 다시 표시
-            if (petController.Needs.Hunger >= EmotionConstants.HUNGER_EMOTION_THRESHOLD)
-            {
-                ShowEmotion(currentFoodEmotion, EmotionConstants.DURATION_PERSISTENT);
-            }
-        }
-    }
-    
-    /// <summary>
-    /// 음식 관련 감정인지 확인
-    /// </summary>
-    private bool IsFoodEmotion(EmotionType emotion)
-    {
-        return emotion == EmotionType.Thought_Food_Meat ||
-               emotion == EmotionType.Thought_Food_Fish ||
-               emotion == EmotionType.Thought_Food_Grass ||
-               emotion == EmotionType.Thought_Food_Grain ||
-               emotion == EmotionType.Thought_Food_Fruit ||
-               emotion == EmotionType.Thought_Food_Vegetable;
-    }
 
     /// <summary>
     /// 보물 관련 감정인지 확인
@@ -388,40 +248,5 @@ public class PetEmotionController : MonoBehaviour
             isTreasureEmotionActive = false;
             HideEmotion();
         }
-    }
-    
-    /// <summary>
-    /// 펫의 식성에 따른 랜덤 음식 감정 선택
-    /// </summary>
-    private EmotionType GetRandomFoodEmotionByDiet()
-    {
-        var diet = petController.diet;
-        var foodEmotions = new System.Collections.Generic.List<EmotionType>();
-        
-        // 식성에 따라 가능한 음식 감정 추가
-        if ((diet & PetTraits.DietaryFlags.Meat) != 0)
-            foodEmotions.Add(EmotionType.Thought_Food_Meat);
-            
-        if ((diet & PetTraits.DietaryFlags.Fish) != 0)
-            foodEmotions.Add(EmotionType.Thought_Food_Fish);
-            
-        if ((diet & PetTraits.DietaryFlags.Grass) != 0)
-            foodEmotions.Add(EmotionType.Thought_Food_Grass);
-            
-        if ((diet & PetTraits.DietaryFlags.SeedsAndGrains) != 0)
-            foodEmotions.Add(EmotionType.Thought_Food_Grain);
-            
-        if ((diet & PetTraits.DietaryFlags.FruitsAndVegetables) != 0)
-        {
-            foodEmotions.Add(EmotionType.Thought_Food_Fruit);
-            foodEmotions.Add(EmotionType.Thought_Food_Vegetable);
-        }
-        
-        // 식성이 없거나 매칭되는 음식 감정이 없으면 기본 Hungry 반환
-        if (foodEmotions.Count == 0)
-            return EmotionType.Hungry;
-        
-        // 랜덤으로 하나 선택
-        return foodEmotions[UnityEngine.Random.Range(0, foodEmotions.Count)];
     }
 }

@@ -78,6 +78,11 @@ public class EnvironmentManager : MonoBehaviour
     private List<GameObject> spawnedEnvironments = new List<GameObject>();
     public bool IsInitializationComplete { get; private set; } = false;
 
+    // ===== 나비 파티클 캐싱 시스템 =====
+    private static GameObject cachedButterfly;
+    private static float lastButterflyCheckTime = -999f;
+    private const float BUTTERFLY_CACHE_INTERVAL = 5f; // 5초마다 갱신
+
     private void Awake()
     {
         // 싱글톤 설정
@@ -781,11 +786,55 @@ public class EnvironmentManager : MonoBehaviour
         return t == 0f ? 0f : t == 1f ? 1f : Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
     }
 
+    /// <summary>
+    /// 나비 파티클 오브젝트를 캐싱하여 반환
+    /// 5초마다 한 번씩만 씬을 검색하여 성능 최적화
+    /// </summary>
+    /// <returns>나비 파티클 GameObject, 없으면 null</returns>
+    public static GameObject GetButterflyParticle()
+    {
+        // 5초마다 한 번씩만 갱신
+        if (Time.time - lastButterflyCheckTime > BUTTERFLY_CACHE_INTERVAL)
+        {
+            lastButterflyCheckTime = Time.time;
+
+            // ButterflyParticle 태그로 찾기 시도
+            GameObject[] butterflies = GameObject.FindGameObjectsWithTag("ButterflyParticle");
+
+            if (butterflies.Length > 0)
+            {
+                // 활성화된 첫 번째 나비 사용
+                foreach (GameObject butterfly in butterflies)
+                {
+                    if (butterfly != null && butterfly.activeInHierarchy)
+                    {
+                        cachedButterfly = butterfly;
+                        return cachedButterfly;
+                    }
+                }
+            }
+
+            // 태그로 못 찾으면 이름으로 폴백
+            cachedButterfly = GameObject.Find("ButterflyParticle");
+        }
+
+        // 캐시된 나비가 여전히 유효한지 확인
+        if (cachedButterfly != null && !cachedButterfly.activeInHierarchy)
+        {
+            cachedButterfly = null;
+        }
+
+        return cachedButterfly;
+    }
+
     private void OnDestroy()
     {
         // 정리 작업
         pendingGifts.Clear();
         environmentPrefabs.Clear();
         spawnedEnvironments.Clear();
+
+        // 나비 캐시 정리
+        cachedButterfly = null;
     }
 }
