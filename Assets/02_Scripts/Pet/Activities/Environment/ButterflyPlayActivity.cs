@@ -382,15 +382,26 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 // 최적화: 목표 위치 갱신 간격 증가 (0.2초 → 0.5초)
                 yield return waitPoint5Sec;  // 캐싱된 WaitForSeconds 사용
 
-                // Stuck 감지: 거리가 줄어들지 않으면 카운터 증가
-                if (targetButterfly != null)
+                // Stuck 감지: 실제로 움직이지 않을 때만 카운터 증가
+                if (targetButterfly != null && pet.agent != null)
                 {
-                    float newDistance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
-
-                    if (newDistance >= previousDistance - 0.5f)  // 0.5m 이상 줄지 않음
+                    // 경로 계산 중이면 Stuck이 아님
+                    if (pet.agent.pathPending)
+                    {
+                        stuckCounter = 0;
+                    }
+                    // 경로가 유효하지 않으면 즉시 포기
+                    else if (pet.agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
+                    {
+                        Debug.LogWarning($"[PlayWithButterfly] {pet.petName}: 나비 위치로 경로 없음. 놀이 종료.");
+                        isPlayingWithButterfly = false;
+                        yield break;
+                    }
+                    // 실제로 움직이지 않으면 Stuck
+                    else if (pet.agent.velocity.magnitude < 0.1f)
                     {
                         stuckCounter++;
-                // Debug.Log($"[PlayWithButterfly] Stuck 감지: {stuckCounter}/{MAX_STUCK_COUNT} (거리: {previousDistance:F1}m → {newDistance:F1}m)");
+                        Debug.Log($"[PlayWithButterfly] Stuck 감지: {stuckCounter}/{MAX_STUCK_COUNT} (velocity: {pet.agent.velocity.magnitude:F2})");
 
                         if (stuckCounter >= MAX_STUCK_COUNT)
                         {
@@ -401,7 +412,8 @@ public class ButterflyPlayActivity : PetActivityAdapter
                     }
                     else
                     {
-                        stuckCounter = 0;  // 거리가 줄어들면 리셋
+                        // 실제로 움직이고 있음 = OK
+                        stuckCounter = 0;
                     }
                 }
             }

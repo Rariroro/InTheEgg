@@ -520,9 +520,10 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         {
             giftPosition.y = 0; // 기본값
         }
-        
+
         // 선물을 대기 목록에서 제거
         pendingGifts.Remove(gift);
+        
         
         // 축하 효과 파티클 실행
         if (celebrationEffectPrefab != null)
