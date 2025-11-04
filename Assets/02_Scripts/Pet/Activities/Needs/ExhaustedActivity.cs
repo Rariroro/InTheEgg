@@ -39,9 +39,9 @@ public class ExhaustedActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 탈진은 매우 높은 우선순위
-        return 50.0f;
+
+        // 탈진은 최고 긴급 우선순위 (배고픔 100 = 생존 위협)
+        return 70.0f;
     }
     
     

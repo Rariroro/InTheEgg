@@ -46,20 +46,20 @@ public class BeeEscapeActivity : PetActivityAdapter
             PetFeedingController feedingController = pet.GetComponent<PetFeedingController>();
             if (feedingController != null && feedingController.IsEatingOrSeeking())
             {
-                // 배고픔이 아직 남아있으면 계속 먹어야 함
+                // 배고픔이 아직 남아있으면 계속 먹어야 함 (하지만 위험은 인지)
                 if (pet.Needs != null && pet.Needs.Hunger >= 70f)
                 {
         // Debug.Log($"[BeeEscapeActivity] {pet.petName}: 아직 배고픔({pet.Needs.Hunger:F1}), 계속 먹기");
-                    return 0.5f; // 매우 낮은 우선순위 - 먹기를 방해하지 않음
+                    return 15f; // 중간 우선순위 - 긴급하지만 먹기를 어느 정도 존중
                 }
-                
+
                 // 배고픔이 해소되었으면 이제 도망갈 수 있음
         // Debug.Log($"[BeeEscapeActivity] {pet.petName}: 배고픔 해소({pet.Needs.Hunger:F1}), 이제 도망!");
-                return 100f; // 최우선순위로 도망
+                return 50f; // 긴급 우선순위로 도망
             }
-            
-            // 다 먹었으면 최우선순위로 도망
-            return 100f; // 탈진(50)보다도 높은 최우선순위
+
+            // 먹지 않고 있으면 긴급 우선순위로 도망
+            return 50f; // 긴급 상황
         }
         
         // 벌 공격이 끝난 후에도 계속 도망

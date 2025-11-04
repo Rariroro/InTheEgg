@@ -87,64 +87,109 @@ namespace InTheEgg.Constants
 
         // ===== 특정 Activity 우선순위 상수 =====
 
+        // 긴급 우선순위 (50+)
+
         /// <summary>
-        /// EatActivity: 매우 배고플 때 우선순위
+        /// ExhaustedActivity: 탈진 상태 우선순위 (배고픔 100)
+        /// </summary>
+        public const float PRIORITY_EXHAUSTED = 70f;
+
+        /// <summary>
+        /// EatActivity: 매우 배고플 때 우선순위 (배고픔 90-99)
         /// </summary>
         public const float PRIORITY_EATING_VERY_HUNGRY = 60f;
 
         /// <summary>
-        /// EatActivity: 적당히 배고플 때 우선순위
+        /// BeeEscapeActivity: 벌 도망 우선순위
         /// </summary>
-        public const float PRIORITY_EATING_MODERATELY_HUNGRY = 20f;
+        public const float PRIORITY_BEE_ESCAPE = 50f;
+
+        // 진행 중 보호 우선순위 (30-49)
 
         /// <summary>
-        /// EatActivity: 먹는 중 우선순위
+        /// EatActivity: 먹는 중 우선순위 (중단 방지)
         /// </summary>
-        public const float PRIORITY_EATING_IN_PROGRESS = 35f;
+        public const float PRIORITY_EATING_IN_PROGRESS = 40f;
 
         /// <summary>
-        /// SleepActivity: 매우 피곤할 때 우선순위
+        /// SleepActivity: 자는 중 우선순위 (중단 방지)
         /// </summary>
-        public const float PRIORITY_SLEEPING_VERY_TIRED = 50f;
+        public const float PRIORITY_SLEEPING_IN_PROGRESS = 35f;
 
         /// <summary>
-        /// SleepActivity: 적당히 피곤할 때 우선순위
+        /// DivingActivity: 다이빙 진행 중 우선순위 (중단 방지)
         /// </summary>
-        public const float PRIORITY_SLEEPING_MODERATELY_TIRED = 20f;
+        public const float PRIORITY_DIVING_IN_PROGRESS = 30f;
 
-        /// <summary>
-        /// SleepActivity: 자는 중 우선순위
-        /// </summary>
-        public const float PRIORITY_SLEEPING_IN_PROGRESS = 40f;
-
-        /// <summary>
-        /// TreasureHuntActivity: 탐색 중 우선순위
-        /// </summary>
-        public const float PRIORITY_TREASURE_HUNTING = 15f;
+        // 높은 우선순위 (20-29)
 
         /// <summary>
         /// TreasureFoundActivity: 보물 발견 후 우선순위
         /// </summary>
-        public const float PRIORITY_TREASURE_FOUND = 20f;
+        public const float PRIORITY_TREASURE_FOUND = 25f;
 
         /// <summary>
-        /// ButterflyPlayActivity: 나비와 놀기 우선순위
+        /// GatherActivity: 플레이어 모이기 명령 우선순위
         /// </summary>
-        public const float PRIORITY_BUTTERFLY_PLAY = 12f;
+        public const float PRIORITY_GATHER_COMMAND = 25f;
 
         /// <summary>
-        /// ClimbTreeActivity: 나무 타기 우선순위
+        /// EatActivity: 적당히 배고플 때 우선순위 (배고픔 70-85)
         /// </summary>
-        public const float PRIORITY_CLIMB_TREE = 5f;
+        public const float PRIORITY_EATING_MODERATELY_HUNGRY = 20f;
 
         /// <summary>
-        /// DivingActivity: 다이빙 우선순위
+        /// SleepActivity: 적당히 피곤할 때 우선순위 (졸림 85+)
         /// </summary>
-        public const float PRIORITY_DIVING = 8f;
+        public const float PRIORITY_SLEEPING_MODERATELY_TIRED = 20f;
+
+        // 중간 우선순위 (10-19)
+
+        /// <summary>
+        /// DivingActivity: 다이빙 시작 우선순위
+        /// </summary>
+        public const float PRIORITY_DIVING_START = 18f;
+
+        /// <summary>
+        /// ButterflyPlayActivity: 나비와 놀기 우선순위 (가까운 나비)
+        /// </summary>
+        public const float PRIORITY_BUTTERFLY_NEAR = 15f;
+
+        /// <summary>
+        /// TreasureHuntActivity: 보물 탐색 중 우선순위
+        /// </summary>
+        public const float PRIORITY_TREASURE_HUNTING = 15f;
+
+        /// <summary>
+        /// BeeEscapeActivity: 벌 공격 중 먹는 경우 우선순위
+        /// </summary>
+        public const float PRIORITY_BEE_ESCAPE_EATING = 15f;
+
+        /// <summary>
+        /// InteractWithPetActivity: 펫 간 상호작용 우선순위
+        /// </summary>
+        public const float PRIORITY_INTERACT_WITH_PET = 10f;
+
+        /// <summary>
+        /// ButterflyPlayActivity: 나비와 놀기 우선순위 (먼 나비)
+        /// </summary>
+        public const float PRIORITY_BUTTERFLY_FAR = 10f;
+
+        // 낮은 우선순위 (1-9)
+
+        /// <summary>
+        /// ClimbTreeActivity: 나무 오르는 중 우선순위
+        /// </summary>
+        public const float PRIORITY_CLIMB_TREE_IN_PROGRESS = 8f;
+
+        /// <summary>
+        /// ClimbTreeActivity: 나무 타기 시작 우선순위
+        /// </summary>
+        public const float PRIORITY_CLIMB_TREE_START = 3f;
 
         /// <summary>
         /// WanderActivity: 배회 우선순위
         /// </summary>
-        public const float PRIORITY_WANDER = 1f;
+        public const float PRIORITY_WANDER = 0.1f;
     }
 }

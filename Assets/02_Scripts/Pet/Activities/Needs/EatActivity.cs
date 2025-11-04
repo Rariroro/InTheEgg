@@ -72,9 +72,9 @@ public class EatActivity : PetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
 
-        // 이미 먹고 있거나 찾으러 가는 중이라면 매우 높은 우선순위
+        // 이미 먹고 있거나 찾으러 가는 중이라면 매우 높은 우선순위 (중단 방지)
         if (feedingController.IsEatingOrSeeking())
-            return EmotionConstants.PRIORITY_EATING_IN_PROGRESS; // 35.0f
+            return 40.0f; // 진행 중 보호 (35→40)
 
         // 배고픔 수치에 비례하여 우선순위 증가
         float hunger = needs != null ? needs.Hunger : pet.Needs.Hunger;
@@ -82,18 +82,18 @@ public class EatActivity : PetActivityAdapter
         // 생존 본능을 반영한 우선순위
         if (hunger >= 90f)
         {
-            // 극도로 배고픔 - 긴급
-            return EmotionConstants.PRIORITY_EATING_VERY_HUNGRY; // 60.0f
+            // 극도로 배고픔 - 긴급 (탈진 직전)
+            return 60.0f;
         }
         else if (hunger >= 85f)
         {
-            // 매우 배고픔 - 높은 우선순위
-            return EmotionConstants.PRIORITY_HIGH_MIN + ((hunger - 85f) / 5f * 10.0f); // 20.0 ~ 30.0
+            // 매우 배고픔 - 높은 우선순위 (선형 증가)
+            return 25.0f + ((hunger - 85f) / 5f * 10.0f); // 25.0 ~ 35.0
         }
         else if (hunger >= 70f)
         {
             // 배고픔 시작 - 중간 우선순위
-            return EmotionConstants.PRIORITY_EATING_MODERATELY_HUNGRY; // 20.0f
+            return 20.0f;
         }
 
         return 0f;

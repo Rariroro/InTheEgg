@@ -36,8 +36,8 @@ public class GatherActivity : PetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
             
-        // 모이기는 최상위 우선순위
-        return 20.0f;
+        // 플레이어 명령(모이기)은 높은 우선순위
+        return 25.0f; // 플레이어 명령 우선 (20→25)
     }
     
     

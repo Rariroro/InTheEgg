@@ -116,12 +116,12 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (targetButterfly == null)
             return 0f;
 
-        // 나비가 가까이 있을수록 높은 우선순위
+        // 나비가 가까이 있을수록 높은 우선순위 (다이빙보다는 낮게)
         float distance = Vector3.Distance(pet.transform.position, targetButterfly.transform.position);
-        float distancePriority = Mathf.Lerp(20f, 10f, distance / DETECTION_RANGE);
+        float distancePriority = Mathf.Lerp(15f, 10f, distance / DETECTION_RANGE); // 가까움 15, 멀리 10
 
-        // Playful 성격 보너스
-        return distancePriority + 5f;
+        // Playful 성격 보너스 없음 (다이빙 18보다 낮게 유지)
+        return distancePriority;
     }
 
     public override void Start()

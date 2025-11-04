@@ -169,11 +169,17 @@ public class StandardizedSleepActivity : EnhancedPetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
 
-        if (needs.Sleepiness >= 90f)
-            return EmotionConstants.PRIORITY_SLEEPING_VERY_TIRED;
-
-        if (needs.Sleepiness >= 70f)
-            return EmotionConstants.PRIORITY_SLEEPING_MODERATELY_TIRED;
+        // 졸림 수치에 비례하여 우선순위 증가
+        if (needs.Sleepiness >= 85f)
+        {
+            // 매우 졸림 - 긴급 수준 (선형 증가)
+            return 20.0f + ((needs.Sleepiness - 85f) / 15f * 10.0f); // 20.0 ~ 30.0
+        }
+        else if (needs.Sleepiness >= 70f)
+        {
+            // 졸림 시작 - 중간 수준 (선형 증가)
+            return 10.0f + ((needs.Sleepiness - 70f) / 15f * 8.0f); // 10.0 ~ 18.0
+        }
 
         return 0f;
     }

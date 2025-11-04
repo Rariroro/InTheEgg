@@ -50,15 +50,14 @@ public class ClimbTreeActivity : PetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
 
-        // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 높은 우선순위
+        // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 중단되지 않도록
         if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
         {
-            // SelectedAction(5.5f)보다 높은 우선순위로 설정
-            return 6.0f;
+            return 8.0f; // 진행 중 보호 (6→8)
         }
 
-        // 나무 오르기 시작 확률 (낮은 우선순위)
-        return EmotionConstants.PRIORITY_CLIMB_TREE * 0.06f;  // 0.3f
+        // 나무 오르기 시작 (낮은 우선순위)
+        return 3.0f; // 확률 기반이지만 너무 낮았음 (0.3→3)
     }
     
     

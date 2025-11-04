@@ -126,13 +126,13 @@ public class DivingActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 이미 진행 중인 다이빙은 높은 우선순위로 완료까지 유지
+
+        // 이미 진행 중인 다이빙은 매우 높은 우선순위로 완료까지 유지 (중단 방지)
         if (isMovingToSpot || isDiving)
-            return 7f;
-            
-        // 새로 시작하는 다이빙은 중간 우선순위
-        return 5f;
+            return 30f; // 진행 중 보호 (7→30)
+
+        // 새로 시작하는 다이빙은 나비보다 높은 우선순위
+        return 18f; // 나비(10-15)보다 높게 (5→18)
     }
 
     /// <summary>

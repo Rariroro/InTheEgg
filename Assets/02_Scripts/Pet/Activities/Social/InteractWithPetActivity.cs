@@ -40,9 +40,8 @@ public class InteractWithPetActivity : PetActivityAdapter
         if (!CanStart(state, needs))
             return 0f;
             
-        // 상호작용 중에는 중간 정도의 우선순위
-        // Eat, Sleep(~2.0)보다는 낮고 Wander(0.1)보다는 높게
-        return 1.5f;
+        // 상호작용 중에는 중간 우선순위 (중단 불가이므로 적절한 우선순위 필요)
+        return 10.0f; // 중단 불가인데 너무 낮았음 (1.5→10)
     }
     
     
