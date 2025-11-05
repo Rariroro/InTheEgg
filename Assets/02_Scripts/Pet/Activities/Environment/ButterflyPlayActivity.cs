@@ -32,6 +32,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
     private WaitForSeconds waitPoint1Sec;
     private WaitForSeconds waitPoint5Sec;
     private WaitForSeconds wait1Sec;
+    private WaitForSeconds wait2Sec;
 
     // ===== 놀이 설정 상수 =====
     // NOTE: InTheEgg.Constants.ButterflyConstants에 정의된 상수 사용
@@ -67,6 +68,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         waitPoint1Sec = new WaitForSeconds(0.1f);
         waitPoint5Sec = new WaitForSeconds(0.5f);
         wait1Sec = new WaitForSeconds(1f);
+        wait2Sec = new WaitForSeconds(2f);
     }
 
     public override bool CanStart(PetState state, PetNeeds needs)
@@ -261,11 +263,8 @@ public class ButterflyPlayActivity : PetActivityAdapter
             animationController.StopContinuousAnimation();
         }
 
-        // 만족 감정 표현
-        if (emotionManager != null)
-        {
-            emotionManager.ShowPetEmotion(pet, EmotionType.Happy, 2f);
-        }
+        // Happy 감정은 코루틴에서 이미 표시됨 (정상 완료 시)
+        // 중단 시에는 HideEmotion()으로 감정 제거됨
     }
 
     /// <summary>
@@ -498,6 +497,14 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 yield return wait1Sec;  // 캐싱된 WaitForSeconds 사용
             }
         }
+
+        // 나비와 놀이 완료 후 Happy 감정 표시
+        if (emotionManager != null)
+        {
+            emotionManager.ShowPetEmotion(pet, EmotionType.Happy, 2f);
+        }
+
+        yield return wait2Sec;  // Happy 감정 표시 시간 (2초, 캐싱됨)
 
         // Debug.Log($"[PlayWithButterfly] 코루틴 종료. targetButterfly null: {targetButterfly == null}, isPlaying: {isPlayingWithButterfly}");
     }

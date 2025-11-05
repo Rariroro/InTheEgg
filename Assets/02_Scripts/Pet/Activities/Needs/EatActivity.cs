@@ -371,11 +371,8 @@ public class EatActivity : PetActivityAdapter
         pet.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_SHORT);
         yield return new WaitForSeconds(EmotionConstants.DURATION_SHORT);
 
-        // Happy 감정 종료 후 음식 생각 감정으로 복귀 (아직 배고프면)
-        if (pet.Needs.Hunger >= 70f)
-        {
-            StartFoodThoughtEmotion();
-        }
+        // Happy 감정 종료 후 자동으로 새 Activity로 전환됨 (PetAI가 처리)
+        // 음식 생각 감정은 새 EatActivity 시작 시 자동 표시됨
     }
 
     #endregion
