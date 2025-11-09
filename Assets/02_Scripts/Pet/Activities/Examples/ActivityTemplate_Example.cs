@@ -2,9 +2,14 @@ using UnityEngine;
 using InTheEgg.Constants;
 
 /// <summary>
+/// [예제 파일 - 실제 게임에서 사용되지 않음]
+///
 /// 표준화된 Activity 패턴 예제
 /// 새로운 Activity를 만들 때 이 패턴을 따르세요.
 /// EnhancedPetActivityAdapter를 상속받아 자동 감정 관리 기능 사용
+///
+/// 이 파일은 참고용 템플릿이며, 실제 게임에서 인스턴스화되지 않습니다.
+/// 실제 구현체는 Activities/Needs/EatActivity.cs 등을 참고하세요.
 /// </summary>
 public class StandardizedEatActivity : EnhancedPetActivityAdapter
 {
