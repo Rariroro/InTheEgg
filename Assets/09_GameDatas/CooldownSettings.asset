@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fcc7a591ab4e4c54a9350479fa221f6, type: 3}
+  m_Name: CooldownSettings
+  m_EditorClassIdentifier: 
+  petInteractionCooldown: 30
+  divingCooldown: 30
+  divingFailedCooldown: 60
+  treeClimbingCooldown: 10
+  butterflyPlayCooldown: 60
+  treasureHuntCooldown: 60
+  environmentTouchCooldown: 0.1
+  giftTouchCooldown: 0.1
+  feedingCooldown: 10
+  foodSearchCooldown: 5
+  chaseAndRunCooldown: 30
+  walkTogetherCooldown: 30
+  raceCooldown: 30
+  fightCooldown: 30
+  sleepTogetherCooldown: 60
+  globalCooldownMultiplier: 1
+  personalityModifiers:
+  - personality: 3
+    multiplier: 0.8
+  - personality: 2
+    multiplier: 1.2
+  - personality: 1
+    multiplier: 0.9
+  - personality: 0
+    multiplier: 1.1
+  debugIgnoreCooldowns: 0
+  debugFixedCooldown: 0

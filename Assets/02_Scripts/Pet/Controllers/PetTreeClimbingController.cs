@@ -11,8 +11,8 @@ public class PetTreeClimbingController : PetControllerBase
     private float treeDetectionRadius = 50f;
     // private float treeClimbChance = 0.1f; // 일반적인 상황에서 나무에 오를 확률
     private bool isSearchingForTree = false;
-    private float lastTreeSearchTime = 0f;
-    private float treeSearchCooldown = 10f; // 일반 탐색 쿨다운은 길게
+    private float lastTreeSearchTime = 0f; // 레거시 호환용 (CooldownManager 없을 때 사용)
+    // treeSearchCooldown 제거 - CooldownManager 사용
 
     protected override void OnInitialize()
     {
@@ -44,8 +44,33 @@ public class PetTreeClimbingController : PetControllerBase
             return;
         }
 
-        if (Time.time - lastTreeSearchTime < treeSearchCooldown) return;
-        lastTreeSearchTime = Time.time;
+        // 쿨다운 체크 - CooldownManager 사용
+        if (CooldownManager.Instance != null)
+        {
+            if (CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.TreeClimbing,
+                petController.petName))
+            {
+                return;
+            }
+        }
+        else
+        {
+            // 레거시 방식 (CooldownManager 없을 때)
+            if (Time.time - lastTreeSearchTime < 10f) return;
+        }
+
+        // 쿨다운 시작
+        if (CooldownManager.Instance != null)
+        {
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.TreeClimbing,
+                petController.petName);
+        }
+        else
+        {
+            lastTreeSearchTime = Time.time;
+        }
 
         if (UnityEngine.Random.value < petController.treeClimbChance)
         {

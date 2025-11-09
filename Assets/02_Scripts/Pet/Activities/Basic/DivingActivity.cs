@@ -24,18 +24,15 @@ public class DivingActivity : PetActivityAdapter
     private bool isMovingToSpot = false;
     /// <summary>펫이 실제로 다이빙 중인지 여부</summary>
     private bool isDiving = false;
-    /// <summary>마지막 다이빙 시간을 기록 (쿨다운 관리용)</summary>
+    /// <summary>마지막 다이빙 시간을 기록 (레거시 호환용 - CooldownManager 없을 때 사용)</summary>
     private float lastDivingTime = -60f;
-    /// <summary>실패한 다이빙 시도 시간 (실패 후 재시도 쿨다운용)</summary>
+    /// <summary>실패한 다이빙 시도 시간 (레거시 호환용 - CooldownManager 없을 때 사용)</summary>
     private float failedAttemptTime = -60f;
     /// <summary>현재 실행 중인 다이빙 코루틴 참조</summary>
     private Coroutine divingCoroutine = null;
     
     // ===== 다이빙 관련 상수 설정 =====
-    /// <summary>다이빙 후 재시도까지 대기 시간 (30초)</summary>
-    private const float DIVING_COOLDOWN = 30f;
-    /// <summary>다이빙 실패 후 재시도까지 대기 시간 (60초)</summary>
-    private const float FAILED_ATTEMPT_COOLDOWN = 60f;
+    // DIVING_COOLDOWN, FAILED_ATTEMPT_COOLDOWN 제거 - CooldownManager 사용
     /// <summary>다이빙 지점 도착 판정 거리 (2유닛)</summary>
     private const float SPOT_ARRIVAL_DISTANCE = 2f;
     /// <summary>다이빙 지점까지 최대 허용 거리 (50유닛)</summary>
@@ -87,13 +84,36 @@ public class DivingActivity : PetActivityAdapter
         if (needs.Hunger > 70f || needs.Sleepiness > 70f)
             return false;
             
-        // 5. 쿨다운 체크: 최근 다이빙 후 30초 대기
-        if (Time.time - lastDivingTime < DIVING_COOLDOWN)
-            return false;
-            
-        // 6. 실패 쿨다운 체크: 실패 후 60초 대기
-        if (Time.time - failedAttemptTime < FAILED_ATTEMPT_COOLDOWN)
-            return false;
+        // 5. 쿨다운 체크 - CooldownManager 사용
+        if (CooldownManager.Instance != null)
+        {
+            // 다이빙 성공 쿨다운 체크
+            if (CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.Diving,
+                pet.petName))
+            {
+                return false;
+            }
+
+            // 다이빙 실패 쿨다운 체크
+            if (CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.DivingFailed,
+                pet.petName))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // 레거시 방식 (CooldownManager 없을 때)
+            // 5. 쿨다운 체크: 최근 다이빙 후 30초 대기
+            if (Time.time - lastDivingTime < 30f)
+                return false;
+
+            // 6. 실패 쿨다운 체크: 실패 후 60초 대기
+            if (Time.time - failedAttemptTime < 60f)
+                return false;
+        }
             
         // 7. 다른 펫이 다이빙 중인지 체크
         if (currentDiver != null && currentDiver != pet)
@@ -279,7 +299,7 @@ public class DivingActivity : PetActivityAdapter
         if (!pet.agent.hasPath && !pet.agent.pathPending)
         {
             // 경로를 찾을 수 없으면 실패 처리
-            failedAttemptTime = Time.time;
+            SetDivingFailedCooldown();
             isMovingToSpot = false;
             isDiving = false;
             if (currentDiver == pet)
@@ -325,7 +345,7 @@ public class DivingActivity : PetActivityAdapter
             if (timeoutCounter > 30f)
             {
                 // 30초 동안 도착 못하면 실패 처리
-                failedAttemptTime = Time.time;
+                SetDivingFailedCooldown();
                 isMovingToSpot = false;
                 isDiving = false;
                 if (currentDiver == pet)
@@ -351,7 +371,7 @@ public class DivingActivity : PetActivityAdapter
                     if (retryCount >= MAX_RETRIES)
                     {
                         // 최대 재시도 횟수 초과 시 실패
-                        failedAttemptTime = Time.time;
+                        SetDivingFailedCooldown();
                         isMovingToSpot = false;
                         isDiving = false;
                         if (currentDiver == pet)
@@ -386,7 +406,7 @@ public class DivingActivity : PetActivityAdapter
                         else
                         {
 
-                            failedAttemptTime = Time.time;
+                            SetDivingFailedCooldown();
                             Stop();
                             yield break;
                         }
@@ -394,7 +414,7 @@ public class DivingActivity : PetActivityAdapter
                     else
                     {
 
-                        failedAttemptTime = Time.time;
+                        SetDivingFailedCooldown();
                         Stop();
                         yield break;
                     }
@@ -521,8 +541,10 @@ public class DivingActivity : PetActivityAdapter
         
         // 상태 플래그 정리
         isDiving = false;
-        lastDivingTime = Time.time;  // 쿨다운 시작
-        
+
+        // 다이빙 성공 쿨다운 시작
+        SetDivingSuccessCooldown();
+
         // 다이빙 슬롯 해제 (다른 펫이 다이빙 가능하도록)
         if (currentDiver == pet)
         {
@@ -530,6 +552,42 @@ public class DivingActivity : PetActivityAdapter
         }
 
 
+    }
+
+    /// <summary>
+    /// 다이빙 성공 쿨다운 설정
+    /// </summary>
+    private void SetDivingSuccessCooldown()
+    {
+        if (CooldownManager.Instance != null)
+        {
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.Diving,
+                pet.petName);
+        }
+        else
+        {
+            // 레거시 방식
+            lastDivingTime = Time.time;
+        }
+    }
+
+    /// <summary>
+    /// 다이빙 실패 쿨다운 설정
+    /// </summary>
+    private void SetDivingFailedCooldown()
+    {
+        if (CooldownManager.Instance != null)
+        {
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.DivingFailed,
+                pet.petName);
+        }
+        else
+        {
+            // 레거시 방식
+            failedAttemptTime = Time.time;
+        }
     }
 
     /// <summary>

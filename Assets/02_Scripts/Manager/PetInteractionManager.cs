@@ -37,15 +37,21 @@ public class PetInteractionManager : MonoBehaviour
     public static PetInteractionManager Instance { get; private set; }
 
     [Header("상호작용 설정")]
+    [Tooltip("레거시 쿨타임 값 - CooldownManager 사용 시 무시됨")]
+    [System.Obsolete("CooldownManager를 사용하세요")]
     public float interactionCooldown = 30f;
-    
+
     [Header("시작 지연")]
     public float startDelay = 3.0f;
     private bool canStartInteractions = false;
 
+    [Header("쿨타임 관리")]
+    [Tooltip("CooldownManager 사용 여부")]
+    public bool useCooldownManager = true;
+
     // 상호작용 관리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
-    private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>();
+    private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>(); // 레거시 호환용
     
     // 등록된 상호작용 컴포넌트
     private List<BasePetInteraction> registeredInteractions = new List<BasePetInteraction>();
@@ -123,14 +129,29 @@ public class PetInteractionManager : MonoBehaviour
     private void StartInteraction(PetController pet1, PetController pet2, BasePetInteraction interaction)
     {
         // Debug.Log($"[PetInteractionManager] {pet1.petName}와 {pet2.petName} 사이에 {interaction.InteractionName} 시작!");
-        
+
         // 상호작용 실행
         interaction.StartInteraction(pet1, pet2);
-        
-        // 상호작용 기록
-        float currentTime = Time.time;
-        lastInteractionTime[pet1] = currentTime;
-        lastInteractionTime[pet2] = currentTime;
+
+        // 쿨타임 기록
+        if (useCooldownManager && CooldownManager.Instance != null)
+        {
+            // CooldownManager 사용
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.PetInteraction,
+                pet1.petName);
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.PetInteraction,
+                pet2.petName);
+        }
+        else
+        {
+            // 레거시 방식 사용
+            float currentTime = Time.time;
+            lastInteractionTime[pet1] = currentTime;
+            lastInteractionTime[pet2] = currentTime;
+        }
+
         interactingPets[pet1] = pet2;
         interactingPets[pet2] = pet1;
     }
@@ -183,11 +204,24 @@ public class PetInteractionManager : MonoBehaviour
 
     private bool IsOnCooldown(PetController pet)
     {
-        if (lastInteractionTime.TryGetValue(pet, out float lastTime))
+        if (useCooldownManager && CooldownManager.Instance != null)
         {
-            return Time.time - lastTime < interactionCooldown;
+            // CooldownManager 사용
+            return CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.PetInteraction,
+                pet.petName);
         }
-        return false;
+        else
+        {
+            // 레거시 방식 사용
+            if (lastInteractionTime.TryGetValue(pet, out float lastTime))
+            {
+                #pragma warning disable CS0618 // 사용되지 않는 멤버 사용 경고 무시
+                return Time.time - lastTime < interactionCooldown;
+                #pragma warning restore CS0618
+            }
+            return false;
+        }
     }
 
     // === 선택적 메서드들 (디버그/호환성용) ===

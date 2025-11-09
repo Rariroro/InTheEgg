@@ -25,7 +25,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
 
     // ===== 놀이 상태 관리 =====
     private float playStartTime;
-    private float lastPlayTime = -60f;
+    private float lastPlayTime = -60f; // 레거시 호환용 (CooldownManager 없을 때 사용)
     private Coroutine playCoroutine;
 
     // ===== WaitForSeconds 캐싱 (성능 최적화) =====
@@ -40,7 +40,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
     private const float PLAY_DISTANCE = 1.2f;           // 나비와 놀기 시작하는 거리 (나비 바로 앞)
     private const float CHASE_RESTART_DISTANCE = 5f;    // 추적 재시작 거리 (히스테리시스)
     private const float PLAY_DURATION = 45f;            // 놀이 지속 시간
-    private const float PLAY_COOLDOWN = 0f;           // 놀이 쿨다운 (2분)
+    // PLAY_COOLDOWN 제거 - CooldownManager 사용
     private const float CHASE_SPEED_MULTIPLIER = 1.2f;  // 나비를 쫓을 때 속도 증가
     private const float PLAY_INTEREST_CHANCE = 0.5f;    // 나비에게 관심을 가질 확률
     // NOTE: CHASE_UPDATE_INTERVAL은 waitPoint5Sec(0.5초)로 대체됨
@@ -85,9 +85,23 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (state.IsHolding || state.IsSelected || state.IsExhausted)
             return false;
 
-        // 쿨다운 체크
-        if (Time.time - lastPlayTime < PLAY_COOLDOWN)
-            return false;
+        // 쿨다운 체크 - CooldownManager 사용
+        if (CooldownManager.Instance != null)
+        {
+            // CooldownManager 사용
+            if (CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.ButterflyPlay,
+                pet.petName))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // 레거시 방식 (CooldownManager 없을 때) - 기본 0초 쿨다운
+            if (Time.time - lastPlayTime < 0f)
+                return false;
+        }
 
         // 나비 파티클 찾기 (최적화: EnvironmentManager 캐싱 사용)
         FindNearestButterfly();
@@ -253,7 +267,20 @@ public class ButterflyPlayActivity : PetActivityAdapter
         pet.State.SetActionLocked(false);
 
         isPlayingWithButterfly = false;
-        lastPlayTime = Time.time;
+
+        // 쿨다운 시작 - CooldownManager 사용
+        if (CooldownManager.Instance != null)
+        {
+            CooldownManager.Instance.StartCooldown(
+                CooldownManager.CooldownType.ButterflyPlay,
+                pet.petName);
+        }
+        else
+        {
+            // 레거시 방식 (CooldownManager 없을 때)
+            lastPlayTime = Time.time;
+        }
+
         targetButterfly = null;
         stuckCounter = 0;  // Stuck 카운터 초기화
 

@@ -71,8 +71,8 @@ public class EnvironmentManager : MonoBehaviour
     private TerrainTextureSwitchManager terrainManager;
 
     // 터치 처리 최적화를 위한 변수
-    private float lastTouchTime;
-    private const float TOUCH_COOLDOWN = 0.1f; // 터치 쿨다운
+    private float lastTouchTime; // 레거시 호환용 (CooldownManager 없을 때 사용)
+    // TOUCH_COOLDOWN 제거 - CooldownManager 사용
 
     // 생성된 환경 오브젝트들을 추적
     private List<GameObject> spawnedEnvironments = new List<GameObject>();
@@ -235,8 +235,21 @@ public class EnvironmentManager : MonoBehaviour
         // 선물이 없으면 Update 실행하지 않음
         if (pendingGifts.Count == 0) return;
 
-        // 터치 쿨다운 체크
-        if (Time.time - lastTouchTime < TOUCH_COOLDOWN) return;
+        // 터치 쿨다운 체크 - CooldownManager 사용
+        if (CooldownManager.Instance != null)
+        {
+            if (CooldownManager.Instance.IsOnCooldown(
+                CooldownManager.CooldownType.EnvironmentTouch,
+                null)) // 전역 쿨타임이므로 entityId 없음
+            {
+                return;
+            }
+        }
+        else
+        {
+            // 레거시 방식 (CooldownManager 없을 때)
+            if (Time.time - lastTouchTime < 0.1f) return;
+        }
 
         // 선물 터치 감지
         HandleGiftTouch();
@@ -329,7 +342,18 @@ public class EnvironmentManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            lastTouchTime = Time.time;
+            // 터치 쿨다운 시작 - CooldownManager 사용
+            if (CooldownManager.Instance != null)
+            {
+                CooldownManager.Instance.StartCooldown(
+                    CooldownManager.CooldownType.EnvironmentTouch,
+                    null); // 전역 쿨타임이므로 entityId 없음
+            }
+            else
+            {
+                // 레거시 방식
+                lastTouchTime = Time.time;
+            }
 
             // 카메라가 없으면 처리하지 않음
             if (Camera.main == null) return;
