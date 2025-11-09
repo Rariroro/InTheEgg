@@ -6,6 +6,10 @@ namespace LegendaryPet
     /// <summary>
     /// 레전드 펫 선택을 관리하는 싱글톤 매니저
     /// PetSelectionManager와 동일한 구조로 작동
+    ///
+    /// [폴더 위치 참고]
+    /// 이 파일은 Manager 폴더가 아닌 LegendaryPet 폴더에 위치합니다.
+    /// 이유: LegendaryPet 네임스페이스 통일성 유지 및 LegendaryPetManager와의 강한 결합
     /// </summary>
     public class LegendaryPetSelectionManager : MonoBehaviour
     {
