@@ -93,9 +93,9 @@ public class RaceInteraction : BasePetInteraction
     // ★★★ 추가: 토끼의 원래 회피 우선순위를 저장할 변수 ★★★
     private int rabbitOriginalPriority;
     
-    // ★★★ 추가: 모든 활성 화살표를 추적하는 static 리스트 ★★★
-    private static List<GameObject> activeArrows = new List<GameObject>();
-    
+    // ★★★ 수정: static 제거 - 인스턴스별로 화살표 관리 ★★★
+    private List<GameObject> myRaceArrows = new List<GameObject>();
+
     // ★★★ 추가: 현재 인스턴스의 결승선 화살표 참조 ★★★
     private GameObject finishArrowInstance;
     /// <summary>
@@ -121,12 +121,12 @@ public class RaceInteraction : BasePetInteraction
     {
         // Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
         
-        // ★★★ 추가: 이전 경주의 남은 화살표 정리 ★★★
-        foreach (var arrow in activeArrows)
+        // ★★★ 수정: 이 인스턴스의 화살표만 정리 ★★★
+        foreach (var arrow in myRaceArrows)
         {
             if (arrow != null) Destroy(arrow);
         }
-        activeArrows.Clear();
+        myRaceArrows.Clear();
 
         // 펫 식별 및 NavMeshAgent 준비 상태 확인 (기존과 동일)
         PetController rabbit = (pet1.PetType == PetType.Rabbit) ? pet1 : pet2;
@@ -196,7 +196,7 @@ public class RaceInteraction : BasePetInteraction
                 finishArrowInstance = Instantiate(finishArrowPrefab, arrowPosition, arrowRotation);
                 
                 // ★★★ 추가: 활성 화살표 리스트에 추가 ★★★
-                activeArrows.Add(finishArrowInstance);
+                myRaceArrows.Add(finishArrowInstance);
 
 
                 // ▼▼▼ [수정] 코루틴을 변수에 저장하여 나중에 중지할 수 있도록 합니다. ▼▼▼
@@ -382,7 +382,7 @@ public class RaceInteraction : BasePetInteraction
             if (finishArrowInstance != null)
             {
                 Destroy(finishArrowInstance);
-                activeArrows.Remove(finishArrowInstance);
+                myRaceArrows.Remove(finishArrowInstance);
             }
             if (IsAgentSafelyReady(rabbit))
             {
@@ -446,7 +446,7 @@ public class RaceInteraction : BasePetInteraction
 
         // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
         Destroy(arrow);
-        activeArrows.Remove(arrow);
+        myRaceArrows.Remove(arrow);
     }
     // ... (다른 헬퍼 메서드들) ...
     /// <summary>
@@ -766,7 +766,7 @@ public class RaceInteraction : BasePetInteraction
         if (finishArrowInstance != null)
         {
             Destroy(finishArrowInstance);
-            activeArrows.Remove(finishArrowInstance);
+            myRaceArrows.Remove(finishArrowInstance);
         }
     }
 

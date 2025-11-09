@@ -52,6 +52,9 @@ public class PetInteractionManager : MonoBehaviour
     // 상호작용 관리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
     private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>(); // 레거시 호환용
+
+    // 쿨타임 시스템 (펫 쌍별로 관리)
+    private Dictionary<(string, string), float> interactionCooldowns = new Dictionary<(string, string), float>();
     
     // 등록된 상호작용 컴포넌트
     private List<BasePetInteraction> registeredInteractions = new List<BasePetInteraction>();
@@ -106,22 +109,27 @@ public class PetInteractionManager : MonoBehaviour
     {
         if (!canStartInteractions)
             return;
-            
+
         // 빠른 거부 조건들
         if (pet1 == null || pet2 == null)
             return;
-            
+
         if (IsInteracting(pet1) || IsInteracting(pet2))
             return;
-            
+
+        // 펫 쌍 쿨타임 체크 (새로운 방식)
+        if (IsInteractionOnCooldown(pet1, pet2))
+            return;
+
+        // 개별 펫 쿨타임 체크 (레거시 호환)
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2))
             return;
-            
+
         // 적합한 상호작용 찾기
         BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
         if (suitableInteraction == null)
             return;
-            
+
         // 상호작용 시작
         StartInteraction(pet1, pet2, suitableInteraction);
     }
@@ -133,7 +141,11 @@ public class PetInteractionManager : MonoBehaviour
         // 상호작용 실행
         interaction.StartInteraction(pet1, pet2);
 
-        // 쿨타임 기록
+        // 펫 쌍 쿨타임 기록 (새로운 방식)
+        var key = GetInteractionKey(pet1, pet2);
+        interactionCooldowns[key] = Time.time;
+
+        // 개별 펫 쿨타임 기록 (레거시 호환)
         if (useCooldownManager && CooldownManager.Instance != null)
         {
             // CooldownManager 사용
@@ -204,6 +216,8 @@ public class PetInteractionManager : MonoBehaviour
 
     private bool IsOnCooldown(PetController pet)
     {
+        // 이 메서드는 개별 펫의 쿨다운을 체크하는 레거시 메서드
+        // 새로운 IsInteractionOnCooldown 메서드를 사용하는 것을 권장
         if (useCooldownManager && CooldownManager.Instance != null)
         {
             // CooldownManager 사용
@@ -222,6 +236,56 @@ public class PetInteractionManager : MonoBehaviour
             }
             return false;
         }
+    }
+
+    /// <summary>
+    /// 펫 쌍의 상호작용 쿨타임 체크 (새로운 방식)
+    /// </summary>
+    private bool IsInteractionOnCooldown(PetController pet1, PetController pet2)
+    {
+        var key = GetInteractionKey(pet1, pet2);
+
+        if (interactionCooldowns.ContainsKey(key))
+        {
+            float timeSinceLastInteraction = Time.time - interactionCooldowns[key];
+            float cooldown = 60f; // 기본 60초
+
+            // CooldownManager는 내부적으로 설정값을 관리하므로 기본값 사용
+
+            if (timeSinceLastInteraction < cooldown)
+            {
+                // 쿨타임 중
+                ShowCooldownFeedback(pet1, pet2, cooldown - timeSinceLastInteraction);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 펫 쌍의 고유 키 생성
+    /// </summary>
+    private (string, string) GetInteractionKey(PetController pet1, PetController pet2)
+    {
+        string name1 = pet1.petName;
+        string name2 = pet2.petName;
+        // 알파벳 순서로 정렬하여 순서에 관계없이 같은 키를 생성
+        return name1.CompareTo(name2) < 0 ? (name1, name2) : (name2, name1);
+    }
+
+    /// <summary>
+    /// 쿨타임 피드백 표시
+    /// </summary>
+    private void ShowCooldownFeedback(PetController pet1, PetController pet2, float remainingTime)
+    {
+        // UI나 감정 표현으로 쿨타임 피드백
+        string message = $"쿨타임: {remainingTime:F0}초 남음";
+        Debug.Log($"[PetInteractionManager] {pet1.petName} - {pet2.petName} {message}");
+
+        // 펫 위에 쿨타임 표시 (Sleepy 감정으로 대체)
+        if (pet1 != null) pet1.ShowEmotion(EmotionType.Sleepy, 2f);
+        if (pet2 != null) pet2.ShowEmotion(EmotionType.Sleepy, 2f);
     }
 
     // === 선택적 메서드들 (디버그/호환성용) ===

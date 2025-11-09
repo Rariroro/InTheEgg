@@ -107,6 +107,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
     // 추격 성공 여부
     private bool chaseCaught = false;
 
+    // 업데이트 최적화용 타이머
+    private float updateTimer = 0f;
+    private const float UPDATE_INTERVAL = 0.3f;
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.ChaseAndRun;
@@ -200,9 +204,17 @@ public class ChaseAndRunInteraction : BasePetInteraction
         {
             // Debug.Log("[ChaseAndRun] 상호작용 정리 시작.");
 
-            // 파티클 정리
-            if (chaserDustParticles != null) Destroy(chaserDustParticles);
-            if (runnerDustParticles != null) Destroy(runnerDustParticles);
+            // 파티클 정리 - Object Pool로 반환
+            if (chaserDustParticles != null)
+            {
+                StartCoroutine(ReturnToPoolAfter(chaserDustParticles, "DustEffect", 0.1f));
+                chaserDustParticles = null;
+            }
+            if (runnerDustParticles != null)
+            {
+                StartCoroutine(ReturnToPoolAfter(runnerDustParticles, "DustEffect", 0.1f));
+                runnerDustParticles = null;
+            }
 
             // 원래 상태 복원
             chaserState.Restore(chaser);
@@ -274,7 +286,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             UpdateStamina(chaser, runner, Time.deltaTime);
 
             // 속도 조정 (지구력 반영)
-            UpdateChasePhase(chaser, runner, distance, ref chasePhase);
+            UpdateChasePhaseWithTimer(chaser, runner, distance, ref chasePhase, Time.deltaTime);
             
             // 속도에 따른 애니메이션 업데이트
             UpdateChaseAnimations(chaser, runner, chaserAnim, runnerAnim);
@@ -478,52 +490,92 @@ public class ChaseAndRunInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 추격 단계 업데이트 (지구력 반영)
+    /// 추격 단계 업데이트 (지구력 반영) - 업데이트 주기 최적화
     /// </summary>
-    private void UpdateChasePhase(PetController chaser, PetController runner, float distance, ref int phase)
+    private void UpdateChasePhaseWithTimer(PetController chaser, PetController runner, float distance, ref int phase, float deltaTime)
     {
-        float chaserStaminaMult = GetStaminaSpeedMultiplier(chaserStamina);
-        float runnerStaminaMult = GetStaminaSpeedMultiplier(runnerStamina);
-        
-        if (distance < panicDistance && phase != 2)
+        // 타이머 업데이트
+        updateTimer += deltaTime;
+
+        // UPDATE_INTERVAL마다 속도 조정
+        if (updateTimer >= UPDATE_INTERVAL)
         {
-            // 매우 가까움
-            runner.agent.speed = runner.baseSpeed * runnerPanicSpeedMultiplier * runnerStaminaMult;
-            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
-            phase = 2;
-            // Debug.Log("[ChaseAndRun] 매우 가까워짐! 긴급 도망!");
-        }
-        else if (distance > farDistance && phase != 3)
-        {
-            // 멀어짐
-            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
-            chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * chaserStaminaMult;
-            phase = 3;
-            // Debug.Log("[ChaseAndRun] 거리가 멀어짐! 추격 가속!");
-        }
-        else if (distance >= panicDistance && distance <= farDistance && phase != 1)
-        {
-            // 적정 거리
-            runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
-            chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
-            phase = 1;
+            updateTimer = 0f;
+
+            float chaserStaminaMult = GetStaminaSpeedMultiplier(chaserStamina);
+            float runnerStaminaMult = GetStaminaSpeedMultiplier(runnerStamina);
+
+            if (distance < panicDistance && phase != 2)
+            {
+                // 매우 가까움
+                runner.agent.speed = runner.baseSpeed * runnerPanicSpeedMultiplier * runnerStaminaMult;
+                chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
+                phase = 2;
+                // Debug.Log("[ChaseAndRun] 매우 가까워짐! 긴급 도망!");
+            }
+            else if (distance > farDistance && phase != 3)
+            {
+                // 멀어짐
+                runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
+                chaser.agent.speed = chaser.baseSpeed * chaserSprintSpeedMultiplier * chaserStaminaMult;
+                phase = 3;
+                // Debug.Log("[ChaseAndRun] 거리가 멀어짐! 추격 가속!");
+            }
+            else if (distance >= panicDistance && distance <= farDistance && phase != 1)
+            {
+                // 적정 거리
+                runner.agent.speed = runner.baseSpeed * runnerBaseSpeedMultiplier * runnerStaminaMult;
+                chaser.agent.speed = chaser.baseSpeed * chaserBaseSpeedMultiplier * chaserStaminaMult;
+                phase = 1;
+            }
         }
     }
 
     /// <summary>
-    /// 먼지 파티클 생성
+    /// 먼지 파티클 생성 - Object Pool 사용
     /// </summary>
     private void CreateDustParticles(PetController chaser, PetController runner)
     {
-        if (dustParticlePrefab != null)
+        if (EffectPool.Instance == null)
         {
-            // 추격자 먼지
-            chaserDustParticles = Instantiate(dustParticlePrefab, chaser.transform);
+            Debug.LogWarning("[ChaseAndRun] EffectPool이 초기화되지 않았습니다. 파티클을 생성하지 않습니다.");
+            return;
+        }
+
+        // 추격자 먼지 - Pool에서 가져오기
+        chaserDustParticles = EffectPool.Instance.Get("DustEffect");
+        if (chaserDustParticles != null)
+        {
+            chaserDustParticles.transform.SetParent(chaser.transform);
             chaserDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
-            
-            // 도망자 먼지
-            runnerDustParticles = Instantiate(dustParticlePrefab, runner.transform);
+
+            var ps = chaserDustParticles.GetComponent<ParticleSystem>();
+            if (ps != null) ps.Play();
+        }
+
+        // 도망자 먼지 - Pool에서 가져오기
+        runnerDustParticles = EffectPool.Instance.Get("DustEffect");
+        if (runnerDustParticles != null)
+        {
+            runnerDustParticles.transform.SetParent(runner.transform);
             runnerDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
+
+            var ps = runnerDustParticles.GetComponent<ParticleSystem>();
+            if (ps != null) ps.Play();
+        }
+    }
+
+    /// <summary>
+    /// 지연 후 풀로 반환하는 코루틴
+    /// </summary>
+    private IEnumerator ReturnToPoolAfter(GameObject obj, string poolName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (obj != null && EffectPool.Instance != null)
+        {
+            obj.transform.SetParent(null);
+            EffectPool.Instance.Return(obj, poolName);
         }
     }
 
@@ -564,12 +616,22 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaser.agent.isStopped = true;
         runner.agent.isStopped = true;
         
-        // 파티클 효과
-        if (catchParticlePrefab != null)
+        // 파티클 효과 - Object Pool 사용
+        if (EffectPool.Instance != null)
         {
             Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
-            GameObject catchEffect = Instantiate(catchParticlePrefab, midPoint, Quaternion.identity);
-            Destroy(catchEffect, 3f);
+            GameObject catchEffect = EffectPool.Instance.Get("CatchEffect");
+            if (catchEffect != null)
+            {
+                catchEffect.transform.position = midPoint;
+                catchEffect.transform.rotation = Quaternion.identity;
+
+                var ps = catchEffect.GetComponent<ParticleSystem>();
+                if (ps != null) ps.Play();
+
+                // 3초 후 풀로 반환
+                StartCoroutine(ReturnToPoolAfter(catchEffect, "CatchEffect", 3f));
+            }
         }
         
         // 감정 표현
