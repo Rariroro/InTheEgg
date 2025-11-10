@@ -99,6 +99,12 @@ public class GiftBoxUIManager : MonoBehaviour
         environmentManager = FindObjectOfType<EnvironmentManager>();
         treasureHuntManager = TreasureHuntManager.Instance;
         legendaryPetManager = LegendaryPet.LegendaryPetManager.Instance;
+
+        // LegendaryPetManager null 체크
+        if (legendaryPetManager == null)
+        {
+            Debug.LogWarning("[GiftBoxUIManager] LegendaryPetManager를 찾을 수 없습니다. 레전드 펫 기능이 비활성화됩니다.");
+        }
         
         // 초기 카메라 상태를 lastCamera 변수에 저장 (첫 번째 버튼 클릭 전까지의 기본값)
         if (mainCamera != null)

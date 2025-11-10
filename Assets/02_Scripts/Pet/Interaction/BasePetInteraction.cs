@@ -155,6 +155,23 @@ public abstract class BasePetInteraction : MonoBehaviour
         if (pet1 != null && pet1.State.IsInteracting) SafeResumePet(pet1);
         if (pet2 != null && pet2.State.IsInteracting) SafeResumePet(pet2);
 
+        // ✅ 상호작용 종료 시 쿨타임 시작
+        if (CooldownManager.Instance != null)
+        {
+            if (pet1 != null)
+            {
+                CooldownManager.Instance.StartCooldown(
+                    CooldownManager.CooldownType.PetInteraction,
+                    pet1.petName);
+            }
+            if (pet2 != null)
+            {
+                CooldownManager.Instance.StartCooldown(
+                    CooldownManager.CooldownType.PetInteraction,
+                    pet2.petName);
+            }
+        }
+
         // 상호작용 매니저에 종료 알림
         if (PetInteractionManager.Instance != null)
         {

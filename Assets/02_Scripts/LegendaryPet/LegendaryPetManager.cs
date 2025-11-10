@@ -254,6 +254,13 @@ namespace LegendaryPet
         // 모든 레전드 펫을 스폰하는 메서드 (PetManager의 SpawnAllPets와 동일)
         private void SpawnAllLegendaryPets()
         {
+            // null 체크: 테스트 씬이거나 프리팹이 할당되지 않은 경우
+            if (legendaryPetPrefabs == null || legendaryPetPrefabs.Length == 0)
+            {
+                Debug.LogWarning("[LegendaryPetManager] 레전드 펫 프리팹이 설정되지 않았습니다. 스폰을 건너뜁니다.");
+                return;
+            }
+
             int spawnCount = 0;
             for (int i = 0; i < legendaryPetPrefabs.Length && spawnCount < maxLegendaryPets; i++)
             {

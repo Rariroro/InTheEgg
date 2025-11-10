@@ -42,13 +42,6 @@ public class CooldownManager : MonoBehaviour
         Feeding,               // 먹이 먹기
         FoodSearch,            // 먹이 탐색
 
-        // === 특수 상호작용 ===
-        ChaseAndRun,           // 추격전
-        WalkTogether,          // 함께 걷기
-        Race,                  // 경주
-        Fight,                 // 싸움
-        SleepTogether,         // 함께 자기
-
         // === 기타 ===
         Custom                 // 커스텀 쿨타임 (동적 생성용)
     }
@@ -363,8 +356,6 @@ public class CooldownManager : MonoBehaviour
             case CooldownType.TreeClimbing: return 10f;
             case CooldownType.ButterflyPlay: return 0f;
             case CooldownType.EnvironmentTouch: return 0.1f;
-            case CooldownType.ChaseAndRun: return 30f;
-            case CooldownType.WalkTogether: return 30f;
             default: return 10f;
         }
     }

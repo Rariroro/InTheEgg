@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fcc7a591ab4e4c54a9350479fa221f6, type: 3}
   m_Name: CooldownSettings
   m_EditorClassIdentifier: 
-  petInteractionCooldown: 30
+  petInteractionCooldown: 120
   divingCooldown: 30
   divingFailedCooldown: 60
   treeClimbingCooldown: 10
@@ -22,11 +22,6 @@ MonoBehaviour:
   giftTouchCooldown: 0.1
   feedingCooldown: 10
   foodSearchCooldown: 5
-  chaseAndRunCooldown: 30
-  walkTogetherCooldown: 30
-  raceCooldown: 30
-  fightCooldown: 30
-  sleepTogetherCooldown: 60
   globalCooldownMultiplier: 1
   personalityModifiers:
   - personality: 3
@@ -37,5 +32,5 @@ MonoBehaviour:
     multiplier: 0.9
   - personality: 0
     multiplier: 1.1
-  debugIgnoreCooldowns: 0
-  debugFixedCooldown: 0
+  debugIgnoreCooldowns: 1
+  debugFixedCooldown: 120

@@ -9,9 +9,9 @@ using System.Collections.Generic;
 public class CooldownSettings : ScriptableObject
 {
     [Header("펫 상호작용 쿨타임")]
-    [Tooltip("펫 간 일반 상호작용 쿨타임 (초)")]
+    [Tooltip("펫 간 일반 상호작용 쿨타임 - 상호작용 후 해당 펫의 체력 회복 시간 (초)")]
     [Range(0f, 120f)]
-    public float petInteractionCooldown = 30f;
+    public float petInteractionCooldown = 60f;
 
     [Header("활동별 쿨타임")]
     [Tooltip("다이빙 성공 후 쿨타임 (초)")]
@@ -52,27 +52,6 @@ public class CooldownSettings : ScriptableObject
     [Range(0f, 30f)]
     public float foodSearchCooldown = 5f;
 
-    [Header("특수 상호작용 쿨타임")]
-    [Tooltip("추격전 쿨타임 (초)")]
-    [Range(0f, 120f)]
-    public float chaseAndRunCooldown = 30f;
-
-    [Tooltip("함께 걷기 쿨타임 (초)")]
-    [Range(0f, 120f)]
-    public float walkTogetherCooldown = 30f;
-
-    [Tooltip("경주 쿨타임 (초)")]
-    [Range(0f, 120f)]
-    public float raceCooldown = 30f;
-
-    [Tooltip("싸움 쿨타임 (초)")]
-    [Range(0f, 120f)]
-    public float fightCooldown = 30f;
-
-    [Tooltip("함께 자기 쿨타임 (초)")]
-    [Range(0f, 180f)]
-    public float sleepTogetherCooldown = 60f;
-
     [Header("쿨타임 수정자")]
     [Tooltip("전역 쿨타임 배율 (0.5 = 50% 감소, 2.0 = 200% 증가)")]
     [Range(0.1f, 3f)]
@@ -92,7 +71,7 @@ public class CooldownSettings : ScriptableObject
     public bool debugIgnoreCooldowns = false;
 
     [Tooltip("모든 쿨타임을 이 값으로 고정 (디버그용, 0이면 사용 안 함)")]
-    [Range(0f, 10f)]
+    [Range(0f, 120f)]
     public float debugFixedCooldown = 0f;
 
     /// <summary>
@@ -179,18 +158,6 @@ public class CooldownSettings : ScriptableObject
             case CooldownManager.CooldownType.FoodSearch:
                 return foodSearchCooldown;
 
-            // 특수 상호작용
-            case CooldownManager.CooldownType.ChaseAndRun:
-                return chaseAndRunCooldown;
-            case CooldownManager.CooldownType.WalkTogether:
-                return walkTogetherCooldown;
-            case CooldownManager.CooldownType.Race:
-                return raceCooldown;
-            case CooldownManager.CooldownType.Fight:
-                return fightCooldown;
-            case CooldownManager.CooldownType.SleepTogether:
-                return sleepTogetherCooldown;
-
             // 기타
             case CooldownManager.CooldownType.Custom:
             default:
@@ -240,11 +207,6 @@ public class CooldownSettings : ScriptableObject
         giftTouchCooldown *= multiplier;
         feedingCooldown *= multiplier;
         foodSearchCooldown *= multiplier;
-        chaseAndRunCooldown *= multiplier;
-        walkTogetherCooldown *= multiplier;
-        raceCooldown *= multiplier;
-        fightCooldown *= multiplier;
-        sleepTogetherCooldown *= multiplier;
     }
 
     /// <summary>
@@ -253,7 +215,7 @@ public class CooldownSettings : ScriptableObject
     [ContextMenu("Reset to Default")]
     public void ResetToDefault()
     {
-        petInteractionCooldown = 30f;
+        petInteractionCooldown = 60f;
         divingCooldown = 30f;
         divingFailedCooldown = 60f;
         treeClimbingCooldown = 10f;
@@ -263,11 +225,6 @@ public class CooldownSettings : ScriptableObject
         giftTouchCooldown = 0.1f;
         feedingCooldown = 10f;
         foodSearchCooldown = 5f;
-        chaseAndRunCooldown = 30f;
-        walkTogetherCooldown = 30f;
-        raceCooldown = 30f;
-        fightCooldown = 30f;
-        sleepTogetherCooldown = 60f;
         globalCooldownMultiplier = 1f;
         debugIgnoreCooldowns = false;
         debugFixedCooldown = 0f;
@@ -286,8 +243,6 @@ public class CooldownSettings : ScriptableObject
         info += $"Treasure Hunt: {treasureHuntCooldown}s\n";
         info += $"Environment Touch: {environmentTouchCooldown}s\n";
         info += $"Feeding: {feedingCooldown}s\n";
-        info += $"Chase & Run: {chaseAndRunCooldown}s\n";
-        info += $"Walk Together: {walkTogetherCooldown}s\n";
         info += $"Global Multiplier: {globalCooldownMultiplier:F1}x\n";
 
         if (debugIgnoreCooldowns)

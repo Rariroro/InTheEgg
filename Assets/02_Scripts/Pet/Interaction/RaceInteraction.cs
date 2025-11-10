@@ -59,7 +59,7 @@ public class RaceInteraction : BasePetInteraction
 
     [Tooltip("거북이가 이 지점에 도달하면 토끼가 깨어납니다 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
     [Range(0f, 1f)]
-    public float turtleWakeUpProgress = 0.9f;
+    public float turtleWakeUpProgress = 0.94f;
 
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
