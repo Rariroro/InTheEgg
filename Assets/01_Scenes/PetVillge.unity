@@ -100913,11 +100913,37 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
       objectReference: {fileID: 2124033965}
+    - target: {fileID: 7427049934770212130, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+--- !u!114 &965292260029740789 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7203191909459317754, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+  m_PrefabInstance: {fileID: 965292260029740788}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &965292260029740790 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3957758844241896153, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+  m_PrefabInstance: {fileID: 965292260029740788}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!205 &966381552351519921
 LODGroup:
   m_ObjectHideFlags: 0
@@ -154759,17 +154785,6 @@ Transform:
   - {fileID: 3570458883768101511}
   m_Father: {fileID: 490291389}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7699660784683680829 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 120736547758306755, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &7701307960760881682
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -156265,17 +156280,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &7978929146412002123 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3395788321154919849, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!23 &7984079042325542818
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -165777,11 +165781,11 @@ PrefabInstance:
     - target: {fileID: 2184876731133836907, guid: 2dbb995257e8044c892b940536ea791c, type: 3}
       propertyPath: petCameraButton
       value: 
-      objectReference: {fileID: 7699660784683680829}
+      objectReference: {fileID: 965292260029740790}
     - target: {fileID: 2184876731133836907, guid: 2dbb995257e8044c892b940536ea791c, type: 3}
       propertyPath: petCameraButtonText
       value: 
-      objectReference: {fileID: 7978929146412002123}
+      objectReference: {fileID: 965292260029740789}
     - target: {fileID: 2184876731133836907, guid: 2dbb995257e8044c892b940536ea791c, type: 3}
       propertyPath: buttonBackgroundImage
       value: 
