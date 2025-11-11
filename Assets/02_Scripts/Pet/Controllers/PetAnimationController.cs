@@ -49,12 +49,13 @@ public class PetAnimationController : PetControllerBase
             );
         }
 
+        // 애니메이션 속도 동기화 (상태 체크보다 먼저 실행)
+        SyncAnimationSpeed();
+
         if (petController.State.IsSelected || petController.State.IsHolding || petController.State.IsInteracting || petController.State.IsActionLocked)
         {
             return;
         }
-        // 애니메이션 속도 동기화
-        SyncAnimationSpeed();
 
         // 특수 애니메이션이 재생 중이면 건너뛰기
         if (isSpecialAnimationPlaying)

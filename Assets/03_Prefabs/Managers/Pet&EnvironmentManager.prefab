@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1708798549124715199}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -50.861572, y: -5.902157, z: 68.90943}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -108,10 +108,43 @@ MonoBehaviour:
   - {fileID: 1988973864988509649, guid: cac00b0943be044cc947f82177d24eec, type: 3}
   spawnRadius: 150
   maxPets: 60
+  spawnSpots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  useSpawnSpots: 1
+  spawnOffsetRadius: 2
   firstAppearanceEffectPrefab: {fileID: 0}
   firstAppearanceDelay: 0.5
-  giftPrefab: {fileID: 0}
-  celebrationEffectPrefab: {fileID: 0}
+  giftPrefabs:
+  - {fileID: 2462992809979899394, guid: 590ae616cb94f431980b2955d8b970d9, type: 3}
+  - {fileID: 2462992809979899394, guid: b8e090ade03824cb1b04fdb777e4e0dd, type: 3}
+  - {fileID: 2462992809979899394, guid: b98bbf8af454d41c5ac01f455dc18fc0, type: 3}
+  - {fileID: 2462992809979899394, guid: b3beb90cfcba14418be0e7cfbe0f7302, type: 3}
+  - {fileID: 2462992809979899394, guid: 8a7b542feb98f458eb0422bd92881123, type: 3}
+  - {fileID: 2462992809979899394, guid: 303f33389054c4914b17f5aa852e01b8, type: 3}
+  - {fileID: 2462992809979899394, guid: 1e72c628ec9ef438c9bec6ffe666f7a3, type: 3}
+  - {fileID: 2462992809979899394, guid: 032f4b27c31d74c4a80771c6e16a00f3, type: 3}
+  - {fileID: 2462992809979899394, guid: ef77d97749fb0425ea5f931ff98e78bd, type: 3}
+  - {fileID: 2462992809979899394, guid: ab01b60fc6cb34f16aa39fca3611826f, type: 3}
+  - {fileID: 2462992809979899394, guid: 1f68f9821ccb04a0d9af557340e5e343, type: 3}
+  - {fileID: 2462992809979899394, guid: 9656f9f9c29754ba392a3467a7d73243, type: 3}
+  - {fileID: 2462992809979899394, guid: 562f6f036ba324da7bb179b257c6fb8a, type: 3}
+  - {fileID: 2462992809979899394, guid: c4f15187198554460b5cadadb8eae5e9, type: 3}
+  - {fileID: 2462992809979899394, guid: 853c141bce4434cfba83046e931059c7, type: 3}
+  - {fileID: 2462992809979899394, guid: 9b544015142934a88a49e3d0b1f8132b, type: 3}
+  - {fileID: 2462992809979899394, guid: 3fa306dd7a99b433d8664904d2ef3df5, type: 3}
+  - {fileID: 2462992809979899394, guid: 6095f80c8931e43689422f115dd9c70d, type: 3}
+  - {fileID: 2462992809979899394, guid: 8619cce6abe6a451ebbc7691deeb639c, type: 3}
+  celebrationEffectPrefab: {fileID: 1890581295539120, guid: a4ee7c848f94149fc865d05ddeaab985, type: 3}
   giftSpawnDelay: 0.5
   fireworkPrefabs: []
   navMeshWaitTime: 3

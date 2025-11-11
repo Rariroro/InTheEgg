@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &592817578851420473
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5818260323748160447}
+  - component: {fileID: 5135077439393447529}
+  m_Layer: 0
+  m_Name: '#TerrainTextureSwitcherManager'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5818260323748160447
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 592817578851420473}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -55.06157, y: 14.797844, z: -41.290565}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5135077439393447529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 592817578851420473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc4b6bf899222406eb89d1421cb07439, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetTerrain: {fileID: 0}
+  planeGroups:
+  - groupName: orchardEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: ricefieldEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: sunflowerEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: honeypotEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: berryfieldEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: watermelonEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: cornfieldEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: pondEnvironment
+    useAlternativeTexture: 0
+    planes:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: foodstoreEnvironment
+    useAlternativeTexture: 0
+    planes: []
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: flowersEnvironment
+    useAlternativeTexture: 0
+    planes: []
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: fenceEnvironment
+    useAlternativeTexture: 0
+    planes: []
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: forestEnvironment
+    useAlternativeTexture: 0
+    planes: []
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  - groupName: cucumberEnvironment
+    useAlternativeTexture: 0
+    planes: []
+    previousToggleState: 0
+    affectedTerrainPoints: []
+    affectedAlphamapPoints: []
+  showDebugVisuals: 0
+  samplesPerUnit: 5
+  autoEnableAllTogglesOnStart: 1

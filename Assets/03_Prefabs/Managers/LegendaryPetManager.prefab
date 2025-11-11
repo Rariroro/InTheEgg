@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1960509059389558243
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6180092414307619987}
+  - component: {fileID: 1974688549386232031}
+  m_Layer: 0
+  m_Name: LegendaryPetManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6180092414307619987
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1960509059389558243}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1974688549386232031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1960509059389558243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d574159b6925d4c269d15c369837e75b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  legendaryPetPrefabs:
+  - {fileID: 4667180333214675606, guid: cde63f50407ca43139c4a28c4b19b56e, type: 3}
+  - {fileID: 6673450887794766262, guid: bf0822a09c58c4ba1b9e0b276a9118db, type: 3}
+  - {fileID: 1697668212555987002, guid: bb841a5bc8c6a451bb7f5262bfb98c9d, type: 3}
+  - {fileID: 2923038482757048391, guid: f8df80a3b8f1b47b38dd40385513cd1e, type: 3}
+  - {fileID: 7053131230823619103, guid: 6d3000cfea80e49d2bb0539fa9384e45, type: 3}
+  - {fileID: 7531138139812612783, guid: f5f2d6686c4fe465c82b75633976e33d, type: 3}
+  - {fileID: 8652999589842752699, guid: e0e00920f199b487e98e63052e201630, type: 3}
+  - {fileID: 3514546012081091601, guid: 29e7bfe3ac7f64570a849dfde07856ec, type: 3}
+  - {fileID: 3556100388096106126, guid: 9890c6429d57142a295730388ccd18ea, type: 3}
+  - {fileID: 2912272638275306517, guid: 2c3d463c2730448a9bf65aadd140e8d4, type: 3}
+  - {fileID: 4196504381704971933, guid: 98606cca6352e4d07aa07f904041b47f, type: 3}
+  - {fileID: 9001268044786979534, guid: 509e1552826b841d79d4b730ff6158ef, type: 3}
+  - {fileID: 8912768317198322471, guid: 242073bfe2abd47a7836f1fcb39f40d6, type: 3}
+  - {fileID: 3456018285846243268, guid: e7379d591b8e449cc97b9972b57ec5c0, type: 3}
+  - {fileID: 6013774241807360531, guid: 8131d0c8551374b408804a47bdaa84da, type: 3}
+  - {fileID: 109590620861269131, guid: c46acd67b00234c82add433b968a783a, type: 3}
+  - {fileID: 2476575185744686834, guid: c70d12d4e00d749248d0fbdecf65719b, type: 3}
+  - {fileID: 3356147997779700145, guid: 6d1347dc276064bf7a6576f0a6cee3d8, type: 3}
+  - {fileID: 6982777452981594513, guid: 80d4bed984b154e2b8ccc0d5f542ebea, type: 3}
+  - {fileID: 7892442412163782643, guid: 14c005abcefad4c12a2ca475f9f12cf9, type: 3}
+  - {fileID: 5163680577475305110, guid: 5c38b79ded8aa4669973e17b5b16d0b4, type: 3}
+  spawnRadius: 20
+  maxLegendaryPets: 21
+  firstAppearanceEffectPrefab: {fileID: 0}
+  firstAppearanceDelay: 0.5
+  giftPrefab: {fileID: 1180577895617214, guid: df38b6bd385294b91aed38205ace2f6b, type: 3}
+  groundEffectPrefab: {fileID: 168878, guid: 97458eaa2df2b4547817ac4b44af7024, type: 3}
+  celebrationEffectPrefab: {fileID: 123268, guid: d1870651fa4a849cba6a775902ade9e1, type: 3}
+  giftSpawnDelay: 0.5
+  fireworkPrefabs: []
+  giftSpawnPosition: {x: -137.83, y: 18.01, z: 226.82}
+  flightWaypoints:
+  - {x: -138, y: 60, z: 313}
+  - {x: -138, y: 79, z: 313}
+  - {x: -138, y: 79, z: 243}
+  - {x: -141, y: 13.1, z: 172}
+  appearanceEffectPrefab: {fileID: 181232, guid: 720625f29ea1744faa40950d7034312b, type: 3}
+  flyingTrailPrefab: {fileID: 129572, guid: e05e9ef56cf36455bbf36bbb0b4d7eb0, type: 3}
+  flyingSpeed: 10
+  flyingHeightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  navMeshWaitTime: 3
+  legendaryPets: []
+  globalEffectsEnabled: 1
+  effectIntensityMultiplier: 1
+  cameraZoomFOV: 30
+  cameraZoomHeight: 15
+  cameraZoomDistance: 50
+  cameraMoveDuration: 1
+  legendaryShowDuration: 2

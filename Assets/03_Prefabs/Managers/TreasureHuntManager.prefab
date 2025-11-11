@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 931646964334491733}
   - component: {fileID: 5386556166281257173}
+  - component: {fileID: 3210195678014549853}
   m_Layer: 0
   m_Name: TreasureHuntManager
   m_TagString: Untagged
@@ -45,16 +46,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   treasurePrefab: {fileID: 2642860239542664815, guid: 87bfd30b4171e4aa0a9c8f758f0f5a38, type: 3}
-  minTreasureCount: 2
-  maxTreasureCount: 5
+  minTreasureCount: 17
+  maxTreasureCount: 17
   minCoinReward: 10
   maxCoinReward: 50
-  treasureHuntDuration: 120
+  baseBonusCoins: 100
+  bonusCoinsPerSecond: 2
+  treasureHuntDuration: 300
   requiredAffection: 76
-  coinFeedbackText: {fileID: 0}
+  feedbackText: {fileID: 0}
+  coinPopupPrefab: {fileID: 6428104773404309462, guid: e70c32ee8529c4d46978d42b924100a6, type: 3}
   totalCoinsText: {fileID: 0}
+  successPopupPrefab: {fileID: 122836, guid: e37a0a780af0744e5a244ba1dec39863, type: 3}
+  popupScreenRatio: 0.6
   isTreasureHuntActive: 0
   totalCoins: 0
+  missionBonusCoins: 0
   allTreasureSpots:
   - {fileID: 0}
   activeTreasureSpots: []
@@ -62,3 +69,31 @@ MonoBehaviour:
   remainingTime: 0
   totalTreasureCount: 0
   foundTreasureCount: 0
+  droppedTreasures: []
+--- !u!114 &3210195678014549853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7529985883062829302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14a9245d02fe9411b945ace636d1dd57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coinPrefab: {fileID: 0}
+  coinSprite: {fileID: 21300000, guid: 55d1c8b9023084cb3822cb85a1d3b330, type: 3}
+  coinsPerAnimation: 5
+  coinSpawnDelay: 0.1
+  flyDuration: 1
+  curveHeight: 100
+  startScale: 1
+  endScale: 0.5
+  rotationSpeed: 360
+  pulseScale: 1.5
+  pulseDuration: 0.4
+  coinSound: {fileID: 0}
+  arrivalSound: {fileID: 0}
+  coinTargetImage: {fileID: 0}
+  coinTargetText: {fileID: 0}

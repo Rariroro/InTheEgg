@@ -1,0 +1,164 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2453884868734381568
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6497727483738594124}
+  - component: {fileID: 2184876731133836907}
+  - component: {fileID: 2533367304803678582}
+  - component: {fileID: 4565109545696148375}
+  - component: {fileID: 4476117582365532485}
+  m_Layer: 5
+  m_Name: UI&ButtonManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &6497727483738594124
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453884868734381568}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 8.50943}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 720.83844, y: 1252.5979}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2184876731133836907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453884868734381568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83450fa0f4e9b4db888de2c1961ca280, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  petCameraButton: {fileID: 0}
+  petCameraButtonText: {fileID: 0}
+  iconImage: {fileID: 0}
+  buttonBackgroundImage: {fileID: 0}
+  petCameraIcon: {fileID: 21300000, guid: 1ed990419bed14cc8a9981288a33d018, type: 3}
+  cameraIcon: {fileID: 21300000, guid: 296eb9e672cc340c69f6070f6b31a6bb, type: 3}
+  cancelIcon: {fileID: 21300000, guid: 296eb9e672cc340c69f6070f6b31a6bb, type: 3}
+  normalButtonBackground: {fileID: 21300000, guid: 7240c0d166eb849899d1bbc12c3d2d36, type: 3}
+  activeButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
+  cancelButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
+  fadePanel: {fileID: 0}
+  feedbackText: {fileID: 0}
+  petCameraModeActivated: 0
+--- !u!114 &2533367304803678582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453884868734381568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14de0fa71289c4b3d970264fccd9f0d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gatherButton: {fileID: 0}
+  gatherRadius: 15
+  feedbackText: {fileID: 0}
+  iconImage: {fileID: 0}
+  buttonBackgroundImage: {fileID: 0}
+  gatherIcon: {fileID: 21300000, guid: e6bfd0b1457cf427e96b4919312370e5, type: 3}
+  cancelIcon: {fileID: 21300000, guid: 0b2d500afa7494e0f8a5280ae00c570c, type: 3}
+  gatherButtonBackground: {fileID: 21300000, guid: 7240c0d166eb849899d1bbc12c3d2d36, type: 3}
+  cancelButtonBackground: {fileID: 21300000, guid: 71aef8dc5f01c42a9aa29b9dd7e96daa, type: 3}
+  speedMultiplier: 4
+  angularSpeedMultiplier: 4
+  accelerationMultiplier: 4
+  stoppingDistanceMultiplier: 3
+--- !u!114 &4565109545696148375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453884868734381568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4949c467926924de1a7d619a4628234a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemButtonContainer: {fileID: 0}
+  itemButtonPrefab: {fileID: 6369699920582995761, guid: 9e60f1433aeb64a8495002e8acf56775, type: 3}
+  feedbackText: {fileID: 0}
+  dropHeight: 10
+  dropForce: 5
+  meatPrefab: {fileID: 2629127272418962556, guid: a9b40897e586742b0bd5937fb3b15e4a, type: 3}
+  fishPrefab: {fileID: 7151594660703261423, guid: 59f230eeb763d443189a63a56ecd3f36, type: 3}
+  fruitPrefab: {fileID: 1063926865984852, guid: 6056d04b524b74537987383dee0a384b, type: 3}
+  vegetablePrefab: {fileID: 7092925670374095050, guid: 7d7448547f17645babfdcf80414f1b02, type: 3}
+  GrainPrefab: {fileID: 7808569464395512018, guid: c42e4935deab64441b61d76f1b2a9970, type: 3}
+  GrassPrefab: {fileID: 6164546111976963054, guid: ede9b61dc53954cd4b62538eb90cff59, type: 3}
+  hayPrefab: {fileID: 6164546111976963054, guid: 5095bbcf54d1b487a8efdcfc422e927a, type: 3}
+  itemTypeIcons:
+  - itemType: meat
+    icon: {fileID: 21300000, guid: 2f56145cb9c164659aaf6928aa4e94ec, type: 3}
+  - itemType: fish
+    icon: {fileID: 21300000, guid: 1ba06ef96f7c940ab8941c7cb1c5f17c, type: 3}
+  - itemType: fruit
+    icon: {fileID: 21300000, guid: 70b63c2060e674bf29f825b7339b9c55, type: 3}
+  - itemType: vegetable
+    icon: {fileID: 21300000, guid: 3ea5ff52612f34ca486dee47ead4e8b1, type: 3}
+  - itemType: Grain
+    icon: {fileID: 21300000, guid: 8965a7bb817f5425fb63b670858fdc70, type: 3}
+  - itemType: Grass
+    icon: {fileID: 21300000, guid: aa4f701c954a244d6abb8936b7850202, type: 3}
+  - itemType: hay
+    icon: {fileID: 21300000, guid: 0c2b775b3d0784cb390e4a4924791fb3, type: 3}
+  bagButton: {fileID: 0}
+  bagBackground: {fileID: 0}
+  bagBackgroundEmpty: {fileID: 21300000, guid: 35d944683b6f043f0a3213e697779ba8, type: 3}
+  bagBackgroundFilled: {fileID: 21300000, guid: e57d758667ec647ba9a894dcad8b24ef, type: 3}
+  bagCountText: {fileID: 0}
+--- !u!114 &4476117582365532485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2453884868734381568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e7302da9390642209f6f7711c9ac120, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  giftButtonPrefab: {fileID: 6369699920582995761, guid: 96ae842077f2d4e81b7fa5fffcb6d815, type: 3}
+  buttonContainer: {fileID: 0}
+  mainCamera: {fileID: 0}
+  cameraMoveDuration: 1
+  cameraZoomDistance: 20
+  cameraHeight: 10
+  environmentCameraZoomDistance: 50
+  environmentCameraHeight: 20
+  giftTypeIcons:
+  - giftType: pet
+    icon: {fileID: 21300000, guid: 0b26b4d08bb04438188cbf6ee6967deb, type: 3}
+  - giftType: environment
+    icon: {fileID: 21300000, guid: f89c36745ae63488692dfdc4d581ccb8, type: 3}
+  - giftType: treasure
+    icon: {fileID: 21300000, guid: 583f02b89cabe4bb8950b242bfabec48, type: 3}
+  - giftType: legendary
+    icon: {fileID: 21300000, guid: dc7a5d944027e41a4acf63a5340bee35, type: 3}

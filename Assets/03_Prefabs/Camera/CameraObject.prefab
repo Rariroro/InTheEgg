@@ -51,10 +51,10 @@ MonoBehaviour:
   maxZoom: 20
   mouseDragSpeed: 0.5
   limitCameraMovement: 1
-  minX: -500
-  maxX: 500
-  minZ: -500
-  maxZ: 500
+  minX: -283
+  maxX: -35
+  minZ: -150
+  maxZ: 150
 --- !u!1 &6462139813891871305
 GameObject:
   m_ObjectHideFlags: 0
