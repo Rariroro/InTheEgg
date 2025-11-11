@@ -30,7 +30,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4562928858349846267
 Transform:
   m_ObjectHideFlags: 0
@@ -39,13 +39,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7108309724432713129}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.91214347, y: 0.06196672, z: -0.17119673, w: 0.36721414}
+  m_LocalRotation: {x: -0.91214263, y: 0.061965935, z: -0.17119566, w: 0.36721662}
   m_LocalPosition: {x: -129.74571, y: 19.39822, z: -37.71538}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -139.557, y: -28.044983, z: 18.285004}
 --- !u!114 &5002162538655136858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -242,7 +242,7 @@ MonoBehaviour:
   rabbitNapProgress: 0.446
   rabbitFinalSprintSpeedMultiplier: 3
   turtleSpeedMultiplier: 1
-  turtleWakeUpProgress: 0.9
+  turtleWakeUpProgress: 0.952
   agentSafetyTimeout: 3
   finishLineSpread: 5
   stuckDetectionTime: 3

@@ -90,13 +90,15 @@ public class CooldownSettings : ScriptableObject
     /// </summary>
     public float GetCooldownDuration(CooldownManager.CooldownType type)
     {
-        // 디버그 모드 체크
-        if (debugIgnoreCooldowns)
-            return 0f;
-
+        // ✅ 우선순위 1: 고정 쿨타임 (명시적 테스트 값)
         if (debugFixedCooldown > 0)
             return debugFixedCooldown;
 
+        // ✅ 우선순위 2: 쿨타임 무시 (완전 비활성화)
+        if (debugIgnoreCooldowns)
+            return 0f;
+
+        // ✅ 우선순위 3: 정상 쿨타임 (기본값)
         // 타입별 기본 쿨타임 가져오기
         float baseDuration = GetBaseDuration(type);
 
