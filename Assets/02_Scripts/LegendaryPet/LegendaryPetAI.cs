@@ -62,7 +62,7 @@ namespace LegendaryPet
                 cachedGroundPosition = hit.point;
                 cachedGroundHeight = hit.point.y;
                 lastGroundCheckTime = Time.time;
-                Debug.Log($"[LegendaryPetAI] {controller.PetName}: 지면 spawnPosition 설정 - {spawnPosition}");
+                // Debug.Log($"[LegendaryPetAI] {controller.PetName}: 지면 spawnPosition 설정 - {spawnPosition}");
             }
             else
             {
@@ -516,7 +516,7 @@ namespace LegendaryPet
         public void UpdateSpawnPosition(Vector3 groundPosition)
         {
             spawnPosition = groundPosition;
-            Debug.Log($"[LegendaryPetAI] {controller.PetName}: spawnPosition 업데이트 - {spawnPosition}");
+            // Debug.Log($"[LegendaryPetAI] {controller.PetName}: spawnPosition 업데이트 - {spawnPosition}");
         }
 
         // 패턴 변경 메서드 (외부에서 호출 가능)

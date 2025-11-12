@@ -136,40 +136,6 @@ public class ToastNotificationItem
     }
 
     /// <summary>
-    /// 단일 펫 활동 토스트 생성
-    /// </summary>
-    public static ToastNotificationItem CreateActivityToast(
-        PetController pet,
-        string activityName,
-        Sprite activityIcon = null)
-    {
-        var toast = new ToastNotificationItem
-        {
-            type = NotificationType.PetActivity,
-            pet1 = new PetInfo(pet),
-            customMessage = activityName,
-            worldPosition = pet.transform.position
-        };
-
-        // 카메라 거리 계산
-        if (Camera.main != null)
-        {
-            toast.distanceFromCamera = Vector3.Distance(
-                Camera.main.transform.position,
-                toast.worldPosition
-            );
-        }
-
-        // 우선순위 계산
-        toast.CalculatePriority();
-
-        // 클릭 액션 설정
-        toast.onClick = () => FocusOnPet(pet);
-
-        return toast;
-    }
-
-    /// <summary>
     /// 시스템 알림 토스트 생성
     /// </summary>
     public static ToastNotificationItem CreateSystemToast(

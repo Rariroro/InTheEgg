@@ -30,8 +30,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
         // Debug.Log("StartInteraction2");
 
-        // 토스트 알림 발생
-        NotifyInteractionStart(pet1, pet2);
+        // ✅ 토스트 알림을 준비 완료 후로 이동 (InteractionLifecycle에서 발생)
 
         // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
         StartCoroutine(InteractionLifecycle(pet1, pet2));
@@ -64,12 +63,20 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         // (선택사항) 펫이 NavMesh 위에 있는지 최종 확인
         yield return StartCoroutine(EnsurePetsOnNavMesh(pet1, pet2));
+
+        // NavMesh 확인 실패 시 조용히 종료
+        if (pet1.agent == null || !pet1.agent.isOnNavMesh || pet2.agent == null || !pet2.agent.isOnNavMesh)
+        {
+            // Debug.LogWarning($"[{InteractionName}] NavMesh 준비 실패로 상호작용 취소");
+            yield break;
+        }
+
         // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
         // Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
         // 펫 크기에 따른 거리 조정
         float adjustedDistance = CalculateAdjustedDistance(pet1, pet2);
-        
+
         // 펫들이 서로 마주볼 위치 계산
         Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
         if (direction == Vector3.zero) direction = pet1.transform.forward; // 위치가 겹쳤을 경우를 대비
@@ -83,6 +90,26 @@ public abstract class BasePetInteraction : MonoBehaviour
 
         // 계산된 위치로 이동
         yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1TargetPos, pet2TargetPos, 10f));
+
+        // 이동 중단 체크 (터치/홀드/모이기)
+        if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
+            (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
+        {
+            // Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 취소");
+            yield break;
+        }
+
+        if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
+                              pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
+            (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
+                              pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+        {
+            // Debug.Log($"[{InteractionName}] 이동 중 모이기로 인해 상호작용 취소");
+            yield break;
+        }
+
+        // ✅ 여기까지 성공적으로 준비 완료! 토스트 알림 발생
+        NotifyInteractionStart(pet1, pet2);
 
         // 서로 마주보게 회전 - 각 상호작용이 자체적으로 처리하도록 제거
         // LookAtEachOther(pet1, pet2);  // 즉시 회전 제거 - 각 상호작용에서 부드럽게 처리
@@ -856,10 +883,24 @@ public abstract class BasePetInteraction : MonoBehaviour
     }
 
     /// <summary>
+    /// 토스트 알림을 표시할지 여부 결정 (서브클래스에서 오버라이드 가능)
+    /// </summary>
+    protected virtual bool ShouldShowToastNotification()
+    {
+        return true;
+    }
+
+    /// <summary>
     /// 상호작용 시작 알림
     /// </summary>
     private void NotifyInteractionStart(PetController pet1, PetController pet2)
     {
+        // 토스트 알림 표시 여부 체크
+        if (!ShouldShowToastNotification())
+        {
+            return;
+        }
+
         // InteractionType 결정
         InteractionType interactionType = GetInteractionType();
 
@@ -879,15 +920,23 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 기본값 반환 (InteractionName 기반)
         switch (InteractionName)
         {
-            case "Chase": return InteractionType.ChaseAndRun;
             case "Fight": return InteractionType.Fight;
-            case "Race": return InteractionType.Race;
+            case "Headbutt": return InteractionType.Headbutt;
+            case "CamelAlpacaSpitFight": return InteractionType.CamelAlpacaSpitFight;
             case "WalkTogether": return InteractionType.WalkTogether;
+            case "RestAndSleepTogether": return InteractionType.RestTogether;
             case "RestTogether": return InteractionType.RestTogether;
             case "SleepTogether": return InteractionType.SleepTogether;
+            case "Race": return InteractionType.Race;
+            case "Chase": return InteractionType.ChaseAndRun;
+            case "ChaseAndRun": return InteractionType.ChaseAndRun;
             case "RideAndWalk": return InteractionType.RideAndWalk;
             case "SlothKoalaRace": return InteractionType.SlothKoalaRace;
+            case "PredatorMoleHunt": return InteractionType.PredatorMoleHunt;
+            case "PredatorPossumPrank": return InteractionType.PredatorPossumPrank;
             case "ChameleonCamouflage": return InteractionType.ChameleonCamouflage;
+            case "PersonalityReaction": return InteractionType.PersonalityReaction;
+            case "SkunkDefense": return InteractionType.SkunkDefense;
             default: return InteractionType.WalkTogether;
         }
     }

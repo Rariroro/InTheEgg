@@ -225,23 +225,12 @@ public class ToastNotificationManager : MonoBehaviour
                 oldestToast.Dismiss();
                 activeInteractionToasts.RemoveAt(0);
 
-                if (debugMode)
-                    Debug.Log($"[ToastNotificationManager] 상호작용 토스트 제한 도달. 가장 오래된 토스트 제거");
+                // if (debugMode)
+                    // Debug.Log($"[ToastNotificationManager] 상호작용 토스트 제한 도달. 가장 오래된 토스트 제거");
             }
         }
 
         var toast = ToastNotificationItem.CreateInteractionToast(pet1, pet2, interactionType);
-        EnqueueNotification(toast);
-    }
-
-    /// <summary>
-    /// 펫 활동 알림 추가
-    /// </summary>
-    public void ShowActivityToast(PetController pet, string activityName)
-    {
-        if (pet == null) return;
-
-        var toast = ToastNotificationItem.CreateActivityToast(pet, activityName);
         EnqueueNotification(toast);
     }
 
@@ -274,8 +263,8 @@ public class ToastNotificationManager : MonoBehaviour
         // 필터링
         if (!ShouldShowNotification(item))
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 알림 필터링됨: {item.id}");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 알림 필터링됨: {item.id}");
             return;
         }
 
@@ -290,8 +279,8 @@ public class ToastNotificationManager : MonoBehaviour
         notificationQueue.Enqueue(item);
         OnQueueSizeChanged?.Invoke(notificationQueue.Count);
 
-        if (debugMode)
-            Debug.Log($"[ToastNotificationManager] 알림 큐에 추가: {item.id}");
+        // if (debugMode)
+            // Debug.Log($"[ToastNotificationManager] 알림 큐에 추가: {item.id}");
     }
 
     private bool ShouldShowNotification(ToastNotificationItem item)
@@ -299,45 +288,45 @@ public class ToastNotificationManager : MonoBehaviour
         // 디버그 모드에서 모든 알림 표시
         if (showAllNotifications || (settings != null && settings.ignoreAllFilters))
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 필터 무시 모드: {item.id} 허용");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 필터 무시 모드: {item.id} 허용");
             return true;
         }
 
         // 우선순위 체크
         if (settings != null && item.priority < (int)settings.minimumPriority)
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 우선순위 필터링: {item.id} (우선순위: {item.priority} < 최소: {(int)settings.minimumPriority})");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 우선순위 필터링: {item.id} (우선순위: {item.priority} < 최소: {(int)settings.minimumPriority})");
             return false;
         }
 
         // 중복 체크
         if (IsDuplicate(item))
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 중복 필터링: {item.id}");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 중복 필터링: {item.id}");
             return false;
         }
 
         // 펫 쿨다운 체크
         if (IsOnPetCooldown(item))
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 펫 쿨다운 필터링: {item.id}");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 펫 쿨다운 필터링: {item.id}");
             return false;
         }
 
         // 거리 체크
         if (settings != null && item.distanceFromCamera > settings.maxDisplayDistance)
         {
-            if (debugMode)
-                Debug.Log($"[ToastNotificationManager] 거리 필터링: {item.id} (거리: {item.distanceFromCamera} > 최대: {settings.maxDisplayDistance})");
+            // if (debugMode)
+                // Debug.Log($"[ToastNotificationManager] 거리 필터링: {item.id} (거리: {item.distanceFromCamera} > 최대: {settings.maxDisplayDistance})");
             return false;
         }
 
-        if (debugMode)
-            Debug.Log($"[ToastNotificationManager] 필터 통과: {item.id}");
+        // if (debugMode)
+            // Debug.Log($"[ToastNotificationManager] 필터 통과: {item.id}");
         return true;
     }
 
@@ -434,8 +423,8 @@ public class ToastNotificationManager : MonoBehaviour
         // 이벤트 발생
         OnToastShown?.Invoke(item);
 
-        if (debugMode)
-            Debug.Log($"[ToastNotificationManager] 토스트 표시: {item.id}");
+        // if (debugMode)
+            // Debug.Log($"[ToastNotificationManager] 토스트 표시: {item.id}");
     }
 
     private Vector2 CalculateToastPosition(int index)
@@ -623,7 +612,7 @@ public class ToastNotificationManager : MonoBehaviour
     [ContextMenu("큐 상태 출력")]
     private void PrintQueueStatus()
     {
-        Debug.Log($"[ToastNotificationManager] 큐 크기: {notificationQueue.Count}, 활성 토스트: {activeToasts.Count}");
+        // Debug.Log($"[ToastNotificationManager] 큐 크기: {notificationQueue.Count}, 활성 토스트: {activeToasts.Count}");
     }
 
     #endregion

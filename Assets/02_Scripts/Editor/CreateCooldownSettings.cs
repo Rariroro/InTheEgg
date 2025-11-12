@@ -31,7 +31,7 @@ public static class CreateCooldownSettingsAsset
         EditorUtility.FocusProjectWindow();
         Selection.activeObject = asset;
 
-        Debug.Log($"CooldownSettings 에셋이 생성되었습니다: {path}");
+        // Debug.Log($"CooldownSettings 에셋이 생성되었습니다: {path}");
     }
 
     [MenuItem("InTheEgg/Create Cooldown Settings in Resources")]
@@ -54,6 +54,6 @@ public static class CreateCooldownSettingsAsset
         EditorUtility.FocusProjectWindow();
         Selection.activeObject = asset;
 
-        Debug.Log($"CooldownSettings 에셋이 Resources 폴더에 생성되었습니다: {path}");
+        // Debug.Log($"CooldownSettings 에셋이 Resources 폴더에 생성되었습니다: {path}");
     }
 }

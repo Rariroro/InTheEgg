@@ -140,12 +140,12 @@ public enum ToastPosition
 
 /// <summary>
 /// 상호작용 타입과 아이콘 매핑
+/// 한글 이름은 InteractionToastFormatter에서 가져옵니다.
 /// </summary>
 [System.Serializable]
 public class InteractionIconMapping
 {
     public InteractionType interactionType;
     public Sprite icon;
-    public string displayName;  // 한글 표시 이름
     public Color iconTint = Color.white;  // 아이콘 색상
 }

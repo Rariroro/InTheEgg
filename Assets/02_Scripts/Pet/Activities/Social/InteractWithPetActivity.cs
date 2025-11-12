@@ -39,9 +39,10 @@ public class InteractWithPetActivity : PetActivityAdapter
     {
         if (!CanStart(state, needs))
             return 0f;
-            
-        // 상호작용 중에는 중간 우선순위 (중단 불가이므로 적절한 우선순위 필요)
-        return 10.0f; // 중단 불가인데 너무 낮았음 (1.5→10)
+
+        // 상호작용 중에는 진행 중 보호 단계 우선순위
+        // Diving(30), 환경 상호작용(10-18)보다 높게 설정하여 주도권 유지
+        return 30.0f; // 진행 중 보호 단계 (10→30)
     }
     
     

@@ -19803,13 +19803,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableInteractionNotifications: 1
-  enableActivityNotifications: 1
   debugMode: 1
   ignoredInteractionTypes: 
-  ignoredActivityNames:
-  - Wander
-  - Eat
-  - Sleep
+  activeInteractionCount: 0
+  maxInteractionsForDisplay: 5
+  showAggregateNotification: 1
 --- !u!114 &392364048
 MonoBehaviour:
   m_ObjectHideFlags: 0

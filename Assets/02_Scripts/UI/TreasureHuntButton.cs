@@ -58,7 +58,7 @@ public class TreasureHuntButton : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log($"[TreasureHunt] buttonImage 찾음: {buttonImage.gameObject.name}, 현재 스프라이트: {(buttonImage.sprite != null ? buttonImage.sprite.name : "null")}");
+            // Debug.Log($"[TreasureHunt] buttonImage 찾음: {buttonImage.gameObject.name}, 현재 스프라이트: {(buttonImage.sprite != null ? buttonImage.sprite.name : "null")}");
                 }
             }
             else
@@ -67,9 +67,9 @@ public class TreasureHuntButton : MonoBehaviour
             }
 
             // 할당된 스프라이트 확인
-            Debug.Log($"[TreasureHunt] normalSprite: {(normalSprite != null ? normalSprite.name : "null")}");
-            Debug.Log($"[TreasureHunt] inactiveSprite: {(inactiveSprite != null ? inactiveSprite.name : "null")}");
-            Debug.Log($"[TreasureHunt] progressSprite: {(progressSprite != null ? progressSprite.name : "null")}");
+            // Debug.Log($"[TreasureHunt] normalSprite: {(normalSprite != null ? normalSprite.name : "null")}");
+            // Debug.Log($"[TreasureHunt] inactiveSprite: {(inactiveSprite != null ? inactiveSprite.name : "null")}");
+            // Debug.Log($"[TreasureHunt] progressSprite: {(progressSprite != null ? progressSprite.name : "null")}");
         }
         else
         {
@@ -153,7 +153,7 @@ public class TreasureHuntButton : MonoBehaviour
             // 이미 진행 중 스프라이트가 설정되어 있으면 변경하지 않음
             if (currentSprite != progressSprite)
             {
-                Debug.Log("[TreasureHunt] 보물찾기 진행 중 - progressSprite 설정");
+            // Debug.Log("[TreasureHunt] 보물찾기 진행 중 - progressSprite 설정");
                 SetButtonSprite(progressSprite);
             }
             return;
@@ -176,7 +176,7 @@ public class TreasureHuntButton : MonoBehaviour
         // 상태가 변경된 경우에만 업데이트
         if (canActivate != lastCanActivate)
         {
-            Debug.Log($"[TreasureHunt] 조건 변경 감지: {qualifiedPets}/{allPets.Length}마리, canActivate: {canActivate}");
+            // Debug.Log($"[TreasureHunt] 조건 변경 감지: {qualifiedPets}/{allPets.Length}마리, canActivate: {canActivate}");
             lastCanActivate = canActivate;
 
             // 버튼 스프라이트 업데이트
@@ -197,7 +197,7 @@ public class TreasureHuntButton : MonoBehaviour
                 return;
             }
 
-            Debug.Log($"[TreasureHunt] 스프라이트 변경: {sprite.name}");
+            // Debug.Log($"[TreasureHunt] 스프라이트 변경: {sprite.name}");
             buttonImage.sprite = sprite;
             currentSprite = sprite;
         }

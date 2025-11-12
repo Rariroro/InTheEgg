@@ -17,15 +17,21 @@ public enum PetType
 // 펫 간 상호작용 종류를 정의하는 열거형
 public enum InteractionType
 {
-    Fight,        // 싸우기
-    WalkTogether, // 같이 걷기
-    RestTogether, // 같이 쉬기
-    Race,         // 달리기 시합
-    ChaseAndRun,  // 쫓고 쫓기기
-    SleepTogether, // 같이 자기
-    RideAndWalk,   // 타고 걷기
-    SlothKoalaRace, // 나무늘보-코알라 달리기
-    ChameleonCamouflage // 카멜레온 위장
+    Fight,                  // 싸우기
+    Headbutt,               // 박치기
+    CamelAlpacaSpitFight,   // 침 뱉기 대결
+    WalkTogether,           // 같이 걷기
+    RestTogether,           // 같이 쉬기
+    SleepTogether,          // 같이 자기
+    Race,                   // 달리기 시합
+    ChaseAndRun,            // 쫓고 쫓기기
+    RideAndWalk,            // 타고 걷기
+    SlothKoalaRace,         // 나무늘보-코알라 달리기
+    PredatorMoleHunt,       // 두더지 사냥
+    PredatorPossumPrank,    // 주머니쥐 장난
+    ChameleonCamouflage,    // 카멜레온 위장
+    PersonalityReaction,    // 성격 반응
+    SkunkDefense            // 스컹크 방어
 }
 
 /// <summary>
@@ -60,6 +66,9 @@ public class PetInteractionManager : MonoBehaviour
     [Header("쿨타임 관리")]
     [Tooltip("CooldownManager 사용 여부")]
     public bool useCooldownManager = true;
+
+    [Header("디버그")]
+    [SerializeField] private bool enableDebugLogs = false;
 
     // 상호작용 관리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
@@ -158,24 +167,50 @@ public class PetInteractionManager : MonoBehaviour
     /// </summary>
     public void RequestInteraction(PetController pet1, PetController pet2)
     {
+        if (enableDebugLogs)
+            Debug.Log($"[Manager] 상호작용 요청 받음: {pet1?.petName ?? "null"} ↔ {pet2?.petName ?? "null"}");
+
         if (!canStartInteractions)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 시작 지연 중 (아직 {startDelay}초 대기 필요)");
             return;
+        }
 
         // 빠른 거부 조건들
         if (pet1 == null || pet2 == null)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ null 펫: pet1={pet1 != null}, pet2={pet2 != null}");
             return;
+        }
 
         if (IsInteracting(pet1) || IsInteracting(pet2))
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 이미 상호작용 중: {pet1.petName}={IsInteracting(pet1)}, {pet2.petName}={IsInteracting(pet2)}");
             return;
+        }
 
         // 개별 펫 쿨타임 체크
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2))
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 쿨타임 중: {pet1.petName}={IsOnCooldown(pet1)}, {pet2.petName}={IsOnCooldown(pet2)}");
             return;
+        }
 
         // 적합한 상호작용 찾기
         BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
         if (suitableInteraction == null)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 적합한 상호작용 없음: {pet1.petName}({pet1.PetType}) ↔ {pet2.petName}({pet2.PetType})");
             return;
+        }
+
+        if (enableDebugLogs)
+            Debug.Log($"[Manager] ✅ 적합한 상호작용 발견: {suitableInteraction.InteractionName}");
 
         // 새 상호작용 정보 생성
         InteractionInfo newInteraction = new InteractionInfo(pet1, pet2, suitableInteraction);
@@ -183,6 +218,9 @@ public class PetInteractionManager : MonoBehaviour
         // 동시 상호작용 수 체크
         if (activeInteractions.Count >= maxConcurrentInteractions)
         {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ⚠️ 최대 상호작용 수 도달 ({activeInteractions.Count}/{maxConcurrentInteractions})");
+
             // 우선순위 기반으로 처리
             if (useDistancePriority)
             {
@@ -192,7 +230,8 @@ public class PetInteractionManager : MonoBehaviour
             {
                 // 대기열에 추가
                 pendingInteractions.Enqueue(newInteraction);
-                // Debug.Log($"[PetInteractionManager] 최대 상호작용 수 도달. 대기열에 추가: {pet1.petName} & {pet2.petName}");
+                if (enableDebugLogs)
+                    Debug.Log($"[Manager] 대기열에 추가: {pet1.petName} & {pet2.petName}");
             }
             return;
         }
@@ -487,6 +526,7 @@ public class PetInteractionManager : MonoBehaviour
     public void PrintCurrentStatus()
     {
         Debug.Log($"[PetInteractionManager] 현재 상태:");
+        Debug.Log($"  - 시스템 활성화: {canStartInteractions}");
         Debug.Log($"  - 총 펫 수: {allPets.Count}");
         Debug.Log($"  - 활성 상호작용: {activeInteractions.Count} / {maxConcurrentInteractions}");
         Debug.Log($"  - 대기 중인 상호작용: {pendingInteractions.Count}");
@@ -498,7 +538,111 @@ public class PetInteractionManager : MonoBehaviour
             Debug.Log("  활성 상호작용 목록:");
             foreach (var interaction in activeInteractions)
             {
-                Debug.Log($"    - {interaction.pet1.petName} ↔ {interaction.pet2.petName} (거리: {interaction.distance:F1}m)");
+                Debug.Log($"    - {interaction.pet1.petName} ↔ {interaction.pet2.petName} " +
+                    $"({interaction.interaction.InteractionName}, 거리: {interaction.distance:F1}m, 시간: {Time.time - interaction.startTime:F1}초)");
+            }
+        }
+
+        if (pendingInteractions.Count > 0)
+        {
+            Debug.Log($"  대기 중인 상호작용: {pendingInteractions.Count}개");
+        }
+    }
+
+    [ContextMenu("쿨타임 상태 출력")]
+    public void PrintCooldownStatus()
+    {
+        Debug.Log($"[PetInteractionManager] 쿨타임 상태:");
+        Debug.Log($"  - CooldownManager 사용: {useCooldownManager}");
+
+        if (useCooldownManager && CooldownManager.Instance != null)
+        {
+            Debug.Log($"  - CooldownManager 활성화됨");
+            int cooldownCount = 0;
+            foreach (var pet in allPets)
+            {
+                if (pet != null && IsOnCooldown(pet))
+                {
+                    cooldownCount++;
+                    Debug.Log($"    ⏱️ {pet.petName}: 쿨타임 중");
+                }
+            }
+            Debug.Log($"  - 쿨타임 중인 펫: {cooldownCount}마리");
+        }
+        else
+        {
+            Debug.Log($"  - 레거시 쿨타임 사용");
+            Debug.Log($"  - 쿨타임 기록 수: {lastInteractionTime.Count}");
+            foreach (var kvp in lastInteractionTime)
+            {
+                if (kvp.Key != null)
+                {
+                    float timeSince = Time.time - kvp.Value;
+                    #pragma warning disable CS0618
+                    bool onCooldown = timeSince < interactionCooldown;
+                    #pragma warning restore CS0618
+                    Debug.Log($"    {kvp.Key.petName}: {(onCooldown ? $"쿨타임 중 ({interactionCooldown - timeSince:F1}초 남음)" : "준비됨")}");
+                }
+            }
+        }
+    }
+
+    [ContextMenu("등록된 상호작용 타입 출력")]
+    public void PrintRegisteredInteractions()
+    {
+        Debug.Log($"[PetInteractionManager] 등록된 상호작용 타입 ({registeredInteractions.Count}개):");
+        for (int i = 0; i < registeredInteractions.Count; i++)
+        {
+            var interaction = registeredInteractions[i];
+            Debug.Log($"  {i + 1}. {interaction.InteractionName} ({interaction.GetType().Name})");
+        }
+    }
+
+    [ContextMenu("테스트 - 랜덤 2마리 상호작용 강제 시작")]
+    public void ForceRandomInteraction()
+    {
+        if (allPets.Count < 2)
+        {
+            Debug.LogWarning("[PetInteractionManager] 펫이 2마리 미만입니다!");
+            return;
+        }
+
+        // 유효한 펫들만 필터링
+        List<PetController> validPets = allPets.Where(p => p != null &&
+            !p.State.IsInteracting &&
+            !p.State.IsHolding).ToList();
+
+        if (validPets.Count < 2)
+        {
+            Debug.LogWarning("[PetInteractionManager] 상호작용 가능한 펫이 2마리 미만입니다!");
+            return;
+        }
+
+        // 랜덤 2마리 선택
+        PetController pet1 = validPets[Random.Range(0, validPets.Count)];
+        validPets.Remove(pet1);
+        PetController pet2 = validPets[Random.Range(0, validPets.Count)];
+
+        Debug.Log($"[PetInteractionManager] 강제 상호작용 테스트: {pet1.petName} ↔ {pet2.petName}");
+
+        // 적합한 상호작용 찾기
+        BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
+        if (suitableInteraction != null)
+        {
+            Debug.Log($"[PetInteractionManager] ✅ {suitableInteraction.InteractionName} 시작!");
+            InteractionInfo testInteraction = new InteractionInfo(pet1, pet2, suitableInteraction);
+            StartInteraction(testInteraction);
+        }
+        else
+        {
+            Debug.LogWarning($"[PetInteractionManager] ❌ {pet1.petName}({pet1.PetType})와 {pet2.petName}({pet2.PetType}) 사이에 적합한 상호작용이 없습니다!");
+
+            // 등록된 모든 상호작용 체크
+            Debug.Log($"등록된 상호작용들의 CanInteract 결과:");
+            foreach (var interaction in registeredInteractions)
+            {
+                bool canInteract = interaction.CanInteract(pet1, pet2);
+                Debug.Log($"  - {interaction.InteractionName}: {canInteract}");
             }
         }
     }

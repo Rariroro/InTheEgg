@@ -310,13 +310,13 @@ public class EnvironmentManager : MonoBehaviour
                 {
                     flowersEnvironmentButterflies.Add(child.gameObject);
                     butterflyCount++;
-                    Debug.Log($"[EnvironmentManager] 나비 참조 저장: {child.name}");
+                    // Debug.Log($"[EnvironmentManager] 나비 참조 저장: {child.name}");
                 }
             }
 
             if (butterflyCount > 0)
             {
-                Debug.Log($"[EnvironmentManager] FlowersEnvironment에서 총 {butterflyCount}개의 나비 저장 완료");
+                // Debug.Log($"[EnvironmentManager] FlowersEnvironment에서 총 {butterflyCount}개의 나비 저장 완료");
             }
             else
             {

@@ -18,6 +18,7 @@ public class PetInteractionDetector : MonoBehaviour
     
     // 디버그용
     [Header("디버그")]
+    [SerializeField] private bool enableDebugLogs = false;
     [SerializeField] private bool showDetectionRadius = false;
     [SerializeField] private List<string> nearbyPetNames = new List<string>(); // 인스펙터에서 확인용
     
@@ -109,31 +110,64 @@ public class PetInteractionDetector : MonoBehaviour
     
     private void CheckInteractionWithPet(PetController otherPet)
     {
+        if (enableDebugLogs)
+            Debug.Log($"[Detector] {myPet?.petName ?? "null"} → {otherPet?.petName ?? "null"} 체크 시작");
+
         // null 체크
         if (myPet == null || otherPet == null)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ❌ null 체크 실패: myPet={myPet != null}, otherPet={otherPet != null}");
             return;
-            
+        }
+
         // 이미 상호작용 중인지 체크
         if (myPet.State.IsInteracting || otherPet.State.IsInteracting)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ❌ 이미 상호작용 중: {myPet.petName}={myPet.State.IsInteracting}, {otherPet.petName}={otherPet.State.IsInteracting}");
             return;
-            
+        }
+
         // 홀딩 상태 체크
         if (myPet.State.IsHolding || otherPet.State.IsHolding)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ❌ 홀딩 중: {myPet.petName}={myPet.State.IsHolding}, {otherPet.petName}={otherPet.State.IsHolding}");
             return;
-            
+        }
+
         // 모이기 상태 체크
         if (IsGathering(myPet) || IsGathering(otherPet))
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ❌ 모이기 중: {myPet.petName}={IsGathering(myPet)}, {otherPet.petName}={IsGathering(otherPet)}");
             return;
-            
+        }
+
         // 욕구 체크 (배고픔 70 이상, 졸림 70 이상이면 상호작용 안함)
         if (myPet.Needs.Hunger >= 70f || myPet.Needs.Sleepiness >= 70f ||
             otherPet.Needs.Hunger >= 70f || otherPet.Needs.Sleepiness >= 70f)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ❌ 욕구 임계값 초과: " +
+                    $"{myPet.petName}(배고픔:{myPet.Needs.Hunger:F1}, 졸림:{myPet.Needs.Sleepiness:F1}), " +
+                    $"{otherPet.petName}(배고픔:{otherPet.Needs.Hunger:F1}, 졸림:{otherPet.Needs.Sleepiness:F1})");
             return;
-            
+        }
+
         // PetInteractionManager에 상호작용 요청
         if (PetInteractionManager.Instance != null)
         {
+            if (enableDebugLogs)
+                Debug.Log($"[Detector] ✅ 상호작용 요청: {myPet.petName} ↔ {otherPet.petName}");
+
             PetInteractionManager.Instance.RequestInteraction(myPet, otherPet);
+        }
+        else
+        {
+            if (enableDebugLogs)
+                Debug.LogWarning($"[Detector] ❌ PetInteractionManager.Instance가 null입니다!");
         }
     }
     
@@ -171,20 +205,54 @@ public class PetInteractionDetector : MonoBehaviour
     
     private void OnDrawGizmosSelected()
     {
-        if (!showDetectionRadius)
+        if (!showDetectionRadius || myPet == null)
             return;
-            
-        Gizmos.color = new Color(0, 1, 0, 0.3f);
+
+        // 감지 범위 표시 (펫 상태에 따라 색상 변경)
+        if (myPet.State.IsInteracting)
+        {
+            Gizmos.color = new Color(1, 1, 0, 0.3f); // 노란색: 상호작용 중
+        }
+        else if (myPet.State.IsHolding)
+        {
+            Gizmos.color = new Color(1, 0.5f, 0, 0.3f); // 주황색: 홀딩 중
+        }
+        else if (IsGathering(myPet))
+        {
+            Gizmos.color = new Color(0, 0.5f, 1, 0.3f); // 하늘색: 모이기 중
+        }
+        else
+        {
+            Gizmos.color = new Color(0, 1, 0, 0.3f); // 초록색: 정상
+        }
         Gizmos.DrawWireSphere(transform.position, detectionRadius);
-        
-        // 근처 펫들과의 연결선 표시
-        Gizmos.color = new Color(1, 1, 0, 0.5f);
+
+        // 근처 펫들과의 연결선 표시 (상호작용 가능 여부에 따라 색상 구분)
         foreach (var pet in nearbyPets)
         {
-            if (pet != null)
+            if (pet == null) continue;
+
+            // 상호작용 가능 여부 체크
+            bool canInteract = !myPet.State.IsInteracting && !pet.State.IsInteracting &&
+                              !myPet.State.IsHolding && !pet.State.IsHolding &&
+                              !IsGathering(myPet) && !IsGathering(pet) &&
+                              myPet.Needs.Hunger < 70f && myPet.Needs.Sleepiness < 70f &&
+                              pet.Needs.Hunger < 70f && pet.Needs.Sleepiness < 70f;
+
+            if (canInteract)
             {
-                Gizmos.DrawLine(transform.position, pet.transform.position);
+                Gizmos.color = new Color(0, 1, 0, 0.7f); // 초록색: 상호작용 가능
             }
+            else if (pet.State.IsInteracting)
+            {
+                Gizmos.color = new Color(1, 1, 0, 0.5f); // 노란색: 다른 펫과 상호작용 중
+            }
+            else
+            {
+                Gizmos.color = new Color(1, 0, 0, 0.5f); // 빨간색: 상호작용 불가
+            }
+
+            Gizmos.DrawLine(transform.position, pet.transform.position);
         }
     }
     

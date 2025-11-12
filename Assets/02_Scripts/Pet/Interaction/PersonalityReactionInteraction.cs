@@ -47,6 +47,14 @@ public class PersonalityReactionInteraction : BasePetInteraction
         return InteractionType.WalkTogether;
     }
 
+    /// <summary>
+    /// PersonalityReaction은 토스트 알림을 표시하지 않음
+    /// </summary>
+    protected override bool ShouldShowToastNotification()
+    {
+        return false;
+    }
+
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
         // PersonalityReactionInteraction은 모든 펫 조합에서 가능

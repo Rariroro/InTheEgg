@@ -138,9 +138,6 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
                 string interactionName = InteractionToastFormatter.GetInteractionName(data.interactionType);
                 return $"{pet1Name} ↔ {pet2Name} | {interactionName}";
 
-            case NotificationType.PetActivity:
-                return $"{TruncateName(data.pet1.name, 8)} {data.customMessage}";
-
             case NotificationType.System:
             case NotificationType.Achievement:
             case NotificationType.Warning:

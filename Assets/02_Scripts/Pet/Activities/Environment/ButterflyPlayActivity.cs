@@ -215,7 +215,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         // ✅ 유저가 펫을 들었는지 체크 (최우선)
         if (pet.State.IsHolding)
         {
-            Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 유저에게 들려서 나비 놀이 중단");
+            // Debug.Log($"[ButterflyPlayActivity] {pet.petName}이(가) 유저에게 들려서 나비 놀이 중단");
             isPlayingWithButterfly = false;
             return;
         }
@@ -332,7 +332,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (nearestButterfly != null)
         {
             targetButterfly = nearestButterfly;
-            Debug.Log($"[ButterflyPlayActivity] {pet.petName}: 가장 가까운 나비 발견! 거리: {nearestDistance:F1}m, 나비: {nearestButterfly.name}");
+            // Debug.Log($"[ButterflyPlayActivity] {pet.petName}: 가장 가까운 나비 발견! 거리: {nearestDistance:F1}m, 나비: {nearestButterfly.name}");
         }
         else
         {
@@ -427,7 +427,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                     else if (pet.agent.velocity.magnitude < 0.1f)
                     {
                         stuckCounter++;
-                        Debug.Log($"[PlayWithButterfly] Stuck 감지: {stuckCounter}/{MAX_STUCK_COUNT} (velocity: {pet.agent.velocity.magnitude:F2})");
+                        // Debug.Log($"[PlayWithButterfly] Stuck 감지: {stuckCounter}/{MAX_STUCK_COUNT} (velocity: {pet.agent.velocity.magnitude:F2})");
 
                         if (stuckCounter >= MAX_STUCK_COUNT)
                         {
@@ -480,7 +480,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
                 }
 
                 // ✅ 3단계: 나비 주변에서 놀기 시작
-        Debug.Log($"[PlayWithButterfly] 놀이 시작!");
+        // Debug.Log($"[PlayWithButterfly] 놀이 시작!");
                 yield return PlayAroundButterfly();
 
                 // ✅ 4단계: NavMeshAgent 강제 정지 (Run 애니메이션 반복 방지)

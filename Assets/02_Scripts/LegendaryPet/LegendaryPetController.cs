@@ -74,7 +74,7 @@ namespace LegendaryPet
             InitializeTraits();
             InitializeComponents();
             isInitialized = true;
-            Debug.Log($"[LegendaryPet] {petName}: 즉시 초기화 완료 - Animator: {animator != null}, flyAnimIndex: {traits.flyAnimIndex}");
+            // Debug.Log($"[LegendaryPet] {petName}: 즉시 초기화 완료 - Animator: {animator != null}, flyAnimIndex: {traits.flyAnimIndex}");
         }
 
         // 날아다니는 상태 설정
@@ -113,13 +113,13 @@ namespace LegendaryPet
                 {
                     // 날아가는 애니메이션 재생
                     animator.SetInteger("animation", traits.flyAnimIndex);
-                    Debug.Log($"[LegendaryPet] {petName}: 비행 애니메이션 재생 (index: {traits.flyAnimIndex}, petType: {petType})");
+                    // Debug.Log($"[LegendaryPet] {petName}: 비행 애니메이션 재생 (index: {traits.flyAnimIndex}, petType: {petType})");
                 }
                 else
                 {
                     // 기본 애니메이션으로 복귀 (idle)
                     animator.SetInteger("animation", 0);
-                    Debug.Log($"[LegendaryPet] {petName}: 기본 애니메이션으로 복귀");
+                    // Debug.Log($"[LegendaryPet] {petName}: 기본 애니메이션으로 복귀");
                 }
             }
         }
@@ -162,7 +162,7 @@ namespace LegendaryPet
                 }
 
                 SetupVisualEffects();
-                Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료 - Flying: {isFlying}");
+                // Debug.Log($"[LegendaryPet] {petName} ({petType}) 초기화 완료 - Flying: {isFlying}");
             }
             else if (agent == null || !agent.enabled)
             {
@@ -180,7 +180,7 @@ namespace LegendaryPet
                 }
 
                 SetupVisualEffects();
-                Debug.Log($"[LegendaryPet] {petName} ({petType}) NavMeshAgent 비활성화 상태로 초기화");
+                // Debug.Log($"[LegendaryPet] {petName} ({petType}) NavMeshAgent 비활성화 상태로 초기화");
             }
             else
             {
