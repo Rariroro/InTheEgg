@@ -19,9 +19,15 @@ public class InteractionNotificationHandler : MonoBehaviour
     [SerializeField] private List<InteractionType> ignoredInteractionTypes = new List<InteractionType>();
     [SerializeField] private List<string> ignoredActivityNames = new List<string>();
 
+    [Header("상호작용 수 관리")]
+    [SerializeField] private int activeInteractionCount = 0;
+    [SerializeField] private int maxInteractionsForDisplay = 5;
+    [SerializeField] private bool showAggregateNotification = true;
+
     // 이벤트
     public static event System.Action<PetController, PetController, InteractionType> OnInteractionStarted;
     public static event System.Action<PetController, string> OnActivityStarted;
+    public static event System.Action<int> OnActiveInteractionCountChanged;
 
     private void Awake()
     {
@@ -83,25 +89,34 @@ public class InteractionNotificationHandler : MonoBehaviour
             return;
         }
 
-        // 토스트 알림 표시
-        if (ToastNotificationManager.Instance != null)
+        // 활성 상호작용 수 체크 (maxInteractionsForDisplay 이하일 때만 개별 토스트 표시)
+        if (activeInteractionCount <= maxInteractionsForDisplay)
         {
-            ToastNotificationManager.Instance.ShowInteractionToast(pet1, pet2, type);
-
-            if (debugMode)
+            // 토스트 알림 표시
+            if (ToastNotificationManager.Instance != null)
             {
-                string message = InteractionToastFormatter.FormatInteractionMessage(
-                    pet1.name,
-                    pet2.name,
-                    type,
-                    includeEmoji: true
-                );
-                Debug.Log($"[InteractionNotificationHandler] {message}");
+                ToastNotificationManager.Instance.ShowInteractionToast(pet1, pet2, type);
+
+                if (debugMode)
+                {
+                    string message = InteractionToastFormatter.FormatInteractionMessage(
+                        pet1.name,
+                        pet2.name,
+                        type,
+                        includeEmoji: true
+                    );
+                    Debug.Log($"[InteractionNotificationHandler] {message}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[InteractionNotificationHandler] ToastNotificationManager를 찾을 수 없습니다!");
             }
         }
-        else
+        else if (showAggregateNotification && activeInteractionCount == maxInteractionsForDisplay + 1)
         {
-            Debug.LogWarning("[InteractionNotificationHandler] ToastNotificationManager를 찾을 수 없습니다!");
+            // 초과 시 집계 알림 표시 (처음 초과할 때만)
+            ShowAggregateNotification();
         }
     }
 
@@ -204,6 +219,82 @@ public class InteractionNotificationHandler : MonoBehaviour
     {
         enableInteractionNotifications = interactions;
         enableActivityNotifications = activities;
+    }
+
+    /// <summary>
+    /// 활성 상호작용 수 설정
+    /// </summary>
+    public void SetActiveInteractionCount(int count)
+    {
+        int previousCount = activeInteractionCount;
+        activeInteractionCount = count;
+
+        if (debugMode)
+            Debug.Log($"[InteractionNotificationHandler] 활성 상호작용 수: {activeInteractionCount}");
+
+        // 상호작용 수 변경 이벤트 발생
+        OnActiveInteractionCountChanged?.Invoke(activeInteractionCount);
+
+        // 집계 알림 업데이트
+        if (showAggregateNotification)
+        {
+            if (activeInteractionCount > maxInteractionsForDisplay &&
+                previousCount <= maxInteractionsForDisplay)
+            {
+                // 최대 표시 수를 초과하기 시작할 때
+                ShowAggregateNotification();
+            }
+            else if (activeInteractionCount <= maxInteractionsForDisplay &&
+                     previousCount > maxInteractionsForDisplay)
+            {
+                // 최대 표시 수 이하로 돌아올 때
+                HideAggregateNotification();
+            }
+            else if (activeInteractionCount > maxInteractionsForDisplay)
+            {
+                // 이미 초과 상태에서 수가 변경될 때
+                UpdateAggregateNotification();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 집계 알림 표시
+    /// </summary>
+    private void ShowAggregateNotification()
+    {
+        if (ToastNotificationManager.Instance != null)
+        {
+            int extraCount = activeInteractionCount - maxInteractionsForDisplay;
+            string message = $"추가 {extraCount}개의 상호작용이 진행 중입니다...";
+
+            ToastNotificationManager.Instance.ShowSystemToast(
+                message,
+                NotificationPriority.Low
+            );
+
+            if (debugMode)
+                Debug.Log($"[InteractionNotificationHandler] 집계 알림: {message}");
+        }
+    }
+
+    /// <summary>
+    /// 집계 알림 업데이트
+    /// </summary>
+    private void UpdateAggregateNotification()
+    {
+        // 기존 집계 알림을 업데이트하거나 새로 표시
+        ShowAggregateNotification();
+    }
+
+    /// <summary>
+    /// 집계 알림 숨기기
+    /// </summary>
+    private void HideAggregateNotification()
+    {
+        // ToastNotificationManager에서 시스템 토스트 제거는 자동으로 처리됨
+        if (debugMode)
+            Debug.Log("[InteractionNotificationHandler] 집계 알림 해제");
     }
 
     #endregion

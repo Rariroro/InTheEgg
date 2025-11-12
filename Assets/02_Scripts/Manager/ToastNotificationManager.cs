@@ -36,6 +36,7 @@ public class ToastNotificationManager : MonoBehaviour
     // 내부 상태
     private Queue<ToastNotificationItem> notificationQueue = new Queue<ToastNotificationItem>();
     private List<ToastNotificationUI> activeToasts = new List<ToastNotificationUI>();
+    private List<ToastNotificationUI> activeInteractionToasts = new List<ToastNotificationUI>(); // 상호작용 토스트 별도 관리
     private Dictionary<string, DateTime> duplicateTracker = new Dictionary<string, DateTime>();
     private Dictionary<string, DateTime> petCooldownTracker = new Dictionary<string, DateTime>();
     private Queue<ToastNotificationUI> toastPool = new Queue<ToastNotificationUI>();
@@ -44,6 +45,9 @@ public class ToastNotificationManager : MonoBehaviour
     private List<ToastNotificationItem> aggregationBuffer = new List<ToastNotificationItem>();
     private float aggregationTimer = 0f;
     private bool isAggregating = false;
+
+    // 상호작용 토스트 제한 (기본값, Settings에서 오버라이드 가능)
+    private int MaxInteractionToasts => settings?.maxInteractionToasts ?? 5;
 
     // 이벤트
     public event Action<ToastNotificationItem> OnToastShown;
@@ -210,6 +214,21 @@ public class ToastNotificationManager : MonoBehaviour
     public void ShowInteractionToast(PetController pet1, PetController pet2, InteractionType interactionType)
     {
         if (pet1 == null || pet2 == null) return;
+
+        // 상호작용 토스트 5개 제한 체크
+        if (activeInteractionToasts.Count >= MaxInteractionToasts)
+        {
+            // 가장 오래된 상호작용 토스트 제거
+            if (activeInteractionToasts.Count > 0)
+            {
+                var oldestToast = activeInteractionToasts[0];
+                oldestToast.Dismiss();
+                activeInteractionToasts.RemoveAt(0);
+
+                if (debugMode)
+                    Debug.Log($"[ToastNotificationManager] 상호작용 토스트 제한 도달. 가장 오래된 토스트 제거");
+            }
+        }
 
         var toast = ToastNotificationItem.CreateInteractionToast(pet1, pet2, interactionType);
         EnqueueNotification(toast);
@@ -406,6 +425,12 @@ public class ToastNotificationManager : MonoBehaviour
         // 활성 리스트에 추가
         activeToasts.Add(toastUI);
 
+        // 상호작용 토스트인 경우 별도 관리
+        if (item.type == NotificationType.PetInteraction)
+        {
+            activeInteractionToasts.Add(toastUI);
+        }
+
         // 이벤트 발생
         OnToastShown?.Invoke(item);
 
@@ -442,6 +467,12 @@ public class ToastNotificationManager : MonoBehaviour
 
             // 나머지 토스트 위치 재조정
             UpdateToastPositions();
+        }
+
+        // 상호작용 토스트 리스트에서도 제거
+        if (activeInteractionToasts.Contains(toast))
+        {
+            activeInteractionToasts.Remove(toast);
         }
 
         // 풀로 반환

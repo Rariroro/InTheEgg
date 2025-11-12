@@ -12,6 +12,10 @@ public class ToastNotificationSettings : ScriptableObject
     [Range(1, 10)]
     public int maxConcurrentToasts = 5;
 
+    [Tooltip("동시에 표시할 수 있는 최대 상호작용 토스트 개수")]
+    [Range(1, 10)]
+    public int maxInteractionToasts = 5;
+
     [Tooltip("토스트가 표시되는 시간 (초)")]
     [Range(1f, 10f)]
     public float displayDuration = 3f;

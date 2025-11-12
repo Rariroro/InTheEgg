@@ -135,7 +135,8 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
             case NotificationType.PetInteraction:
                 string pet1Name = TruncateName(data.pet1.name, 6);
                 string pet2Name = TruncateName(data.pet2.name, 6);
-                return $"{pet1Name} ↔ {pet2Name}";
+                string interactionName = InteractionToastFormatter.GetInteractionName(data.interactionType);
+                return $"{pet1Name} ↔ {pet2Name} | {interactionName}";
 
             case NotificationType.PetActivity:
                 return $"{TruncateName(data.pet1.name, 8)} {data.customMessage}";
