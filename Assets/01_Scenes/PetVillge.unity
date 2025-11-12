@@ -2724,6 +2724,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6339661850831118846, guid: d0af3290353d80f44ba24aeafac0cd72, type: 3}
   m_PrefabInstance: {fileID: 53677920}
   m_PrefabAsset: {fileID: 0}
+--- !u!223 &57545846 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 3806962286905719562, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+  m_PrefabInstance: {fileID: 965292260029740788}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &62917682
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19752,6 +19757,81 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8454420542440214735, guid: bfd5dc30a3f09d44d9e555968583225c, type: 3}
   m_PrefabInstance: {fileID: 391972827}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &392364045
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 392364046}
+  - component: {fileID: 392364048}
+  - component: {fileID: 392364047}
+  m_Layer: 0
+  m_Name: ToastNotificationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &392364046
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 392364045}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1361253149}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &392364047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 392364045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 812c62455b0374a719f78b0fe55acbaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableInteractionNotifications: 1
+  enableActivityNotifications: 1
+  debugMode: 1
+  ignoredInteractionTypes: 
+  ignoredActivityNames:
+  - Wander
+  - Eat
+  - Sleep
+--- !u!114 &392364048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 392364045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2ecc840bbb054d6bac811e5eeff84f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: b6b9e98e04e024da1947ff5607c45127, type: 2}
+  useDefaultSettingsIfNull: 1
+  toastPrefab: {fileID: 2397195614109430810, guid: 8008dd83b823e4826974c582efe9b6bc, type: 3}
+  toastCanvasPrefab: {fileID: 0}
+  toastCanvas: {fileID: 57545846}
+  toastContainer: {fileID: 0}
+  poolSize: 10
+  expandPoolIfNeeded: 1
+  debugMode: 1
+  showAllNotifications: 1
 --- !u!1001 &394091978
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -65427,6 +65507,7 @@ Transform:
   - {fileID: 881718093}
   - {fileID: 1819018885}
   - {fileID: 1549711008}
+  - {fileID: 392364046}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1365257205

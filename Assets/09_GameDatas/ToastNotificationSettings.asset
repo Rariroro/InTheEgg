@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b652066d23547484e8768bcf0030516d, type: 3}
+  m_Name: ToastNotificationSettings
+  m_EditorClassIdentifier: 
+  maxConcurrentToasts: 5
+  displayDuration: 3
+  fadeInDuration: 0.3
+  fadeOutDuration: 0.5
+  minimumPriority: 10
+  legendaryPetBonus: 100
+  favoritePetBonus: 50
+  onScreenBonus: 30
+  duplicateCooldown: 30
+  maxDisplayDistance: 50
+  samePetCooldown: 5
+  position: 2
+  toastSpacing: 10
+  screenMargin: {x: 20, y: 20}
+  useSlideAnimation: 1
+  slideDistance: 200
+  pauseOnHover: 1
+  interactionIcons:
+  - interactionType: 0
+    icon: {fileID: 21300000, guid: 580451c8f54174996bb27500155e8349, type: 3}
+    displayName: "\"\uC2F8\uC6C0\""
+    iconTint: {r: 1, g: 0.033018887, b: 0.033018887, a: 0.003921569}
+  - interactionType: 1
+    icon: {fileID: 21300000, guid: bfaa6a06070d3461a8c6b100e9fd503c, type: 3}
+    displayName: "\"\uD568\uAED8 \uC0B0\uCC45\""
+    iconTint: {r: 0.031372547, g: 1, b: 0.23223525, a: 0.003921569}
+  - interactionType: 2
+    icon: {fileID: 21300000, guid: eb0f14ba6b7a442478f3c867055d112b, type: 3}
+    displayName: "\"\uD568\uAED8 \uD734\uC2DD\""
+    iconTint: {r: 0.031372547, g: 0.7696316, b: 1, a: 0.003921569}
+  - interactionType: 3
+    icon: {fileID: 21300000, guid: 9638506aaefe64f0bb8233f954397973, type: 3}
+    displayName: "\"\uB2EC\uB9AC\uAE30 \uC2DC\uD569\""
+    iconTint: {r: 0.0047169924, g: 0.2043562, b: 1, a: 0.003921569}
+  - interactionType: 4
+    icon: {fileID: 21300000, guid: eb97f6c7b120f4f789ae35a3c20b6a69, type: 3}
+    displayName: "\"\uCD94\uACA9\uC804\""
+    iconTint: {r: 1, g: 0.48474085, b: 0.0039215684, a: 0.003921569}
+  - interactionType: 5
+    icon: {fileID: 21300000, guid: eb97f6c7b120f4f789ae35a3c20b6a69, type: 3}
+    displayName: "\"\uCD94\uACA9\uC804\""
+    iconTint: {r: 1, g: 0.48474085, b: 0.0039215684, a: 0.003921569}
+  - interactionType: 6
+    icon: {fileID: 21300000, guid: eb97f6c7b120f4f789ae35a3c20b6a69, type: 3}
+    displayName: "\"\uCD94\uACA9\uC804\""
+    iconTint: {r: 1, g: 0.48474085, b: 0.0039215684, a: 0.003921569}
+  - interactionType: 7
+    icon: {fileID: 21300000, guid: eb97f6c7b120f4f789ae35a3c20b6a69, type: 3}
+    displayName: "\"\uCD94\uACA9\uC804\""
+    iconTint: {r: 1, g: 0.48474085, b: 0.0039215684, a: 0.003921569}
+  - interactionType: 8
+    icon: {fileID: 21300000, guid: eb97f6c7b120f4f789ae35a3c20b6a69, type: 3}
+    displayName: "\"\uCD94\uACA9\uC804\""
+    iconTint: {r: 1, g: 0.48474085, b: 0.0039215684, a: 0.003921569}
+  useNotificationSound: 1
+  notificationSound: {fileID: 0}
+  soundVolume: 0.5
+  aggregationThreshold: 10
+  aggregationWindow: 2
+  enableDebugLog: 0
+  ignoreAllFilters: 1

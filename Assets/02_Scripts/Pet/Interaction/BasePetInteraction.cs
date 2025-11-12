@@ -30,6 +30,9 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
         // Debug.Log("StartInteraction2");
 
+        // 토스트 알림 발생
+        NotifyInteractionStart(pet1, pet2);
+
         // PetInteractionManager에서 직접 이 코루틴을 시작합니다.
         StartCoroutine(InteractionLifecycle(pet1, pet2));
     }
@@ -850,5 +853,42 @@ public abstract class BasePetInteraction : MonoBehaviour
         // NavMesh 보정
         pet1Pos = FindValidPositionOnNavMesh(pet1Pos, spacing * 2);
         pet2Pos = FindValidPositionOnNavMesh(pet2Pos, spacing * 2);
+    }
+
+    /// <summary>
+    /// 상호작용 시작 알림
+    /// </summary>
+    private void NotifyInteractionStart(PetController pet1, PetController pet2)
+    {
+        // InteractionType 결정
+        InteractionType interactionType = GetInteractionType();
+
+        // 토스트 알림 핸들러에 알림
+        if (InteractionNotificationHandler.Instance != null)
+        {
+            InteractionNotificationHandler.NotifyInteractionStarted(pet1, pet2, interactionType);
+        }
+    }
+
+    /// <summary>
+    /// 현재 상호작용의 타입 가져오기
+    /// </summary>
+    protected virtual InteractionType GetInteractionType()
+    {
+        // 각 상호작용 클래스에서 오버라이드 가능
+        // 기본값 반환 (InteractionName 기반)
+        switch (InteractionName)
+        {
+            case "Chase": return InteractionType.ChaseAndRun;
+            case "Fight": return InteractionType.Fight;
+            case "Race": return InteractionType.Race;
+            case "WalkTogether": return InteractionType.WalkTogether;
+            case "RestTogether": return InteractionType.RestTogether;
+            case "SleepTogether": return InteractionType.SleepTogether;
+            case "RideAndWalk": return InteractionType.RideAndWalk;
+            case "SlothKoalaRace": return InteractionType.SlothKoalaRace;
+            case "ChameleonCamouflage": return InteractionType.ChameleonCamouflage;
+            default: return InteractionType.WalkTogether;
+        }
     }
 }
