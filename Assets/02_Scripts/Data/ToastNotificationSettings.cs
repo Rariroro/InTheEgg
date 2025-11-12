@@ -57,9 +57,9 @@ public class ToastNotificationSettings : ScriptableObject
     [Tooltip("토스트 표시 위치")]
     public ToastPosition position = ToastPosition.TopRight;
 
-    [Tooltip("토스트 간 간격")]
-    [Range(5f, 20f)]
-    public float toastSpacing = 10f;
+    [Tooltip("토스트 간 간격 (픽셀)")]
+    [Range(10f, 150f)]
+    public float toastSpacing = 70f;
 
     [Tooltip("화면 가장자리로부터의 여백")]
     public Vector2 screenMargin = new Vector2(20f, 20f);

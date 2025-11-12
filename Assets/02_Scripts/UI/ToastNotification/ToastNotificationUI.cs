@@ -14,8 +14,6 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
     [SerializeField] private RectTransform rectTransform;
 
     [Header("콘텐츠")]
-    [SerializeField] private Image pet1Icon;
-    [SerializeField] private Image pet2Icon;
     [SerializeField] private TextMeshProUGUI mainText;
     [SerializeField] private Image interactionIcon;
     [SerializeField] private Image backgroundImage;
@@ -87,38 +85,6 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
     {
         if (data == null) return;
 
-        // 펫 아이콘 설정
-        if (pet1Icon != null)
-        {
-            pet1Icon.gameObject.SetActive(data.pet1.icon != null);
-            if (data.pet1.icon != null)
-            {
-                pet1Icon.sprite = data.pet1.icon;
-
-                // 레전드 펫 강조
-                if (data.pet1.isLegendary)
-                {
-                    AddGlowEffect(pet1Icon);
-                }
-            }
-        }
-
-        if (pet2Icon != null)
-        {
-            bool hasPet2 = data.type == NotificationType.PetInteraction && data.pet2.icon != null;
-            pet2Icon.gameObject.SetActive(hasPet2);
-            if (hasPet2)
-            {
-                pet2Icon.sprite = data.pet2.icon;
-
-                // 레전드 펫 강조
-                if (data.pet2.isLegendary)
-                {
-                    AddGlowEffect(pet2Icon);
-                }
-            }
-        }
-
         // 텍스트 설정
         if (mainText != null)
         {
@@ -134,11 +100,12 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
             if (data.type == NotificationType.PetInteraction)
             {
                 var iconMapping = GetInteractionIcon(data.interactionType);
+
                 if (iconMapping != null && iconMapping.icon != null)
                 {
                     interactionIcon.gameObject.SetActive(true);
                     interactionIcon.sprite = iconMapping.icon;
-                    interactionIcon.color = iconMapping.iconTint;
+                    interactionIcon.color = Color.white; // 원본 아이콘 색상 유지
                 }
                 else
                 {
@@ -496,19 +463,6 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
     #endregion
 
     #region 헬퍼 메서드
-
-    private void AddGlowEffect(Image image)
-    {
-        // 레전드 펫 글로우 효과
-        // Outline 컴포넌트나 쉐이더 효과 추가
-        var outline = image.gameObject.GetComponent<Outline>();
-        if (outline == null)
-        {
-            outline = image.gameObject.AddComponent<Outline>();
-        }
-        outline.effectColor = Color.yellow;
-        outline.effectDistance = new Vector2(2, 2);
-    }
 
     private Color GetPriorityColor(NotificationPriority priority)
     {
