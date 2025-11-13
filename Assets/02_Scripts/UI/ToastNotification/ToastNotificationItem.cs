@@ -23,10 +23,6 @@ public class ToastNotificationItem
     // 위치 정보
     public Vector3 worldPosition;              // 발생 위치
 
-    // 우선순위
-    public int priority;                       // 계산된 우선순위
-    public NotificationPriority priorityLevel; // 우선순위 레벨
-
     // 표시 옵션
     public float displayDuration;              // 표시 시간 (기본값 override)
     public bool isClickable;                   // 클릭 가능 여부
@@ -35,6 +31,11 @@ public class ToastNotificationItem
     // 콜백
     public Action onClick;                     // 클릭 시 실행할 액션
     public Action onDismiss;                   // 사라질 때 실행할 액션
+
+    // UI 참조 (상호작용 종료 시 토스트 제거용)
+    [System.NonSerialized]
+    public ToastNotificationUI toastUI;        // 생성된 토스트 UI 참조
+    public float displayStartTime;             // 표시 시작 시간
 
     /// <summary>
     /// 펫 정보 구조체
@@ -110,14 +111,12 @@ public class ToastNotificationItem
             pet1 = new PetInfo(pet1),
             pet2 = new PetInfo(pet2),
             interactionType = interactionType,
-            worldPosition = (pet1.transform.position + pet2.transform.position) / 2f
+            worldPosition = (pet1.transform.position + pet2.transform.position) / 2f,
+            isPersistent = true  // 상호작용이 끝날 때까지 지속
         };
 
         // 고유 ID 생성 (펫 조합 기반)
         toast.id = GenerateInteractionId(pet1, pet2, interactionType);
-
-        // 우선순위 계산
-        toast.CalculatePriority();
 
         // 클릭 액션 설정
         toast.onClick = () => FocusOnPosition(toast.worldPosition);
@@ -128,66 +127,14 @@ public class ToastNotificationItem
     /// <summary>
     /// 시스템 알림 토스트 생성
     /// </summary>
-    public static ToastNotificationItem CreateSystemToast(
-        string message,
-        NotificationPriority priority = NotificationPriority.Medium)
+    public static ToastNotificationItem CreateSystemToast(string message)
     {
         return new ToastNotificationItem
         {
             type = NotificationType.System,
             customMessage = message,
-            priorityLevel = priority,
-            priority = (int)priority,
             isClickable = false
         };
-    }
-
-    /// <summary>
-    /// 우선순위 계산
-    /// </summary>
-    private void CalculatePriority()
-    {
-        int basePriority = 0;
-
-        // 레전드 펫 체크
-        if (pet1.isLegendary || (pet2.isLegendary))
-        {
-            basePriority = (int)NotificationPriority.Critical;
-            priorityLevel = NotificationPriority.Critical;
-        }
-        // 즐겨찾기 펫 체크
-        else if (pet1.isFavorite || (pet2.isFavorite))
-        {
-            basePriority = (int)NotificationPriority.High;
-            priorityLevel = NotificationPriority.High;
-        }
-        // 화면 내 펫 체크
-        else if (IsInCameraView())
-        {
-            basePriority = (int)NotificationPriority.Medium;
-            priorityLevel = NotificationPriority.Medium;
-        }
-        // 기본 우선순위
-        else
-        {
-            basePriority = (int)NotificationPriority.Low;
-            priorityLevel = NotificationPriority.Low;
-        }
-
-        priority = basePriority;
-    }
-
-    /// <summary>
-    /// 카메라 뷰 내에 있는지 체크
-    /// </summary>
-    private bool IsInCameraView()
-    {
-        if (Camera.main == null) return false;
-
-        Vector3 viewportPoint = Camera.main.WorldToViewportPoint(worldPosition);
-        return viewportPoint.x >= 0 && viewportPoint.x <= 1 &&
-               viewportPoint.y >= 0 && viewportPoint.y <= 1 &&
-               viewportPoint.z > 0;
     }
 
     /// <summary>

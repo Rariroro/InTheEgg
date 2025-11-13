@@ -214,7 +214,13 @@ public abstract class BasePetInteraction : MonoBehaviour
         {
             PetInteractionManager.Instance.NotifyInteractionEnded(pet1, pet2);
         }
-        
+
+        // 토스트 알림 제거 (우선순위 상호작용은 토스트 알림 자체가 없으므로 호출해도 무방)
+        if (InteractionNotificationHandler.Instance != null)
+        {
+            InteractionNotificationHandler.NotifyInteractionEnded(pet1, pet2);
+        }
+
         // Debug.Log($"[{InteractionName}] EndInteraction 완료");
     }
     // 상호작용 수행 코루틴

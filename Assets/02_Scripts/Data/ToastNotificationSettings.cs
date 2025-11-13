@@ -8,15 +8,11 @@ using System.Collections.Generic;
 public class ToastNotificationSettings : ScriptableObject
 {
     [Header("표시 설정")]
-    [Tooltip("동시에 표시할 수 있는 최대 토스트 개수")]
-    [Range(1, 10)]
-    public int maxConcurrentToasts = 5;
-
     [Tooltip("동시에 표시할 수 있는 최대 상호작용 토스트 개수")]
-    [Range(1, 10)]
-    public int maxInteractionToasts = 5;
+    [Range(1, 20)]
+    public int maxInteractionToasts = 10;
 
-    [Tooltip("토스트가 표시되는 시간 (초)")]
+    [Tooltip("토스트가 표시되는 시간 (초) - Persistent 토스트는 무시")]
     [Range(1f, 10f)]
     public float displayDuration = 3f;
 
@@ -28,26 +24,10 @@ public class ToastNotificationSettings : ScriptableObject
     [Range(0.1f, 1f)]
     public float fadeOutDuration = 0.5f;
 
-    [Header("우선순위 설정")]
-    [Tooltip("표시할 최소 우선순위 레벨")]
-    public NotificationPriority minimumPriority = NotificationPriority.Medium;
-
-    [Tooltip("레전드 펫 우선순위 보너스")]
-    [Range(0, 100)]
-    public int legendaryPetBonus = 100;
-
-    [Tooltip("즐겨찾기 펫 우선순위 보너스")]
-    [Range(0, 50)]
-    public int favoritePetBonus = 50;
-
     [Header("필터링 설정")]
     [Tooltip("동일한 펫 조합의 상호작용 무시 시간 (초)")]
     [Range(5f, 60f)]
     public float duplicateCooldown = 30f;
-
-    [Tooltip("동일한 펫이 연속으로 알림을 띄울 수 있는 최소 간격 (초)")]
-    [Range(1f, 10f)]
-    public float samePetCooldown = 5f;
 
     [Header("UI 설정")]
     [Tooltip("토스트 표시 위치")]
@@ -98,21 +78,6 @@ public class ToastNotificationSettings : ScriptableObject
     [Header("디버그")]
     [Tooltip("디버그 로그 표시")]
     public bool enableDebugLog = false;
-
-    [Tooltip("모든 우선순위 무시하고 표시 (테스트용)")]
-    public bool ignoreAllFilters = false;
-}
-
-/// <summary>
-/// 알림 우선순위 레벨
-/// </summary>
-public enum NotificationPriority
-{
-    VeryLow = 10,    // 매우 낮음
-    Low = 25,        // 낮음
-    Medium = 50,     // 중간
-    High = 75,       // 높음 (즐겨찾기 펫)
-    Critical = 100   // 긴급 (레전드 펫)
 }
 
 /// <summary>

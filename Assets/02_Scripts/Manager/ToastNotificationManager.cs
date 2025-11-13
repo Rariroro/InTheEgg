@@ -38,7 +38,6 @@ public class ToastNotificationManager : MonoBehaviour
     private List<ToastNotificationUI> activeToasts = new List<ToastNotificationUI>();
     private List<ToastNotificationUI> activeInteractionToasts = new List<ToastNotificationUI>(); // 상호작용 토스트 별도 관리
     private Dictionary<string, DateTime> duplicateTracker = new Dictionary<string, DateTime>();
-    private Dictionary<string, DateTime> petCooldownTracker = new Dictionary<string, DateTime>();
     private Queue<ToastNotificationUI> toastPool = new Queue<ToastNotificationUI>();
 
     // 집계 모드
@@ -97,9 +96,8 @@ public class ToastNotificationManager : MonoBehaviour
     {
         // 런타임에 기본 설정 생성 (저장은 안됨)
         settings = ScriptableObject.CreateInstance<ToastNotificationSettings>();
-        settings.maxConcurrentToasts = 5;
+        settings.maxInteractionToasts = 10;
         settings.displayDuration = 3f;
-        settings.minimumPriority = NotificationPriority.Medium;
     }
 
     private void SetupCanvas()
@@ -237,9 +235,9 @@ public class ToastNotificationManager : MonoBehaviour
     /// <summary>
     /// 시스템 메시지 알림 추가
     /// </summary>
-    public void ShowSystemToast(string message, NotificationPriority priority = NotificationPriority.Medium)
+    public void ShowSystemToast(string message)
     {
-        var toast = ToastNotificationItem.CreateSystemToast(message, priority);
+        var toast = ToastNotificationItem.CreateSystemToast(message);
         EnqueueNotification(toast);
     }
 
@@ -254,17 +252,80 @@ public class ToastNotificationManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 상호작용 종료 시 해당 토스트 제거 (하이브리드 방식: 최소 표시 시간 보장)
+    /// </summary>
+    public void DismissInteractionToast(PetController pet1, PetController pet2)
+    {
+        if (pet1 == null || pet2 == null) return;
+
+        const float MIN_DISPLAY_TIME = 2f; // 최소 2초 표시 보장
+
+        // 펫 쌍에 해당하는 토스트 찾기
+        for (int i = activeInteractionToasts.Count - 1; i >= 0; i--)
+        {
+            var toastUI = activeInteractionToasts[i];
+            if (toastUI == null) continue;
+
+            // 토스트의 원본 데이터 확인 필요 - ToastNotificationUI에서 item 참조 가능하도록 수정 필요
+            // 임시로 펫 이름으로 비교 (ToastNotificationUI에 GetItem 메서드 추가 필요)
+            var item = toastUI.GetNotificationItem();
+            if (item == null) continue;
+
+            // 펫 쌍 매칭 (순서 무관) - GameObject 참조로 비교
+            bool isPet1Match = (item.pet1.petObject == pet1.gameObject || item.pet1.petObject == pet2.gameObject);
+            bool isPet2Match = (item.pet2.petObject == pet1.gameObject || item.pet2.petObject == pet2.gameObject);
+
+            if (isPet1Match && isPet2Match)
+            {
+                // 최소 표시 시간 체크
+                float displayedTime = Time.time - item.displayStartTime;
+                if (displayedTime >= MIN_DISPLAY_TIME)
+                {
+                    // 즉시 제거
+                    toastUI.Dismiss();
+                    activeInteractionToasts.RemoveAt(i);
+                    if (debugMode)
+                        Debug.Log($"[ToastNotificationManager] 상호작용 종료로 토스트 제거: {item.pet1.name} ↔ {item.pet2.name}");
+                }
+                else
+                {
+                    // 최소 시간 미달 - 나머지 시간만큼 대기 후 제거
+                    float remainingTime = MIN_DISPLAY_TIME - displayedTime;
+                    StartCoroutine(DismissAfterDelay(toastUI, remainingTime));
+                    if (debugMode)
+                        Debug.Log($"[ToastNotificationManager] 상호작용 종료 - {remainingTime:F1}초 후 토스트 제거 예약");
+                }
+                break; // 하나만 찾으면 종료
+            }
+        }
+    }
+
+    /// <summary>
+    /// 지연 후 토스트 제거
+    /// </summary>
+    private IEnumerator DismissAfterDelay(ToastNotificationUI toastUI, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (toastUI != null && toastUI.gameObject.activeSelf)
+        {
+            toastUI.Dismiss();
+            activeInteractionToasts.Remove(toastUI);
+        }
+    }
+
     #endregion
 
     #region Queue Management
 
     private void EnqueueNotification(ToastNotificationItem item)
     {
-        // 필터링
-        if (!ShouldShowNotification(item))
+        // 중복 체크만 수행
+        if (IsDuplicate(item))
         {
             // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 알림 필터링됨: {item.id}");
+                // Debug.Log($"[ToastNotificationManager] 중복 필터링: {item.id}");
             return;
         }
 
@@ -283,45 +344,6 @@ public class ToastNotificationManager : MonoBehaviour
             // Debug.Log($"[ToastNotificationManager] 알림 큐에 추가: {item.id}");
     }
 
-    private bool ShouldShowNotification(ToastNotificationItem item)
-    {
-        // 디버그 모드에서 모든 알림 표시
-        if (showAllNotifications || (settings != null && settings.ignoreAllFilters))
-        {
-            // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 필터 무시 모드: {item.id} 허용");
-            return true;
-        }
-
-        // 우선순위 체크
-        if (settings != null && item.priority < (int)settings.minimumPriority)
-        {
-            // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 우선순위 필터링: {item.id} (우선순위: {item.priority} < 최소: {(int)settings.minimumPriority})");
-            return false;
-        }
-
-        // 중복 체크
-        if (IsDuplicate(item))
-        {
-            // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 중복 필터링: {item.id}");
-            return false;
-        }
-
-        // 펫 쿨다운 체크
-        if (IsOnPetCooldown(item))
-        {
-            // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 펫 쿨다운 필터링: {item.id}");
-            return false;
-        }
-
-        // if (debugMode)
-            // Debug.Log($"[ToastNotificationManager] 필터 통과: {item.id}");
-        return true;
-    }
-
     private bool IsDuplicate(ToastNotificationItem item)
     {
         if (settings == null) return false;
@@ -337,30 +359,6 @@ public class ToastNotificationManager : MonoBehaviour
         return false;
     }
 
-    private bool IsOnPetCooldown(ToastNotificationItem item)
-    {
-        if (settings == null) return false;
-
-        // 시스템 토스트는 펫이 없으므로 쿨다운 체크 안함
-        if (item.pet1.petObject == null)
-            return false;
-
-        string petKey = item.pet1.name;
-
-        // 펫 이름이 없으면 쿨다운 체크 안함
-        if (string.IsNullOrEmpty(petKey))
-            return false;
-
-        if (petCooldownTracker.TryGetValue(petKey, out DateTime lastTime))
-        {
-            if ((DateTime.Now - lastTime).TotalSeconds < settings.samePetCooldown)
-                return true;
-        }
-
-        // 트래커 업데이트
-        petCooldownTracker[petKey] = DateTime.Now;
-        return false;
-    }
 
     #endregion
 
@@ -372,7 +370,7 @@ public class ToastNotificationManager : MonoBehaviour
         {
             // 큐에 항목이 있고, 동시 표시 제한을 넘지 않으면
             if (notificationQueue.Count > 0 &&
-                activeToasts.Count < (settings?.maxConcurrentToasts ?? 5))
+                activeInteractionToasts.Count < MaxInteractionToasts)
             {
                 var item = notificationQueue.Dequeue();
                 ShowToast(item);
@@ -402,6 +400,10 @@ public class ToastNotificationManager : MonoBehaviour
         // 초기화 및 표시
         toastUI.gameObject.SetActive(true);
         toastUI.Initialize(item, settings, position);
+
+        // ToastNotificationItem에 UI 참조와 시작 시간 저장 (상호작용 종료 시 제거용)
+        item.toastUI = toastUI;
+        item.displayStartTime = Time.time;
 
         // 활성 리스트에 추가
         activeToasts.Add(toastUI);
@@ -546,14 +548,14 @@ public class ToastNotificationManager : MonoBehaviour
                 group.Key
             );
 
-            ShowSystemToast(message, NotificationPriority.High);
+            ShowSystemToast(message);
         }
 
         // 나머지 알림 요약
         int otherCount = aggregationBuffer.Count(x => x.type != NotificationType.PetInteraction);
         if (otherCount > 0)
         {
-            ShowSystemToast($"{otherCount}개의 다른 활동 진행 중", NotificationPriority.Medium);
+            ShowSystemToast($"{otherCount}개의 다른 활동 진행 중");
         }
     }
 
@@ -577,17 +579,6 @@ public class ToastNotificationManager : MonoBehaviour
             {
                 duplicateTracker.Remove(key);
             }
-
-            // 오래된 펫 쿨다운 제거
-            var expiredCooldowns = petCooldownTracker
-                .Where(x => (DateTime.Now - x.Value).TotalSeconds > (settings?.samePetCooldown ?? 5))
-                .Select(x => x.Key)
-                .ToList();
-
-            foreach (var key in expiredCooldowns)
-            {
-                petCooldownTracker.Remove(key);
-            }
         }
     }
 
@@ -598,7 +589,7 @@ public class ToastNotificationManager : MonoBehaviour
     [ContextMenu("테스트 토스트 표시")]
     private void ShowTestToast()
     {
-        ShowSystemToast("테스트 토스트 메시지입니다!", NotificationPriority.High);
+        ShowSystemToast("테스트 토스트 메시지입니다!");
     }
 
     [ContextMenu("큐 상태 출력")]

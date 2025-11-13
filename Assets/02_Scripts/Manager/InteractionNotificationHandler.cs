@@ -24,6 +24,7 @@ public class InteractionNotificationHandler : MonoBehaviour
 
     // 이벤트
     public static event System.Action<PetController, PetController, InteractionType> OnInteractionStarted;
+    public static event System.Action<PetController, PetController> OnInteractionEnded;
     public static event System.Action<int> OnActiveInteractionCountChanged;
 
     private void Awake()
@@ -45,12 +46,14 @@ public class InteractionNotificationHandler : MonoBehaviour
     {
         // 이벤트 구독
         OnInteractionStarted += HandleInteractionStarted;
+        OnInteractionEnded += HandleInteractionEnded;
     }
 
     private void OnDisable()
     {
         // 이벤트 구독 해제
         OnInteractionStarted -= HandleInteractionStarted;
+        OnInteractionEnded -= HandleInteractionEnded;
     }
 
     /// <summary>
@@ -59,6 +62,14 @@ public class InteractionNotificationHandler : MonoBehaviour
     public static void NotifyInteractionStarted(PetController pet1, PetController pet2, InteractionType type)
     {
         OnInteractionStarted?.Invoke(pet1, pet2, type);
+    }
+
+    /// <summary>
+    /// 상호작용이 종료될 때 호출 (BasePetInteraction에서 호출)
+    /// </summary>
+    public static void NotifyInteractionEnded(PetController pet1, PetController pet2)
+    {
+        OnInteractionEnded?.Invoke(pet1, pet2);
     }
 
     /// <summary>
@@ -99,6 +110,23 @@ public class InteractionNotificationHandler : MonoBehaviour
         {
             // 초과 시 집계 알림 표시 (처음 초과할 때만)
             ShowAggregateNotification();
+        }
+    }
+
+    /// <summary>
+    /// 상호작용 종료 핸들러
+    /// </summary>
+    private void HandleInteractionEnded(PetController pet1, PetController pet2)
+    {
+        if (!enableInteractionNotifications) return;
+
+        // 토스트 알림 제거
+        if (ToastNotificationManager.Instance != null)
+        {
+            ToastNotificationManager.Instance.DismissInteractionToast(pet1, pet2);
+
+            if (debugMode)
+                Debug.Log($"[InteractionNotificationHandler] 토스트 제거 요청: {pet1?.name} ↔ {pet2?.name}");
         }
     }
 
@@ -174,10 +202,7 @@ public class InteractionNotificationHandler : MonoBehaviour
             int extraCount = activeInteractionCount - maxInteractionsForDisplay;
             string message = $"추가 {extraCount}개의 상호작용이 진행 중입니다...";
 
-            ToastNotificationManager.Instance.ShowSystemToast(
-                message,
-                NotificationPriority.Low
-            );
+            ToastNotificationManager.Instance.ShowSystemToast(message);
 
             // if (debugMode)
                 // Debug.Log($"[InteractionNotificationHandler] 집계 알림: {message}");

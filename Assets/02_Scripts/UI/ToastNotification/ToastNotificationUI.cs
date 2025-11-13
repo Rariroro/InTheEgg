@@ -53,6 +53,14 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
     }
 
     /// <summary>
+    /// 토스트 데이터 가져오기 (상호작용 종료 시 제거용)
+    /// </summary>
+    public ToastNotificationItem GetNotificationItem()
+    {
+        return data;
+    }
+
+    /// <summary>
     /// 토스트 초기화 및 표시
     /// </summary>
     public void Initialize(ToastNotificationItem item, ToastNotificationSettings settings, Vector2 position)
@@ -89,9 +97,7 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
         if (mainText != null)
         {
             mainText.text = GetFormattedText();
-
-            // 우선순위에 따른 텍스트 색상
-            mainText.color = GetPriorityColor(data.priorityLevel);
+            mainText.color = Color.white; // 모든 알림 흰색으로 통일
         }
 
         // 상호작용 아이콘 설정
@@ -121,7 +127,7 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
         // 배경 색상 설정
         if (backgroundImage != null)
         {
-            backgroundImage.color = GetBackgroundColor(data.priorityLevel);
+            backgroundImage.color = new Color(0, 0, 0, 0.7f); // 모든 알림 동일한 배경색
         }
     }
 
@@ -221,24 +227,39 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
         // 페이드 인 & 슬라이드
         yield return StartCoroutine(FadeIn());
 
-        // 표시 유지
-        remainingTime = data?.displayDuration ?? settings?.displayDuration ?? 3f;
-
-        while (remainingTime > 0 && !isDismissed)
+        // Persistent 토스트는 타이머 없이 명시적 제거까지 대기
+        if (data != null && data.isPersistent)
         {
-            // 호버 중이면 시간 정지
-            if (!isHovered || !settings.pauseOnHover)
+            // 상호작용이 끝날 때까지 무한 대기 (Dismiss()가 호출될 때까지)
+            while (!isDismissed)
             {
-                remainingTime -= Time.deltaTime;
+                yield return null;
             }
 
-            yield return null;
-        }
-
-        // 페이드 아웃
-        if (!isDismissed)
-        {
+            // Persistent 토스트도 페이드 아웃 적용
             yield return StartCoroutine(FadeOut());
+        }
+        else
+        {
+            // 표시 유지 (시간 제한)
+            remainingTime = data?.displayDuration ?? settings?.displayDuration ?? 3f;
+
+            while (remainingTime > 0 && !isDismissed)
+            {
+                // 호버 중이면 시간 정지
+                if (!isHovered || !settings.pauseOnHover)
+                {
+                    remainingTime -= Time.deltaTime;
+                }
+
+                yield return null;
+            }
+
+            // 페이드 아웃
+            if (!isDismissed)
+            {
+                yield return StartCoroutine(FadeOut());
+            }
         }
 
         // 제거
@@ -461,38 +482,6 @@ public class ToastNotificationUI : MonoBehaviour, IPointerEnterHandler, IPointer
     #endregion
 
     #region 헬퍼 메서드
-
-    private Color GetPriorityColor(NotificationPriority priority)
-    {
-        switch (priority)
-        {
-            case NotificationPriority.Critical:
-                return new Color(1f, 0.8f, 0f); // 금색
-            case NotificationPriority.High:
-                return new Color(0.5f, 0.8f, 1f); // 하늘색
-            case NotificationPriority.Medium:
-                return Color.white;
-            case NotificationPriority.Low:
-                return new Color(0.8f, 0.8f, 0.8f);
-            default:
-                return new Color(0.6f, 0.6f, 0.6f);
-        }
-    }
-
-    private Color GetBackgroundColor(NotificationPriority priority)
-    {
-        Color baseColor = new Color(0, 0, 0, 0.7f);
-
-        switch (priority)
-        {
-            case NotificationPriority.Critical:
-                return new Color(0.2f, 0.15f, 0, 0.8f); // 어두운 금색
-            case NotificationPriority.High:
-                return new Color(0, 0.1f, 0.2f, 0.8f); // 어두운 파랑
-            default:
-                return baseColor;
-        }
-    }
 
     private InteractionIconMapping GetInteractionIcon(InteractionType type)
     {

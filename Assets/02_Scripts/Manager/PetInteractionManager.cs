@@ -43,11 +43,6 @@ public class PetInteractionManager : MonoBehaviour
     // 싱글톤 패턴
     public static PetInteractionManager Instance { get; private set; }
 
-    [Header("상호작용 설정")]
-    [Tooltip("레거시 쿨타임 값 - CooldownManager 사용 시 무시됨")]
-    [System.Obsolete("CooldownManager를 사용하세요")]
-    public float interactionCooldown = 30f;
-
     [Header("동시 상호작용 제한")]
     [Tooltip("동시에 진행할 수 있는 최대 상호작용 수")]
     [Range(1, 10)]
@@ -57,16 +52,11 @@ public class PetInteractionManager : MonoBehaviour
     public float startDelay = 3.0f;
     private bool canStartInteractions = false;
 
-    [Header("쿨타임 관리")]
-    [Tooltip("CooldownManager 사용 여부")]
-    public bool useCooldownManager = true;
-
     [Header("디버그")]
     [SerializeField] private bool enableDebugLogs = false;
 
     // 상호작용 관리
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
-    private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>(); // 레거시 호환용
 
     // 상호작용 정보
     private class InteractionInfo
@@ -438,24 +428,13 @@ public class PetInteractionManager : MonoBehaviour
 
     private bool IsOnCooldown(PetController pet)
     {
-        if (useCooldownManager && CooldownManager.Instance != null)
+        if (CooldownManager.Instance != null)
         {
-            // CooldownManager 사용
             return CooldownManager.Instance.IsOnCooldown(
                 CooldownManager.CooldownType.PetInteraction,
                 pet.petName);
         }
-        else
-        {
-            // 레거시 방식 사용
-            if (lastInteractionTime.TryGetValue(pet, out float lastTime))
-            {
-                #pragma warning disable CS0618 // 사용되지 않는 멤버 사용 경고 무시
-                return Time.time - lastTime < interactionCooldown;
-                #pragma warning restore CS0618
-            }
-            return false;
-        }
+        return false;
     }
 
 
@@ -483,7 +462,7 @@ public class PetInteractionManager : MonoBehaviour
         if (pet != null && allPets.Contains(pet))
         {
             allPets.Remove(pet);
-            
+
             // 상호작용 정리
             if (interactingPets.ContainsKey(pet))
             {
@@ -494,8 +473,7 @@ public class PetInteractionManager : MonoBehaviour
                     interactingPets.Remove(partner);
                 }
             }
-            
-            lastInteractionTime.Remove(pet);
+
         // Debug.Log($"[PetInteractionManager] 펫 제거: {pet.petName}");
         }
     }
@@ -550,9 +528,8 @@ public class PetInteractionManager : MonoBehaviour
     public void PrintCooldownStatus()
     {
         Debug.Log($"[PetInteractionManager] 쿨타임 상태:");
-        Debug.Log($"  - CooldownManager 사용: {useCooldownManager}");
 
-        if (useCooldownManager && CooldownManager.Instance != null)
+        if (CooldownManager.Instance != null)
         {
             Debug.Log($"  - CooldownManager 활성화됨");
             int cooldownCount = 0;
@@ -568,19 +545,7 @@ public class PetInteractionManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"  - 레거시 쿨타임 사용");
-            Debug.Log($"  - 쿨타임 기록 수: {lastInteractionTime.Count}");
-            foreach (var kvp in lastInteractionTime)
-            {
-                if (kvp.Key != null)
-                {
-                    float timeSince = Time.time - kvp.Value;
-                    #pragma warning disable CS0618
-                    bool onCooldown = timeSince < interactionCooldown;
-                    #pragma warning restore CS0618
-                    Debug.Log($"    {kvp.Key.petName}: {(onCooldown ? $"쿨타임 중 ({interactionCooldown - timeSince:F1}초 남음)" : "준비됨")}");
-                }
-            }
+            Debug.Log($"  - CooldownManager가 없습니다!");
         }
     }
 
