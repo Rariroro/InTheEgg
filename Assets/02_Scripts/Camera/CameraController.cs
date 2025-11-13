@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class CameraController : MonoBehaviour
 {
@@ -275,5 +276,63 @@ public class CameraController : MonoBehaviour
     public void UnlockCamera()
     {
         isCameraAnimating = false;
+    }
+
+    /// <summary>
+    /// 지정된 위치로 카메라를 부드럽게 이동
+    /// </summary>
+    /// <param name="targetPosition">목표 위치 (월드 좌표)</param>
+    /// <param name="duration">이동 시간 (초)</param>
+    public void MoveCameraToPosition(Vector3 targetPosition, float duration = 1.0f)
+    {
+        StartCoroutine(MoveCameraToPositionCoroutine(targetPosition, duration));
+    }
+
+    /// <summary>
+    /// 카메라 이동 코루틴
+    /// </summary>
+    private IEnumerator MoveCameraToPositionCoroutine(Vector3 targetPosition, float duration)
+    {
+        // 카메라 잠금 (사용자 입력 차단)
+        LockCamera();
+
+        // 시작 위치
+        Vector3 startPosition = transform.position;
+
+        // 목표 위치 조정 (현재 Y 높이 유지)
+        Vector3 adjustedTarget = new Vector3(targetPosition.x, startPosition.y, targetPosition.z);
+
+        // 위치 제한 적용
+        if (limitCameraMovement)
+        {
+            adjustedTarget.x = Mathf.Clamp(adjustedTarget.x, minX, maxX);
+            adjustedTarget.z = Mathf.Clamp(adjustedTarget.z, minZ, maxZ);
+        }
+
+        // 이동 거리에 따라 duration 자동 조정 (너무 멀면 더 오래 걸림)
+        float distance = Vector3.Distance(startPosition, adjustedTarget);
+        float adjustedDuration = Mathf.Max(duration, distance / 100f); // 100 유닛당 1초
+
+        // 부드러운 이동
+        float elapsed = 0f;
+        while (elapsed < adjustedDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / adjustedDuration;
+
+            // EaseInOut 커브 적용
+            float smoothT = t < 0.5f
+                ? 2f * t * t
+                : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
+
+            transform.position = Vector3.Lerp(startPosition, adjustedTarget, smoothT);
+            yield return null;
+        }
+
+        // 최종 위치로 정확히 설정
+        transform.position = adjustedTarget;
+
+        // 카메라 잠금 해제
+        UnlockCamera();
     }
 }

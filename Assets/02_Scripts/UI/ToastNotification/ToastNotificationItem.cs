@@ -162,12 +162,29 @@ public class ToastNotificationItem
     /// </summary>
     private static void FocusOnPosition(Vector3 position)
     {
-        // PetCameraSwitcherButton이나 CameraController 연동
+        // 펫 카메라 모드에서는 작동하지 않음
         var cameraSwitcher = GameObject.FindObjectOfType<PetCameraSwitcherButton>();
-        if (cameraSwitcher != null)
+        if (cameraSwitcher != null && cameraSwitcher.IsInPetCameraMode())
         {
-            // TODO: 위치로 카메라 이동 기능 구현
-            Debug.Log($"[ToastNotification] 카메라를 {position}로 이동");
+            Debug.Log($"[ToastNotification] 펫 카메라 모드에서는 이동할 수 없습니다.");
+            return;
+        }
+
+        // CameraController를 통해 카메라 이동
+        var mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            var cameraController = mainCamera.GetComponentInParent<CameraController>();
+            if (cameraController != null)
+            {
+                // 1초 동안 부드럽게 이동
+                cameraController.MoveCameraToPosition(position, 1.0f);
+                Debug.Log($"[ToastNotification] 카메라를 {position}로 이동 중...");
+            }
+            else
+            {
+                Debug.LogWarning($"[ToastNotification] CameraController를 찾을 수 없습니다.");
+            }
         }
     }
 
