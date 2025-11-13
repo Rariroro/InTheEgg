@@ -118,8 +118,8 @@ public class ToastNotificationItem
         // 고유 ID 생성 (펫 조합 기반)
         toast.id = GenerateInteractionId(pet1, pet2, interactionType);
 
-        // 클릭 액션 설정
-        toast.onClick = () => FocusOnPosition(toast.worldPosition);
+        // 클릭 액션 설정 (실시간 펫 위치로 이동)
+        toast.onClick = () => FocusOnPets(toast.pet1.petObject, toast.pet2.petObject);
 
         return toast;
     }
@@ -155,6 +155,39 @@ public class ToastNotificationItem
         }
 
         return $"{name1}_{name2}_{type}";
+    }
+
+    /// <summary>
+    /// 펫들의 실시간 위치로 카메라 포커스 (오프셋 적용)
+    /// </summary>
+    private static void FocusOnPets(GameObject petObject1, GameObject petObject2)
+    {
+        // 펫 오브젝트 유효성 체크
+        if (petObject1 == null || petObject2 == null)
+        {
+            Debug.LogWarning($"[ToastNotification] 펫 오브젝트가 null입니다.");
+            return;
+        }
+
+        // PetController 가져오기
+        var pet1 = petObject1.GetComponent<PetController>();
+        var pet2 = petObject2.GetComponent<PetController>();
+
+        if (pet1 == null || pet2 == null)
+        {
+            Debug.LogWarning($"[ToastNotification] PetController를 찾을 수 없습니다.");
+            return;
+        }
+
+        // 실시간 중간 위치 계산
+        Vector3 currentPosition = (pet1.transform.position + pet2.transform.position) / 2f;
+
+        // 쿼터뷰 카메라 오프셋 적용 (펫이 화면 중앙에 잘 보이도록)
+        // 카메라가 대각선에서 바라보므로 약간 뒤로 이동
+        Vector3 cameraOffset = new Vector3(-8f, 0f, -8f);
+        Vector3 targetPosition = currentPosition + cameraOffset;
+
+        FocusOnPosition(targetPosition);
     }
 
     /// <summary>
