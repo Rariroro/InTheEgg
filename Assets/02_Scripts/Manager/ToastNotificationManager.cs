@@ -17,6 +17,9 @@ public class ToastNotificationManager : MonoBehaviour
     [SerializeField] private ToastNotificationSettings settings;
     [SerializeField] private bool useDefaultSettingsIfNull = true;
 
+    // Settings 외부 접근용 (ToastNotificationItem에서 카메라 설정 읽기)
+    public static ToastNotificationSettings Settings => Instance?.settings;
+
     [Header("UI 프리팹")]
     [SerializeField] private GameObject toastPrefab;
     [SerializeField] private GameObject toastCanvasPrefab;

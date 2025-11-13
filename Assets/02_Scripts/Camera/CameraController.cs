@@ -279,19 +279,44 @@ public class CameraController : MonoBehaviour
     }
 
     /// <summary>
-    /// 지정된 위치로 카메라를 부드럽게 이동
+    /// 지정된 위치로 카메라를 부드럽게 이동 (Y축 고정)
     /// </summary>
     /// <param name="targetPosition">목표 위치 (월드 좌표)</param>
     /// <param name="duration">이동 시간 (초)</param>
     public void MoveCameraToPosition(Vector3 targetPosition, float duration = 1.0f)
     {
-        StartCoroutine(MoveCameraToPositionCoroutine(targetPosition, duration));
+        StartCoroutine(MoveCameraToPositionCoroutine(targetPosition, duration, false));
+    }
+
+    /// <summary>
+    /// 지정된 위치로 카메라를 부드럽게 이동 (Y축 포함 옵션)
+    /// </summary>
+    /// <param name="targetPosition">목표 위치 (월드 좌표)</param>
+    /// <param name="duration">이동 시간 (초)</param>
+    /// <param name="includeHeight">Y축 높이 포함 여부 (true: 높이 따라감, false: 현재 높이 유지)</param>
+    public void MoveCameraToPosition(Vector3 targetPosition, float duration, bool includeHeight)
+    {
+        StartCoroutine(MoveCameraToPositionCoroutine(targetPosition, duration, includeHeight));
+    }
+
+    /// <summary>
+    /// 지정된 위치로 카메라를 이동하면서 FOV도 조정 (토스트 알림용)
+    /// </summary>
+    /// <param name="targetPosition">목표 위치 (월드 좌표, Y는 무시됨)</param>
+    /// <param name="duration">이동 시간 (초)</param>
+    /// <param name="targetFOV">목표 FOV 값</param>
+    public void MoveCameraToPositionWithZoom(Vector3 targetPosition, float duration, float targetFOV)
+    {
+        StartCoroutine(MoveCameraWithZoomCoroutine(targetPosition, duration, targetFOV));
     }
 
     /// <summary>
     /// 카메라 이동 코루틴
     /// </summary>
-    private IEnumerator MoveCameraToPositionCoroutine(Vector3 targetPosition, float duration)
+    /// <param name="targetPosition">목표 위치</param>
+    /// <param name="duration">이동 시간</param>
+    /// <param name="includeHeight">Y축 높이 포함 여부</param>
+    private IEnumerator MoveCameraToPositionCoroutine(Vector3 targetPosition, float duration, bool includeHeight)
     {
         // 카메라 잠금 (사용자 입력 차단)
         LockCamera();
@@ -299,14 +324,29 @@ public class CameraController : MonoBehaviour
         // 시작 위치
         Vector3 startPosition = transform.position;
 
-        // 목표 위치 조정 (현재 Y 높이 유지)
-        Vector3 adjustedTarget = new Vector3(targetPosition.x, startPosition.y, targetPosition.z);
+        // 목표 위치 조정
+        Vector3 adjustedTarget;
+        if (includeHeight)
+        {
+            // Y축 포함 전체 이동 (펫 높이 따라감)
+            adjustedTarget = targetPosition;
+        }
+        else
+        {
+            // 기존 방식: 현재 Y 높이 유지
+            adjustedTarget = new Vector3(targetPosition.x, startPosition.y, targetPosition.z);
+        }
 
         // 위치 제한 적용
         if (limitCameraMovement)
         {
             adjustedTarget.x = Mathf.Clamp(adjustedTarget.x, minX, maxX);
             adjustedTarget.z = Mathf.Clamp(adjustedTarget.z, minZ, maxZ);
+            // Y축도 제한 (너무 높거나 낮지 않도록)
+            if (includeHeight)
+            {
+                adjustedTarget.y = Mathf.Clamp(adjustedTarget.y, 10f, 100f); // 적절한 높이 범위
+            }
         }
 
         // 이동 거리에 따라 duration 자동 조정 (너무 멀면 더 오래 걸림)
@@ -331,6 +371,73 @@ public class CameraController : MonoBehaviour
 
         // 최종 위치로 정확히 설정
         transform.position = adjustedTarget;
+
+        // 카메라 잠금 해제
+        UnlockCamera();
+    }
+
+    /// <summary>
+    /// 카메라 이동 + FOV 조정 코루틴 (Y축 고정)
+    /// </summary>
+    /// <param name="targetPosition">목표 위치</param>
+    /// <param name="duration">이동 시간</param>
+    /// <param name="targetFOV">목표 FOV</param>
+    private IEnumerator MoveCameraWithZoomCoroutine(Vector3 targetPosition, float duration, float targetFOV)
+    {
+        // 카메라 잠금 (사용자 입력 차단)
+        LockCamera();
+
+        // 시작 위치 및 FOV
+        Vector3 startPosition = transform.position;
+        float startFOV = childCamera != null ? childCamera.fieldOfView : minZoom;
+
+        // 목표 위치 조정 (Y는 현재 높이 유지)
+        Vector3 adjustedTarget = new Vector3(targetPosition.x, startPosition.y, targetPosition.z);
+
+        // 위치 제한 적용
+        if (limitCameraMovement)
+        {
+            adjustedTarget.x = Mathf.Clamp(adjustedTarget.x, minX, maxX);
+            adjustedTarget.z = Mathf.Clamp(adjustedTarget.z, minZ, maxZ);
+        }
+
+        // FOV 제한 적용
+        targetFOV = Mathf.Clamp(targetFOV, maxZoom, minZoom);
+
+        // 이동 거리에 따라 duration 자동 조정 (너무 멀면 더 오래 걸림)
+        float distance = Vector3.Distance(startPosition, adjustedTarget);
+        float adjustedDuration = Mathf.Max(duration, distance / 100f); // 100 유닛당 1초
+
+        // 부드러운 이동 + FOV 변경
+        float elapsed = 0f;
+        while (elapsed < adjustedDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / adjustedDuration;
+
+            // EaseInOut 커브 적용
+            float smoothT = t < 0.5f
+                ? 2f * t * t
+                : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
+
+            // 위치 이동
+            transform.position = Vector3.Lerp(startPosition, adjustedTarget, smoothT);
+
+            // FOV 변경
+            if (childCamera != null)
+            {
+                childCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, smoothT);
+            }
+
+            yield return null;
+        }
+
+        // 최종 위치 및 FOV로 정확히 설정
+        transform.position = adjustedTarget;
+        if (childCamera != null)
+        {
+            childCamera.fieldOfView = targetFOV;
+        }
 
         // 카메라 잠금 해제
         UnlockCamera();

@@ -78,6 +78,27 @@ public class ToastNotificationSettings : ScriptableObject
     [Header("디버그")]
     [Tooltip("디버그 로그 표시")]
     public bool enableDebugLog = false;
+
+    [Header("카메라 포커스 설정 (FOV 줌 방식)")]
+    [Tooltip("이 거리 이하일 때 최대 줌 인 (FOV 20)")]
+    [Range(5f, 30f)]
+    public float minFOVDistance = 10f;
+
+    [Tooltip("이 거리 이상일 때 최대 줌 아웃 (FOV 50)")]
+    [Range(30f, 100f)]
+    public float maxFOVDistance = 50f;
+
+    [Tooltip("FOV 배율 (1.0보다 크면 더 줌 아웃, 작으면 더 줌 인)")]
+    [Range(0.5f, 2.0f)]
+    public float fovMultiplier = 1.2f;
+
+    [Tooltip("카메라 6시 방향 오프셋 (Z축 음수, 클수록 더 남쪽으로)")]
+    [Range(0f, 100f)]
+    public float cameraSouthOffset = 10f;
+
+    [Tooltip("카메라 이동 시간 (초)")]
+    [Range(0.5f, 3f)]
+    public float cameraMoveDuration = 1.0f;
 }
 
 /// <summary>

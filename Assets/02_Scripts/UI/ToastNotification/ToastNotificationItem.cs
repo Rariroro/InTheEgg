@@ -179,21 +179,108 @@ public class ToastNotificationItem
             return;
         }
 
-        // 실시간 중간 위치 계산
-        Vector3 currentPosition = (pet1.transform.position + pet2.transform.position) / 2f;
+        // 실시간 중간 위치 계산 (펫들의 중간점)
+        Vector3 centerPosition = (pet1.transform.position + pet2.transform.position) / 2f;
 
-        // 쿼터뷰 카메라 오프셋 적용 (펫이 화면 중앙에 잘 보이도록)
-        // 카메라가 대각선에서 바라보므로 약간 뒤로 이동
-        Vector3 cameraOffset = new Vector3(-8f, 0f, -8f);
-        Vector3 targetPosition = currentPosition + cameraOffset;
+        // 펫 간 거리 계산
+        float distance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
 
-        FocusOnPosition(targetPosition);
+        // Settings에서 카메라 설정 가져오기 (없으면 기본값)
+        var settings = ToastNotificationManager.Settings;
+        float minFOVDistance = settings?.minFOVDistance ?? 10f;
+        float maxFOVDistance = settings?.maxFOVDistance ?? 50f;
+        float fovMultiplier = settings?.fovMultiplier ?? 1.2f;
+        float southOffset = settings?.cameraSouthOffset ?? 10f;
+        float moveDuration = settings?.cameraMoveDuration ?? 1.0f;
+
+        // 6시 방향(남쪽) 오프셋 적용 (Z축 음수 방향)
+        Vector3 targetPosition = centerPosition + new Vector3(0f, 0f, -southOffset);
+
+        // CameraController에서 실제 FOV 범위 가져오기
+        var mainCamera = Camera.main;
+        CameraController cameraController = mainCamera?.GetComponentInParent<CameraController>();
+
+        // FOV 범위 설정 (CameraController에서 가져오거나 기본값 사용)
+        float minFOV = cameraController?.maxZoom ?? 20f;  // 줌 인 (CameraController.maxZoom)
+        float maxFOV = cameraController?.minZoom ?? 80f;  // 줌 아웃 (CameraController.minZoom)
+
+        // 펫 간 거리에 따른 FOV 계산
+        float baseFOV = CalculateFOVForDistance(distance, minFOVDistance, maxFOVDistance, minFOV, maxFOV);
+
+        // FOV 배율 적용 (더 줌 아웃하려면 1.0보다 크게)
+        float targetFOV = Mathf.Clamp(baseFOV * fovMultiplier, minFOV, maxFOV);
+
+        FocusOnPositionWithZoom(targetPosition, moveDuration, targetFOV);
     }
 
     /// <summary>
-    /// 위치로 카메라 포커스
+    /// 펫 간 거리에 따른 적절한 FOV 계산
     /// </summary>
-    private static void FocusOnPosition(Vector3 position)
+    /// <param name="distance">펫 간 거리</param>
+    /// <param name="minDistance">최소 거리 (이하면 줌 인)</param>
+    /// <param name="maxDistance">최대 거리 (이상이면 줌 아웃)</param>
+    /// <param name="minFOV">최소 FOV 값 (줌 인 시, CameraController.maxZoom)</param>
+    /// <param name="maxFOV">최대 FOV 값 (줌 아웃 시, CameraController.minZoom)</param>
+    /// <returns>계산된 FOV 값</returns>
+    private static float CalculateFOVForDistance(float distance, float minDistance, float maxDistance, float minFOV, float maxFOV)
+    {
+        // 거리가 minDistance 이하면 줌 인
+        if (distance <= minDistance)
+        {
+            return minFOV;
+        }
+
+        // 거리가 maxDistance 이상이면 줌 아웃
+        if (distance >= maxDistance)
+        {
+            return maxFOV;
+        }
+
+        // 그 사이는 선형 보간
+        float t = (distance - minDistance) / (maxDistance - minDistance);
+        return Mathf.Lerp(minFOV, maxFOV, t);
+    }
+
+    /// <summary>
+    /// 위치로 카메라 포커스 + FOV 조정
+    /// </summary>
+    /// <param name="position">목표 위치</param>
+    /// <param name="duration">이동 시간 (초)</param>
+    /// <param name="targetFOV">목표 FOV</param>
+    private static void FocusOnPositionWithZoom(Vector3 position, float duration, float targetFOV)
+    {
+        // 펫 카메라 모드에서는 작동하지 않음
+        var cameraSwitcher = GameObject.FindObjectOfType<PetCameraSwitcherButton>();
+        if (cameraSwitcher != null && cameraSwitcher.IsInPetCameraMode())
+        {
+            Debug.Log($"[ToastNotification] 펫 카메라 모드에서는 이동할 수 없습니다.");
+            return;
+        }
+
+        // CameraController를 통해 카메라 이동 + FOV 조정
+        var mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            var cameraController = mainCamera.GetComponentInParent<CameraController>();
+            if (cameraController != null)
+            {
+                // X, Z만 이동 (Y 고정) + FOV 조정
+                cameraController.MoveCameraToPositionWithZoom(position, duration, targetFOV);
+                Debug.Log($"[ToastNotification] 카메라를 {position}로 {duration}초 동안 이동 중... (FOV: {targetFOV:F1})");
+            }
+            else
+            {
+                Debug.LogWarning($"[ToastNotification] CameraController를 찾을 수 없습니다.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 위치로 카메라 포커스 (구버전 - 하위 호환성 유지)
+    /// </summary>
+    /// <param name="position">목표 위치</param>
+    /// <param name="duration">이동 시간 (초)</param>
+    private static void FocusOnPosition(Vector3 position, float duration = 1.0f)
     {
         // 펫 카메라 모드에서는 작동하지 않음
         var cameraSwitcher = GameObject.FindObjectOfType<PetCameraSwitcherButton>();
@@ -210,9 +297,9 @@ public class ToastNotificationItem
             var cameraController = mainCamera.GetComponentInParent<CameraController>();
             if (cameraController != null)
             {
-                // 1초 동안 부드럽게 이동
-                cameraController.MoveCameraToPosition(position, 1.0f);
-                Debug.Log($"[ToastNotification] 카메라를 {position}로 이동 중...");
+                // 지정된 시간 동안 부드럽게 이동 (Y축 높이 포함)
+                cameraController.MoveCameraToPosition(position, duration, true);
+                Debug.Log($"[ToastNotification] 카메라를 {position}로 {duration}초 동안 이동 중... (높이 포함)");
             }
             else
             {
