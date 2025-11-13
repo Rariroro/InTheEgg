@@ -22,7 +22,6 @@ public class ToastNotificationItem
 
     // 위치 정보
     public Vector3 worldPosition;              // 발생 위치
-    public float distanceFromCamera;           // 카메라로부터의 거리
 
     // 우선순위
     public int priority;                       // 계산된 우선순위
@@ -117,15 +116,6 @@ public class ToastNotificationItem
         // 고유 ID 생성 (펫 조합 기반)
         toast.id = GenerateInteractionId(pet1, pet2, interactionType);
 
-        // 카메라 거리 계산
-        if (Camera.main != null)
-        {
-            toast.distanceFromCamera = Vector3.Distance(
-                Camera.main.transform.position,
-                toast.worldPosition
-            );
-        }
-
         // 우선순위 계산
         toast.CalculatePriority();
 
@@ -177,16 +167,11 @@ public class ToastNotificationItem
             basePriority = (int)NotificationPriority.Medium;
             priorityLevel = NotificationPriority.Medium;
         }
-        // 거리 기반
-        else if (distanceFromCamera < 20f)
+        // 기본 우선순위
+        else
         {
             basePriority = (int)NotificationPriority.Low;
             priorityLevel = NotificationPriority.Low;
-        }
-        else
-        {
-            basePriority = (int)NotificationPriority.VeryLow;
-            priorityLevel = NotificationPriority.VeryLow;
         }
 
         priority = basePriority;

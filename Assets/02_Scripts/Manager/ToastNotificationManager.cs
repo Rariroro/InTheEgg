@@ -317,14 +317,6 @@ public class ToastNotificationManager : MonoBehaviour
             return false;
         }
 
-        // 거리 체크
-        if (settings != null && item.distanceFromCamera > settings.maxDisplayDistance)
-        {
-            // if (debugMode)
-                // Debug.Log($"[ToastNotificationManager] 거리 필터링: {item.id} (거리: {item.distanceFromCamera} > 최대: {settings.maxDisplayDistance})");
-            return false;
-        }
-
         // if (debugMode)
             // Debug.Log($"[ToastNotificationManager] 필터 통과: {item.id}");
         return true;

@@ -40,18 +40,10 @@ public class ToastNotificationSettings : ScriptableObject
     [Range(0, 50)]
     public int favoritePetBonus = 50;
 
-    [Tooltip("화면 내 펫 우선순위 보너스")]
-    [Range(0, 30)]
-    public int onScreenBonus = 30;
-
     [Header("필터링 설정")]
     [Tooltip("동일한 펫 조합의 상호작용 무시 시간 (초)")]
     [Range(5f, 60f)]
     public float duplicateCooldown = 30f;
-
-    [Tooltip("카메라로부터 표시할 최대 거리 (미터)")]
-    [Range(10f, 100f)]
-    public float maxDisplayDistance = 50f;
 
     [Tooltip("동일한 펫이 연속으로 알림을 띄울 수 있는 최소 간격 (초)")]
     [Range(1f, 10f)]
@@ -116,9 +108,9 @@ public class ToastNotificationSettings : ScriptableObject
 /// </summary>
 public enum NotificationPriority
 {
-    VeryLow = 10,    // 매우 낮음 (멀리 있는 펫)
-    Low = 25,        // 낮음 (가까운 거리)
-    Medium = 50,     // 중간 (화면 내 펫)
+    VeryLow = 10,    // 매우 낮음
+    Low = 25,        // 낮음
+    Medium = 50,     // 중간
     High = 75,       // 높음 (즐겨찾기 펫)
     Critical = 100   // 긴급 (레전드 펫)
 }

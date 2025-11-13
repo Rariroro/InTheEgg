@@ -10,7 +10,13 @@ public class PersonalityReactionInteraction : BasePetInteraction
 {
     // 상호작용 이름을 "PersonalityReaction"으로 고정 반환
     public override string InteractionName => "PersonalityReaction";
-    
+
+    /// <summary>
+    /// 우선순위 상호작용으로 설정 (5개 제한 무시)
+    /// 토스트 알림도 없고, 빈번하게 발생하는 가벼운 반응이므로 제한하지 않음
+    /// </summary>
+    public override bool IsPriorityInteraction => true;
+
     // 유저가 펫을 터치하거나 홀드해서 상호작용이 중단되었는지 추적하는 플래그
     private bool wasInterrupted = false;
 

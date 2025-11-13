@@ -53,12 +53,6 @@ public class PetInteractionManager : MonoBehaviour
     [Range(1, 10)]
     public int maxConcurrentInteractions = 5;
 
-    [Tooltip("카메라와의 거리 기반 우선순위 사용")]
-    public bool useDistancePriority = true;
-
-    [Tooltip("우선순위 재평가 주기 (초)")]
-    public float priorityCheckInterval = 2.0f;
-
     [Header("시작 지연")]
     public float startDelay = 3.0f;
     private bool canStartInteractions = false;
@@ -74,13 +68,12 @@ public class PetInteractionManager : MonoBehaviour
     private Dictionary<PetController, PetController> interactingPets = new Dictionary<PetController, PetController>();
     private Dictionary<PetController, float> lastInteractionTime = new Dictionary<PetController, float>(); // 레거시 호환용
 
-    // 우선순위 관리
+    // 상호작용 정보
     private class InteractionInfo
     {
         public PetController pet1;
         public PetController pet2;
         public BasePetInteraction interaction;
-        public float distance; // 카메라와의 거리
         public float startTime;
 
         public InteractionInfo(PetController p1, PetController p2, BasePetInteraction inter)
@@ -89,27 +82,15 @@ public class PetInteractionManager : MonoBehaviour
             pet2 = p2;
             interaction = inter;
             startTime = Time.time;
-            UpdateDistance();
-        }
-
-        public void UpdateDistance()
-        {
-            if (Camera.main != null && pet1 != null && pet2 != null)
-            {
-                Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
-                distance = Vector3.Distance(Camera.main.transform.position, midPoint);
-            }
-            else
-            {
-                distance = float.MaxValue;
-            }
         }
     }
 
     private List<InteractionInfo> activeInteractions = new List<InteractionInfo>();
     private Queue<InteractionInfo> pendingInteractions = new Queue<InteractionInfo>();
-    private float lastPriorityCheck = 0f;
-    
+
+    // 우선순위 상호작용 (PersonalityReaction 등 - 5개 제한 없음)
+    private List<InteractionInfo> priorityInteractions = new List<InteractionInfo>();
+
     // 등록된 상호작용 컴포넌트
     private List<BasePetInteraction> registeredInteractions = new List<BasePetInteraction>();
     
@@ -141,12 +122,6 @@ public class PetInteractionManager : MonoBehaviour
 
         // 지정된 시간 후에 상호작용 활성화
         StartCoroutine(EnableInteractionsAfterDelay());
-
-        // 우선순위 재평가 코루틴 시작
-        if (useDistancePriority)
-        {
-            StartCoroutine(UpdateInteractionPriorities());
-        }
     }
 
     private IEnumerator EnableInteractionsAfterDelay()
@@ -215,24 +190,25 @@ public class PetInteractionManager : MonoBehaviour
         // 새 상호작용 정보 생성
         InteractionInfo newInteraction = new InteractionInfo(pet1, pet2, suitableInteraction);
 
-        // 동시 상호작용 수 체크
+        // 우선순위 상호작용(PersonalityReaction 등)은 5개 제한 무시하고 즉시 시작
+        if (suitableInteraction.IsPriorityInteraction)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ⭐ 우선순위 상호작용 시작: {pet1.petName} & {pet2.petName} ({suitableInteraction.InteractionName})");
+            StartPriorityInteraction(newInteraction);
+            return;
+        }
+
+        // 일반 상호작용은 동시 상호작용 수 체크
         if (activeInteractions.Count >= maxConcurrentInteractions)
         {
             if (enableDebugLogs)
                 Debug.Log($"[Manager] ⚠️ 최대 상호작용 수 도달 ({activeInteractions.Count}/{maxConcurrentInteractions})");
 
-            // 우선순위 기반으로 처리
-            if (useDistancePriority)
-            {
-                TryReplaceOrQueueInteraction(newInteraction);
-            }
-            else
-            {
-                // 대기열에 추가
-                pendingInteractions.Enqueue(newInteraction);
-                if (enableDebugLogs)
-                    Debug.Log($"[Manager] 대기열에 추가: {pet1.petName} & {pet2.petName}");
-            }
+            // 대기열에 추가
+            pendingInteractions.Enqueue(newInteraction);
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] 대기열에 추가: {pet1.petName} & {pet2.petName}");
             return;
         }
 
@@ -240,36 +216,29 @@ public class PetInteractionManager : MonoBehaviour
         StartInteraction(newInteraction);
     }
 
-    private void TryReplaceOrQueueInteraction(InteractionInfo newInteraction)
+    /// <summary>
+    /// 우선순위 상호작용 시작 (5개 제한 무시)
+    /// </summary>
+    private void StartPriorityInteraction(InteractionInfo interactionInfo)
     {
-        // 가장 멀리 있는 상호작용 찾기
-        InteractionInfo furthestInteraction = null;
-        float maxDistance = newInteraction.distance;
+        // Debug.Log($"[PetInteractionManager] 우선순위 상호작용 시작: {interactionInfo.pet1.petName} & {interactionInfo.pet2.petName} ({interactionInfo.interaction.InteractionName})");
 
-        foreach (var interaction in activeInteractions)
-        {
-            if (interaction.distance > maxDistance)
-            {
-                maxDistance = interaction.distance;
-                furthestInteraction = interaction;
-            }
-        }
+        // 우선순위 상호작용 목록에 추가
+        priorityInteractions.Add(interactionInfo);
 
-        if (furthestInteraction != null)
-        {
-            // 먼 상호작용 종료하고 새 상호작용 시작
-            // Debug.Log($"[PetInteractionManager] 거리 우선순위: {furthestInteraction.pet1.petName} & {furthestInteraction.pet2.petName} 종료, {newInteraction.pet1.petName} & {newInteraction.pet2.petName} 시작");
+        // 상호작용 실행
+        interactionInfo.interaction.StartInteraction(interactionInfo.pet1, interactionInfo.pet2);
 
-            EndInteraction(furthestInteraction);
-            StartInteraction(newInteraction);
-        }
-        else
-        {
-            // 대기열에 추가
-            pendingInteractions.Enqueue(newInteraction);
-        }
+        // 상호작용 중인 펫 쌍 기록
+        interactingPets[interactionInfo.pet1] = interactionInfo.pet2;
+        interactingPets[interactionInfo.pet2] = interactionInfo.pet1;
+
+        // 토스트 알림은 필요 없음 (PersonalityReaction은 ShouldShowToastNotification = false)
     }
 
+    /// <summary>
+    /// 일반 상호작용 시작 (5개 제한 적용)
+    /// </summary>
     private void StartInteraction(InteractionInfo interactionInfo)
     {
         // Debug.Log($"[PetInteractionManager] {interactionInfo.pet1.petName}와 {interactionInfo.pet2.petName} 사이에 {interactionInfo.interaction.InteractionName} 시작!");
@@ -338,7 +307,7 @@ public class PetInteractionManager : MonoBehaviour
         bool pet1Valid = pet1 != null;
         bool pet2Valid = pet2 != null;
 
-        // 해당 상호작용 정보 찾기
+        // 일반 상호작용에서 찾기
         InteractionInfo endedInteraction = null;
         foreach (var info in activeInteractions)
         {
@@ -350,6 +319,7 @@ public class PetInteractionManager : MonoBehaviour
             }
         }
 
+        // 일반 상호작용이면 제거
         if (endedInteraction != null)
         {
             activeInteractions.Remove(endedInteraction);
@@ -358,6 +328,26 @@ public class PetInteractionManager : MonoBehaviour
             if (InteractionNotificationHandler.Instance != null)
             {
                 InteractionNotificationHandler.Instance.SetActiveInteractionCount(activeInteractions.Count);
+            }
+        }
+        else
+        {
+            // 우선순위 상호작용에서 찾기
+            foreach (var info in priorityInteractions)
+            {
+                if ((info.pet1 == pet1 && info.pet2 == pet2) ||
+                    (info.pet1 == pet2 && info.pet2 == pet1))
+                {
+                    endedInteraction = info;
+                    break;
+                }
+            }
+
+            // 우선순위 상호작용이면 제거
+            if (endedInteraction != null)
+            {
+                priorityInteractions.Remove(endedInteraction);
+                // Debug.Log($"[PetInteractionManager] 우선순위 상호작용 종료: {endedInteraction.interaction.InteractionName}");
             }
         }
 
@@ -388,61 +378,57 @@ public class PetInteractionManager : MonoBehaviour
     private void ProcessPendingInteractions()
     {
         // 활성 상호작용 수가 최대치보다 적고 대기 중인 것이 있으면
-        while (activeInteractions.Count < maxConcurrentInteractions && pendingInteractions.Count > 0)
+        int processedCount = 0;
+        const int maxProcessAtOnce = 3; // 한 번에 최대 3개까지 시도 (무한 루프 방지)
+
+        while (activeInteractions.Count < maxConcurrentInteractions &&
+               pendingInteractions.Count > 0 &&
+               processedCount < maxProcessAtOnce)
         {
             InteractionInfo pending = pendingInteractions.Dequeue();
+            processedCount++;
 
-            // 펫이 여전히 유효하고 상호작용 가능한 상태인지 체크
-            if (pending.pet1 != null && pending.pet2 != null &&
-                !IsInteracting(pending.pet1) && !IsInteracting(pending.pet2) &&
-                !IsOnCooldown(pending.pet1) && !IsOnCooldown(pending.pet2))
+            // 유효성 체크
+            if (IsValidPendingInteraction(pending))
             {
                 StartInteraction(pending);
-                break; // 한 번에 하나씩만 처리
+                // 하나 시작했으면 다음 루프로 (한 번에 하나씩)
+                break;
             }
+            // 유효하지 않으면 그냥 버림 (다음 것 시도)
         }
     }
 
-    private IEnumerator UpdateInteractionPriorities()
+    /// <summary>
+    /// 대기 중인 상호작용의 유효성 검사
+    /// </summary>
+    private bool IsValidPendingInteraction(InteractionInfo info)
     {
-        while (true)
-        {
-            yield return new WaitForSeconds(priorityCheckInterval);
+        // null 체크
+        if (info == null || info.pet1 == null || info.pet2 == null)
+            return false;
 
-            if (activeInteractions.Count == 0)
-                continue;
+        // 이미 상호작용 중인지 체크
+        if (IsInteracting(info.pet1) || IsInteracting(info.pet2))
+            return false;
 
-            // 모든 활성 상호작용의 거리 업데이트
-            foreach (var interaction in activeInteractions)
-            {
-                interaction.UpdateDistance();
-            }
+        // 쿨타임 체크
+        if (IsOnCooldown(info.pet1) || IsOnCooldown(info.pet2))
+            return false;
 
-            // 대기 중인 상호작용도 거리 업데이트
-            var pendingList = pendingInteractions.ToList();
-            foreach (var pending in pendingList)
-            {
-                pending.UpdateDistance();
-            }
+        // 홀딩/선택 상태 체크
+        if (info.pet1.State.IsHolding || info.pet1.State.IsSelected ||
+            info.pet2.State.IsHolding || info.pet2.State.IsSelected)
+            return false;
 
-            // 거리 기반 우선순위 재평가
-            if (pendingInteractions.Count > 0 && activeInteractions.Count >= maxConcurrentInteractions)
-            {
-                var nearestPending = pendingList.OrderBy(p => p.distance).FirstOrDefault();
-                if (nearestPending != null)
-                {
-                    var furthestActive = activeInteractions.OrderByDescending(a => a.distance).FirstOrDefault();
+        // 모이기 상태 체크
+        if (info.pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
+            info.pet1.State.CurrentStatus == PetStatus.GatheredWaiting ||
+            info.pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
+            info.pet2.State.CurrentStatus == PetStatus.GatheredWaiting)
+            return false;
 
-                    if (furthestActive != null && nearestPending.distance < furthestActive.distance * 0.7f) // 30% 이상 가까워야 교체
-                    {
-                        // Debug.Log($"[PetInteractionManager] 우선순위 재평가로 상호작용 교체");
-                        EndInteraction(furthestActive);
-                        StartInteraction(nearestPending);
-                        pendingInteractions = new Queue<InteractionInfo>(pendingList.Where(p => p != nearestPending));
-                    }
-                }
-            }
-        }
+        return true;
     }
 
     private bool IsInteracting(PetController pet)
@@ -529,17 +515,28 @@ public class PetInteractionManager : MonoBehaviour
         Debug.Log($"  - 시스템 활성화: {canStartInteractions}");
         Debug.Log($"  - 총 펫 수: {allPets.Count}");
         Debug.Log($"  - 활성 상호작용: {activeInteractions.Count} / {maxConcurrentInteractions}");
+        Debug.Log($"  - 우선순위 상호작용: {priorityInteractions.Count} (제한 없음)");
         Debug.Log($"  - 대기 중인 상호작용: {pendingInteractions.Count}");
         Debug.Log($"  - 상호작용 중인 펫 쌍: {interactingPets.Count / 2}");
         Debug.Log($"  - 등록된 상호작용 타입: {registeredInteractions.Count}개");
 
         if (activeInteractions.Count > 0)
         {
-            Debug.Log("  활성 상호작용 목록:");
+            Debug.Log("  활성 상호작용 목록 (5개 제한 적용):");
             foreach (var interaction in activeInteractions)
             {
                 Debug.Log($"    - {interaction.pet1.petName} ↔ {interaction.pet2.petName} " +
-                    $"({interaction.interaction.InteractionName}, 거리: {interaction.distance:F1}m, 시간: {Time.time - interaction.startTime:F1}초)");
+                    $"({interaction.interaction.InteractionName}, 시간: {Time.time - interaction.startTime:F1}초)");
+            }
+        }
+
+        if (priorityInteractions.Count > 0)
+        {
+            Debug.Log("  우선순위 상호작용 목록 (제한 없음):");
+            foreach (var interaction in priorityInteractions)
+            {
+                Debug.Log($"    ⭐ {interaction.pet1.petName} ↔ {interaction.pet2.petName} " +
+                    $"({interaction.interaction.InteractionName}, 시간: {Time.time - interaction.startTime:F1}초)");
             }
         }
 

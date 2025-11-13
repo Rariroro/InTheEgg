@@ -8,6 +8,13 @@ public abstract class BasePetInteraction : MonoBehaviour
 {
     // 상호작용 이름 프로퍼티
     public abstract string InteractionName { get; }
+
+    /// <summary>
+    /// 우선순위 상호작용 여부 (5개 동시 상호작용 제한 무시)
+    /// PersonalityReaction 같은 빈번하고 가벼운 상호작용에 사용
+    /// </summary>
+    public virtual bool IsPriorityInteraction => false;
+
     // ▼▼▼ [수정] 인스펙터에서 상호작용 시작 거리를 조절할 수 있는 변수 추가 ▼▼▼
     [Header("Common Interaction Settings")]
     [Tooltip("상호작용 시작 시 펫들이 유지할 기본 거리입니다.")]
