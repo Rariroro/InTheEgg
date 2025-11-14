@@ -18,7 +18,7 @@ public static class InteractionToastFormatter
         { InteractionType.WalkTogether, "함께 산책" },
         { InteractionType.RestTogether, "함께 휴식" },
         { InteractionType.SleepTogether, "함께 잠들기" },
-        { InteractionType.Race, "달리기 시합" },
+        { InteractionType.TurtleRabbitRace, "토끼와 거북이 경주" },
         { InteractionType.ChaseAndRun, "추격전" },
         { InteractionType.RideAndWalk, "태우고 걷기" },
         { InteractionType.SlothKoalaRace, "느림보 경주" },

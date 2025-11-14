@@ -940,7 +940,8 @@ public abstract class BasePetInteraction : MonoBehaviour
             case "RestAndSleepTogether": return InteractionType.RestTogether;
             case "RestTogether": return InteractionType.RestTogether;
             case "SleepTogether": return InteractionType.SleepTogether;
-            case "Race": return InteractionType.Race;
+            case "Race": return InteractionType.TurtleRabbitRace;
+            case "TurtleRabbitRace": return InteractionType.TurtleRabbitRace;
             case "Chase": return InteractionType.ChaseAndRun;
             case "ChaseAndRun": return InteractionType.ChaseAndRun;
             case "RideAndWalk": return InteractionType.RideAndWalk;

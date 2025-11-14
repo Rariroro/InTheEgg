@@ -23,7 +23,7 @@ public enum InteractionType
     WalkTogether,           // 같이 걷기
     RestTogether,           // 같이 쉬기
     SleepTogether,          // 같이 자기
-    Race,                   // 달리기 시합
+    TurtleRabbitRace,       // 토끼와 거북이 경주
     ChaseAndRun,            // 쫓고 쫓기기
     RideAndWalk,            // 타고 걷기
     SlothKoalaRace,         // 나무늘보-코알라 달리기

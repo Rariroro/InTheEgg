@@ -23,10 +23,10 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<RestAndSleepTogetherInteraction>("RestAndSleepTogether");
     }
     
-    [MenuItem("Tools/Pet System/Add Race Interaction")]
+    [MenuItem("Tools/Pet System/Add TurtleRabbitRace Interaction")]
     private static void AddRaceInteraction()
     {
-        AddInteractionComponent<RaceInteraction>("Race");
+        AddInteractionComponent<TurtleRabbitRace>("TurtleRabbitRace");
     }
     
     [MenuItem("Tools/Pet System/Add ChaseAndRun Interaction")]

@@ -6,13 +6,14 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// 토끼와 거북이의 경주 상호작용을 처리하는 클래스입니다.
+/// 느린 펫 vs 빠른 펫 경주 상호작용을 처리하는 클래스입니다.
+/// 이솝우화 "토끼와 거북이" 컨셉: 빠른 펫이 자만하다 느린 펫에게 패배
 /// BasePetInteraction을 상속받습니다.
 /// </summary>
-public class RaceInteraction : BasePetInteraction
+public class TurtleRabbitRace : BasePetInteraction
 {
-    // 이 상호작용의 이름을 "Race"로 정의합니다.
-    public override string InteractionName => "Race";
+    // 이 상호작용의 이름을 "TurtleRabbitRace"로 정의합니다.
+    public override string InteractionName => "TurtleRabbitRace";
     // ★★★ 새로 추가된 부분: 결승선 깃발 프리팹 ★★★
     // ★★★ 이 부분을 추가합니다. ★★★
     // ▼▼▼ [수정] 이 부분을 아래 코드로 교체합니다. ▼▼▼
@@ -42,24 +43,24 @@ public class RaceInteraction : BasePetInteraction
     [Tooltip("경주 타임아웃 시간 (초)")]
     public float raceTimeoutSeconds = 180f;
 
-    [Header("Rabbit Settings")]
-    [Tooltip("토끼의 경주 시작 시 속도 배율입니다.")]
-    public float rabbitStartSpeedMultiplier = 3.5f;
+    [Header("Fast Pet Settings (빠른 펫 - 토끼 역할)")]
+    [Tooltip("빠른 펫의 경주 시작 시 속도 배율입니다.")]
+    public float fastPetStartSpeedMultiplier = 3.5f;
 
-    [Tooltip("토끼가 낮잠을 잘 위치 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
+    [Tooltip("빠른 펫이 낮잠을 잘 위치 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
     [Range(0f, 1f)] // 인스펙터에서 값을 슬라이더로 조절할 수 있게 합니다. (0에서 1 사이)
-    public float rabbitNapProgress = 0.4f;
+    public float fastPetNapProgress = 0.4f;
 
-    [Tooltip("토끼가 다시 깨어나 전력 질주할 때의 속도 배율입니다.")]
-    public float rabbitFinalSprintSpeedMultiplier = 5.0f;
+    [Tooltip("빠른 펫이 다시 깨어나 전력 질주할 때의 속도 배율입니다.")]
+    public float fastPetFinalSprintSpeedMultiplier = 5.0f;
 
-    [Header("Turtle Settings")]
-    [Tooltip("거북이의 경주 시 속도 배율입니다.")]
-    public float turtleSpeedMultiplier = 0.8f;
+    [Header("Slow Pet Settings (느린 펫 - 거북이 역할)")]
+    [Tooltip("느린 펫의 경주 시 속도 배율입니다.")]
+    public float slowPetSpeedMultiplier = 0.8f;
 
-    [Tooltip("거북이가 이 지점에 도달하면 토끼가 깨어납니다 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
+    [Tooltip("느린 펫이 이 지점에 도달하면 빠른 펫이 깨어납니다 (전체 경주 거리 대비 비율, 0.0 ~ 1.0)")]
     [Range(0f, 1f)]
-    public float turtleWakeUpProgress = 0.94f;
+    public float slowPetWakeUpProgress = 0.94f;
 
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
@@ -81,17 +82,17 @@ public class RaceInteraction : BasePetInteraction
     // ▲▲▲ [여기까지 추가] ▲▲▲
 
 
-    // 토끼가 깨어나야 하는지를 외부(FixPositionDuringInteraction)에서 알 수 있도록 하는 플래그 변수입니다.
-    private bool rabbitShouldWakeUp = false;
-    [Header("Rabbit Nap Settings")]
-    [Tooltip("토끼가 잠들기 전 속도를 줄이는 시간 (초)")]
-    public float rabbitSlowDownDuration = 1.0f;
+    // 빠른 펫이 깨어나야 하는지를 외부에서 알 수 있도록 하는 플래그 변수입니다.
+    private bool fastPetShouldWakeUp = false;
+    [Header("Fast Pet Nap Settings (낮잠 설정)")]
+    [Tooltip("빠른 펫이 잠들기 전 속도를 줄이는 시간 (초)")]
+    public float fastPetSlowDownDuration = 1.0f;
 
-    [Tooltip("토끼가 멈추기 직전의 최소 속도")]
-    public float rabbitMinSpeedBeforeSleep = 0.5f;
+    [Tooltip("빠른 펫이 멈추기 직전의 최소 속도")]
+    public float fastPetMinSpeedBeforeSleep = 0.5f;
 
-    // ★★★ 추가: 토끼의 원래 회피 우선순위를 저장할 변수 ★★★
-    private int rabbitOriginalPriority;
+    // ★★★ 추가: 빠른 펫의 원래 회피 우선순위를 저장할 변수 ★★★
+    private int fastPetOriginalPriority;
     
     // ★★★ 수정: static 제거 - 인스턴스별로 화살표 관리 ★★★
     private List<GameObject> myRaceArrows = new List<GameObject>();
@@ -99,21 +100,42 @@ public class RaceInteraction : BasePetInteraction
     // ★★★ 추가: 현재 인스턴스의 결승선 화살표 참조 ★★★
     private GameObject finishArrowInstance;
     /// <summary>
-    /// 이 상호작용의 타입을 InteractionType.Race로 결정합니다.
+    /// 이 상호작용의 타입을 InteractionType.TurtleRabbitRace로 결정합니다.
     /// </summary>
     protected override InteractionType DetermineInteractionType()
     {
-        return InteractionType.Race;
+        return InteractionType.TurtleRabbitRace;
     }
 
     /// <summary>
-    /// 두 펫이 각각 토끼와 거북이일 때만 경주 상호작용이 가능하도록 조건을 설정합니다.
+    /// 느린 펫과 빠른 펫의 조합일 때 경주 상호작용이 가능하도록 조건을 설정합니다.
+    /// 이솝우화 "토끼와 거북이" 컨셉: 빠른 펫이 자만하다 느린 펫에게 패배
     /// </summary>
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        // 한 쪽이 토끼이고 다른 한 쪽이 거북이인 경우 true를 반환합니다.
-        return (pet1.PetType == PetType.Rabbit && pet2.PetType == PetType.Turtle) ||
-               (pet1.PetType == PetType.Turtle && pet2.PetType == PetType.Rabbit);
+        // 느린 동물 그룹 (거북이 역할)
+        PetType[] slowAnimals = {
+            PetType.Turtle,   // 거북이
+            PetType.Sloth,    // 나무늘보
+            PetType.Koala     // 코알라
+        };
+
+        // 빠른 동물 그룹 (토끼 역할)
+        PetType[] fastAnimals = {
+            PetType.Rabbit,   // 토끼
+            PetType.Deer,     // 사슴
+            PetType.Fox,      // 여우
+            PetType.Horse,    // 말
+            PetType.Leopard   // 표범
+        };
+
+        // 한 쪽은 느린 동물, 다른 쪽은 빠른 동물
+        bool pet1SlowPet2Fast = System.Array.Exists(slowAnimals, t => t == pet1.PetType) &&
+                                System.Array.Exists(fastAnimals, t => t == pet2.PetType);
+        bool pet1FastPet2Slow = System.Array.Exists(fastAnimals, t => t == pet1.PetType) &&
+                                System.Array.Exists(slowAnimals, t => t == pet2.PetType);
+
+        return pet1SlowPet2Fast || pet1FastPet2Slow;
     }
 
 
@@ -128,24 +150,27 @@ public class RaceInteraction : BasePetInteraction
         }
         myRaceArrows.Clear();
 
-        // 펫 식별 및 NavMeshAgent 준비 상태 확인 (기존과 동일)
-        PetController rabbit = (pet1.PetType == PetType.Rabbit) ? pet1 : pet2;
-        PetController turtle = (pet1.PetType == PetType.Turtle) ? pet1 : pet2;
+        // 펫 식별: 느린 펫과 빠른 펫 동적 구분
+        PetType[] slowAnimals = { PetType.Turtle, PetType.Sloth, PetType.Koala };
+        PetType[] fastAnimals = { PetType.Rabbit, PetType.Deer, PetType.Fox, PetType.Horse, PetType.Leopard };
 
-        yield return StartCoroutine(WaitUntilAgentIsReady(rabbit, agentSafetyTimeout));
-        yield return StartCoroutine(WaitUntilAgentIsReady(turtle, agentSafetyTimeout));
+        PetController fastPet = System.Array.Exists(fastAnimals, t => t == pet1.PetType) ? pet1 : pet2;
+        PetController slowPet = System.Array.Exists(slowAnimals, t => t == pet1.PetType) ? pet1 : pet2;
 
-        if (!IsAgentSafelyReady(rabbit) || !IsAgentSafelyReady(turtle))
+        yield return StartCoroutine(WaitUntilAgentIsReady(fastPet, agentSafetyTimeout));
+        yield return StartCoroutine(WaitUntilAgentIsReady(slowPet, agentSafetyTimeout));
+
+        if (!IsAgentSafelyReady(fastPet) || !IsAgentSafelyReady(slowPet))
         {
-            Debug.LogError("[Race] NavMeshAgent 준비 실패로 경주를 중단합니다.");
+            Debug.LogError("[TurtleRabbitRace] NavMeshAgent 준비 실패로 경주를 중단합니다.");
             // ★★★ 수정: 상호작용 실패 시 즉시 EndInteraction 호출로 안전하게 종료 ★★★
-            EndInteraction(rabbit, turtle);
+            EndInteraction(fastPet, slowPet);
             yield break;
         }
 
         // 상태 저장 및 변수 초기화
-        PetOriginalState rabbitState = new PetOriginalState(rabbit);
-        PetOriginalState turtleState = new PetOriginalState(turtle);
+        PetOriginalState fastPetOriginalState = new PetOriginalState(fastPet);
+        PetOriginalState slowPetOriginalState = new PetOriginalState(slowPet);
         // ★★★ 인스턴스 참조 변수 초기화 ★★★
         finishArrowInstance = null;
         // ▼▼▼ [추가] 화살표 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
@@ -156,12 +181,12 @@ public class RaceInteraction : BasePetInteraction
 
         try
         {
-            rabbit.ShowEmotion(EmotionType.Race, raceTimeoutSeconds);
-            turtle.ShowEmotion(EmotionType.Race, raceTimeoutSeconds);
+            fastPet.ShowEmotion(EmotionType.Race, raceTimeoutSeconds);
+            slowPet.ShowEmotion(EmotionType.Race, raceTimeoutSeconds);
 
             // --- 1. 결승선 위치 설정 ---
             // (이 부분 로직은 기존과 동일하게 유지)
-            Vector3 initialCenter = (rabbit.transform.position + turtle.transform.position) / 2;
+            Vector3 initialCenter = (fastPet.transform.position + slowPet.transform.position) / 2;
             Vector3 finishLine = Vector3.zero;
             Vector3 dirToFinish = Vector3.zero;
             float totalRaceDistance = 0f;
@@ -209,24 +234,24 @@ public class RaceInteraction : BasePetInteraction
             // --- 2. 출발점으로 이동 및 정렬 (부드러운 이동) ---
 
             // 자동 회전 비활성화
-            rabbit.agent.updateRotation = false;
-            turtle.agent.updateRotation = false;
+            fastPet.agent.updateRotation = false;
+            slowPet.agent.updateRotation = false;
 
-            Vector3 startPosition = CalculateOptimalStartPosition(rabbit, turtle, finishLine, dirToFinish);
-            Vector3 rabbitStartPos, turtleStartPos;
-            CalculateAlignedStartPositions(startPosition, dirToFinish, out rabbitStartPos, out turtleStartPos, 3f);
+            Vector3 startPosition = CalculateOptimalStartPosition(fastPet, slowPet, finishLine, dirToFinish);
+            Vector3 fastPetStartPos, slowPetStartPos;
+            CalculateAlignedStartPositions(startPosition, dirToFinish, out fastPetStartPos, out slowPetStartPos, 3f);
 
             // 1단계: 출발선 근처로 이동
-            yield return StartCoroutine(MoveToPositions(rabbit, turtle, rabbitStartPos, turtleStartPos, 10f));
+            yield return StartCoroutine(MoveToPositions(fastPet, slowPet, fastPetStartPos, slowPetStartPos, 10f));
 
             // 2단계: 미세 조정 - 정확한 위치로 부드럽게 이동
-            yield return StartCoroutine(FineTunePositions(rabbit, turtle, rabbitStartPos, turtleStartPos, dirToFinish));
+            yield return StartCoroutine(FineTunePositions(fastPet, slowPet, fastPetStartPos, slowPetStartPos, dirToFinish));
 
             // 3단계: 출발 대기
-            rabbit.agent.isStopped = true;
-            turtle.agent.isStopped = true;
-            rabbit.agent.velocity = Vector3.zero;
-            turtle.agent.velocity = Vector3.zero;
+            fastPet.agent.isStopped = true;
+            slowPet.agent.isStopped = true;
+            fastPet.agent.velocity = Vector3.zero;
+            slowPet.agent.velocity = Vector3.zero;
 
             // Debug.Log("[Race] 출발선에서 대기 중...");
 
@@ -241,42 +266,42 @@ public class RaceInteraction : BasePetInteraction
 
             // --- 5. 경주 시작 ---
             // Debug.Log("[Race] 경주 시작!");
-            rabbit.agent.updateRotation = true;
-            turtle.agent.updateRotation = true;
-            rabbit.agent.speed = rabbitState.originalSpeed * rabbitStartSpeedMultiplier;
-            turtle.agent.speed = turtleState.originalSpeed * turtleSpeedMultiplier;
+            fastPet.agent.updateRotation = true;
+            slowPet.agent.updateRotation = true;
+            fastPet.agent.speed = fastPetOriginalState.originalSpeed * fastPetStartSpeedMultiplier;
+            slowPet.agent.speed = slowPetOriginalState.originalSpeed * slowPetSpeedMultiplier;
 
-            rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-            turtle.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            fastPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            slowPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
-            Vector3 rabbitFinishDestination, turtleFinishDestination;
-            CreateSeparateFinishDestinations(finishLine, dirToFinish, out rabbitFinishDestination, out turtleFinishDestination);
+            Vector3 fastPetFinishDestination, slowPetFinishDestination;
+            CreateSeparateFinishDestinations(finishLine, dirToFinish, out fastPetFinishDestination, out slowPetFinishDestination);
 
             // ★★★ 수정: isStopped를 false로 바꿔주는 것만으로 이동이 안전하게 재개됩니다. ★★★
-            rabbit.agent.isStopped = false;
-            turtle.agent.isStopped = false;
-            rabbit.agent.SetDestination(rabbitFinishDestination);
-            turtle.agent.SetDestination(turtleFinishDestination);
+            fastPet.agent.isStopped = false;
+            slowPet.agent.isStopped = false;
+            fastPet.agent.SetDestination(fastPetFinishDestination);
+            slowPet.agent.SetDestination(slowPetFinishDestination);
 
-            float napDistance = totalRaceDistance * rabbitNapProgress;
+            float napDistance = totalRaceDistance * fastPetNapProgress;
 
             // --- 6. 경주 진행 ---
-            bool turtleFinished = false;
-            bool rabbitIsSleeping = false;
-            bool rabbitWokeUp = false;
+            bool slowPetFinished = false;
+            bool fastPetIsSleeping = false;
+            bool fastPetWokeUp = false;
             float raceStartTime = Time.time;
 
-            while (!turtleFinished)
+            while (!slowPetFinished)
             {
                 // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
                 if (!isArrowDisappearing && finishArrowInstance != null)
                 {
                     // 각 주자와 결승선 사이의 거리를 계산
-                    float rabbitDistToFinish = Vector3.Distance(rabbit.transform.position, finishLine);
-                    float turtleDistToFinish = Vector3.Distance(turtle.transform.position, finishLine);
+                    float fastPetDistToFinish = Vector3.Distance(fastPet.transform.position, finishLine);
+                    float slowPetDistToFinish = Vector3.Distance(slowPet.transform.position, finishLine);
 
                     // 두 주자 중 더 가까운 거리가 설정한 값보다 작아지면
-                    if (Mathf.Min(rabbitDistToFinish, turtleDistToFinish) < arrowDisappearDistance)
+                    if (Mathf.Min(fastPetDistToFinish, slowPetDistToFinish) < arrowDisappearDistance)
                     {
                         isArrowDisappearing = true; // 중복 실행 방지
 
@@ -294,80 +319,80 @@ public class RaceInteraction : BasePetInteraction
                 // ▲▲▲ [여기까지 추가] ▲▲▲
                 // 토끼 낮잠 로직
                 // 토끼 낮잠 로직
-                if (!rabbitIsSleeping && !rabbitWokeUp)
+                if (!fastPetIsSleeping && !fastPetWokeUp)
                 {
-                    float rabbitProjectedDistance = Vector3.Dot(rabbit.transform.position - startPosition, dirToFinish);
-                    if (rabbitProjectedDistance >= napDistance)
+                    float fastPetProjectedDistance = Vector3.Dot(fastPet.transform.position - startPosition, dirToFinish);
+                    if (fastPetProjectedDistance >= napDistance)
                     {
                         // ▼▼▼▼▼ [수정된 부분] 토끼가 자연스럽게 멈추고 자는 로직 ▼▼▼▼▼
-                        rabbitIsSleeping = true;
+                        fastPetIsSleeping = true;
 
                         // 자연스럽게 속도를 줄이며 멈추는 코루틴 시작
-                        StartCoroutine(SlowDownAndSleep(rabbit));
+                        StartCoroutine(SlowDownAndSleep(fastPet));
 
-                        // Debug.Log($"[Race] {rabbit.petName}이(가) 속도를 줄이며 잠들 준비를 합니다.");
+                        // Debug.Log($"[Race] {fastPet.petName}이(가) 속도를 줄이며 잠들 준비를 합니다.");
                         // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
                     }
                 }
 
                 // 토끼 깨우기 로직
-                float turtleProjectedDistance = Vector3.Dot(turtle.transform.position - startPosition, dirToFinish);
-                float turtleProgress = Mathf.Clamp01(turtleProjectedDistance / totalRaceDistance);
+                float slowPetProjectedDistance = Vector3.Dot(slowPet.transform.position - startPosition, dirToFinish);
+                float slowPetProgress = Mathf.Clamp01(slowPetProjectedDistance / totalRaceDistance);
 
-                if (rabbitIsSleeping && !rabbitWokeUp && turtleProgress >= turtleWakeUpProgress)
+                if (fastPetIsSleeping && !fastPetWokeUp && slowPetProgress >= slowPetWakeUpProgress)
                 {
                     // ★★★ 수정: 토끼 깨우기 로직을 isStopped로 제어 ★★★
-                    rabbitWokeUp = true;
-                    var rabbitAnimController = rabbit.GetComponent<PetAnimationController>();
-                    rabbitAnimController.StopContinuousAnimation(); // 잠자는 애니메이션 중지
+                    fastPetWokeUp = true;
+                    var fastPetAnimController = fastPet.GetComponent<PetAnimationController>();
+                    fastPetAnimController.StopContinuousAnimation(); // 잠자는 애니메이션 중지
                                                                     // ▼▼▼▼▼ [핵심 수정] 이 부분을 추가합니다. ▼▼▼▼▼
                                                                     // 기존의 '잠자기' 파티클을 즉시 제거합니다.
-                    rabbit.HideEmotion();
+                    fastPet.HideEmotion();
                     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-                    rabbit.ShowEmotion(EmotionType.Scared, 10f);
+                    fastPet.ShowEmotion(EmotionType.Scared, 10f);
 
-                    if (IsAgentSafelyReady(rabbit))
+                    if (IsAgentSafelyReady(fastPet))
                     {
-                        rabbit.agent.avoidancePriority = rabbitOriginalPriority;
+                        fastPet.agent.avoidancePriority = fastPetOriginalPriority;
 
-                        rabbit.agent.speed = rabbitState.originalSpeed * rabbitFinalSprintSpeedMultiplier;
-                        rabbit.agent.updateRotation = true; // 회전 재개
-                        rabbit.agent.isStopped = false;     // 이동 재개
+                        fastPet.agent.speed = fastPetOriginalState.originalSpeed * fastPetFinalSprintSpeedMultiplier;
+                        fastPet.agent.updateRotation = true; // 회전 재개
+                        fastPet.agent.isStopped = false;     // 이동 재개
                     }
 
-                    yield return StartCoroutine(rabbitAnimController.PlayAnimationWithCustomDuration(
+                    yield return StartCoroutine(fastPetAnimController.PlayAnimationWithCustomDuration(
                         PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
 
-                    rabbitAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-                    // Debug.Log($"[Race] {rabbit.petName}이(가) 잠에서 깨어나 전력질주합니다!");
+                    fastPetAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+                    // Debug.Log($"[Race] {fastPet.petName}이(가) 잠에서 깨어나 전력질주합니다!");
                 }
 
                 // 거북이 도착 및 타임아웃 체크 (기존과 동일)
-                if (!turtle.agent.pathPending && turtle.agent.remainingDistance < 0.5f)
+                if (!slowPet.agent.pathPending && slowPet.agent.remainingDistance < 0.5f)
                 {
-                    turtleFinished = true;
+                    slowPetFinished = true;
                 }
                 if (Time.time - raceStartTime > raceTimeoutSeconds)
                 {
                     Debug.LogWarning("[Race] 경주 시간 초과! 거북이를 강제로 결승선으로 이동시킵니다.");
-                    if (IsAgentSafelyReady(turtle)) turtle.agent.Warp(turtleFinishDestination);
-                    turtleFinished = true;
+                    if (IsAgentSafelyReady(slowPet)) slowPet.agent.Warp(slowPetFinishDestination);
+                    slowPetFinished = true;
                 }
 
                 yield return null;
             }
 
             // --- 7. 경주 종료 및 결과 처리 ---
-            if (IsAgentSafelyReady(rabbit)) rabbit.agent.isStopped = true;
-            if (IsAgentSafelyReady(turtle)) turtle.agent.isStopped = true;
+            if (IsAgentSafelyReady(fastPet)) fastPet.agent.isStopped = true;
+            if (IsAgentSafelyReady(slowPet)) slowPet.agent.isStopped = true;
 
             // Debug.Log("[Race] 경주가 종료되었습니다. 거북이의 승리!");
-            turtle.ShowEmotion(EmotionType.Victory, 15f);
-            rabbit.ShowEmotion(EmotionType.Defeat, 15f);
+            slowPet.ShowEmotion(EmotionType.Victory, 15f);
+            fastPet.ShowEmotion(EmotionType.Defeat, 15f);
 
-            StartCoroutine(turtle.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
-            StartCoroutine(rabbit.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 3.0f, false, false));
+            StartCoroutine(slowPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 2.0f, false, false));
+            StartCoroutine(fastPet.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 3.0f, false, false));
 
             yield return new WaitForSeconds(3f);
         }
@@ -384,17 +409,17 @@ public class RaceInteraction : BasePetInteraction
                 Destroy(finishArrowInstance);
                 myRaceArrows.Remove(finishArrowInstance);
             }
-            if (IsAgentSafelyReady(rabbit))
+            if (IsAgentSafelyReady(fastPet))
             {
-                rabbit.agent.avoidancePriority = rabbitOriginalPriority;
+                fastPet.agent.avoidancePriority = fastPetOriginalPriority;
             }
             // PetOriginalState가 NavMeshAgent의 속성(speed, acceleration 등)을 원래대로 복원합니다.
-            rabbitState.Restore(rabbit);
-            turtleState.Restore(turtle);
+            fastPetOriginalState.Restore(fastPet);
+            slowPetOriginalState.Restore(slowPet);
 
             // 모든 상호작용의 공통 종료 처리를 호출합니다. 
             // 이 메서드는 isInteracting 플래그 해제, 감정 숨기기, 다음 행동 준비 등을 안전하게 처리합니다.
-            EndInteraction(rabbit, turtle);
+            EndInteraction(fastPet, slowPet);
             // Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
@@ -452,28 +477,28 @@ public class RaceInteraction : BasePetInteraction
     /// <summary>
     /// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
     /// </summary>
-    private IEnumerator FineTunePositions(PetController rabbit, PetController turtle,
-        Vector3 rabbitTarget, Vector3 turtleTarget, Vector3 raceDirection)
+    private IEnumerator FineTunePositions(PetController fastPet, PetController slowPet,
+        Vector3 fastPetTarget, Vector3 slowPetTarget, Vector3 raceDirection)
     {
         float adjustmentTime = 2f; // 조정에 걸리는 시간
         float elapsedTime = 0f;
 
         // 현재 위치 저장
-        Vector3 rabbitStartPos = rabbit.transform.position;
-        Vector3 turtleStartPos = turtle.transform.position;
+        Vector3 fastPetStartPos = fastPet.transform.position;
+        Vector3 slowPetStartPos = slowPet.transform.position;
 
         // 목표 회전 계산
         Quaternion targetRotation = Quaternion.LookRotation(raceDirection);
-        Quaternion rabbitStartRot = rabbit.transform.rotation;
-        Quaternion turtleStartRot = turtle.transform.rotation;
+        Quaternion fastPetStartRot = fastPet.transform.rotation;
+        Quaternion slowPetStartRot = slowPet.transform.rotation;
 
         // 애니메이션을 Idle로 설정
-        rabbit.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-        turtle.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        fastPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        slowPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
 
         // NavMeshAgent 일시 정지
-        rabbit.agent.isStopped = true;
-        turtle.agent.isStopped = true;
+        fastPet.agent.isStopped = true;
+        slowPet.agent.isStopped = true;
 
         while (elapsedTime < adjustmentTime)
         {
@@ -482,90 +507,90 @@ public class RaceInteraction : BasePetInteraction
             float smoothT = t * t * (3f - 2f * t);
 
             // 위치 보간
-            rabbit.transform.position = Vector3.Lerp(rabbitStartPos, rabbitTarget, smoothT);
-            turtle.transform.position = Vector3.Lerp(turtleStartPos, turtleTarget, smoothT);
+            fastPet.transform.position = Vector3.Lerp(fastPetStartPos, fastPetTarget, smoothT);
+            slowPet.transform.position = Vector3.Lerp(slowPetStartPos, slowPetTarget, smoothT);
 
             // 회전 보간
-            rabbit.transform.rotation = Quaternion.Slerp(rabbitStartRot, targetRotation, smoothT);
-            turtle.transform.rotation = Quaternion.Slerp(turtleStartRot, targetRotation, smoothT);
+            fastPet.transform.rotation = Quaternion.Slerp(fastPetStartRot, targetRotation, smoothT);
+            slowPet.transform.rotation = Quaternion.Slerp(slowPetStartRot, targetRotation, smoothT);
 
             // 펫 모델도 함께 회전
-            if (rabbit.petModelTransform != null)
-                rabbit.petModelTransform.rotation = rabbit.transform.rotation;
-            if (turtle.petModelTransform != null)
-                turtle.petModelTransform.rotation = turtle.transform.rotation;
+            if (fastPet.petModelTransform != null)
+                fastPet.petModelTransform.rotation = fastPet.transform.rotation;
+            if (slowPet.petModelTransform != null)
+                slowPet.petModelTransform.rotation = slowPet.transform.rotation;
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         // 최종 위치와 회전 확정
-        rabbit.transform.position = rabbitTarget;
-        turtle.transform.position = turtleTarget;
-        rabbit.transform.rotation = targetRotation;
-        turtle.transform.rotation = targetRotation;
+        fastPet.transform.position = fastPetTarget;
+        slowPet.transform.position = slowPetTarget;
+        fastPet.transform.rotation = targetRotation;
+        slowPet.transform.rotation = targetRotation;
 
-        if (rabbit.petModelTransform != null)
-            rabbit.petModelTransform.rotation = targetRotation;
-        if (turtle.petModelTransform != null)
-            turtle.petModelTransform.rotation = targetRotation;
+        if (fastPet.petModelTransform != null)
+            fastPet.petModelTransform.rotation = targetRotation;
+        if (slowPet.petModelTransform != null)
+            slowPet.petModelTransform.rotation = targetRotation;
 
         // NavMeshAgent 위치 동기화
-        if (IsAgentSafelyReady(rabbit))
+        if (IsAgentSafelyReady(fastPet))
         {
-            rabbit.agent.nextPosition = rabbitTarget;
+            fastPet.agent.nextPosition = fastPetTarget;
         }
-        if (IsAgentSafelyReady(turtle))
+        if (IsAgentSafelyReady(slowPet))
         {
-            turtle.agent.nextPosition = turtleTarget;
+            slowPet.agent.nextPosition = slowPetTarget;
         }
 
-        // Debug.Log($"[Race] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(rabbit.transform.position, turtle.transform.position):F2}m");
+        // Debug.Log($"[Race] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(fastPet.transform.position, slowPet.transform.position):F2}m");
     }
     // RaceInteraction.cs에 새로운 메서드 추가
 
     /// <summary>
     /// 토끼가 자연스럽게 속도를 줄이며 멈춘 후 잠드는 코루틴
     /// </summary>
-    private IEnumerator SlowDownAndSleep(PetController rabbit)
+    private IEnumerator SlowDownAndSleep(PetController fastPet)
     {
-        if (!IsAgentSafelyReady(rabbit)) yield break;
+        if (!IsAgentSafelyReady(fastPet)) yield break;
         // ★★★ 수정: 잠들기 직전에 회피 우선순위를 최하위로 변경 ★★★
-        rabbitOriginalPriority = rabbit.agent.avoidancePriority; // 원래 우선순위 저장
-        rabbit.agent.avoidancePriority = 99; // 길을 막지 않도록 우선순위 최하위(99)로 설정
+        fastPetOriginalPriority = fastPet.agent.avoidancePriority; // 원래 우선순위 저장
+        fastPet.agent.avoidancePriority = 99; // 길을 막지 않도록 우선순위 최하위(99)로 설정
 
-        // Debug.Log($"[Race] {rabbit.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
+        // Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
 
         // 현재 속도 저장
-        float currentSpeed = rabbit.agent.speed;
-        float slowDownDuration = rabbitSlowDownDuration; // 2.0f 대신
+        float currentSpeed = fastPet.agent.speed;
+        float slowDownDuration = fastPetSlowDownDuration; // 2.0f 대신
         float elapsedTime = 0f;
 
         // 1. 속도를 서서히 줄이기
         while (elapsedTime < slowDownDuration)
         {
-            if (!IsAgentSafelyReady(rabbit)) break;
+            if (!IsAgentSafelyReady(fastPet)) break;
 
             float t = elapsedTime / slowDownDuration;
             // EaseOutCubic 커브를 사용하여 자연스러운 감속
             float easeT = 1f - Mathf.Pow(1f - t, 3f);
 
-            rabbit.agent.speed = Mathf.Lerp(currentSpeed, rabbitMinSpeedBeforeSleep, easeT); // 0.5f 대신
+            fastPet.agent.speed = Mathf.Lerp(currentSpeed, fastPetMinSpeedBeforeSleep, easeT); // 0.5f 대신
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         // 2. 완전히 멈추기
-        if (IsAgentSafelyReady(rabbit))
+        if (IsAgentSafelyReady(fastPet))
         {
-            rabbit.agent.isStopped = true;
-            rabbit.agent.velocity = Vector3.zero;
-            rabbit.agent.updateRotation = false;
+            fastPet.agent.isStopped = true;
+            fastPet.agent.velocity = Vector3.zero;
+            fastPet.agent.updateRotation = false;
         }
 
         // 3. 하품 애니메이션 (선택사항)
-        var animController = rabbit.GetComponent<PetAnimationController>();
+        var animController = fastPet.GetComponent<PetAnimationController>();
         // if (animController != null)
         // {
         //     // 하품이나 기지개를 펴는 애니메이션이 있다면 먼저 재생
@@ -574,14 +599,14 @@ public class RaceInteraction : BasePetInteraction
         // }
 
         // 4. 잠자는 감정 표현과 애니메이션 시작
-        rabbit.ShowEmotion(EmotionType.Sleep, 60f);
+        fastPet.ShowEmotion(EmotionType.Sleep, 60f);
         if (animController != null)
         {
             StartCoroutine(animController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Rest, 999f, true, false));
         }
 
-        // Debug.Log($"[Race] {rabbit.petName}이(가) 편안하게 잠들었습니다.");
+        // Debug.Log($"[Race] {fastPet.petName}이(가) 편안하게 잠들었습니다.");
     }
     // ... (IsAgentSafelyReady, CalculateOptimalStartPosition, CalculateAlignedStartPositions 등 다른 헬퍼 메서드는 그대로 유지) ...
 
@@ -602,7 +627,7 @@ public class RaceInteraction : BasePetInteraction
 
 
     private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection,
-        out Vector3 rabbitFinish, out Vector3 turtleFinish)
+        out Vector3 fastPetFinish, out Vector3 slowPetFinish)
     {
         // 결승선에서 양옆으로 분리된 목적지 생성
         Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
@@ -611,10 +636,10 @@ public class RaceInteraction : BasePetInteraction
         Vector3 rightFinish = finishLine + sideDirection * (finishLineSpread / 2);
 
         // NavMesh 유효 위치로 보정
-        rabbitFinish = FindValidPositionOnNavMesh(leftFinish, finishLineSpread);
-        turtleFinish = FindValidPositionOnNavMesh(rightFinish, finishLineSpread);
+        fastPetFinish = FindValidPositionOnNavMesh(leftFinish, finishLineSpread);
+        slowPetFinish = FindValidPositionOnNavMesh(rightFinish, finishLineSpread);
 
-        // Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({rabbitFinish}), 거북이({turtleFinish})");
+        // Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({fastPetFinish}), 거북이({slowPetFinish})");
     }
 
     // RaceInteraction.cs에 추가할 새로운 메서드들
