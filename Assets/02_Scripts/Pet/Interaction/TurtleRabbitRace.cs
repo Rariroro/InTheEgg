@@ -141,7 +141,7 @@ public class TurtleRabbitRace : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
+        Debug.Log($"[Race] {pet1.petName}와(과) {pet2.petName}의 달리기 시합이 시작됩니다!");
         
         // ★★★ 수정: 이 인스턴스의 화살표만 정리 ★★★
         foreach (var arrow in myRaceArrows)
@@ -253,19 +253,19 @@ public class TurtleRabbitRace : BasePetInteraction
             fastPet.agent.velocity = Vector3.zero;
             slowPet.agent.velocity = Vector3.zero;
 
-            // Debug.Log("[Race] 출발선에서 대기 중...");
+            Debug.Log("[Race] 출발선에서 대기 중...");
 
             // 카운트다운
             for (int i = 0; i < 3; i++)
             {
-                // Debug.Log($"[Race] {3 - i}...");
+                Debug.Log($"[Race] {3 - i}...");
                 yield return new WaitForSeconds(1f);
             }
             // ★★★ 수정된 부분 끝 ★★★
 
 
             // --- 5. 경주 시작 ---
-            // Debug.Log("[Race] 경주 시작!");
+            Debug.Log("[Race] 경주 시작!");
             fastPet.agent.updateRotation = true;
             slowPet.agent.updateRotation = true;
             fastPet.agent.speed = fastPetOriginalState.originalSpeed * fastPetStartSpeedMultiplier;
@@ -313,7 +313,7 @@ public class TurtleRabbitRace : BasePetInteraction
 
                         // 사라지는 애니메이션 시작
                         StartCoroutine(DisappearFinishArrow(finishArrowInstance));
-                        // Debug.Log("[Race] 주자가 결승선에 근접하여 화살표가 사라지기 시작합니다.");
+                        Debug.Log("[Race] 주자가 결승선에 근접하여 화살표가 사라지기 시작합니다.");
                     }
                 }
                 // ▲▲▲ [여기까지 추가] ▲▲▲
@@ -330,7 +330,7 @@ public class TurtleRabbitRace : BasePetInteraction
                         // 자연스럽게 속도를 줄이며 멈추는 코루틴 시작
                         StartCoroutine(SlowDownAndSleep(fastPet));
 
-                        // Debug.Log($"[Race] {fastPet.petName}이(가) 속도를 줄이며 잠들 준비를 합니다.");
+                        Debug.Log($"[Race] {fastPet.petName}이(가) 속도를 줄이며 잠들 준비를 합니다.");
                         // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
                     }
                 }
@@ -365,7 +365,7 @@ public class TurtleRabbitRace : BasePetInteraction
                         PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
 
                     fastPetAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-                    // Debug.Log($"[Race] {fastPet.petName}이(가) 잠에서 깨어나 전력질주합니다!");
+                    Debug.Log($"[Race] {fastPet.petName}이(가) 잠에서 깨어나 전력질주합니다!");
                 }
 
                 // 거북이 도착 및 타임아웃 체크 (기존과 동일)
@@ -387,7 +387,7 @@ public class TurtleRabbitRace : BasePetInteraction
             if (IsAgentSafelyReady(fastPet)) fastPet.agent.isStopped = true;
             if (IsAgentSafelyReady(slowPet)) slowPet.agent.isStopped = true;
 
-            // Debug.Log("[Race] 경주가 종료되었습니다. 거북이의 승리!");
+            Debug.Log("[Race] 경주가 종료되었습니다. 거북이의 승리!");
             slowPet.ShowEmotion(EmotionType.Victory, 15f);
             fastPet.ShowEmotion(EmotionType.Defeat, 15f);
 
@@ -401,7 +401,7 @@ public class TurtleRabbitRace : BasePetInteraction
             // ★★★ 수정: finally 블록을 대폭 간소화합니다. ★★★
             // 복잡한 NavMeshAgent 복구 로직을 제거합니다.
             // PetOriginalState 복원과 EndInteraction 호출만으로 충분합니다.
-            // Debug.Log("[Race] 상호작용 정리 시작.");
+            Debug.Log("[Race] 상호작용 정리 시작.");
 
             // ▼▼▼ [수정] 생성된 화살표를 파괴하는 로직으로 교체합니다. ▼▼▼
             if (finishArrowInstance != null)
@@ -420,7 +420,7 @@ public class TurtleRabbitRace : BasePetInteraction
             // 모든 상호작용의 공통 종료 처리를 호출합니다. 
             // 이 메서드는 isInteracting 플래그 해제, 감정 숨기기, 다음 행동 준비 등을 안전하게 처리합니다.
             EndInteraction(fastPet, slowPet);
-            // Debug.Log("[Race] 상호작용 정리 완료.");
+            Debug.Log("[Race] 상호작용 정리 완료.");
         }
     }
     // Pet.zip/Interaction/RaceInteraction.cs
@@ -545,7 +545,7 @@ public class TurtleRabbitRace : BasePetInteraction
             slowPet.agent.nextPosition = slowPetTarget;
         }
 
-        // Debug.Log($"[Race] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(fastPet.transform.position, slowPet.transform.position):F2}m");
+        Debug.Log($"[Race] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(fastPet.transform.position, slowPet.transform.position):F2}m");
     }
     // RaceInteraction.cs에 새로운 메서드 추가
 
@@ -559,7 +559,7 @@ public class TurtleRabbitRace : BasePetInteraction
         fastPetOriginalPriority = fastPet.agent.avoidancePriority; // 원래 우선순위 저장
         fastPet.agent.avoidancePriority = 99; // 길을 막지 않도록 우선순위 최하위(99)로 설정
 
-        // Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
+        Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
 
         // 현재 속도 저장
         float currentSpeed = fastPet.agent.speed;
@@ -606,7 +606,7 @@ public class TurtleRabbitRace : BasePetInteraction
                 PetAnimationController.PetAnimationType.Rest, 999f, true, false));
         }
 
-        // Debug.Log($"[Race] {fastPet.petName}이(가) 편안하게 잠들었습니다.");
+        Debug.Log($"[Race] {fastPet.petName}이(가) 편안하게 잠들었습니다.");
     }
     // ... (IsAgentSafelyReady, CalculateOptimalStartPosition, CalculateAlignedStartPositions 등 다른 헬퍼 메서드는 그대로 유지) ...
 
@@ -639,7 +639,7 @@ public class TurtleRabbitRace : BasePetInteraction
         fastPetFinish = FindValidPositionOnNavMesh(leftFinish, finishLineSpread);
         slowPetFinish = FindValidPositionOnNavMesh(rightFinish, finishLineSpread);
 
-        // Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({fastPetFinish}), 거북이({slowPetFinish})");
+        Debug.Log($"[Race] 분리된 결승 목적지 설정: 토끼({fastPetFinish}), 거북이({slowPetFinish})");
     }
 
     // RaceInteraction.cs에 추가할 새로운 메서드들
@@ -680,7 +680,7 @@ public class TurtleRabbitRace : BasePetInteraction
         if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = targetRotation;
         if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = targetRotation;
 
-        // Debug.Log("[Race] 출발선 방향 정렬 완료");
+        Debug.Log("[Race] 출발선 방향 정렬 완료");
     }
 
 
@@ -780,7 +780,7 @@ public class TurtleRabbitRace : BasePetInteraction
         pet1Pos.y = avgY;
         pet2Pos.y = avgY;
 
-        // Debug.Log($"[Race] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
+        Debug.Log($"[Race] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
     }
     
     /// <summary>

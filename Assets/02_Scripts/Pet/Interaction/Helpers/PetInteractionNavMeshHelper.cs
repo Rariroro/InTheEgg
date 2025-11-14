@@ -84,7 +84,7 @@ public static class PetInteractionNavMeshHelper
     /// </summary>
     public static IEnumerator EnsurePetsOnNavMesh(PetController pet1, PetController pet2, string interactionName)
     {
-        // Debug.Log($"[{interactionName}] 펫 NavMesh 위치 확인 중...");
+        Debug.Log($"[{interactionName}] 펫 NavMesh 위치 확인 중...");
 
         // 첫 번째 펫이 NavMesh 위에 없으면 위치 조정
         if (pet1.agent != null && !pet1.agent.isOnNavMesh)
@@ -93,7 +93,7 @@ public static class PetInteractionNavMeshHelper
             if (NavMesh.SamplePosition(pet1.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet1.transform.position = navHit.position;
-                // Debug.Log($"[{interactionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
+                Debug.Log($"[{interactionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet1.agent.enabled = false;
@@ -112,7 +112,7 @@ public static class PetInteractionNavMeshHelper
             if (NavMesh.SamplePosition(pet2.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet2.transform.position = navHit.position;
-                // Debug.Log($"[{interactionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
+                Debug.Log($"[{interactionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet2.agent.enabled = false;
@@ -124,7 +124,7 @@ public static class PetInteractionNavMeshHelper
             }
         }
 
-        // Debug.Log($"[{interactionName}] 펫 NavMesh 위치 확인 완료");
+        Debug.Log($"[{interactionName}] 펫 NavMesh 위치 확인 완료");
     }
 
     /// <summary>

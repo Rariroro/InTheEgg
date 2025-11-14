@@ -25,17 +25,17 @@ public abstract class BasePetInteraction : MonoBehaviour
     // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
     public void StartInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log("StartInteraction");
+        Debug.Log("StartInteraction");
         // 모이기 상태 체크 - 모이기 중이면 상호작용 시작하지 않음
         if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
             (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
         {
-            // Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
+            Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
             return;
         }
-        // Debug.Log("StartInteraction2");
+        Debug.Log("StartInteraction2");
 
         // ✅ 토스트 알림을 준비 완료 후로 이동 (InteractionLifecycle에서 발생)
 
@@ -48,21 +48,21 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// </summary>
     private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
     {
-        // Debug.Log("InteractionLifecycle");
+        Debug.Log("InteractionLifecycle");
 
         // 1. 사전 준비 단계
-        // Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
+        Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
 
         // ★★★ Activity 시스템에서 자동으로 처리됨 ★★★
 
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet1.State.StartInteraction(pet2);
         pet1.State.SetInteractionLogic(this);
-        // Debug.Log("InteractionLifecycle2");
+        Debug.Log("InteractionLifecycle2");
 
         pet2.State.StartInteraction(pet1);
         pet2.State.SetInteractionLogic(this);
-        // Debug.Log("InteractionLifecycle3");
+        Debug.Log("InteractionLifecycle3");
 
         // 이동 중지
         pet1.StopMovement();
@@ -74,12 +74,12 @@ public abstract class BasePetInteraction : MonoBehaviour
         // NavMesh 확인 실패 시 조용히 종료
         if (pet1.agent == null || !pet1.agent.isOnNavMesh || pet2.agent == null || !pet2.agent.isOnNavMesh)
         {
-            // Debug.LogWarning($"[{InteractionName}] NavMesh 준비 실패로 상호작용 취소");
+            Debug.LogWarning($"[{InteractionName}] NavMesh 준비 실패로 상호작용 취소");
             yield break;
         }
 
         // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
-        // Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
+        Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
         // 펫 크기에 따른 거리 조정
         float adjustedDistance = CalculateAdjustedDistance(pet1, pet2);
@@ -102,7 +102,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
             (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
         {
-            // Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 취소");
+            Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 취소");
             yield break;
         }
 
@@ -111,7 +111,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
                               pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
         {
-            // Debug.Log($"[{InteractionName}] 이동 중 모이기로 인해 상호작용 취소");
+            Debug.Log($"[{InteractionName}] 이동 중 모이기로 인해 상호작용 취소");
             yield break;
         }
 
@@ -131,7 +131,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         {
             // 3. 사후 정리 단계
             // 코루틴이 어떤 이유로든 종료될 때(성공, 실패, 중단), 반드시 정리를 수행합니다.
-            // Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
             EndInteraction(pet1, pet2);
         }
     }
@@ -156,7 +156,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
-                // Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
+                Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
                 yield break;
             }
             
@@ -166,7 +166,7 @@ public abstract class BasePetInteraction : MonoBehaviour
                 (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
                                   pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
             {
-                // Debug.Log($"[{InteractionName}] 모이기 명령으로 인해 상호작용이 중단됨");
+                Debug.Log($"[{InteractionName}] 모이기 명령으로 인해 상호작용이 중단됨");
                 yield break;
             }
             
@@ -177,7 +177,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     // EndInteraction은 private 또는 protected로 변경하여 외부 호출을 막습니다.
     protected void EndInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] EndInteraction 호출: {pet1?.petName} & {pet2?.petName}");
+        Debug.Log($"[{InteractionName}] EndInteraction 호출: {pet1?.petName} & {pet2?.petName}");
         
         // 중복 호출 방지를 위한 체크
         bool pet1AlreadyClean = (pet1 == null || !pet1.State.IsInteracting);
@@ -185,7 +185,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         
         if (pet1AlreadyClean && pet2AlreadyClean)
         {
-        // Debug.Log($"[{InteractionName}] 이미 상호작용이 종료된 상태, 중복 호출 무시");
+        Debug.Log($"[{InteractionName}] 이미 상호작용이 종료된 상태, 중복 호출 무시");
             return;
         }
         
@@ -221,7 +221,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             InteractionNotificationHandler.NotifyInteractionEnded(pet1, pet2);
         }
 
-        // Debug.Log($"[{InteractionName}] EndInteraction 완료");
+        Debug.Log($"[{InteractionName}] EndInteraction 완료");
     }
     // 상호작용 수행 코루틴
 
@@ -255,7 +255,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     // 새로운 메서드 추가 - 펫이 NavMesh 위에 있는지 확인하고 보정
     private IEnumerator EnsurePetsOnNavMesh(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 중...");
+        Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 중...");
 
         // 첫 번째 펫이 NavMesh 위에 없으면 위치 조정
         if (pet1.agent != null && !pet1.agent.isOnNavMesh)
@@ -264,7 +264,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (NavMesh.SamplePosition(pet1.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet1.transform.position = navHit.position;
-                // Debug.Log($"[{InteractionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
+                Debug.Log($"[{InteractionName}] {pet1.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet1.agent.enabled = false;
@@ -283,7 +283,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (NavMesh.SamplePosition(pet2.transform.position, out navHit, 10f, NavMesh.AllAreas))
             {
                 pet2.transform.position = navHit.position;
-                // Debug.Log($"[{InteractionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
+                Debug.Log($"[{InteractionName}] {pet2.petName}의 위치가 NavMesh로 조정됨");
 
                 // NavMeshAgent 재활성화 (필요 시)
                 pet2.agent.enabled = false;
@@ -295,7 +295,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             }
         }
 
-        // Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
+        Debug.Log($"[{InteractionName}] 펫 NavMesh 위치 확인 완료");
     }
 
 
@@ -316,7 +316,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         if (pet == null) return;
 
-        // Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
+        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
         
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.EndInteraction();
@@ -373,7 +373,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 5. AI를 즉시 재평가하여 다음 행동 결정
         if (pet.AI != null)
         {
-        // Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
+        Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
             pet.AI.InterruptAndResetAI();  // 현재 활동 중단하고 새로 평가
             
             // 0.1초 후 AI 활동 보장
@@ -383,7 +383,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 추가 안전장치: 약간의 지연 후에도 다시 확인
         pet.StartCoroutine(DelayedBehaviorDecision(pet));
         
-        // Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
+        Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
     }
     
     /// <summary>
@@ -443,7 +443,7 @@ public abstract class BasePetInteraction : MonoBehaviour
                 }
             }
 
-            // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}이(가) 서로 마주보도록 설정됨");
+            Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}이(가) 서로 마주보도록 설정됨");
         }
     }
 
@@ -488,7 +488,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 기본 거리에 평균 배율 적용
         float adjustedDistance = interactionStartDistance * averageMultiplier;
         
-        // Debug.Log($"[{InteractionName}] 크기 조정 거리: {pet1.petName}({pet1.Profile.size}) & {pet2.petName}({pet2.Profile.size}) = {adjustedDistance:F1}m (기본: {interactionStartDistance}m)");
+        Debug.Log($"[{InteractionName}] 크기 조정 거리: {pet1.petName}({pet1.Profile.size}) & {pet2.petName}({pet2.Profile.size}) = {adjustedDistance:F1}m (기본: {interactionStartDistance}m)");
         
         return adjustedDistance;
     }
@@ -532,7 +532,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
                 (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
             {
-                // Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
+                Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
                 // 애니메이션 정지
                 pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
@@ -545,7 +545,7 @@ public abstract class BasePetInteraction : MonoBehaviour
                 (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
                                   pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
             {
-                // Debug.Log($"[{InteractionName}] 이동 중 모이기 명령으로 인해 상호작용 중단");
+                Debug.Log($"[{InteractionName}] 이동 중 모이기 명령으로 인해 상호작용 중단");
                 // 애니메이션 정지
                 pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
@@ -568,7 +568,7 @@ public abstract class BasePetInteraction : MonoBehaviour
 
             if (pet1Arrived && pet2Arrived)
             {
-                // Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
+                Debug.Log($"[{InteractionName}] 두 펫이 목적지에 도착");
                 break;
             }
             // ▼▼▼ [수정] 이동 중 펫이 자연스럽게 경로를 바라보도록 회전 처리 ▼▼▼
@@ -812,7 +812,7 @@ public abstract class BasePetInteraction : MonoBehaviour
      PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump,
      PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
     {
-        // Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
+        Debug.Log($"[{InteractionName}] 결과: {winner.petName}이(가) 승리!");
 
         PetAnimationController winnerAnimController = winner.GetComponent<PetAnimationController>();
         PetAnimationController loserAnimController = loser.GetComponent<PetAnimationController>();

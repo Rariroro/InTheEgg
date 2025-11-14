@@ -180,7 +180,7 @@ public static class PetInteractionAnimationHelper
         PetAnimationController.PetAnimationType winnerAnimType = PetAnimationController.PetAnimationType.Jump,
         PetAnimationController.PetAnimationType loserAnimType = PetAnimationController.PetAnimationType.Eat)
     {
-        // Debug.Log($"[{interactionName}] 결과: {winner.petName}이(가) 승리!");
+        Debug.Log($"[{interactionName}] 결과: {winner.petName}이(가) 승리!");
 
         PetAnimationController winnerAnimController = winner.GetComponent<PetAnimationController>();
         PetAnimationController loserAnimController = loser.GetComponent<PetAnimationController>();

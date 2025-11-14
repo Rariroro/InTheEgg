@@ -85,7 +85,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 방어 상호작용 시작!");
+        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 방어 상호작용 시작!");
 
         // 역할 식별
         PetController attacker = null;
@@ -107,7 +107,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
             yield break;
         }
 
-        // Debug.Log($"[{InteractionName}] 공격자: {attacker.petName}, 스컹크: {skunk.petName}");
+        Debug.Log($"[{InteractionName}] 공격자: {attacker.petName}, 스컹크: {skunk.petName}");
 
         // NavMeshAgent 준비 확인
         yield return StartCoroutine(WaitUntilAgentIsReady(attacker, agentSafetyTimeout));
@@ -148,12 +148,12 @@ public class SkunkDefenseInteraction : BasePetInteraction
             // 6. 승리 표현 단계
             yield return StartCoroutine(VictoryCelebrationPhase(skunk, attacker));
 
-            // Debug.Log($"[{InteractionName}] 상호작용 완료!");
+            Debug.Log($"[{InteractionName}] 상호작용 완료!");
         }
         finally
         {
             // 최종 정리
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
 
             // 원래 상태 복원
             attackerState.Restore(attacker);
@@ -165,7 +165,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(attacker, skunk);
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -174,7 +174,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator ApproachPhase(PetController attacker, PetController skunk)
     {
-        // Debug.Log($"[{InteractionName}] 1단계: {attacker.petName}이(가) {skunk.petName}에게 접근합니다.");
+        Debug.Log($"[{InteractionName}] 1단계: {attacker.petName}이(가) {skunk.petName}에게 접근합니다.");
 
         // 스컹크 앞쪽으로 접근할 위치 계산
         Vector3 direction = (skunk.transform.position - attacker.transform.position).normalized;
@@ -200,7 +200,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
             // 도착 체크
             if (!attacker.agent.pathPending && attacker.agent.remainingDistance < 0.5f)
             {
-                // Debug.Log($"[{InteractionName}] {attacker.petName}이(가) 접근 완료!");
+                Debug.Log($"[{InteractionName}] {attacker.petName}이(가) 접근 완료!");
                 break;
             }
 
@@ -224,7 +224,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator AttackAttemptPhase(PetController attacker, PetController skunk)
     {
-        // Debug.Log($"[{InteractionName}] 2단계: {attacker.petName}이(가) 공격을 시도합니다.");
+        Debug.Log($"[{InteractionName}] 2단계: {attacker.petName}이(가) 공격을 시도합니다.");
 
         // 공격자 감정 변경
         attacker.ShowEmotion(EmotionType.Hungry, 5f);
@@ -243,7 +243,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator SkunkDefensePhase(PetController skunk, PetController attacker)
     {
-        // Debug.Log($"[{InteractionName}] 3단계: {skunk.petName}이(가) 방어태세를 취합니다!");
+        Debug.Log($"[{InteractionName}] 3단계: {skunk.petName}이(가) 방어태세를 취합니다!");
 
         // 스컹크 감정 변경
         skunk.ShowEmotion(EmotionType.Angry, 5f);
@@ -306,7 +306,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator AttackerRetreatPhase(PetController attacker, PetController skunk)
     {
-        // Debug.Log($"[{InteractionName}] 4단계: {attacker.petName}이(가) 놀라서 후퇴합니다!");
+        Debug.Log($"[{InteractionName}] 4단계: {attacker.petName}이(가) 놀라서 후퇴합니다!");
 
         // 공격자 감정 변경 - 스컹크 방구를 맞아서 어지럽고 역겨움
         attacker.ShowEmotion(EmotionType.Dizzy, 8f);
@@ -332,7 +332,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
         {
             if (!attacker.agent.pathPending && attacker.agent.remainingDistance < 0.5f)
             {
-                // Debug.Log($"[{InteractionName}] {attacker.petName}이(가) 후퇴 완료!");
+                Debug.Log($"[{InteractionName}] {attacker.petName}이(가) 후퇴 완료!");
                 break;
             }
 
@@ -367,7 +367,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator SkunkEscapePhase(PetController skunk, PetController attacker)
     {
-        // Debug.Log($"[{InteractionName}] 5단계: {skunk.petName}이(가) 안전한 곳으로 이동합니다.");
+        Debug.Log($"[{InteractionName}] 5단계: {skunk.petName}이(가) 안전한 곳으로 이동합니다.");
 
         // 스컹크 감정 변경 - 안심
         skunk.ShowEmotion(EmotionType.Happy, 10f);
@@ -394,7 +394,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
         {
             if (!skunk.agent.pathPending && skunk.agent.remainingDistance < 1f)
             {
-                // Debug.Log($"[{InteractionName}] {skunk.petName}이(가) 안전하게 도망쳤습니다.");
+                Debug.Log($"[{InteractionName}] {skunk.petName}이(가) 안전하게 도망쳤습니다.");
                 break;
             }
 
@@ -413,7 +413,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator VictoryCelebrationPhase(PetController skunk, PetController attacker)
     {
-        // Debug.Log($"[{InteractionName}] 6단계: 승리의 기쁨!");
+        Debug.Log($"[{InteractionName}] 6단계: 승리의 기쁨!");
 
         // 공격자를 향해 돌아보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(skunk, attacker, 0.5f));

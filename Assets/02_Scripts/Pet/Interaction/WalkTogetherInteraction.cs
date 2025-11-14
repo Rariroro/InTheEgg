@@ -85,7 +85,7 @@ public class WalkTogetherInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 함께 걷기 시작했습니다!");
+        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 함께 걷기 시작했습니다!");
 
         // NavMeshAgent 준비 확인
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
@@ -127,12 +127,12 @@ public class WalkTogetherInteraction : BasePetInteraction
             // 2. 메인 걷기 단계
             yield return StartCoroutine(MainWalkPhase(pet1, pet2));
 
-            // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 함께 걷기 완료");
+            Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 함께 걷기 완료");
         }
         finally
         {
             // 최종 정리
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
 
             // 원래 상태 복원
             pet1State.Restore(pet1);
@@ -147,7 +147,7 @@ public class WalkTogetherInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(pet1, pet2);
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 완룼.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완룼.");
         }
     }
 
@@ -156,7 +156,7 @@ public class WalkTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PrepareWalkPhase(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] 1단계: 걷기 준비");
+        Debug.Log($"[{InteractionName}] 1단계: 걷기 준비");
 
         // 시작 위치 계산 (나란히 서기)
         Vector3 pet1Position, pet2Position;
@@ -183,7 +183,7 @@ public class WalkTogetherInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MainWalkPhase(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] 2단계: 메인 걷기");
+        Debug.Log($"[{InteractionName}] 2단계: 메인 걷기");
 
         // 속도 동기화
         float syncedSpeed = Mathf.Min(pet1.baseSpeed, pet2.baseSpeed) * walkSpeedMultiplier;
@@ -301,7 +301,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 pet1.agent.SetDestination(pet1Target);
                 pet2.agent.SetDestination(pet2Target);
 
-                // Debug.Log($"[{InteractionName}] 새 목적지 설정 성공");
+                Debug.Log($"[{InteractionName}] 새 목적지 설정 성공");
                 yield break;
             }
 
@@ -354,7 +354,7 @@ public class WalkTogetherInteraction : BasePetInteraction
         switch (eventType)
         {
             case 0: // 잠시 멈춰서 주변 구경
-                // Debug.Log($"[{InteractionName}] 잠시 멈춰서 주변을 구경합니다.");
+                Debug.Log($"[{InteractionName}] 잠시 멈춰서 주변을 구경합니다.");
                 pet1.agent.isStopped = true;
                 pet2.agent.isStopped = true;
                 
@@ -375,7 +375,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 break;
 
             case 1: // 잠시 뛰기
-                // Debug.Log($"[{InteractionName}] 잠시 뛰어갑니다!");
+                Debug.Log($"[{InteractionName}] 잠시 뛰어갑니다!");
                 
                 // 속도 증가
                 pet1.agent.speed = eventSpeed1 * 1.8f;
@@ -395,7 +395,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 break;
 
             case 2: // 서로 바라보며 교감
-                // Debug.Log($"[{InteractionName}] 서로를 바라보며 교감합니다.");
+                Debug.Log($"[{InteractionName}] 서로를 바라보며 교감합니다.");
                 pet1.agent.isStopped = true;
                 pet2.agent.isStopped = true;
                 
@@ -411,7 +411,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 break;
 
             case 3: // 한 펫이 앞서가기
-                // Debug.Log($"[{InteractionName}] 한 펫이 앞서갑니다.");
+                Debug.Log($"[{InteractionName}] 한 펫이 앞서갑니다.");
                 PetController leadPet = Random.value > 0.5f ? pet1 : pet2;
                 PetController followPet = leadPet == pet1 ? pet2 : pet1;
                 float leadSpeed = leadPet == pet1 ? eventSpeed1 : eventSpeed2;
@@ -433,7 +433,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 break;
 
             case 4: // 동시에 점프
-                // Debug.Log($"[{InteractionName}] 함께 점프합니다!");
+                Debug.Log($"[{InteractionName}] 함께 점프합니다!");
                 // 잠시 멈추고
                 pet1.agent.isStopped = true;
                 pet2.agent.isStopped = true;
@@ -456,7 +456,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 break;
 
             case 5: // 간단한 교차 걷기
-                // Debug.Log($"[{InteractionName}] 위치를 교차하며 걷습니다.");
+                Debug.Log($"[{InteractionName}] 위치를 교차하며 걷습니다.");
                 
                 // 현재 목적지 저장
                 Vector3 pet1Dest = pet1.agent.destination;

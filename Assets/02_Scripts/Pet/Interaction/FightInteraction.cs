@@ -111,7 +111,7 @@ public class FightInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 싸움 시작!");
+        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 싸움 시작!");
 
         // NavMeshAgent 준비 확인
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
@@ -147,12 +147,12 @@ public class FightInteraction : BasePetInteraction
             // 4. 결과 표현 단계
             yield return StartCoroutine(ShowResultPhase(winner, loser));
 
-            // Debug.Log($"[{InteractionName}] 싸움 종료! 승자: {winner.petName}");
+            Debug.Log($"[{InteractionName}] 싸움 종료! 승자: {winner.petName}");
         }
         finally
         {
             // 최종 정리
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
 
             // 원래 상태 복원
             pet1State.Restore(pet1);
@@ -164,7 +164,7 @@ public class FightInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(pet1, pet2);
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -173,7 +173,7 @@ public class FightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PrepareFightPhase(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] 1단계: 싸움 준비");
+        Debug.Log($"[{InteractionName}] 1단계: 싸움 준비");
 
         // 싸움 위치 계산
         Vector3 fightSpot = FindInteractionSpot(pet1, pet2);
@@ -211,14 +211,14 @@ public class FightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator FightPhase(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] 2단계: 싸움 진행");
+        Debug.Log($"[{InteractionName}] 2단계: 싸움 진행");
 
         var pet1Anim = pet1.GetComponent<PetAnimationController>();
         var pet2Anim = pet2.GetComponent<PetAnimationController>();
 
         for (int round = 0; round < fightRounds; round++)
         {
-            // Debug.Log($"[{InteractionName}] 라운드 {round + 1}/{fightRounds}");
+            Debug.Log($"[{InteractionName}] 라운드 {round + 1}/{fightRounds}");
 
             // 번갈아가며 공격
             if (round % 2 == 0)
@@ -279,7 +279,7 @@ public class FightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator ShowResultPhase(PetController winner, PetController loser)
     {
-        // Debug.Log($"[{InteractionName}] 3단계: 결과 발표");
+        Debug.Log($"[{InteractionName}] 3단계: 결과 발표");
 
         // 감정 변경
         winner.ShowEmotion(EmotionType.Victory, postFightEmotionDuration);
@@ -375,7 +375,7 @@ public class FightInteraction : BasePetInteraction
         // 기본 거리에 평균 배율 적용
         float adjustedDistance = fightDistance * averageMultiplier;
         
-        // Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
+        Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
         
         return adjustedDistance;
     }

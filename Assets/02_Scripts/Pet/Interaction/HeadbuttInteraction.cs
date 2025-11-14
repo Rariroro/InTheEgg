@@ -140,7 +140,7 @@ public class HeadbuttInteraction : BasePetInteraction
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         HeadbuttPair pairType = GetPairType(pet1, pet2);
-        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 박치기 상호작용 시작! (타입: {pairType})");
+        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 박치기 상호작용 시작! (타입: {pairType})");
         
         // 역할 식별
         PetController firstPet, secondPet;
@@ -170,7 +170,7 @@ public class HeadbuttInteraction : BasePetInteraction
         }
         finally
         {
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
             
             // 감정 숨기기
             firstPet.HideEmotion();
@@ -182,7 +182,7 @@ public class HeadbuttInteraction : BasePetInteraction
             
             // 상호작용 종료
             EndInteraction(firstPet, secondPet);
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
     
@@ -193,7 +193,7 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator PreparePhase(PetController firstPet, PetController secondPet, HeadbuttPair pairType)
     {
-        // Debug.Log($"[{InteractionName}] 1단계: 박치기 준비");
+        Debug.Log($"[{InteractionName}] 1단계: 박치기 준비");
         
         // 감정 표현
         firstPet.ShowEmotion(EmotionType.Angry, 30f);
@@ -231,13 +231,13 @@ public class HeadbuttInteraction : BasePetInteraction
     private IEnumerator HeadbuttBattlePhase(PetController firstPet, PetController secondPet, HeadbuttPair pairType,
         PetOriginalState firstPetState, PetOriginalState secondPetState)
     {
-        // Debug.Log($"[{InteractionName}] 2단계: 박치기 전투");
+        Debug.Log($"[{InteractionName}] 2단계: 박치기 전투");
         
         int headbuttCount = GetHeadbuttCount(pairType);
         
         for (int i = 0; i < headbuttCount; i++)
         {
-            // Debug.Log($"[{InteractionName}] {i+1}번째 박치기 시작");
+            Debug.Log($"[{InteractionName}] {i+1}번째 박치기 시작");
             
             // 뒤로 물러나기
             yield return StartCoroutine(BackupForCharge(firstPet, secondPet, pairType));
@@ -264,13 +264,13 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator DetermineWinnerPhase(PetController firstPet, PetController secondPet, HeadbuttPair pairType)
     {
-        // Debug.Log($"[{InteractionName}] 3단계: 승자 결정");
+        Debug.Log($"[{InteractionName}] 3단계: 승자 결정");
         
         float winProbability = GetWinProbability(pairType, firstPet);
         PetController winner = DetermineWinner(firstPet, secondPet, winProbability);
         PetController loser = winner == firstPet ? secondPet : firstPet;
         
-        // Debug.Log($"[{InteractionName}] 승자: {winner.petName}!");
+        Debug.Log($"[{InteractionName}] 승자: {winner.petName}!");
         
         // 감정 표현
         winner.ShowEmotion(EmotionType.Victory, 5f);
@@ -486,7 +486,7 @@ public class HeadbuttInteraction : BasePetInteraction
             // 설정된 시간 후 제거
             Destroy(effect, effectDuration);
             
-            // Debug.Log($"[{InteractionName}] 충돌 효과 {i + 1}/{effectRepeatCount} 생성!");
+            Debug.Log($"[{InteractionName}] 충돌 효과 {i + 1}/{effectRepeatCount} 생성!");
             
             // 마지막 효과가 아니면 대기
             if (i < effectRepeatCount - 1)
@@ -555,7 +555,7 @@ public class HeadbuttInteraction : BasePetInteraction
                 true,  // loop
                 false  // stopPrevious
             ));
-            // Debug.Log($"[{InteractionName}] {pet.petName} 뒤로 걷기 애니메이션 시작");
+            Debug.Log($"[{InteractionName}] {pet.petName} 뒤로 걷기 애니메이션 시작");
         }
         
         while (elapsedTime < duration)
@@ -653,7 +653,7 @@ public class HeadbuttInteraction : BasePetInteraction
         bool collision = false;
         // 목표 거리를 더 정확하게 계산 (두 펫이 멈출 위치 사이의 거리)
         float targetDistance = Vector3.Distance(firstPetTarget, secondPetTarget);
-        // Debug.Log($"[{InteractionName}] 충돌 감지 시작. 목표 거리: {targetDistance}, 충돌 감지 거리: {collisionDist}");
+        Debug.Log($"[{InteractionName}] 충돌 감지 시작. 목표 거리: {targetDistance}, 충돌 감지 거리: {collisionDist}");
         
         while (Time.time - startTime < chargeTimeout && !collision)
         {
@@ -663,7 +663,7 @@ public class HeadbuttInteraction : BasePetInteraction
             if (petDistance <= targetDistance)
             {
                 collision = true;
-                // Debug.Log($"[{InteractionName}] 충돌 발생! 펫 간 거리: {petDistance:F2}");
+                Debug.Log($"[{InteractionName}] 충돌 발생! 펫 간 거리: {petDistance:F2}");
             }
             
             yield return null;
@@ -683,7 +683,7 @@ public class HeadbuttInteraction : BasePetInteraction
             {
                 Debug.LogWarning($"[{InteractionName}] 충돌이 감지되지 않았지만 효과는 생성됩니다.");
                 float currentDistance = Vector3.Distance(firstPet.transform.position, secondPet.transform.position);
-                // Debug.Log($"[{InteractionName}] 현재 펫 간 거리: {currentDistance}, 목표 거리: {targetDistance}");
+                Debug.Log($"[{InteractionName}] 현재 펫 간 거리: {currentDistance}, 목표 거리: {targetDistance}");
             }
         }
         else

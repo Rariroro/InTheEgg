@@ -72,7 +72,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     // 메인 상호작용 수행
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[ChameleonCamouflage] {pet1.petName}와(과) {pet2.petName}의 위장 상호작용 시작!");
+        Debug.Log($"[ChameleonCamouflage] {pet1.petName}와(과) {pet2.petName}의 위장 상호작용 시작!");
 
         // 필수 머티리얼 체크
         if (transparentMaterial == null)
@@ -124,7 +124,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
             // 5. 카멜레온 안심 및 재등장 단계
             yield return StartCoroutine(ImprovedReappearPhase(chameleon, originalMaterials));
 
-            // Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위기를 모면했습니다!");
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위기를 모면했습니다!");
             
             // 성공 감정 표현
             chameleon.ShowEmotion(EmotionType.Happy, 5f);
@@ -133,7 +133,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
         finally
         {
             // 최종 정리
-            // Debug.Log("[ChameleonCamouflage] 상호작용 정리 시작.");
+            Debug.Log("[ChameleonCamouflage] 상호작용 정리 시작.");
 
             // 머티리얼 복원 (안전장치)
             if (originalMaterials != null)
@@ -147,14 +147,14 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(chameleon, predator);
-            // Debug.Log("[ChameleonCamouflage] 상호작용 정리 완료.");
+            Debug.Log("[ChameleonCamouflage] 상호작용 정리 완료.");
         }
     }
 
     // 개선된 접근 단계 - 더 자연스러운 추적
     private IEnumerator ImprovedApproachPhase(PetController predator, PetController chameleon)
     {
-        // Debug.Log($"[ChameleonCamouflage] 1단계: {predator.petName}이(가) {chameleon.petName}을(를) 추적합니다.");
+        Debug.Log($"[ChameleonCamouflage] 1단계: {predator.petName}이(가) {chameleon.petName}을(를) 추적합니다.");
          // ======================= [수정 코드 시작] =======================
         // 상호작용 시작 전 멈춰있던 NavMeshAgent의 이동을 다시 재개시킵니다.
         if (predator.agent != null && predator.agent.enabled)
@@ -216,13 +216,13 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
         chameleon.agent.isStopped = true;
         chameleon.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
         
-        // Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위협을 감지했습니다!");
+        Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 위협을 감지했습니다!");
     }
 
     // 개선된 위장 및 혼란 단계
     private IEnumerator ImprovedHideAndConfusePhase(PetController chameleon, PetController predator, Dictionary<Renderer, Material[]> originalMaterials)
     {
-        // Debug.Log($"[ChameleonCamouflage] 2단계: {chameleon.petName}이(가) 위장하고 {predator.petName}은(는) 혼란에 빠집니다.");
+        Debug.Log($"[ChameleonCamouflage] 2단계: {chameleon.petName}이(가) 위장하고 {predator.petName}은(는) 혼란에 빠집니다.");
 
         // 포식자 정지
         predator.agent.isStopped = true;
@@ -245,7 +245,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     // 포식자의 수색 행동
 private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastSeenPosition)
 {
-    // Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 주변을 수색합니다.");
+    Debug.Log($"[ChameleonCamouflage] {predator.petName}이(가) 주변을 수색합니다.");
     
     var predatorAnim = predator.GetComponent<PetAnimationController>();
     
@@ -332,7 +332,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
     // 개선된 떠나기 단계
     private IEnumerator ImprovedLeavePhase(PetController predator, PetController chameleon)
     {
-        // Debug.Log($"[ChameleonCamouflage] 3단계: {predator.petName}이(가) 포기하고 떠납니다.");
+        Debug.Log($"[ChameleonCamouflage] 3단계: {predator.petName}이(가) 포기하고 떠납니다.");
         
         yield return new WaitForSeconds(predatorGiveUpDelay);
 
@@ -384,7 +384,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
     // 개선된 재등장 단계
     private IEnumerator ImprovedReappearPhase(PetController chameleon, Dictionary<Renderer, Material[]> originalMaterials)
     {
-        // Debug.Log($"[ChameleonCamouflage] 4단계: {chameleon.petName}이(가) 안전함을 느끼고 재등장합니다.");
+        Debug.Log($"[ChameleonCamouflage] 4단계: {chameleon.petName}이(가) 안전함을 느끼고 재등장합니다.");
         
         // 주변을 살피는 동작
         var chameleonAnim = chameleon.GetComponent<PetAnimationController>();
@@ -429,7 +429,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
         if (fadeOut)
         {
             // 투명화 시작
-            // Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 투명해집니다.");
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 투명해집니다.");
             
             // 페이드 아웃 효과 (선택사항 - 바로 투명 머티리얼로 교체해도 됨)
             foreach (var renderer in renderers)
@@ -447,7 +447,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
         else
         {
             // 원래 모습으로 복원
-            // Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 나타납니다.");
+            Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 나타납니다.");
             RestoreChameleonMaterials(chameleon, originalMaterials);
         }
     }

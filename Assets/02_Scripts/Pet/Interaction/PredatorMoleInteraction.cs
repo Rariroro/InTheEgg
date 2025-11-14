@@ -80,7 +80,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 메인 상호작용 수행
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[PredatorMoleHunt] {pet1.petName}와(과) {pet2.petName}의 포식자-두더지 상호작용 시작!");
+        Debug.Log($"[PredatorMoleHunt] {pet1.petName}와(과) {pet2.petName}의 포식자-두더지 상호작용 시작!");
 
         // 역할 식별
         PetController mole = (pet1.PetType == PetType.Mole) ? pet1 : pet2;
@@ -130,7 +130,7 @@ public class PredatorMoleInteraction : BasePetInteraction
             // 6. 두더지 재등장 단계
             yield return StartCoroutine(MoleEmergePhase(mole, moleBurrowPosition));
 
-            // Debug.Log($"[PredatorMoleHunt] {mole.petName}이(가) 위기를 모면했습니다!");
+            Debug.Log($"[PredatorMoleHunt] {mole.petName}이(가) 위기를 모면했습니다!");
 
             // 성공 감정 표현
             // mole.ShowEmotion(EmotionType.Happy, 5f);
@@ -139,7 +139,7 @@ public class PredatorMoleInteraction : BasePetInteraction
         finally
         {
             // 최종 정리
-            // Debug.Log("[PredatorMoleHunt] 상호작용 정리 시작.");
+            Debug.Log("[PredatorMoleHunt] 상호작용 정리 시작.");
 
             // 두더지가 여전히 숨어있다면 원래 위치로 복원
             if (_moleIsHidden && mole.agent != null)
@@ -158,14 +158,14 @@ public class PredatorMoleInteraction : BasePetInteraction
 
             // 공통 종료 처리
             EndInteraction(predator, mole);
-            // Debug.Log("[PredatorMoleHunt] 상호작용 정리 완룼.");
+            Debug.Log("[PredatorMoleHunt] 상호작용 정리 완룼.");
         }
     }
 
     // 1. 추격 단계
     private IEnumerator ChasePhase(PetController predator, PetController mole)
     {
-        // Debug.Log($"[PredatorMoleHunt] 1단계: {predator.petName}이(가) {mole.petName}을(를) 추격합니다.");
+        Debug.Log($"[PredatorMoleHunt] 1단계: {predator.petName}이(가) {mole.petName}을(를) 추격합니다.");
 
         // NavMeshAgent 활성화
         if (predator.agent != null) predator.agent.isStopped = false;
@@ -206,7 +206,7 @@ public class PredatorMoleInteraction : BasePetInteraction
             if (distance < catchDistance)
             {
                 caught = true;
-                // Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) {mole.petName}에게 접근했습니다!");
+                Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) {mole.petName}에게 접근했습니다!");
             }
 
             // 회전 처리
@@ -220,7 +220,7 @@ public class PredatorMoleInteraction : BasePetInteraction
         // 시간 초과 시 강제 접근
         if (!caught)
         {
-            // Debug.Log("[PredatorMoleHunt] 추격 시간 초과. 공격 단계로 진행합니다.");
+            Debug.Log("[PredatorMoleHunt] 추격 시간 초과. 공격 단계로 진행합니다.");
             Vector3 teleportPos = predator.transform.position + predator.transform.forward * 2.5f;
             teleportPos = FindValidPositionOnNavMesh(teleportPos, 3f);
             mole.agent.Warp(teleportPos);
@@ -235,7 +235,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 수정 후 AttackPhase
     private IEnumerator AttackPhase(PetController predator, PetController mole)
     {
-        // Debug.Log($"[PredatorMoleHunt] 2단계: {predator.petName}이(가) {mole.petName}을(를) 공격합니다!");
+        Debug.Log($"[PredatorMoleHunt] 2단계: {predator.petName}이(가) {mole.petName}을(를) 공격합니다!");
 
         // 달리기 애니메이션 정지
         predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
@@ -288,7 +288,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 3. 두더지 숨기 단계
     private IEnumerator BurrowPhase(PetController mole)
     {
-        // Debug.Log($"[PredatorMoleHunt] 3단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
+        Debug.Log($"[PredatorMoleHunt] 3단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
 
         Vector3 burrowPosition = mole.transform.position;
         StartCoroutine(SpawnBurrowParticles(burrowPosition));
@@ -320,7 +320,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 4. 포식자 땅파기 단계 (수정된 버전)
     private IEnumerator PredatorDigPhase(PetController predator, Vector3 burrowPosition)
     {
-        // Debug.Log($"[PredatorMoleHunt] 4단계: {predator.petName}이(가) 두더지를 찾기 시작합니다.");
+        Debug.Log($"[PredatorMoleHunt] 4단계: {predator.petName}이(가) 두더지를 찾기 시작합니다.");
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -368,7 +368,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 냄새 맡기 동작
     private IEnumerator SniffAroundPhase(PetController predator, Vector3 centerPosition)
     {
-        // Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 냄새를 맡으며 추적합니다.");
+        Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 냄새를 맡으며 추적합니다.");
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -414,7 +414,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 여러 위치 탐색
     private IEnumerator SearchMultipleLocations(PetController predator, Vector3 burrowPosition)
     {
-        // Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 주변 여러 곳을 파봅니다.");
+        Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 주변 여러 곳을 파봅니다.");
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -532,7 +532,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 마지막 시도
     private IEnumerator FinalDigAttempt(PetController predator, Vector3 burrowPosition)
     {
-        // Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 마지막으로 원래 구멍을 다시 파봅니다.");
+        Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) 마지막으로 원래 구멍을 다시 파봅니다.");
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -560,7 +560,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 5. 포식자 떠나기 단계
     private IEnumerator PredatorLeavePhase(PetController predator, Vector3 burrowPosition)
     {
-        // Debug.Log($"[PredatorMoleHunt] 5단계: {predator.petName}이(가) 포기하고 떠납니다.");
+        Debug.Log($"[PredatorMoleHunt] 5단계: {predator.petName}이(가) 포기하고 떠납니다.");
 
         // 랜덤 방향으로 이동
         Vector3 randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
@@ -608,7 +608,7 @@ public class PredatorMoleInteraction : BasePetInteraction
     {
         if (!_moleIsHidden) yield break;
 
-        // Debug.Log($"[PredatorMoleHunt] 6단계: {mole.petName}이(가) 땅에서 나옵니다.");
+        Debug.Log($"[PredatorMoleHunt] 6단계: {mole.petName}이(가) 땅에서 나옵니다.");
         StartCoroutine(SpawnBurrowParticles(burrowPosition));
 
         // 원래 위치로 이동

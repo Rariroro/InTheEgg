@@ -52,7 +52,7 @@ public class RideAndWalkInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[RideAndWalk] {pet1.petName}와(과) {pet2.petName}의 타고 걷기 상호작용이 시작됩니다!");
+        Debug.Log($"[RideAndWalk] {pet1.petName}와(과) {pet2.petName}의 타고 걷기 상호작용이 시작됩니다!");
 
         // 역할 식별
         PetController meerkat = (pet1.PetType == PetType.Meerkat) ? pet1 : pet2;
@@ -103,7 +103,7 @@ public class RideAndWalkInteraction : BasePetInteraction
         }
         finally
         {
-            // Debug.Log("[RideAndWalk] 상호작용 정리 시작.");
+            Debug.Log("[RideAndWalk] 상호작용 정리 시작.");
             // ★★★ 수정된 부분 시작 ★★★
             // 부모 관계 복원
             if (meerkat.transform.parent == boar.transform)
@@ -136,7 +136,7 @@ public class RideAndWalkInteraction : BasePetInteraction
 
             // 상호작용 종료
             EndInteraction(meerkat, boar);
-            // Debug.Log("[RideAndWalk] 상호작용 정리 완료.");
+            Debug.Log("[RideAndWalk] 상호작용 정리 완료.");
         }
     }
 
@@ -145,7 +145,7 @@ public class RideAndWalkInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MeetAndPlay(PetController meerkat, PetController boar)
     {
-        // Debug.Log("[RideAndWalk] 1단계: 만나서 놀기");
+        Debug.Log("[RideAndWalk] 1단계: 만나서 놀기");
         // ▼▼▼ [수정] 하드코딩된 지역 변수 대신 인스펙터에서 설정한 meetingDistance 값을 사용합니다. ▼▼▼
         Vector3 meerkatPos, boarPos;
 
@@ -186,7 +186,7 @@ public class RideAndWalkInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MountBoar(PetController meerkat, PetController boar)
     {
-        // Debug.Log($"[RideAndWalk] 2단계: {meerkat.petName}이(가) {boar.petName}의 등에 올라탑니다.");
+        Debug.Log($"[RideAndWalk] 2단계: {meerkat.petName}이(가) {boar.petName}의 등에 올라탑니다.");
 
         // ★★★ 추가: 미어캣의 회피 우선순위를 낮춰서 멧돼지를 가로막지 않도록 ★★★
         if (IsAgentSafelyReady(meerkat))
@@ -225,7 +225,7 @@ public class RideAndWalkInteraction : BasePetInteraction
 /// </summary>
 private IEnumerator WalkTogether(PetController meerkat, PetController boar)
 {
-    // Debug.Log($"[RideAndWalk] 3단계: 함께 산책하기");
+    Debug.Log($"[RideAndWalk] 3단계: 함께 산책하기");
 
     if (!IsAgentSafelyReady(boar))
     {
@@ -263,7 +263,7 @@ private IEnumerator WalkTogether(PetController meerkat, PetController boar)
 
             boar.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, 30f));
             boar.agent.isStopped = false;
-            // Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {boar.agent.destination}");
+            Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {boar.agent.destination}");
         }
 
         // ▼▼▼ [수정] 미어캣이 등 위에서 더 다양한 행동을 하도록 로직 개선 ▼▼▼
@@ -337,7 +337,7 @@ private bool IsPetPlayingRidingAnimation(PetController meerkat)
     /// </summary>
     private IEnumerator DismountBoar(PetController meerkat, PetController boar)
     {
-        // Debug.Log($"[RideAndWalk] 4단계: {meerkat.petName}이(가) 등에서 내립니다.");
+        Debug.Log($"[RideAndWalk] 4단계: {meerkat.petName}이(가) 등에서 내립니다.");
 
         // 멧돼지가 멈춰서 앉아줍니다
         if (IsAgentSafelyReady(boar))
@@ -382,7 +382,7 @@ private bool IsPetPlayingRidingAnimation(PetController meerkat)
     /// </summary>
     private IEnumerator SayFarewell(PetController meerkat, PetController boar)
     {
-        // Debug.Log("[RideAndWalk] 5단계: 작별 인사하기");
+        Debug.Log("[RideAndWalk] 5단계: 작별 인사하기");
 
         // ▼▼▼ [수정] Dismount 단계에서 거리를 확보했으므로, 여기서는 서로 부드럽게 마주보기만 하면 됩니다. ▼▼▼
         if (IsAgentSafelyReady(meerkat) && IsAgentSafelyReady(boar))

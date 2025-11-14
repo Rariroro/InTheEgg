@@ -66,7 +66,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[SlothKoalaRace] {pet1.petName}와(과) {pet2.petName}의 세상에서 가장 느린 달리기 시합이 시작됩니다!");
+        Debug.Log($"[SlothKoalaRace] {pet1.petName}와(과) {pet2.petName}의 세상에서 가장 느린 달리기 시합이 시작됩니다!");
 
         PetController sloth = (pet1.PetType == PetType.Sloth) ? pet1 : pet2;
         PetController koala = (pet1.PetType == PetType.Koala) ? pet1 : pet2;
@@ -163,7 +163,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             yield return new WaitForSeconds(2.0f);
 
             // ... 이하 경주 진행 로직은 기존과 동일 ...
-            // Debug.Log("[SlothKoalaRace] 경주 시작!");
+            Debug.Log("[SlothKoalaRace] 경주 시작!");
             sloth.agent.speed = slothState.originalSpeed * slothSpeedMultiplier;
             koala.agent.speed = koalaState.originalSpeed * koalaSpeedMultiplier;
             sloth.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -205,7 +205,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                         
                         // 사라지는 애니메이션 시작
                         StartCoroutine(DisappearFinishMarker(finishMarkerInstance));
-                        // Debug.Log("[SlothKoalaRace] 주자가 결승선에 근접하여 마커가 사라지기 시작합니다.");
+                        Debug.Log("[SlothKoalaRace] 주자가 결승선에 근접하여 마커가 사라지기 시작합니다.");
                     }
                 }
                 // ▲▲▲ [여기까지 추가] ▲▲▲
@@ -214,7 +214,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 if (!boredomPhase1Triggered && spectatorBoredomTimer > boredomTimePhase1)
                 {
                     boredomPhase1Triggered = true;
-                    // Debug.Log("[SlothKoalaRace] 관중들이 지루해하기 시작합니다...");
+                    Debug.Log("[SlothKoalaRace] 관중들이 지루해하기 시작합니다...");
                     foreach (var spec in spectators)
                     {
                         spec.ShowEmotion(EmotionType.Confused, raceTimeoutSeconds);
@@ -225,7 +225,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 if (!boredomPhase2Triggered && spectatorBoredomTimer > boredomTimePhase2)
                 {
                     boredomPhase2Triggered = true;
-                    // Debug.Log("[SlothKoalaRace] 관중들이 완전히 지루해져서 잠들어버립니다...");
+                    Debug.Log("[SlothKoalaRace] 관중들이 완전히 지루해져서 잠들어버립니다...");
                     foreach (var spec in spectators)
                     {
                         spec.ShowEmotion(EmotionType.Sleepy, raceTimeoutSeconds);
@@ -242,7 +242,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                     PetController winner = slothArrived ? sloth : koala;
                     PetController loser = (winner == sloth) ? koala : sloth;
                     
-                    // Debug.Log($"[SlothKoalaRace] 경주 결과: {winner.petName}의 아슬아슬한 승리!");
+                    Debug.Log($"[SlothKoalaRace] 경주 결과: {winner.petName}의 아슬아슬한 승리!");
 
                     winner.ShowEmotion(EmotionType.Victory, 10f);
                     loser.ShowEmotion(EmotionType.Defeat, 10f);
@@ -283,7 +283,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
         }
         finally
         {
-            // Debug.Log("[SlothKoalaRace] 상호작용 정리 시작.");
+            Debug.Log("[SlothKoalaRace] 상호작용 정리 시작.");
             if (finishMarkerInstance != null)
             {
                 Destroy(finishMarkerInstance);
@@ -292,7 +292,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             koalaState.Restore(koala);
             RestoreSpectators(spectators, spectatorStates);
             EndInteraction(sloth, koala);
-            // Debug.Log("[SlothKoalaRace] 상호작용 정리 완료.");
+            Debug.Log("[SlothKoalaRace] 상호작용 정리 완료.");
         }
     }
 // Pet.zip/Interaction/SlothKoalaRaceInteraction.cs
@@ -312,7 +312,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             yield break;
         }
 
-        // Debug.Log("[SlothKoalaRace] 관중들이 응원 위치로 달려갑니다!");
+        Debug.Log("[SlothKoalaRace] 관중들이 응원 위치로 달려갑니다!");
 
         Vector3 raceDirection = (finishLine - startPos).normalized;
         Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
@@ -399,7 +399,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
             yield return null;
         }
         
-        // Debug.Log("[SlothKoalaRace] 모든 관중이 응원 위치에 도착했습니다.");
+        Debug.Log("[SlothKoalaRace] 모든 관중이 응원 위치에 도착했습니다.");
     }
     
     /// <summary>
@@ -508,7 +508,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 // ★ [Phase 4] PetState를 통한 상태 업데이트
                 potentialSpectator.State.StartInteraction(null); // 관중은 특정 파트너가 없음
                 
-                // Debug.Log($"[SlothKoalaRace] {potentialSpectator.petName}을(를) 관중으로 모집!");
+                Debug.Log($"[SlothKoalaRace] {potentialSpectator.petName}을(를) 관중으로 모집!");
 
                 if (spectators.Count >= maxSpectators) break;
             }
@@ -557,7 +557,7 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
                 spec.State.EndInteraction();
                 spec.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
                 spec.GetComponent<PetMovementController>()?.DecideNextBehavior();
-                // Debug.Log($"[SlothKoalaRace] 관중 {spec.petName}의 상태를 복원했습니다.");
+                Debug.Log($"[SlothKoalaRace] 관중 {spec.petName}의 상태를 복원했습니다.");
             }
         }
     }

@@ -76,7 +76,8 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
-        // Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 침/물 뿜기 대결 시작!");
+        string combinationType = GetCombinationTypeName(pet1, pet2);
+        Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 {combinationType} 대결 시작!");
 
         // 역할 식별
         PetController fighter1 = pet1;
@@ -107,9 +108,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         finally
         {
             // 상호작용이 어떤 이유로든 종료될 때 항상 정리 작업을 수행합니다.
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
             EndInteraction(fighter1, fighter2);
-            // Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -120,7 +121,8 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator MeetAndConfrontPhase(PetController fighter1, PetController fighter2)
     {
-        // Debug.Log($"[{InteractionName}] 1단계: 대치");
+        string combinationType = GetCombinationTypeName(fighter1, fighter2);
+        Debug.Log($"[{InteractionName}] 1단계: {combinationType} 대치");
 
         // 감정 표현 (화난 표정)
         fighter1.ShowEmotion(EmotionType.Angry, 30f);
@@ -131,17 +133,27 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         if (direction == Vector3.zero) direction = fighter1.transform.forward;
         Vector3 midpoint = (fighter1.transform.position + fighter2.transform.position) / 2f;
 
-        Vector3 fighter1TargetPos = midpoint - direction * (fightDistance / 2f);
-        Vector3 fighter2TargetPos = midpoint + direction * (fightDistance / 2f);
+        // 펫 크기에 따라 적절한 거리 계산
+        float adjustedDistance = CalculateFightDistance(fighter1, fighter2);
+
+        Vector3 fighter1TargetPos = midpoint - direction * (adjustedDistance / 2f);
+        Vector3 fighter2TargetPos = midpoint + direction * (adjustedDistance / 2f);
 
         // 계산된 위치로 이동
         yield return StartCoroutine(MoveToPositions(fighter1, fighter2, fighter1TargetPos, fighter2TargetPos, 10f));
 
-        // 서로 부드럽게 마주보게 회전
-        yield return StartCoroutine(SmoothlyLookAtEachOther(fighter1, fighter2, 0.5f));
+        // 이동 완료 후 Agent 정지 (위치 고정)
+        if (fighter1.agent != null) fighter1.agent.isStopped = true;
+        if (fighter2.agent != null) fighter2.agent.isStopped = true;
 
-        // 긴장감 조성을 위한 잠시 대기
-        yield return new WaitForSeconds(1.0f);
+        // 서로 부드럽게 마주보게 회전 (충분한 시간 확보)
+        yield return StartCoroutine(SmoothlyLookAtEachOther(fighter1, fighter2, 1.5f));
+
+        // 정확히 마주보는지 재확인 및 보정
+        yield return StartCoroutine(EnsureFacingEachOther(fighter1, fighter2));
+
+        // 긴장감 조성을 위한 대치 시간
+        yield return new WaitForSeconds(2.0f);
     }
 
 
@@ -150,14 +162,17 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator SpitExchangePhase(PetController fighter1, PetController fighter2)
     {
-        // Debug.Log($"[{InteractionName}] 2단계: 침/물 뿜기 공방");
+        string combinationType = GetCombinationTypeName(fighter1, fighter2);
+        Debug.Log($"[{InteractionName}] 2단계: {combinationType} 공방");
 
         for (int i = 0; i < spitRounds; i++)
         {
             PetController attacker = (i % 2 == 0) ? fighter1 : fighter2;
             PetController target = (attacker == fighter1) ? fighter2 : fighter1;
 
-            // Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 공격!");
+            bool isCamelAlpaca = (fighter1.PetType == PetType.Camel || fighter1.PetType == PetType.Alpaca);
+            string attackType = isCamelAlpaca ? "침 발사" : "물 발사";
+            Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 {attackType}!");
 
             yield return StartCoroutine(attacker.GetComponent<PetAnimationController>()
                 .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, attackAnimationDuration, true, false));
@@ -169,14 +184,14 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 
             if (Random.value < dodgeChance)
             {
-                // Debug.Log($"[{InteractionName}] {target.petName}이(가) 공격을 회피했습니다!");
+                Debug.Log($"[{InteractionName}] {target.petName}이(가) {attackType}을(를) 회피했습니다!");
                 target.ShowEmotion(EmotionType.Happy, 2f);
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, dodgeAnimationDuration, true, false));
             }
             else
             {
-                // Debug.Log($"[{InteractionName}] {target.petName}이(가) 침/물에 맞았습니다!");
+                Debug.Log($"[{InteractionName}] {target.petName}이(가) {attackType}에 맞았습니다!");
                 // 피격 효과 생성은 SpitEffectCoroutine이 담당
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, damageAnimationDuration, true, false));
@@ -191,7 +206,8 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator DetermineWinnerPhase(PetController fighter1, PetController fighter2)
     {
-        // Debug.Log($"[{InteractionName}] 3단계: 승패 결정");
+        string combinationType = GetCombinationTypeName(fighter1, fighter2);
+        Debug.Log($"[{InteractionName}] 3단계: {combinationType} 승패 결정");
 
         // 랜덤으로 승자 결정
         PetController winner = DetermineWinner(fighter1, fighter2, 0.5f);
@@ -211,7 +227,75 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 
     #region Helper Coroutines & Methods
 
-      /// <summary>
+    /// <summary>
+    /// 현재 조합이 어떤 타입인지 식별하여 디버그 메시지용 문자열을 반환합니다.
+    /// </summary>
+    private string GetCombinationTypeName(PetController pet1, PetController pet2)
+    {
+        bool isCamelAlpaca = (pet1.PetType == PetType.Camel && pet2.PetType == PetType.Alpaca) ||
+                            (pet1.PetType == PetType.Alpaca && pet2.PetType == PetType.Camel);
+        return isCamelAlpaca ? "낙타-알파카 침 뱉기" : "코끼리-하마 물 뿜기";
+    }
+
+    /// <summary>
+    /// 두 펫이 정확히 마주보고 있는지 확인하고 필요시 보정합니다.
+    /// </summary>
+    private IEnumerator EnsureFacingEachOther(PetController fighter1, PetController fighter2)
+    {
+        const float ANGLE_THRESHOLD = 10f; // 허용 오차 10도
+
+        // 서로를 향하는 방향 계산
+        Vector3 dir1to2 = (fighter2.transform.position - fighter1.transform.position).normalized;
+        Vector3 dir2to1 = (fighter1.transform.position - fighter2.transform.position).normalized;
+
+        // 현재 각도 오차 확인
+        float angle1 = Vector3.Angle(fighter1.transform.forward, dir1to2);
+        float angle2 = Vector3.Angle(fighter2.transform.forward, dir2to1);
+
+        // 오차가 크면 추가 보정
+        if (angle1 > ANGLE_THRESHOLD || angle2 > ANGLE_THRESHOLD)
+        {
+            string combinationType = GetCombinationTypeName(fighter1, fighter2);
+            Debug.Log($"[{InteractionName}] {combinationType} 각도 보정 필요 ({fighter1.petName}: {angle1:F1}°, {fighter2.petName}: {angle2:F1}°)");
+            yield return StartCoroutine(SmoothlyLookAtEachOther(fighter1, fighter2, 0.5f));
+        }
+    }
+
+    /// <summary>
+    /// 두 펫의 크기에 따라 적절한 대결 거리를 계산합니다.
+    /// </summary>
+    private float CalculateFightDistance(PetController pet1, PetController pet2)
+    {
+        // 두 펫의 Collider radius 합산 기반 거리 계산
+        float radius1 = GetPetRadius(pet1);
+        float radius2 = GetPetRadius(pet2);
+
+        // 기본 거리 + (반지름 합 * 배율)
+        // 예: Camel(1.5) + Alpaca(1.5) = 3 * 1.5 = 4.5 → 7 + 4.5 = 11.5f
+        // 예: Elephant(4) + Hippo(4) = 8 * 1.5 = 12 → 7 + 12 = 19f
+        float baseFightDistance = 7f;
+        float sizeMultiplier = 1.5f;
+
+        return baseFightDistance + (radius1 + radius2) * sizeMultiplier;
+    }
+
+    /// <summary>
+    /// 펫의 Collider radius를 반환합니다.
+    /// </summary>
+    private float GetPetRadius(PetController pet)
+    {
+        if (pet == null) return 1f;
+
+        var capsuleCollider = pet.GetComponent<CapsuleCollider>();
+        if (capsuleCollider != null) return capsuleCollider.radius;
+
+        var sphereCollider = pet.GetComponent<SphereCollider>();
+        if (sphereCollider != null) return sphereCollider.radius;
+
+        return 1f; // 기본값
+    }
+
+    /// <summary>
     /// 침 뱉기 효과 (발사 및 피격)를 순차적으로 재생하는 코루틴입니다.
     /// </summary>
     private IEnumerator SpitEffectCoroutine(PetController attacker, PetController target)
