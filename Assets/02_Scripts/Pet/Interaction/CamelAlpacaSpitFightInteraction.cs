@@ -281,10 +281,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         // 기본 거리 + (반지름 합 * 배율)
         // 예: Camel(1.5) + Alpaca(1.5) = 3 * 1.5 = 4.5 → 7 + 4.5 = 11.5f
         // 예: Elephant(4) + Hippo(4) = 8 * 1.5 = 12 → 7 + 12 = 19f
-        float baseFightDistance = 7f;
         float sizeMultiplier = 1.5f;
 
-        return baseFightDistance + (radius1 + radius2) * sizeMultiplier;
+        return fightDistance + (radius1 + radius2) * sizeMultiplier;
     }
 
     /// <summary>

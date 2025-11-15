@@ -148,7 +148,7 @@ MonoBehaviour:
   spitUpwardOffset: 0
   spitEmissionPrefab: {fileID: 1681250260847346, guid: af4e64f2d3625435082dbf0620d0add0, type: 3}
   spitHitPrefab: {fileID: 0}
-  fightDistance: 10
+  fightDistance: 5
   spitTravelDuration: 0.7
   spitRounds: 3
   dodgeChance: 0.5
@@ -238,18 +238,18 @@ MonoBehaviour:
   raceDistance: 100
   minRaceDistance: 80
   raceTimeoutSeconds: 180
-  rabbitStartSpeedMultiplier: 3.5
-  rabbitNapProgress: 0.446
-  rabbitFinalSprintSpeedMultiplier: 3
-  turtleSpeedMultiplier: 1
-  turtleWakeUpProgress: 0.94
+  fastPetStartSpeedMultiplier: 3.5
+  fastPetNapProgress: 0.4
+  fastPetFinalSprintSpeedMultiplier: 5
+  slowPetSpeedMultiplier: 0.8
+  slowPetWakeUpProgress: 0.94
   agentSafetyTimeout: 3
   finishLineSpread: 5
   stuckDetectionTime: 3
   detourRadius: 8
   arrowDisappearDistance: 5
-  rabbitSlowDownDuration: 0.75
-  rabbitMinSpeedBeforeSleep: 0.5
+  fastPetSlowDownDuration: 1
+  fastPetMinSpeedBeforeSleep: 0.5
 --- !u!114 &4223720624493054833
 MonoBehaviour:
   m_ObjectHideFlags: 0
