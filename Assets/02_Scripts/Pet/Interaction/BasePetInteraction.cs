@@ -15,6 +15,11 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// </summary>
     public virtual bool IsPriorityInteraction => false;
 
+    // 상호작용 중인 펫들 추적 (정리 보장용)
+    private PetController activePet1;
+    private PetController activePet2;
+    private bool isInteractionActive = false;
+
     // ▼▼▼ [수정] 인스펙터에서 상호작용 시작 거리를 조절할 수 있는 변수 추가 ▼▼▼
     [Header("Common Interaction Settings")]
     [Tooltip("상호작용 시작 시 펫들이 유지할 기본 거리입니다.")]
@@ -49,6 +54,11 @@ public abstract class BasePetInteraction : MonoBehaviour
     private IEnumerator InteractionLifecycle(PetController pet1, PetController pet2)
     {
         Debug.Log("InteractionLifecycle");
+
+        // 상호작용 추적 변수 설정
+        activePet1 = pet1;
+        activePet2 = pet2;
+        isInteractionActive = true;
 
         // 1. 사전 준비 단계
         Debug.Log($"[{InteractionName}] 상호작용 준비: {pet1.petName} & {pet2.petName}");
@@ -133,6 +143,68 @@ public abstract class BasePetInteraction : MonoBehaviour
             // 코루틴이 어떤 이유로든 종료될 때(성공, 실패, 중단), 반드시 정리를 수행합니다.
             Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
             EndInteraction(pet1, pet2);
+            isInteractionActive = false;
+            activePet1 = null;
+            activePet2 = null;
+        }
+    }
+
+    /// <summary>
+    /// 컴포넌트 비활성화 시 호출 - 상호작용 강제 종료
+    /// </summary>
+    private void OnDisable()
+    {
+        if (isInteractionActive)
+        {
+            Debug.LogWarning($"[{InteractionName}] OnDisable - 진행 중인 상호작용 강제 종료");
+            ForceCleanupInteraction();
+        }
+    }
+
+    /// <summary>
+    /// 컴포넌트 파괴 시 호출 - 상호작용 강제 종료
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (isInteractionActive)
+        {
+            Debug.LogWarning($"[{InteractionName}] OnDestroy - 진행 중인 상호작용 강제 종료");
+            ForceCleanupInteraction();
+        }
+    }
+
+    /// <summary>
+    /// 상호작용 강제 정리 (OnDisable/OnDestroy용)
+    /// </summary>
+    private void ForceCleanupInteraction()
+    {
+        if (activePet1 != null || activePet2 != null)
+        {
+            // EndInteraction 호출하지 않고 직접 정리
+            if (activePet1 != null && activePet1.State.IsInteracting)
+            {
+                SafeResumePet(activePet1);
+            }
+            if (activePet2 != null && activePet2.State.IsInteracting)
+            {
+                SafeResumePet(activePet2);
+            }
+
+            // 매니저에 알림
+            if (PetInteractionManager.Instance != null)
+            {
+                PetInteractionManager.Instance.NotifyInteractionEnded(activePet1, activePet2);
+            }
+
+            // 토스트 알림 제거
+            if (InteractionNotificationHandler.Instance != null)
+            {
+                InteractionNotificationHandler.NotifyInteractionEnded(activePet1, activePet2);
+            }
+
+            isInteractionActive = false;
+            activePet1 = null;
+            activePet2 = null;
         }
     }
 

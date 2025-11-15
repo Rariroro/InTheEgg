@@ -540,6 +540,15 @@ public class PetInputController : PetControllerBase
     private void ForceStopHolding()
     {
         if (!petController.State.IsHolding) return;  // 들고 있지 않으면 무시
+
+        // ★★★ 진행 중인 상호작용이 있으면 강제 종료 ★★★
+        if (petController.State.IsInteracting && petController.State.InteractionLogic != null)
+        {
+            Debug.Log($"[ForceStopHolding] {petController.petName} - 상호작용 진행 중이므로 StopAllCoroutines 호출");
+            petController.State.InteractionLogic.StopAllCoroutines();
+            // OnDisable이 호출되어 ForceCleanupInteraction이 실행될 것임
+        }
+
         petController.State.UpdateHoldingState(false);  // 홀드 상태 해제
 
 

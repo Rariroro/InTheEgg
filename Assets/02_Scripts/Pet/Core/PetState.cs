@@ -54,7 +54,11 @@ public class PetState
     // 보물찾기 관련
     [SerializeField] private bool isTreasureHuntActive;
     [SerializeField] private Vector3 treasureTargetPosition;
-    
+
+    // 상호작용 타임아웃 감지용
+    private float interactionStartTime;
+    private const float INTERACTION_TIMEOUT = 60f; // 60초 (긴 상호작용 허용)
+
     // 이벤트
     public event Action<PetStatus, PetStatus> OnStatusChanged; // (이전 상태, 새 상태)
     
@@ -298,9 +302,10 @@ public class PetState
         if (TrySetStatus(PetStatus.Interacting))
         {
             interactionPartner = partner;
+            interactionStartTime = Time.time;
         }
     }
-    
+
     /// <summary>
     /// 상호작용 종료
     /// </summary>
@@ -309,7 +314,39 @@ public class PetState
         if (currentStatus == PetStatus.Interacting)
         {
             interactionPartner = null;
+            currentInteractionLogic = null;
             TrySetStatus(PetStatus.Idle);
+        }
+    }
+
+    /// <summary>
+    /// 상호작용 강제 종료 (상태 검증 없이)
+    /// </summary>
+    public void ForceEndInteraction()
+    {
+        if (currentStatus == PetStatus.Interacting)
+        {
+            Debug.LogWarning($"[PetState] ForceEndInteraction - 상호작용 강제 종료");
+            interactionPartner = null;
+            currentInteractionLogic = null;
+            currentStatus = PetStatus.Idle; // TrySetStatus 없이 직접 변경
+        }
+    }
+
+    /// <summary>
+    /// 상호작용 타임아웃 체크 (매 프레임 호출 권장)
+    /// </summary>
+    public void CheckInteractionTimeout()
+    {
+        if (currentStatus == PetStatus.Interacting)
+        {
+            if (Time.time - interactionStartTime > INTERACTION_TIMEOUT)
+            {
+                #if UNITY_EDITOR
+                Debug.LogWarning($"[PetState] 상호작용이 {INTERACTION_TIMEOUT}초 경과하여 안전하게 종료합니다. (개발 모드 안전장치)");
+                #endif
+                ForceEndInteraction();
+            }
         }
     }
     

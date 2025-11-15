@@ -186,6 +186,9 @@ public partial class PetController : MonoBehaviour
     private void Update()
     {
         petNeeds?.UpdateNeeds();
+
+        // 상호작용 타임아웃 체크
+        petState?.CheckInteractionTimeout();
     }
     [System.Obsolete("Use State.StartInteraction() directly")]
     public void BeginInteraction(PetController partner, BasePetInteraction interactionLogic)
@@ -363,6 +366,82 @@ public partial class PetController : MonoBehaviour
     public void ShowEmotion(EmotionType emotion, float duration = 10f) => emotionController?.ShowEmotion(emotion, duration);
     public void HideEmotion() => emotionController?.HideEmotion();
     public void AdjustSpeedForWater() => waterBehaviorController?.AdjustSpeedForWater();
+
+    /// <summary>
+    /// 긴급 상황 시 펫 상태 강제 복구
+    /// </summary>
+    public void ForceResetState()
+    {
+        Debug.LogWarning($"[PetController] {petName} - ForceResetState 호출");
+
+        // 1. 진행 중인 상호작용 강제 종료
+        if (petState.IsInteracting)
+        {
+            petState.ForceEndInteraction();
+
+            if (petState.InteractionLogic != null)
+            {
+                petState.InteractionLogic.StopAllCoroutines();
+            }
+        }
+
+        // 2. 상태 초기화
+        petState.ForceIdle();
+
+        // 3. 감정 숨기기
+        HideEmotion();
+
+        // 4. 애니메이션 정리
+        if (animationController != null)
+        {
+            animationController.StopAllCoroutines();
+            animationController.StopContinuousAnimation();
+            animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+
+        // 5. NavMeshAgent 강제 복구
+        if (agent != null)
+        {
+            // 비활성화되었다면 활성화
+            if (!agent.enabled)
+            {
+                agent.enabled = true;
+            }
+
+            // NavMesh 위에 없다면 위치 보정
+            if (agent.enabled && !agent.isOnNavMesh)
+            {
+                NavMeshHit navHit;
+                if (NavMesh.SamplePosition(transform.position, out navHit, 10f, NavMesh.AllAreas))
+                {
+                    agent.Warp(navHit.position);
+                }
+            }
+
+            // Agent 상태 초기화
+            if (agent.enabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.ResetPath();
+                agent.speed = baseSpeed;
+                agent.acceleration = baseAcceleration;
+                agent.angularSpeed = baseAngularSpeed;
+                agent.updateRotation = true;
+                agent.updatePosition = true;
+            }
+        }
+
+        // 6. 이동 재개
+        ResumeMovement();
+
+        // 7. AI 즉시 재평가
+        if (petAI != null)
+        {
+            petAI.InterruptAndResetAI();
+        }
+
+        Debug.Log($"[PetController] {petName} - ForceResetState 완료");
+    }
 
     // 이벤트 핸들러
     private void OnPetStatusChanged(PetStatus oldStatus, PetStatus newStatus)
