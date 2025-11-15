@@ -139,12 +139,20 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         Vector3 fighter1TargetPos = midpoint - direction * (adjustedDistance / 2f);
         Vector3 fighter2TargetPos = midpoint + direction * (adjustedDistance / 2f);
 
-        // 계산된 위치로 이동
-        yield return StartCoroutine(MoveToPositions(fighter1, fighter2, fighter1TargetPos, fighter2TargetPos, 10f));
+        // NavMesh 위의 유효한 위치로 보정
+        fighter1TargetPos = FindValidPositionOnNavMesh(fighter1TargetPos, 5f);
+        fighter2TargetPos = FindValidPositionOnNavMesh(fighter2TargetPos, 5f);
+
+        Debug.Log($"[{InteractionName}] 목표 거리: {adjustedDistance:F1}m, 실제 목표 위치 간 거리: {Vector3.Distance(fighter1TargetPos, fighter2TargetPos):F1}m");
+
+        // 계산된 위치로 정밀하게 이동
+        yield return StartCoroutine(MoveToPositionsPrecise(fighter1, fighter2, fighter1TargetPos, fighter2TargetPos, 15f));
 
         // 이동 완료 후 Agent 정지 (위치 고정)
         if (fighter1.agent != null) fighter1.agent.isStopped = true;
         if (fighter2.agent != null) fighter2.agent.isStopped = true;
+
+        Debug.Log($"[{InteractionName}] 이동 완료 후 실제 거리: {Vector3.Distance(fighter1.transform.position, fighter2.transform.position):F1}m");
 
         // 서로 부드럽게 마주보게 회전 (충분한 시간 확보)
         yield return StartCoroutine(SmoothlyLookAtEachOther(fighter1, fighter2, 1.5f));
@@ -293,6 +301,96 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
         if (sphereCollider != null) return sphereCollider.radius;
 
         return 1f; // 기본값
+    }
+
+    /// <summary>
+    /// 두 펫을 목표 위치로 정밀하게 이동시킵니다. (거리 확보를 위한 엄격한 도착 판정)
+    /// </summary>
+    private IEnumerator MoveToPositionsPrecise(PetController pet1, PetController pet2,
+        Vector3 pos1, Vector3 pos2, float timeout = 15f)
+    {
+        // NavMeshAgent 준비 확인
+        if (pet1.agent == null || !pet1.agent.enabled || !pet1.agent.isOnNavMesh ||
+            pet2.agent == null || !pet2.agent.enabled || !pet2.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[{InteractionName}] NavMeshAgent가 준비되지 않았습니다.");
+            yield break;
+        }
+
+        // stoppingDistance를 매우 작게 설정 (정밀한 위치 제어)
+        float originalStop1 = pet1.agent.stoppingDistance;
+        float originalStop2 = pet2.agent.stoppingDistance;
+        pet1.agent.stoppingDistance = 0.1f;
+        pet2.agent.stoppingDistance = 0.1f;
+
+        // 목적지 설정
+        pet1.agent.isStopped = false;
+        pet2.agent.isStopped = false;
+        pet1.agent.SetDestination(pos1);
+        pet2.agent.SetDestination(pos2);
+
+        // 걷기 애니메이션
+        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        float startTime = Time.time;
+        const float PRECISE_THRESHOLD = 0.3f; // 정밀한 도착 판정 거리
+
+        while (Time.time - startTime < timeout)
+        {
+            // NavMeshAgent 상태 확인
+            bool pet1Arrived = false;
+            bool pet2Arrived = false;
+
+            if (pet1.agent != null && pet1.agent.enabled && pet1.agent.isOnNavMesh)
+            {
+                // NavMesh 경로 기반 판정 + 실제 위치 거리 판정
+                bool navMeshArrived = !pet1.agent.pathPending && pet1.agent.remainingDistance <= PRECISE_THRESHOLD;
+                float actualDistance = Vector3.Distance(pet1.transform.position, pos1);
+                pet1Arrived = navMeshArrived && actualDistance <= PRECISE_THRESHOLD;
+            }
+
+            if (pet2.agent != null && pet2.agent.enabled && pet2.agent.isOnNavMesh)
+            {
+                bool navMeshArrived = !pet2.agent.pathPending && pet2.agent.remainingDistance <= PRECISE_THRESHOLD;
+                float actualDistance = Vector3.Distance(pet2.transform.position, pos2);
+                pet2Arrived = navMeshArrived && actualDistance <= PRECISE_THRESHOLD;
+            }
+
+            if (pet1Arrived && pet2Arrived)
+            {
+                Debug.Log($"[{InteractionName}] 두 펫이 정밀하게 목적지에 도착");
+                break;
+            }
+
+            // 먼저 도착한 펫은 상대를 기다림
+            if (pet1Arrived && !pet2Arrived)
+            {
+                pet1.agent.isStopped = true;
+                pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            }
+            if (pet2Arrived && !pet1Arrived)
+            {
+                pet2.agent.isStopped = true;
+                pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            }
+
+            yield return null;
+        }
+
+        // stoppingDistance 복원
+        pet1.agent.stoppingDistance = originalStop1;
+        pet2.agent.stoppingDistance = originalStop2;
+
+        // 이동 정지
+        if (pet1.agent != null && pet1.agent.enabled && pet1.agent.isOnNavMesh)
+            pet1.agent.isStopped = true;
+        if (pet2.agent != null && pet2.agent.enabled && pet2.agent.isOnNavMesh)
+            pet2.agent.isStopped = true;
+
+        // 애니메이션 정지
+        pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
     }
 
     /// <summary>
