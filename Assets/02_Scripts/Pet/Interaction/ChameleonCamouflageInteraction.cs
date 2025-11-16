@@ -49,6 +49,10 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
 
+    // 강제 종료 시 머티리얼 복원을 위한 클래스 레벨 변수
+    private Dictionary<Renderer, Material[]> currentOriginalMaterials = null;
+    private PetController currentChameleon = null;
+
     // 상호작용 타입 결정
     protected override InteractionType DetermineInteractionType()
     {
@@ -114,6 +118,9 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
 
             // 2. 카멜레온 위장 준비
             originalMaterials = BackupChameleonMaterials(chameleon);
+            // 클래스 레벨 변수에도 저장 (강제 종료 대비)
+            currentOriginalMaterials = originalMaterials;
+            currentChameleon = chameleon;
             
             // 3. 위장 및 포식자 혼란 단계
             yield return StartCoroutine(ImprovedHideAndConfusePhase(chameleon, predator, originalMaterials));
@@ -140,6 +147,10 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
             {
                 RestoreChameleonMaterials(chameleon, originalMaterials);
             }
+
+            // 클래스 레벨 변수 초기화
+            currentOriginalMaterials = null;
+            currentChameleon = null;
 
             // 원래 상태 복원
             chameleonState.Restore(chameleon);
@@ -487,5 +498,36 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+    }
+
+    // 컴포넌트 비활성화 시 머티리얼 복원
+    private void OnDisable()
+    {
+        CleanupCamouflage();
+    }
+
+    // 컴포넌트 파괴 시 머티리얼 복원
+    private void OnDestroy()
+    {
+        CleanupCamouflage();
+    }
+
+    // 강제 종료 시 카멜레온 머티리얼 정리
+    private void CleanupCamouflage()
+    {
+        if (currentOriginalMaterials != null && currentChameleon != null)
+        {
+            Debug.Log($"[ChameleonCamouflage] 강제 종료 감지 - {currentChameleon.petName}의 머티리얼을 원래대로 복원합니다.");
+            RestoreChameleonMaterials(currentChameleon, currentOriginalMaterials);
+            currentOriginalMaterials = null;
+            currentChameleon = null;
+        }
+    }
+
+    // 외부에서 강제로 정리를 요청할 때 사용하는 public 메서드
+    public void ForceCleanup()
+    {
+        Debug.Log($"[ChameleonCamouflage] ForceCleanup 호출됨 - 상호작용 강제 종료 처리");
+        CleanupCamouflage();
     }
 }

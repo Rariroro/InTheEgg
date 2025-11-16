@@ -973,11 +973,20 @@ public class PetInputController : PetControllerBase
     private void ForceStopInteraction()
     {
         // Debug.Log($"[ForceStopInteraction] {petController.petName}: 상호작용 강제 중단 시작");
-        
+
         if (petController.State.InteractionLogic != null)
         {
             // 상호작용 로직의 모든 코루틴 중단
             var interactionLogic = petController.State.InteractionLogic;
+
+            // ChameleonCamouflageInteraction 특별 처리 - 머티리얼 복원
+            var chameleonInteraction = interactionLogic as ChameleonCamouflageInteraction;
+            if (chameleonInteraction != null)
+            {
+                Debug.Log($"[ForceStopInteraction] ChameleonCamouflageInteraction 감지 - 강제 정리 실행");
+                chameleonInteraction.ForceCleanup();
+            }
+
             interactionLogic.StopAllCoroutines();
 
             // 상대 펫 처리
@@ -988,6 +997,14 @@ public class PetInputController : PetControllerBase
                 // 상대 펫의 상호작용 코루틴도 중단
                 if (partner.State.InteractionLogic != null)
                 {
+                    // 상대 펫도 ChameleonCamouflageInteraction에 참여 중일 수 있으므로 동일하게 처리
+                    var partnerChameleonInteraction = partner.State.InteractionLogic as ChameleonCamouflageInteraction;
+                    if (partnerChameleonInteraction != null)
+                    {
+                        Debug.Log($"[ForceStopInteraction] 상대 펫도 ChameleonCamouflageInteraction 중 - 강제 정리 실행");
+                        partnerChameleonInteraction.ForceCleanup();
+                    }
+
                     partner.State.InteractionLogic.StopAllCoroutines();
                 }
 
