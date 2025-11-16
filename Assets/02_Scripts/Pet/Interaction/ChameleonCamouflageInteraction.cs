@@ -441,10 +441,17 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
         {
             // 투명화 시작
             Debug.Log($"[ChameleonCamouflage] {chameleon.petName}이(가) 서서히 투명해집니다.");
-            
+
             // 페이드 아웃 효과 (선택사항 - 바로 투명 머티리얼로 교체해도 됨)
             foreach (var renderer in renderers)
             {
+                // 감정 파티클 제외 체크
+                if (IsEmotionParticle(renderer.transform))
+                {
+                    Debug.Log($"[ChameleonCamouflage] 감정 파티클 제외: {renderer.name}");
+                    continue;
+                }
+
                 Material[] transparentMaterials = new Material[renderer.materials.Length];
                 for (int i = 0; i < transparentMaterials.Length; i++)
                 {
@@ -452,7 +459,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
                 }
                 renderer.materials = transparentMaterials;
             }
-            
+
             yield return new WaitForSeconds(camouflageDuration);
         }
         else
@@ -463,20 +470,45 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
         }
     }
 
+    // 감정 파티클 체크
+    private bool IsEmotionParticle(Transform obj)
+    {
+        // ParticleSystem 컴포넌트를 가지고 있으면 감정 파티클로 판단
+        // (카멜레온 모델 자체에는 ParticleSystem이 없고, 감정 표시만 ParticleSystem 사용)
+        if (obj.GetComponent<ParticleSystem>() != null)
+        {
+            return true;
+        }
+
+        // 추가로 이름으로도 체크 (감정 파티클은 보통 특정 이름 패턴을 가짐)
+        string objName = obj.name.ToLower();
+        if (objName.Contains("emotion") || objName.Contains("particle") || objName.Contains("effect"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     // 머티리얼 백업
     private Dictionary<Renderer, Material[]> BackupChameleonMaterials(PetController chameleon)
     {
         Dictionary<Renderer, Material[]> backup = new Dictionary<Renderer, Material[]>();
-        
+
         if (chameleon.petModelTransform != null)
         {
             Renderer[] renderers = chameleon.petModelTransform.GetComponentsInChildren<Renderer>();
             foreach (var renderer in renderers)
             {
+                // 감정 파티클은 백업에서도 제외
+                if (IsEmotionParticle(renderer.transform))
+                {
+                    continue;
+                }
                 backup[renderer] = renderer.materials;
             }
         }
-        
+
         return backup;
     }
 
