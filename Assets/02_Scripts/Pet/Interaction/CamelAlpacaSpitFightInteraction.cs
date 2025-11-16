@@ -208,6 +208,10 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             else
             {
                 Debug.Log($"[{InteractionName}] {target.petName}이(가) {attackType}에 맞았습니다!");
+
+                // 피격 시 짜증 감정 표현
+                target.ShowEmotion(EmotionType.Annoyed, 2f);
+
                 // 피격 효과 생성은 SpitEffectCoroutine이 담당
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, damageAnimationDuration, true, false));
