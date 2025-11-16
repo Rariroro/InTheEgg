@@ -11,6 +11,7 @@ public enum EmotionType
     Happy,      // 행복
     Sad,        // 슬픔
     Angry,      // 화남
+    Annoyed,    // 짜증 (화남보다 약한 단계)
     Surprised,  // 놀람
     Love,       // 사랑
     Sleepy,     // 졸림

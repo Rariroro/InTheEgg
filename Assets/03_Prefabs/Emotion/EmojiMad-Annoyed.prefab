@@ -4839,7 +4839,7 @@ GameObject:
   - component: {fileID: 198596524191670460}
   - component: {fileID: 199194421889081694}
   m_Layer: 0
-  m_Name: EmojiMad
+  m_Name: EmojiMad-Annoyed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

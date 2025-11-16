@@ -103,3 +103,5 @@ MonoBehaviour:
     particlePrefab: {fileID: 118748, guid: 6793101deea5943eb8db59651f9fe339, type: 3}
   - emotionType: 29
     particlePrefab: {fileID: 118748, guid: 7b6df2aad803442c0a2d6784195989ea, type: 3}
+  - emotionType: 6
+    particlePrefab: {fileID: 1801004341784822, guid: 2a22e9f8e40ca441dbc585242b8313f4, type: 3}

@@ -33,8 +33,8 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     public float fightDistance = 7f;
     [Tooltip("침이 날아가는 데 걸리는 시간입니다.")]
     public float spitTravelDuration = 0.7f;
-    [Tooltip("공격을 주고받는 횟수입니다.")]
-    public int spitRounds = 3;
+    [Tooltip("공격을 주고받는 횟수입니다. (각 펫이 공격하는 횟수)")]
+    public int spitRounds = 5;
     [Tooltip("공격을 회피할 확률입니다. (0.0 ~ 1.0)")]
     [Range(0f, 1f)]
     public float dodgeChance = 0.5f;
@@ -171,16 +171,23 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
     private IEnumerator SpitExchangePhase(PetController fighter1, PetController fighter2)
     {
         string combinationType = GetCombinationTypeName(fighter1, fighter2);
-        Debug.Log($"[{InteractionName}] 2단계: {combinationType} 공방");
+        Debug.Log($"[{InteractionName}] 2단계: {combinationType} 공방 (각 펫이 {spitRounds}번씩 공격)");
 
-        for (int i = 0; i < spitRounds; i++)
+        // 총 라운드 수는 spitRounds * 2 (각 펫이 spitRounds번씩)
+        int totalRounds = spitRounds * 2;
+
+        for (int i = 0; i < totalRounds; i++)
         {
             PetController attacker = (i % 2 == 0) ? fighter1 : fighter2;
             PetController target = (attacker == fighter1) ? fighter2 : fighter1;
 
             bool isCamelAlpaca = (fighter1.PetType == PetType.Camel || fighter1.PetType == PetType.Alpaca);
             string attackType = isCamelAlpaca ? "침 발사" : "물 발사";
-            Debug.Log($"[{InteractionName}] 라운드 {i + 1}: {attacker.petName}의 {attackType}!");
+
+            // 각 펫별 공격 횟수 표시
+            int attackerRound = (i / 2) + 1;
+            string attackerName = (i % 2 == 0) ? fighter1.petName : fighter2.petName;
+            Debug.Log($"[{InteractionName}] {attackerName}의 {attackerRound}번째 {attackType}! (전체 라운드 {i + 1}/{totalRounds})");
 
             yield return StartCoroutine(attacker.GetComponent<PetAnimationController>()
                 .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Attack, attackAnimationDuration, true, false));
@@ -194,8 +201,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             {
                 Debug.Log($"[{InteractionName}] {target.petName}이(가) {attackType}을(를) 회피했습니다!");
                 target.ShowEmotion(EmotionType.Happy, 2f);
-                yield return StartCoroutine(target.GetComponent<PetAnimationController>()
-                    .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, dodgeAnimationDuration, true, false));
+
+                // 옆으로 점프하면서 회피
+                yield return StartCoroutine(DodgeSideways(target, attacker));
             }
             else
             {
@@ -204,6 +212,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
                 yield return StartCoroutine(target.GetComponent<PetAnimationController>()
                     .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Damage, damageAnimationDuration, true, false));
             }
+
+            // 회피 후에도 서로 마주보도록 재조정
+            yield return StartCoroutine(EnsureFacingEachOther(fighter1, fighter2));
 
             yield return new WaitForSeconds(1.0f);
         }
@@ -266,6 +277,97 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             string combinationType = GetCombinationTypeName(fighter1, fighter2);
             Debug.Log($"[{InteractionName}] {combinationType} 각도 보정 필요 ({fighter1.petName}: {angle1:F1}°, {fighter2.petName}: {angle2:F1}°)");
             yield return StartCoroutine(SmoothlyLookAtEachOther(fighter1, fighter2, 0.5f));
+        }
+    }
+
+    /// <summary>
+    /// 펫이 옆으로 점프하여 회피하는 동작을 수행합니다.
+    /// 회피 중에도 공격자를 계속 바라보도록 합니다.
+    /// </summary>
+    private IEnumerator DodgeSideways(PetController dodger, PetController attacker)
+    {
+        if (dodger.agent == null || !dodger.agent.enabled || !dodger.agent.isOnNavMesh)
+        {
+            // NavMeshAgent가 없으면 일반 점프만 수행
+            yield return StartCoroutine(dodger.GetComponent<PetAnimationController>()
+                .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, dodgeAnimationDuration, true, false));
+            yield break;
+        }
+
+        // 회피 방향 결정 (좌 또는 우로 랜덤하게)
+        bool dodgeLeft = Random.value < 0.5f;
+        Vector3 dodgeDirection = dodgeLeft ? -dodger.transform.right : dodger.transform.right;
+
+        // 회피 거리 계산 (펫 크기에 비례)
+        float dodgeDistance = GetPetRadius(dodger) * 2f;
+
+        // 목표 위치 계산
+        Vector3 dodgeTarget = dodger.transform.position + (dodgeDirection * dodgeDistance);
+
+        // NavMesh 위의 유효한 위치로 보정
+        dodgeTarget = FindValidPositionOnNavMesh(dodgeTarget, 2f);
+
+        // 원래 위치 저장
+        Vector3 originalPosition = dodger.transform.position;
+
+        // NavMeshAgent 일시 정지
+        bool wasAgentStopped = dodger.agent.isStopped;
+        dodger.agent.isStopped = true;
+
+        // 점프 애니메이션 시작
+        var animController = dodger.GetComponent<PetAnimationController>();
+        animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Jump);
+
+        // 옆으로 이동하면서 계속 공격자를 바라보기
+        float elapsedTime = 0f;
+        float jumpHeight = 1.5f; // 점프 높이
+
+        while (elapsedTime < dodgeAnimationDuration)
+        {
+            float progress = elapsedTime / dodgeAnimationDuration;
+
+            // 수평 이동 (Lerp)
+            Vector3 currentPos = Vector3.Lerp(originalPosition, dodgeTarget, progress);
+
+            // 포물선 점프 (위아래 움직임)
+            float jumpProgress = Mathf.Sin(progress * Mathf.PI);
+            currentPos.y = originalPosition.y + (jumpHeight * jumpProgress);
+
+            // 위치 업데이트 (NavMeshAgent 우회)
+            dodger.transform.position = currentPos;
+
+            // 공격자를 계속 바라보도록 회전
+            Vector3 lookDirection = (attacker.transform.position - dodger.transform.position).normalized;
+            lookDirection.y = 0; // 수평 방향만 고려
+            if (lookDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+                dodger.transform.rotation = Quaternion.Slerp(dodger.transform.rotation, targetRotation, Time.deltaTime * 10f);
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 최종 위치 설정
+        dodger.transform.position = dodgeTarget;
+
+        // NavMeshAgent 재활성화 및 위치 동기화
+        if (dodger.agent != null && dodger.agent.enabled && dodger.agent.isOnNavMesh)
+        {
+            dodger.agent.Warp(dodgeTarget);
+            dodger.agent.isStopped = wasAgentStopped;
+        }
+
+        // 애니메이션 정지
+        animController.StopContinuousAnimation();
+
+        // 최종적으로 공격자를 정확히 바라보도록 조정
+        Vector3 finalLookDirection = (attacker.transform.position - dodger.transform.position).normalized;
+        finalLookDirection.y = 0;
+        if (finalLookDirection != Vector3.zero)
+        {
+            dodger.transform.rotation = Quaternion.LookRotation(finalLookDirection);
         }
     }
 
