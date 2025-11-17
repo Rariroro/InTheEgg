@@ -7,6 +7,9 @@ using UnityEngine.AI;
 public class RideAndWalkInteraction : BasePetInteraction
 {
     public override string InteractionName => "RideAndWalk";
+
+    // 우선순위: 95 (2순위)
+    public override int Priority => 95;
     // ▼▼▼ [수정] 헤더를 추가하여 인스펙터에서 관련 설정을 쉽게 찾도록 정리합니다. ▼▼▼
     [Header("Ride & Walk Settings")]
     [Tooltip("상호작용 시작 시 펫들이 만나는 거리입니다.")]

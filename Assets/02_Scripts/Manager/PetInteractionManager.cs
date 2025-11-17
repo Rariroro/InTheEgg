@@ -279,14 +279,28 @@ public class PetInteractionManager : MonoBehaviour
 
     private BasePetInteraction FindSuitableInteraction(PetController pet1, PetController pet2)
     {
+        BasePetInteraction bestInteraction = null;
+        int highestPriority = -1;
+
+        // 모든 가능한 상호작용을 확인하고 가장 높은 우선순위를 가진 것을 선택
         foreach (var interaction in registeredInteractions)
         {
             if (interaction.CanInteract(pet1, pet2))
             {
-                return interaction;
+                if (interaction.Priority > highestPriority)
+                {
+                    highestPriority = interaction.Priority;
+                    bestInteraction = interaction;
+                }
             }
         }
-        return null;
+
+        if (enableDebugLogs && bestInteraction != null)
+        {
+            Debug.Log($"[Manager] 선택된 상호작용: {bestInteraction.InteractionName} (우선순위: {highestPriority})");
+        }
+
+        return bestInteraction;
     }
 
     /// <summary>

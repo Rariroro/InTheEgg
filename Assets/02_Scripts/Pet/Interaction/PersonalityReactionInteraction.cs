@@ -17,6 +17,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
     /// </summary>
     public override bool IsPriorityInteraction => true;
 
+    // 우선순위: 40 (13순위 - 가장 낮음)
+    public override int Priority => 40;
+
     // 유저가 펫을 터치하거나 홀드해서 상호작용이 중단되었는지 추적하는 플래그
     private bool wasInterrupted = false;
 

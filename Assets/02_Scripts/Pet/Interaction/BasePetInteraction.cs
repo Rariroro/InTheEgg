@@ -15,6 +15,12 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// </summary>
     public virtual bool IsPriorityInteraction => false;
 
+    /// <summary>
+    /// 상호작용 우선순위 (높을수록 우선 선택됨)
+    /// 기본값: 50
+    /// </summary>
+    public virtual int Priority => 50;
+
     // 상호작용 중인 펫들 추적 (정리 보장용)
     private PetController activePet1;
     private PetController activePet2;

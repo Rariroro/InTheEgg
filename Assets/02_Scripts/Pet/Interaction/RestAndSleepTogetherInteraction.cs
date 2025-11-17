@@ -7,6 +7,9 @@ public class RestAndSleepTogetherInteraction : BasePetInteraction
 {
     public override string InteractionName => "RestAndSleepTogether";
 
+    // 우선순위: 45 (12순위)
+    public override int Priority => 45;
+
     [Header("상호작용 모드")]
     [Tooltip("true면 잠자기, false면 휴식")]
     public bool isSleepMode = false;

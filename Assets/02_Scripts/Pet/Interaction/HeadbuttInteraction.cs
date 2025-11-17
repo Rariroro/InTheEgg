@@ -10,6 +10,9 @@ using UnityEngine.AI;
 public class HeadbuttInteraction : BasePetInteraction
 {
     public override string InteractionName => "Headbutt";
+
+    // 우선순위: 60 (9순위)
+    public override int Priority => 60;
     
     [Header("Headbutt Settings")]
     [Tooltip("박치기를 위해 떨어지는 기본 거리입니다.")]

@@ -8,6 +8,9 @@ public class SlothKoalaRaceInteraction : BasePetInteraction
 {
     public override string InteractionName => "SlothKoalaRace";
 
+    // 우선순위: 90 (3순위)
+    public override int Priority => 90;
+
     [Header("Finish Line Visuals")]
     [Tooltip("결승선에 표시될 프리팹입니다.")]
     public GameObject finishLinePrefab;

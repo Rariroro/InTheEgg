@@ -7,6 +7,9 @@ public class PredatorMoleInteraction : BasePetInteraction
 {
     public override string InteractionName => "PredatorMoleHunt";
 
+    // 우선순위: 70 (7순위)
+    public override int Priority => 70;
+
     // 상태 추적을 위한 클래스 레벨 변수
     private bool _moleIsHidden = false;
 

@@ -14,6 +14,9 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
 {
     public override string InteractionName => "CamelAlpacaSpitFight";
 
+    // 우선순위: 85 (4순위)
+    public override int Priority => 85;
+
     [Header("Fine-Tuning Settings")]
     [Tooltip("침/물 발사 위치를 펫의 앞쪽으로 미세 조정합니다. (단위: 미터)")]
     public float spitForwardOffset = 0.5f;

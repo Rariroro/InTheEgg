@@ -7,6 +7,9 @@ public class SkunkDefenseInteraction : BasePetInteraction
 {
     public override string InteractionName => "SkunkDefense";
 
+    // 우선순위: 75 (6순위)
+    public override int Priority => 75;
+
     [Header("접근 설정")]
     [Tooltip("공격자가 스컹크에게 접근할 거리")]
     public float approachDistance = 3f;

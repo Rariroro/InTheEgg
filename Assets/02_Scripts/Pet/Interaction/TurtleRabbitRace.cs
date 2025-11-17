@@ -14,6 +14,9 @@ public class TurtleRabbitRace : BasePetInteraction
 {
     // 이 상호작용의 이름을 "TurtleRabbitRace"로 정의합니다.
     public override string InteractionName => "TurtleRabbitRace";
+
+    // 우선순위: 100 (가장 높음)
+    public override int Priority => 100;
     // ★★★ 새로 추가된 부분: 결승선 깃발 프리팹 ★★★
     // ★★★ 이 부분을 추가합니다. ★★★
     // ▼▼▼ [수정] 이 부분을 아래 코드로 교체합니다. ▼▼▼

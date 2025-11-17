@@ -8,6 +8,8 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     // 상호작용 이름 변경
     public override string InteractionName => "PredatorPossumPrank";
 
+    // 우선순위를 설정하지 않아 기본값 50 사용
+
     [Header("Interaction Settings")]
     [Tooltip("포식자가 잠들 위치를 찾을 때의 반경입니다.")]
     public float sleepSpotRadius = 3f;

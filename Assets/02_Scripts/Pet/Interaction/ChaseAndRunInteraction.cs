@@ -8,6 +8,9 @@ public class ChaseAndRunInteraction : BasePetInteraction
 {
     public override string InteractionName => "ChaseAndRun";
 
+    // 우선순위: 65 (8순위)
+    public override int Priority => 65;
+
     [Header("Chase Settings")]
     [Tooltip("추격 지속 시간")]
     public float chaseDuration = 20f;

@@ -7,6 +7,9 @@ public class WalkTogetherInteraction : BasePetInteraction
 {
     public override string InteractionName => "WalkTogether";
 
+    // 우선순위: 50 (11순위)
+    public override int Priority => 50;
+
     [Header("걷기 설정")]
     [Tooltip("함께 걷는 총 시간")]
     public float walkDuration = 15f;

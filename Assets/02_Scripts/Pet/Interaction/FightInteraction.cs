@@ -7,6 +7,9 @@ public class FightInteraction : BasePetInteraction
 {
     public override string InteractionName => "Fight";
 
+    // 우선순위: 55 (10순위)
+    public override int Priority => 55;
+
     [Header("싸움 설정")]
     [Tooltip("싸움을 위한 적절한 거리")]
     public float fightDistance = 5f;

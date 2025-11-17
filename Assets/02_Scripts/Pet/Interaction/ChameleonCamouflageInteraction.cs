@@ -8,6 +8,9 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
 {
     public override string InteractionName => "ChameleonCamouflage";
 
+    // 우선순위: 80 (5순위)
+    public override int Priority => 80;
+
     [Header("Material Settings")]
     [Tooltip("카멜레온이 투명해질 때 사용할 투명 머티리얼입니다.")]
     [SerializeField] private Material transparentMaterial;
