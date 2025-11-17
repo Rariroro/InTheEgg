@@ -432,7 +432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
   reactionDuration: 8
-  approachDistance: 3
+  approachDistance: 5
   fleeDistance: 10
   moveTimeout: 5
   pauseDuration: 1.5
