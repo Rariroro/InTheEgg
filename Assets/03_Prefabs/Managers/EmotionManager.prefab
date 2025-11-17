@@ -58,50 +58,50 @@ MonoBehaviour:
   - emotionType: 5
     particlePrefab: {fileID: 180600, guid: be566f6e0815e4836a840d7032634a3e, type: 3}
   - emotionType: 6
-    particlePrefab: {fileID: 143880, guid: 2ad724dff5a8c4bca8be99694405c2cd, type: 3}
-  - emotionType: 7
-    particlePrefab: {fileID: 185686, guid: 90cdceb93334d44138c4014651548bf5, type: 3}
-  - emotionType: 8
-    particlePrefab: {fileID: 1978455369297776, guid: 5b8bfafc2fc9a438cb058b5ce27e8688, type: 3}
-  - emotionType: 9
-    particlePrefab: {fileID: 120732, guid: 8afc8ba0345254887ae950f3bf5d8245, type: 3}
-  - emotionType: 10
-    particlePrefab: {fileID: 1240120653875528, guid: cfd21bab7191548fb9329c59f0ff209f, type: 3}
-  - emotionType: 11
-    particlePrefab: {fileID: 118748, guid: 847a3d99a87f64e05bbb0465f4782ab4, type: 3}
-  - emotionType: 12
-    particlePrefab: {fileID: 118748, guid: 3cee5b6d5a04e4d78a3a258d823befa9, type: 3}
-  - emotionType: 13
-    particlePrefab: {fileID: 173990, guid: fe7f03a7c6c454b9aa4f317c99e4061e, type: 3}
-  - emotionType: 14
-    particlePrefab: {fileID: 1550143868354262, guid: e32275b54eff7475bb91901007bc28ae, type: 3}
-  - emotionType: 15
-    particlePrefab: {fileID: 156528, guid: dc03a008c35c74e4fb055d261b2a5ccb, type: 3}
-  - emotionType: 16
-    particlePrefab: {fileID: 1534639363344604, guid: ae34dec330b5b4b1391eb0bf82afc069, type: 3}
-  - emotionType: 17
-    particlePrefab: {fileID: 1238154324082714, guid: 889d8e4bbe65848bda194c7e0078ddb6, type: 3}
-  - emotionType: 19
-    particlePrefab: {fileID: 118748, guid: 1850acfe37c844b99bbc12c7a1888e70, type: 3}
-  - emotionType: 20
-    particlePrefab: {fileID: 118748, guid: 6c13ccb25e2e841cfa73085ca2e838b2, type: 3}
-  - emotionType: 21
-    particlePrefab: {fileID: 118748, guid: c3dffc81817da4922a43b49c97aa6543, type: 3}
-  - emotionType: 22
-    particlePrefab: {fileID: 118748, guid: ccf930a975f724af3b17b96a4febaeb7, type: 3}
-  - emotionType: 23
-    particlePrefab: {fileID: 118748, guid: e4a26d692e12a409693851e33fc53ee1, type: 3}
-  - emotionType: 24
-    particlePrefab: {fileID: 118748, guid: 66386918a99124e59b5b07fb1dd76ab9, type: 3}
-  - emotionType: 25
-    particlePrefab: {fileID: 118748, guid: 7373e1bee2c884cf4be35b699da18ad9, type: 3}
-  - emotionType: 26
-    particlePrefab: {fileID: 118748, guid: e3342115ea97040c0b0a91c0066a06d0, type: 3}
-  - emotionType: 27
-    particlePrefab: {fileID: 118748, guid: 2313569608f424a1cbdba037238e0780, type: 3}
-  - emotionType: 28
-    particlePrefab: {fileID: 118748, guid: 6793101deea5943eb8db59651f9fe339, type: 3}
-  - emotionType: 29
-    particlePrefab: {fileID: 118748, guid: 7b6df2aad803442c0a2d6784195989ea, type: 3}
-  - emotionType: 6
     particlePrefab: {fileID: 1801004341784822, guid: 2a22e9f8e40ca441dbc585242b8313f4, type: 3}
+  - emotionType: 7
+    particlePrefab: {fileID: 143880, guid: 2ad724dff5a8c4bca8be99694405c2cd, type: 3}
+  - emotionType: 8
+    particlePrefab: {fileID: 185686, guid: 90cdceb93334d44138c4014651548bf5, type: 3}
+  - emotionType: 9
+    particlePrefab: {fileID: 1978455369297776, guid: 5b8bfafc2fc9a438cb058b5ce27e8688, type: 3}
+  - emotionType: 10
+    particlePrefab: {fileID: 120732, guid: 8afc8ba0345254887ae950f3bf5d8245, type: 3}
+  - emotionType: 11
+    particlePrefab: {fileID: 1240120653875528, guid: cfd21bab7191548fb9329c59f0ff209f, type: 3}
+  - emotionType: 12
+    particlePrefab: {fileID: 118748, guid: 847a3d99a87f64e05bbb0465f4782ab4, type: 3}
+  - emotionType: 13
+    particlePrefab: {fileID: 118748, guid: 3cee5b6d5a04e4d78a3a258d823befa9, type: 3}
+  - emotionType: 14
+    particlePrefab: {fileID: 173990, guid: fe7f03a7c6c454b9aa4f317c99e4061e, type: 3}
+  - emotionType: 15
+    particlePrefab: {fileID: 1550143868354262, guid: e32275b54eff7475bb91901007bc28ae, type: 3}
+  - emotionType: 16
+    particlePrefab: {fileID: 156528, guid: dc03a008c35c74e4fb055d261b2a5ccb, type: 3}
+  - emotionType: 17
+    particlePrefab: {fileID: 1534639363344604, guid: ae34dec330b5b4b1391eb0bf82afc069, type: 3}
+  - emotionType: 18
+    particlePrefab: {fileID: 1238154324082714, guid: 889d8e4bbe65848bda194c7e0078ddb6, type: 3}
+  - emotionType: 20
+    particlePrefab: {fileID: 118748, guid: 1850acfe37c844b99bbc12c7a1888e70, type: 3}
+  - emotionType: 21
+    particlePrefab: {fileID: 118748, guid: 6c13ccb25e2e841cfa73085ca2e838b2, type: 3}
+  - emotionType: 22
+    particlePrefab: {fileID: 118748, guid: c3dffc81817da4922a43b49c97aa6543, type: 3}
+  - emotionType: 23
+    particlePrefab: {fileID: 118748, guid: ccf930a975f724af3b17b96a4febaeb7, type: 3}
+  - emotionType: 24
+    particlePrefab: {fileID: 118748, guid: e4a26d692e12a409693851e33fc53ee1, type: 3}
+  - emotionType: 25
+    particlePrefab: {fileID: 118748, guid: 66386918a99124e59b5b07fb1dd76ab9, type: 3}
+  - emotionType: 26
+    particlePrefab: {fileID: 118748, guid: 7373e1bee2c884cf4be35b699da18ad9, type: 3}
+  - emotionType: 27
+    particlePrefab: {fileID: 118748, guid: e3342115ea97040c0b0a91c0066a06d0, type: 3}
+  - emotionType: 28
+    particlePrefab: {fileID: 118748, guid: 2313569608f424a1cbdba037238e0780, type: 3}
+  - emotionType: 29
+    particlePrefab: {fileID: 118748, guid: 6793101deea5943eb8db59651f9fe339, type: 3}
+  - emotionType: 30
+    particlePrefab: {fileID: 118748, guid: 7b6df2aad803442c0a2d6784195989ea, type: 3}
