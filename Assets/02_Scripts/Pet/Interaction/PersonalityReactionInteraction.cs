@@ -407,7 +407,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 거리 설정 (인스펙터 값 사용)
         float targetDistance = CalculateApproachDistance(lazyPet, bravePet);
-        float circleRadius = 4f;
+        float circleRadius = CalculateCircleRadius(bravePet, lazyPet);  // 펫 크기 고려
         float skipApproachThreshold = 5f;  // 5미터 이내면 접근 스킵
         
         // 현재 거리 체크
@@ -478,7 +478,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         SkipToCircle:
         // 3단계: Brave가 Lazy 주위를 돔
         Debug.Log($"[LazyBrave] 단계3: {bravePet.petName}이 주위를 돌며 살펴봄");
-        yield return StartCoroutine(CircleAroundTarget(bravePet, lazyPet, circleRadius, 3f));
+        float circleDuration = CalculateCircleDuration(circleRadius, bravePet.baseSpeed);
+        yield return StartCoroutine(CircleAroundTarget(bravePet, lazyPet, circleRadius, circleDuration));
         
         // 4단계: Brave가 점프하며 자랑
         Debug.Log($"[LazyBrave] 단계4: {bravePet.petName}이 점프하며 자랑");
@@ -590,7 +591,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         SkipToCircle:
         // 4단계: Playful이 Lazy 주위를 빙빙 돔
         Debug.Log($"[LazyPlayful] 단계4: {playfulPet.petName}이 주위를 돌며 놀자고 함");
-        yield return StartCoroutine(CircleAroundTarget(playfulPet, lazyPet, 3f, 2f));
+        float circleRadius = CalculateCircleRadius(playfulPet, lazyPet);  // 펫 크기 고려
+        float circleDuration = CalculateCircleDuration(circleRadius, playfulPet.baseSpeed);
+        yield return StartCoroutine(CircleAroundTarget(playfulPet, lazyPet, circleRadius, circleDuration));
         
         // 5단계: Lazy는 계속 무시
         Debug.Log($"[LazyPlayful] 단계5: {lazyPet.petName}은 계속 무시");
@@ -920,7 +923,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 거리 설정
         float meetDistance = 4f;
-        float circleRadius = 5f;
+        float circleRadius = CalculateCircleRadius(pet1, pet2);  // 펫 크기 고려
         float raceDistance = 8f;
         float skipApproachThreshold = 5f;  // 5미터 이내면 접근 스킵
         
@@ -990,7 +993,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         SkipToCircle:
         // 2단계: 서로 주위를 돔 (위엄 과시)
         Debug.Log($"[BraveBrave] 단계2: 서로 주위를 돌며 위엄 과시");
-        yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, 2.5f));
+        float circleDuration = CalculateCircleDuration(circleRadius, (pet1.baseSpeed + pet2.baseSpeed) / 2f);
+        yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, circleDuration));
         
         // 3단계: 동시에 점프하며 자랑
         Debug.Log($"[BraveBrave] 단계3: 동시에 점프하며 자랑");
@@ -1038,7 +1042,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 거리 설정
         float meetDistance = 3f;
-        float circleRadius = 4f;
+        float circleRadius = CalculateCircleRadius(bravePet, playfulPet);  // 펫 크기 고려
         float chaseDistance = 6f;
         float skipApproachThreshold = 5f;  // 5미터 이내면 접근 스킵
         
@@ -1104,7 +1108,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 2단계: 서로 주위를 빙빙 돔
         Debug.Log($"[BravePlayful] 단계2: 서로 주위를 빙빙 돔");
-        yield return StartCoroutine(CircleAroundEachOther(bravePet, playfulPet, circleRadius, 2f));
+        float circleDuration = CalculateCircleDuration(circleRadius, (bravePet.baseSpeed + playfulPet.baseSpeed) / 2f);
+        yield return StartCoroutine(CircleAroundEachOther(bravePet, playfulPet, circleRadius, circleDuration));
         
         // 3단계: Playful이 먼저 점프
         Debug.Log($"[BravePlayful] 단계3: {playfulPet.petName}이 신나서 점프");
@@ -1395,43 +1400,164 @@ public class PersonalityReactionInteraction : BasePetInteraction
     /// </summary>
     private IEnumerator CircleAroundTarget(PetController circler, PetController target, float radius, float duration)
     {
+        // NavMeshAgent 체크
+        if (circler.agent == null || !circler.agent.enabled || !circler.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[CircleAroundTarget] {circler.petName}의 NavMeshAgent가 준비되지 않음");
+            yield break;
+        }
+
+        Debug.Log($"[CircleAroundTarget] {circler.petName}이(가) {target.petName} 주위를 {duration}초 동안 돌기 시작");
+
+        // 원래 속도 저장
+        float originalSpeed = circler.agent.speed;
+
+        // 원의 둘레와 필요한 속도 계산
+        float circumference = 2f * Mathf.PI * radius;
+        float requiredSpeed = circumference / duration;
+
+        // Agent 설정
+        circler.agent.isStopped = false;
+        circler.agent.speed = requiredSpeed;
+        circler.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
         float elapsed = 0f;
-        float angleStep = 360f / duration;
-        
+
+        // 시작 위치에서 타겟까지의 방향을 기준으로 시작 각도 계산
+        Vector3 startDirection = (circler.transform.position - target.transform.position).normalized;
+        startDirection.y = 0;
+        if (startDirection == Vector3.zero) startDirection = Vector3.forward;
+
         while (elapsed < duration)
         {
-            float angle = angleStep * elapsed;
-            Vector3 offset = Quaternion.Euler(0, angle, 0) * Vector3.forward * radius;
+            // 진행도 계산 (0.0 ~ 1.0)
+            float progress = elapsed / duration;
+            float angle = progress * 360f;  // 0도 ~ 360도
+
+            // 원 위의 위치 계산
+            Vector3 offset = Quaternion.Euler(0, angle, 0) * startDirection * radius;
             Vector3 targetPos = target.transform.position + offset;
-            
+            targetPos = FindValidPositionOnNavMesh(targetPos, radius + 2f);
+
+            // 이동
             circler.agent.SetDestination(targetPos);
-            
+
+            // 타겟을 계속 바라보기
+            Vector3 lookDirection = (target.transform.position - circler.transform.position).normalized;
+            lookDirection.y = 0;
+            if (lookDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+                circler.transform.rotation = Quaternion.Slerp(
+                    circler.transform.rotation,
+                    targetRotation,
+                    Time.deltaTime * 5f
+                );
+            }
+
             elapsed += Time.deltaTime;
             yield return null;
         }
+
+        // 정리
+        circler.agent.isStopped = true;
+        circler.animationController.StopContinuousAnimation();
+        circler.agent.speed = originalSpeed;
+
+        Debug.Log($"[CircleAroundTarget] {circler.petName} 원 운동 완료");
     }
 
     /// <summary>
-    /// 서로 주위를 도는 동작
+    /// 서로 주위를 도는 동작 (원의 반대편에서 시작)
     /// </summary>
     private IEnumerator CircleAroundEachOther(PetController pet1, PetController pet2, float radius, float duration)
     {
-        float elapsed = 0f;
+        // NavMeshAgent 체크
+        if (pet1.agent == null || !pet1.agent.enabled || !pet1.agent.isOnNavMesh ||
+            pet2.agent == null || !pet2.agent.enabled || !pet2.agent.isOnNavMesh)
+        {
+            Debug.LogWarning($"[CircleAroundEachOther] NavMeshAgent가 준비되지 않음");
+            yield break;
+        }
+
+        Debug.Log($"[CircleAroundEachOther] {pet1.petName}과 {pet2.petName}이 서로 돌기 시작 ({duration}초)");
+
+        // 중심점 계산 (고정)
         Vector3 center = (pet1.transform.position + pet2.transform.position) / 2f;
-        
+
+        // 원래 속도 저장
+        float originalSpeed1 = pet1.agent.speed;
+        float originalSpeed2 = pet2.agent.speed;
+
+        // 원의 둘레와 필요한 속도 계산
+        float circumference = 2f * Mathf.PI * radius;
+        float requiredSpeed = circumference / duration;
+
+        // Agent 설정
+        pet1.agent.isStopped = false;
+        pet2.agent.isStopped = false;
+        pet1.agent.speed = requiredSpeed;
+        pet2.agent.speed = requiredSpeed;
+        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        float elapsed = 0f;
+
+        // 시작 방향 계산 (pet1의 현재 위치 기준)
+        Vector3 startDirection = (pet1.transform.position - center).normalized;
+        startDirection.y = 0;
+        if (startDirection == Vector3.zero) startDirection = Vector3.forward;
+
         while (elapsed < duration)
         {
-            float angle = (elapsed / duration) * 360f;
-            
-            Vector3 offset1 = Quaternion.Euler(0, angle, 0) * Vector3.forward * radius;
-            Vector3 offset2 = Quaternion.Euler(0, angle + 180f, 0) * Vector3.forward * radius;
-            
-            pet1.agent.SetDestination(center + offset1);
-            pet2.agent.SetDestination(center + offset2);
-            
+            // 진행도 계산
+            float progress = elapsed / duration;
+            float angle = progress * 360f;
+
+            // 원 위의 위치 계산 (서로 반대편)
+            Vector3 offset1 = Quaternion.Euler(0, angle, 0) * startDirection * radius;
+            Vector3 offset2 = Quaternion.Euler(0, angle + 180f, 0) * startDirection * radius;
+
+            Vector3 targetPos1 = center + offset1;
+            Vector3 targetPos2 = center + offset2;
+
+            targetPos1 = FindValidPositionOnNavMesh(targetPos1, radius + 2f);
+            targetPos2 = FindValidPositionOnNavMesh(targetPos2, radius + 2f);
+
+            // 이동
+            pet1.agent.SetDestination(targetPos1);
+            pet2.agent.SetDestination(targetPos2);
+
+            // 서로를 바라보기
+            Vector3 lookDir1 = (pet2.transform.position - pet1.transform.position).normalized;
+            lookDir1.y = 0;
+            if (lookDir1 != Vector3.zero)
+            {
+                Quaternion rotation1 = Quaternion.LookRotation(lookDir1);
+                pet1.transform.rotation = Quaternion.Slerp(pet1.transform.rotation, rotation1, Time.deltaTime * 5f);
+            }
+
+            Vector3 lookDir2 = (pet1.transform.position - pet2.transform.position).normalized;
+            lookDir2.y = 0;
+            if (lookDir2 != Vector3.zero)
+            {
+                Quaternion rotation2 = Quaternion.LookRotation(lookDir2);
+                pet2.transform.rotation = Quaternion.Slerp(pet2.transform.rotation, rotation2, Time.deltaTime * 5f);
+            }
+
             elapsed += Time.deltaTime;
             yield return null;
         }
+
+        // 정리
+        pet1.agent.isStopped = true;
+        pet2.agent.isStopped = true;
+        pet1.animationController.StopContinuousAnimation();
+        pet2.animationController.StopContinuousAnimation();
+        pet1.agent.speed = originalSpeed1;
+        pet2.agent.speed = originalSpeed2;
+
+        Debug.Log($"[CircleAroundEachOther] 서로 돌기 완료");
     }
 
     /// <summary>
@@ -1728,6 +1854,42 @@ public class PersonalityReactionInteraction : BasePetInteraction
         if (sphereCollider != null) return sphereCollider.radius;
 
         return 1f; // 기본값
+    }
+
+    /// <summary>
+    /// 펫 크기를 고려한 적절한 원 운동 반지름 계산
+    /// </summary>
+    private float CalculateCircleRadius(PetController circler, PetController target)
+    {
+        float circlerRadius = GetPetRadius(circler);
+        float targetRadius = GetPetRadius(target);
+
+        // 기본 간격 (펫들 사이 여유 공간)
+        float baseGap = 3f;
+
+        // 최소 반지름 = 타겟 반지름 + 기본 간격 + 회전하는 펫 반지름
+        float minRadius = targetRadius + baseGap + circlerRadius;
+
+        Debug.Log($"[CalculateCircleRadius] {circler.petName}({circlerRadius:F1}m) → {target.petName}({targetRadius:F1}m) 원 반지름: {minRadius:F1}m");
+        return minRadius;
+    }
+
+    /// <summary>
+    /// 원을 한 바퀴 도는데 필요한 적절한 시간 계산
+    /// </summary>
+    private float CalculateCircleDuration(float radius, float baseSpeed = 4f)
+    {
+        // 원의 둘레 계산
+        float circumference = 2f * Mathf.PI * radius;
+
+        // 펫의 평균 속도로 한 바퀴 도는데 걸리는 시간
+        float duration = circumference / baseSpeed;
+
+        // 최소 5초, 최대 10초로 제한
+        duration = Mathf.Clamp(duration, 5f, 10f);
+
+        Debug.Log($"[CalculateCircleDuration] 반지름 {radius:F1}m, 둘레 {circumference:F1}m → {duration:F1}초");
+        return duration;
     }
 
     /// <summary>
