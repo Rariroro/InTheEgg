@@ -372,8 +372,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
             SafeSetNavMeshAgent(shyPet, true);
         }
 
-        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, lazyPet, 0.5f));
-        yield return new WaitForSeconds(1f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, lazyPet, 0.3f));
 
         // 5단계: Shy가 조심스럽게 다시 접근
         Debug.Log($"[LazyShy] 단계5: {shyPet.petName}이 조심스럽게 다시 접근");
@@ -420,7 +419,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[LazyBrave] 이미 가까이 있음 - Lazy는 즉시 누워버림!");
             
             // 서로 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.5f));
+            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
             
             // Lazy는 바로 누워버림
         Debug.Log($"[LazyBrave] {lazyPet.petName}은 귀찮아서 즉시 누움");
@@ -472,8 +471,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.5f));
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
         
         SkipToCircle:
         // 3단계: Brave가 Lazy 주위를 돔
@@ -576,8 +574,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.5f));
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.3f));
         
         // 3단계: Playful이 연속 점프하며 놀자고 함
         Debug.Log($"[LazyPlayful] 단계3: {playfulPet.petName}이 점프하며 놀자고 함 (3회)");
@@ -647,7 +644,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 1단계: 조심스럽게 서로 쳐다보기
         Debug.Log($"[ShyShy] 단계1: 조심스럽게 서로 쳐다보기");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1f));
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
         
         // 2단계: 긴 정적
         Debug.Log($"[ShyShy] 단계2: 긴 정적... (불안한 기다림)");
@@ -674,8 +671,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyShy] 단계5: 멈춰서 다시 돌아봄");
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
         
         // 6단계: 완전히 반대 방향으로 도망
         Debug.Log($"[ShyShy] 단계6: 완전히 반대 방향으로 도망");
@@ -733,7 +729,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyBrave] 이미 가까이 있음 - Shy가 바로 놀람!");
             
             // 서로 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.3f));
         }
         else
         {
@@ -754,8 +750,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyBrave] 단계1: 서로 마주보기");
             bravePet.agent.isStopped = true;
             bravePet.animationController.StopContinuousAnimation();
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 1f));
-            yield return new WaitForSeconds(0.5f);
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
         }
         
         // 2단계: Shy가 놀라서 첫 번째 도망
@@ -778,7 +773,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 4단계: Shy가 멈춰서 돌아봄
         Debug.Log($"[ShyBrave] 단계4: {shyPet.petName}이 멈춰서 돌아봄");
         SafeSetNavMeshAgent(shyPet, true);
-        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.3f));
 
         // 5단계: Brave가 점프하며 인사
         Debug.Log($"[ShyBrave] 단계5: {bravePet.petName}이 점프하며 인사");
@@ -838,8 +833,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyPlayful] 이미 가까이 있음 - Shy가 바로 놀람!");
             
             // 서로 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
-            yield return new WaitForSeconds(0.3f);
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.3f));
         }
         else
         {
@@ -871,8 +865,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
             
             // 1단계: 서로 마주보기
         Debug.Log($"[ShyPlayful] 단계1: 서로 마주보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 1f));
-            yield return new WaitForSeconds(1f);
+            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
         }
 
         // 2단계: Shy가 놀라서 도망 후 돌아보기
@@ -894,8 +887,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // Shy가 멈춰서 돌아보기
         Debug.Log($"[ShyPlayful] Shy가 멈춰서 Playful을 돌아봄");
         shyPet.agent.isStopped = true;
-        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.3f));
         
         // 3단계: Playful이 점프하며 놀자고 함
         Debug.Log($"[ShyPlayful] 단계3: Playful이 점프하며 놀자고 신호");
@@ -985,8 +977,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet2.agent.isStopped = true;
         pet1.animationController.StopContinuousAnimation();
         pet2.animationController.StopContinuousAnimation();
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1f));
-        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
         
         // 2단계로 이어짐
         
@@ -1074,8 +1065,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         
         // 0단계: 서로 마주보기
         Debug.Log($"[BravePlayful] 단계0: 서로 마주보기");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(bravePet, playfulPet, 0.5f));
-        yield return new WaitForSeconds(0.3f);
+        yield return StartCoroutine(SmoothlyLookAtEachOther(bravePet, playfulPet, 0.3f));
         
         // 1단계: 둘 다 빠르게 접근
         Debug.Log($"[BravePlayful] 단계1: 둘 다 신나게 빠르게 접근");
