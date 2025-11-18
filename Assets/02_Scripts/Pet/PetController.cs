@@ -1,6 +1,7 @@
 // PetController.cs
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -317,7 +318,13 @@ public partial class PetController : MonoBehaviour
         }
         else
         {
-            foreach (PetType type in Enum.GetValues(typeof(PetType)))
+            // enum을 이름 길이 역순으로 정렬 (긴 이름 먼저 체크)
+            // 예: "Chicken" (7글자) → "Chick" (5글자)보다 먼저 체크됨
+            var sortedTypes = Enum.GetValues(typeof(PetType))
+                .Cast<PetType>()
+                .OrderByDescending(t => t.ToString().Length);
+
+            foreach (PetType type in sortedTypes)
             {
                 string typeName = type.ToString().ToLower();
                 if (name.Contains(typeName))
