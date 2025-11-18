@@ -47,15 +47,19 @@ public class RideAndWalkInteraction : BasePetInteraction
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
 
-    // 탈 수 있는 펫 조합 정의 (rider, mount)
+    // 탈 수 있는 펫 조합 정의 (rider, mount) - 10개 조합
     private readonly HashSet<(PetType rider, PetType mount)> validRideCombinations = new()
     {
         (PetType.Meerkat, PetType.Boar),
-        (PetType.Meerkat, PetType.Elephant),
+        (PetType.Chick, PetType.Pig),
+        (PetType.Chicken, PetType.Cow),
+        (PetType.Cat, PetType.Mule),
+        (PetType.Squirrel, PetType.Bear),
         (PetType.Monkey, PetType.Elephant),
-        (PetType.Cat, PetType.Dog),
-        (PetType.Monkey, PetType.Bear),
-        // 필요시 더 추가 가능
+        (PetType.RedPanda, PetType.Panda),
+        (PetType.Otter, PetType.Hippo),
+        (PetType.Platypus, PetType.Crocodile),
+        (PetType.Kangaroo, PetType.Horse)
     };
 
     // 탑승 위치 캐시 (성능 최적화)
