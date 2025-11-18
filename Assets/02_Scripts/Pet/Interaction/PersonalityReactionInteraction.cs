@@ -468,10 +468,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
             waitTime += Time.deltaTime;
             yield return null;
         }
-        
+
         bravePet.agent.isStopped = true;
-        bravePet.animationController.StopContinuousAnimation();
-        
+        bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
         yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
@@ -571,10 +571,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
             waitTime += Time.deltaTime;
             yield return null;
         }
-        
+
         playfulPet.agent.isStopped = true;
-        playfulPet.animationController.StopContinuousAnimation();
-        
+        playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
         yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.3f));

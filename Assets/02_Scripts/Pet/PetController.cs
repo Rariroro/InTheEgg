@@ -68,6 +68,10 @@ public partial class PetController : MonoBehaviour
     [Header("Treasure Settings")]
     [Tooltip("보물을 물고 갈 위치 (입 위치) - Unity 에디터에서 설정")]
     public Transform treasureHoldPoint;
+
+    [Header("Ride Settings")]
+    [Tooltip("다른 펫이 올라탈 수 있는 위치 - Unity 에디터에서 설정")]
+    public Transform ridePoint;
     public PetState State => petState;
     public PetNeeds Needs => petNeeds;
     public PetAI AI => petAI;
@@ -136,6 +140,13 @@ public partial class PetController : MonoBehaviour
             {
                 Debug.LogWarning($"[PetController] {petName}: TreasureHoldPoint를 찾을 수 없습니다. 보물찾기 기능이 제한될 수 있습니다.");
             }
+        }
+
+        // RidePoint 자동 검색 (인스펙터에서 할당되지 않은 경우)
+        if (ridePoint == null)
+        {
+            ridePoint = transform.Find("RidePoint");
+            // RidePoint는 선택사항이므로 경고 메시지 출력하지 않음
         }
         
         // 펫 타입과 이름이 일치하지 않거나 기본 이름인 경우 업데이트
