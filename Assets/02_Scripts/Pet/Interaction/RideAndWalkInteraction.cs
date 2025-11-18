@@ -68,6 +68,12 @@ public class RideAndWalkInteraction : BasePetInteraction
     // 라이더의 원래 회피 우선순위를 저장할 변수
     private int riderOriginalPriority;
 
+    // 캐시 초기화 (씬 로드/재로드 시 이전 잘못된 값 제거)
+    private void OnEnable()
+    {
+        ridePositionCache.Clear();
+    }
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.RideAndWalk;
@@ -96,9 +102,9 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 1순위: PetController의 ridePoint Transform 확인
         if (mount.ridePoint != null)
         {
-            // mount의 로컬 좌표계에서의 위치 계산
-            ridePosition = mount.transform.InverseTransformPoint(mount.ridePoint.position);
-            Debug.Log($"[RideWalk] {mount.petName}의 RidePoint 사용: {ridePosition}");
+            // RidePoint의 로컬 좌표 직접 사용 (부모의 자식이므로 불변)
+            ridePosition = mount.ridePoint.localPosition;
+            Debug.Log($"[RideWalk] {mount.petName}의 RidePoint 사용 (local): {ridePosition}");
         }
         // 2순위: Collider 기반 자동 계산
         else
