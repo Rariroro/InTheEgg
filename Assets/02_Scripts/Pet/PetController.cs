@@ -181,6 +181,10 @@ public partial class PetController : MonoBehaviour
         petAI.Init(this);
         petNeeds ??= new PetNeeds();
         petNeeds.Init(this);
+
+        // PetState 초기화
+        petState ??= new PetState();
+        petState.Initialize(this);
         
         // 이벤트 구독
         petNeeds.OnEmotionRequired += OnEmotionRequired;

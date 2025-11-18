@@ -57,7 +57,10 @@ public class PetState
 
     // 상호작용 타임아웃 감지용
     private float interactionStartTime;
-    private const float INTERACTION_TIMEOUT = 60f; // 60초 (긴 상호작용 허용)
+    private const float INTERACTION_TIMEOUT = 180f; // 180초 (긴 상호작용 허용)
+
+    // PetController 참조 (로그용)
+    private PetController ownerPet;
 
     // 이벤트
     public event Action<PetStatus, PetStatus> OnStatusChanged; // (이전 상태, 새 상태)
@@ -124,6 +127,14 @@ public class PetState
     /// <summary>
     /// 상태 전환 시도
     /// </summary>
+    /// <summary>
+    /// PetState 초기화 (PetController 참조 설정)
+    /// </summary>
+    public void Initialize(PetController pet)
+    {
+        ownerPet = pet;
+    }
+
     public bool TrySetStatus(PetStatus newStatus)
     {
         if (!CanTransition(currentStatus, newStatus))
@@ -131,11 +142,11 @@ public class PetState
             PetDebug.LogWarning($"{currentStatus}에서 {newStatus}로 전환할 수 없습니다.");
             return false;
         }
-        
+
         var previousStatus = currentStatus;
         currentStatus = newStatus;
         OnStatusChanged?.Invoke(previousStatus, newStatus);
-        
+
         PetDebug.LogStateChange("Pet", previousStatus.ToString(), newStatus.ToString());
         return true;
     }
@@ -326,7 +337,12 @@ public class PetState
     {
         if (currentStatus == PetStatus.Interacting)
         {
-            Debug.LogWarning($"[PetState] ForceEndInteraction - 상호작용 강제 종료");
+            string petName = ownerPet != null ? ownerPet.petName : "Unknown";
+            string partnerName = interactionPartner != null ? interactionPartner.petName : "Unknown";
+            string interactionType = currentInteractionLogic != null ? currentInteractionLogic.InteractionName : "Unknown";
+
+            Debug.LogWarning($"[PetState] {petName} ForceEndInteraction - {petName} & {partnerName}의 {interactionType} 상호작용 강제 종료");
+
             interactionPartner = null;
             currentInteractionLogic = null;
             currentStatus = PetStatus.Idle; // TrySetStatus 없이 직접 변경
@@ -343,7 +359,11 @@ public class PetState
             if (Time.time - interactionStartTime > INTERACTION_TIMEOUT)
             {
                 #if UNITY_EDITOR
-                Debug.LogWarning($"[PetState] 상호작용이 {INTERACTION_TIMEOUT}초 경과하여 안전하게 종료합니다. (개발 모드 안전장치)");
+                string petName = ownerPet != null ? ownerPet.petName : "Unknown";
+                string partnerName = interactionPartner != null ? interactionPartner.petName : "Unknown";
+                string interactionType = currentInteractionLogic != null ? currentInteractionLogic.InteractionName : "Unknown";
+
+                Debug.LogWarning($"[PetState] {petName} & {partnerName}의 {interactionType} 상호작용이 {INTERACTION_TIMEOUT}초 경과하여 안전하게 종료합니다. (개발 모드 안전장치)");
                 #endif
                 ForceEndInteraction();
             }
