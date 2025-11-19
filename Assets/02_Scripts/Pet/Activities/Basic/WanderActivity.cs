@@ -94,13 +94,19 @@ public class WanderActivity : PetActivityAdapter
     public override void Update()
     {
         if (!IsAgentReady()) return;
-        
+
+        // 상호작용 중이면 Update 중단 (NavMeshAgent 제어 방지)
+        if (pet.State.IsInteracting)
+        {
+            return;
+        }
+
         // 선택 상태가 되면 즉시 중단
         if (pet.State.IsSelected)
         {
             return;
         }
-        
+
         behaviorTimer += Time.deltaTime;
         
         // 현재 이동 중이라면 목표 지점 도착 여부 체크

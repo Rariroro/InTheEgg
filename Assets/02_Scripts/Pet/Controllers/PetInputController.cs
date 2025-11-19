@@ -388,6 +388,59 @@ public class PetInputController : PetControllerBase
     /// </summary>
     private void StartHolding()
     {
+        // ===== RideAndWalk 상호작용 중인지 체크 =====
+        // 부모가 있다면 라이더일 가능성이 있음
+        if (petController.transform.parent != null)
+        {
+            var parentPet = petController.transform.parent.GetComponent<PetController>();
+            if (parentPet != null)
+            {
+                // 이 펫은 라이더이고 부모는 마운트
+                Debug.Log($"[StartHolding] {petController.petName}은(는) {parentPet.petName} 위에 탑승 중 - 분리 필요");
+
+                // 부모-자식 관계 해제
+                petController.transform.SetParent(null, true);
+
+                // 라이더 위치 조정
+                Vector3 safePosition = parentPet.transform.position + parentPet.transform.right * 2f;
+                petController.transform.position = safePosition;
+
+                // 스케일 복원
+                petController.transform.localScale = Vector3.one;
+            }
+        }
+
+        // 자식이 있다면 마운트일 가능성이 있음
+        foreach (Transform child in petController.transform)
+        {
+            var childPet = child.GetComponent<PetController>();
+            if (childPet != null)
+            {
+                // 이 펫은 마운트이고 자식은 라이더
+                Debug.Log($"[StartHolding] {childPet.petName}이(가) {petController.petName} 위에 탑승 중 - 라이더 분리");
+
+                // 라이더를 분리
+                child.SetParent(null, true);
+
+                // 라이더 위치 조정
+                Vector3 safePosition = petController.transform.position + petController.transform.right * 2f;
+                child.position = safePosition;
+
+                // 라이더 스케일 복원
+                child.localScale = Vector3.one;
+
+                // 라이더의 NavMeshAgent 재활성화
+                if (childPet.agent != null)
+                {
+                    if (!childPet.agent.enabled)
+                    {
+                        childPet.agent.enabled = true;
+                    }
+                    childPet.StartCoroutine(DelayedAgentWarp(childPet));
+                }
+            }
+        }
+
         // ===== 진행 중인 활동 강제 중단 =====
 
         // 다른 펫과 상호작용 중이면 강제 중단
@@ -438,11 +491,54 @@ public class PetInputController : PetControllerBase
     }
 
     /// <summary>
+    /// NavMeshAgent를 지연 후 재설정 (안정성 향상)
+    /// </summary>
+    private IEnumerator DelayedAgentWarp(PetController pet)
+    {
+        yield return null; // 한 프레임 대기
+
+        if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
+        {
+            pet.agent.Warp(pet.transform.position);
+            pet.agent.isStopped = false;
+        }
+    }
+
+    /// <summary>
     /// 펫 놓기 처리
     /// 현재 마우스 위치의 지형에 펫을 부드럽게 내려놓습니다
     /// </summary>
     private void StopHolding()
     {
+        // ===== 부모-자식 관계 최종 체크 =====
+        // 놓기 전에 혹시 남아있는 부모-자식 관계 정리
+        if (petController.transform.parent != null)
+        {
+            var parentPet = petController.transform.parent.GetComponent<PetController>();
+            if (parentPet != null)
+            {
+                Debug.Log($"[StopHolding] {petController.petName}의 부모 관계 해제");
+                petController.transform.SetParent(null, true);
+                petController.transform.localScale = Vector3.one;
+            }
+        }
+
+        // 자식 펫이 있다면 분리
+        foreach (Transform child in petController.transform)
+        {
+            var childPet = child.GetComponent<PetController>();
+            if (childPet != null)
+            {
+                Debug.Log($"[StopHolding] {childPet.petName}을(를) {petController.petName}에서 분리");
+                child.SetParent(null, true);
+                child.localScale = Vector3.one;
+
+                // 자식 펫 위치 조정
+                Vector3 childSafePos = petController.transform.position + Vector3.right * 2f;
+                child.position = childSafePos;
+            }
+        }
+
         // ===== 홀드 상태 해제 =====
         // State의 IsHolding을 false로 설정
         petController.State.UpdateHoldingState(false);
@@ -978,6 +1074,14 @@ public class PetInputController : PetControllerBase
         {
             // 상호작용 로직의 모든 코루틴 중단
             var interactionLogic = petController.State.InteractionLogic;
+
+            // RideAndWalkInteraction 특별 처리 - 라이더와 마운트 분리
+            var rideWalkInteraction = interactionLogic as RideAndWalkInteraction;
+            if (rideWalkInteraction != null)
+            {
+                Debug.Log($"[ForceStopInteraction] RideAndWalkInteraction 감지 - 강제 분리 실행");
+                rideWalkInteraction.ForceCleanup();
+            }
 
             // ChameleonCamouflageInteraction 특별 처리 - 머티리얼 복원
             var chameleonInteraction = interactionLogic as ChameleonCamouflageInteraction;
