@@ -303,12 +303,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
   meetingDistance: 5
-  ridePositionOffset: {x: 0, y: 1.7, z: 0.2}
+  defaultRideOffset: {x: 0, y: 1.7, z: 0.2}
   mountDuration: 1
   walkTogetherDuration: 40
   pathUpdateInterval: 15
   walkingSpeedMultiplier: 0.9
   farewellDistance: 6
+  autoHeightMultiplier: 0.85
+  autoDepthMultiplier: 0.2
   agentSafetyTimeout: 3
 --- !u!114 &1608003550366215983
 MonoBehaviour:
@@ -433,6 +435,7 @@ MonoBehaviour:
   interactionStartDistance: 5
   reactionDuration: 8
   approachDistance: 5
+  preciseThreshold: 0.3
   fleeDistance: 10
   moveTimeout: 5
   pauseDuration: 1.5

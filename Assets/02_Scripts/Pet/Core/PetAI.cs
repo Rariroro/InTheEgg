@@ -88,8 +88,8 @@ public class PetAI : MonoBehaviour
     /// </summary>
     public void UpdateAI()
     {
-        // 플레이어가 펫을 들고 있을 때만 AI 중단
-        if (petState?.IsHolding == true)
+        // 플레이어가 펫을 들고 있거나 상호작용 중일 때 AI 중단
+        if (petState?.IsHolding == true || petState?.IsInteracting == true)
             return;
             
         // 현재 활동이 완료되었는지 확인
