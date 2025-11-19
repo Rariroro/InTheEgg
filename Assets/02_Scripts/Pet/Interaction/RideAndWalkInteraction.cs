@@ -79,6 +79,25 @@ public class RideAndWalkInteraction : BasePetInteraction
         return InteractionType.RideAndWalk;
     }
 
+    /// <summary>
+    /// 템플릿 인스턴스의 설정을 복사합니다 (인스턴스 생성 시 사용)
+    /// </summary>
+    public void CopySettingsFrom(RideAndWalkInteraction template)
+    {
+        if (template == null) return;
+
+        this.meetingDistance = template.meetingDistance;
+        this.defaultRideOffset = template.defaultRideOffset;
+        this.mountDuration = template.mountDuration;
+        this.walkTogetherDuration = template.walkTogetherDuration;
+        this.pathUpdateInterval = template.pathUpdateInterval;
+        this.walkingSpeedMultiplier = template.walkingSpeedMultiplier;
+        this.farewellDistance = template.farewellDistance;
+        this.autoHeightMultiplier = template.autoHeightMultiplier;
+        this.autoDepthMultiplier = template.autoDepthMultiplier;
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+    }
+
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
         // HashSet을 사용한 유연한 조합 체크
@@ -421,123 +440,6 @@ private bool IsPetPlayingRidingAnimation(PetController meerkat)
     return meerkat.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Eat;
 }
 // ▲▲▲ [여기까지 추가] ▲▲▲
-
-    /// <summary>
-    /// 강제로 상호작용을 중단하고 정리합니다 (터치/홀드 시 호출됨)
-    /// </summary>
-    public void ForceCleanup()
-    {
-        Debug.Log("[RideAndWalk] ForceCleanup 호출됨 - 강제로 상호작용 정리");
-
-        // 모든 코루틴 즉시 중단
-        StopAllCoroutines();
-
-        // 현재 라이더와 마운트 찾기 (부모-자식 관계로 판별)
-        PetController rider = null;
-        PetController mount = null;
-
-        // 모든 펫 확인하여 부모-자식 관계 찾기
-        PetController[] allPets = FindObjectsOfType<PetController>();
-        foreach (var pet in allPets)
-        {
-            if (pet.transform.parent != null)
-            {
-                var parentPet = pet.transform.parent.GetComponent<PetController>();
-                if (parentPet != null)
-                {
-                    // 부모-자식 관계 발견
-                    rider = pet;
-                    mount = parentPet;
-                    break;
-                }
-            }
-        }
-
-        // 라이더와 마운트를 찾았다면 즉시 분리
-        if (rider != null && mount != null)
-        {
-            Debug.Log($"[RideAndWalk] ForceCleanup - {rider.petName}을(를) {mount.petName}에서 분리");
-
-            // 1. 부모-자식 관계 즉시 해제
-            rider.transform.SetParent(null, true);
-
-            // 2. 라이더를 마운트 옆 안전한 위치로 이동
-            Vector3 safePosition = mount.transform.position + mount.transform.right * 2f;
-            NavMeshHit navHit;
-            if (NavMesh.SamplePosition(safePosition, out navHit, 5f, NavMesh.AllAreas))
-            {
-                rider.transform.position = navHit.position;
-            }
-            else
-            {
-                // 실패 시 마운트 위치 사용
-                rider.transform.position = mount.transform.position + Vector3.right * 2f;
-            }
-
-            // 3. 라이더 NavMeshAgent 재활성화
-            if (rider.agent != null)
-            {
-                if (!rider.agent.enabled)
-                {
-                    rider.agent.enabled = true;
-                }
-                // 잠시 대기 후 위치 설정
-                rider.StartCoroutine(DelayedAgentSetup(rider));
-            }
-
-            // 4. 라이더 스케일 복원
-            rider.transform.localScale = Vector3.one;
-
-            // 5. 마운트 상태 정리
-            if (mount.agent != null && mount.agent.enabled && mount.agent.isOnNavMesh)
-            {
-                mount.agent.isStopped = false;
-            }
-
-            // 6. 애니메이션 정지
-            var riderAnimController = rider.GetComponent<PetAnimationController>();
-            if (riderAnimController != null)
-            {
-                riderAnimController.StopContinuousAnimation();
-                riderAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-            }
-
-            var mountAnimController = mount.GetComponent<PetAnimationController>();
-            if (mountAnimController != null)
-            {
-                mountAnimController.StopContinuousAnimation();
-                mountAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-            }
-
-            // 7. 감정 표현 숨기기
-            rider.HideEmotion();
-            mount.HideEmotion();
-
-            // 8. 상호작용 상태 종료
-            EndInteraction(rider, mount);
-
-            Debug.Log("[RideAndWalk] ForceCleanup 완료 - 두 펫이 안전하게 분리됨");
-        }
-        else
-        {
-            Debug.LogWarning("[RideAndWalk] ForceCleanup - 라이더와 마운트를 찾을 수 없음");
-        }
-    }
-
-    /// <summary>
-    /// NavMeshAgent 설정을 지연 실행 (안정성을 위해)
-    /// </summary>
-    private IEnumerator DelayedAgentSetup(PetController pet)
-    {
-        yield return null; // 한 프레임 대기
-
-        if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
-        {
-            pet.agent.Warp(pet.transform.position);
-            pet.agent.isStopped = false;
-            pet.agent.avoidancePriority = 50; // 기본값
-        }
-    }
 
     /// <summary>
     /// 라이더가 마운트 펫의 등에서 내리는 단계를 처리합니다.

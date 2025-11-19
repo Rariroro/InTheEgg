@@ -227,17 +227,22 @@ public class PetInteractionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 일반 상호작용 시작 (5개 제한 적용)
+    /// 일반 상호작용 시작 (5개 제한 적용) - 새 인스턴스 생성
     /// </summary>
     private void StartInteraction(InteractionInfo interactionInfo)
     {
         // Debug.Log($"[PetInteractionManager] {interactionInfo.pet1.petName}와 {interactionInfo.pet2.petName} 사이에 {interactionInfo.interaction.InteractionName} 시작!");
 
+        // 템플릿에서 새로운 인스턴스 생성 (격리를 위해)
+        var templateInteraction = interactionInfo.interaction;
+        var newInteraction = CreateInteractionInstance(templateInteraction);
+        interactionInfo.interaction = newInteraction;
+
         // 활성 상호작용 목록에 추가
         activeInteractions.Add(interactionInfo);
 
         // 상호작용 실행
-        interactionInfo.interaction.StartInteraction(interactionInfo.pet1, interactionInfo.pet2);
+        newInteraction.StartInteraction(interactionInfo.pet1, interactionInfo.pet2);
 
         // 상호작용 중인 펫 쌍 기록
         interactingPets[interactionInfo.pet1] = interactionInfo.pet2;
@@ -304,6 +309,35 @@ public class PetInteractionManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 템플릿에서 새로운 상호작용 인스턴스를 생성합니다 (동시 실행 격리)
+    /// </summary>
+    private BasePetInteraction CreateInteractionInstance(BasePetInteraction template)
+    {
+        if (template == null) return null;
+
+        // 새로운 GameObject 생성
+        GameObject interactionObj = new GameObject($"{template.InteractionName}_{Time.time}");
+        interactionObj.transform.SetParent(this.transform);
+
+        BasePetInteraction newInstance = null;
+
+        if (template is RideAndWalkInteraction)
+        {
+            var original = template as RideAndWalkInteraction;
+            var newComp = interactionObj.AddComponent<RideAndWalkInteraction>();
+            newComp.CopySettingsFrom(original);
+            newInstance = newComp;
+        }
+        else
+        {
+            // 다른 상호작용은 기존 방식 사용 (템플릿 그대로)
+            return template;
+        }
+
+        return newInstance;
+    }
+
+    /// <summary>
     /// 상호작용 종료 시 호출
     /// </summary>
     public void NotifyInteractionEnded(PetController pet1, PetController pet2)
@@ -327,6 +361,12 @@ public class PetInteractionManager : MonoBehaviour
         if (endedInteraction != null)
         {
             activeInteractions.Remove(endedInteraction);
+
+            // 생성된 인스턴스 파괴 (메모리 정리)
+            if (endedInteraction.interaction != null && endedInteraction.interaction.gameObject != this.gameObject)
+            {
+                Destroy(endedInteraction.interaction.gameObject);
+            }
 
             // 토스트 알림에 활성 상호작용 수 업데이트
             if (InteractionNotificationHandler.Instance != null)

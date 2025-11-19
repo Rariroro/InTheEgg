@@ -1075,14 +1075,6 @@ public class PetInputController : PetControllerBase
             // 상호작용 로직의 모든 코루틴 중단
             var interactionLogic = petController.State.InteractionLogic;
 
-            // RideAndWalkInteraction 특별 처리 - 라이더와 마운트 분리
-            var rideWalkInteraction = interactionLogic as RideAndWalkInteraction;
-            if (rideWalkInteraction != null)
-            {
-                Debug.Log($"[ForceStopInteraction] RideAndWalkInteraction 감지 - 강제 분리 실행");
-                rideWalkInteraction.ForceCleanup();
-            }
-
             // ChameleonCamouflageInteraction 특별 처리 - 머티리얼 복원
             var chameleonInteraction = interactionLogic as ChameleonCamouflageInteraction;
             if (chameleonInteraction != null)

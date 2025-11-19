@@ -116,6 +116,7 @@ public class CamelAlpacaSpitFightInteraction : BasePetInteraction
             Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
+    
 
     #region Interaction Phases
 
