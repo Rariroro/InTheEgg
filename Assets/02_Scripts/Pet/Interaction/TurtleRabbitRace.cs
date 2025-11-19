@@ -102,6 +102,50 @@ public class TurtleRabbitRace : BasePetInteraction
 
     // ★★★ 추가: 현재 인스턴스의 결승선 화살표 참조 ★★★
     private GameObject finishArrowInstance;
+
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(TurtleRabbitRace template)
+    {
+        if (template == null) return;
+
+        // Finish Line Visuals
+        this.finishArrowPrefab = template.finishArrowPrefab;
+        this.arrowHeight = template.arrowHeight;
+        this.arrowBobSpeed = template.arrowBobSpeed;
+        this.arrowBobAmount = template.arrowBobAmount;
+
+        // Race Settings
+        this.raceDistance = template.raceDistance;
+        this.minRaceDistance = template.minRaceDistance;
+        this.raceTimeoutSeconds = template.raceTimeoutSeconds;
+
+        // Fast Pet Settings
+        this.fastPetStartSpeedMultiplier = template.fastPetStartSpeedMultiplier;
+        this.fastPetNapProgress = template.fastPetNapProgress;
+        this.fastPetFinalSprintSpeedMultiplier = template.fastPetFinalSprintSpeedMultiplier;
+
+        // Slow Pet Settings
+        this.slowPetSpeedMultiplier = template.slowPetSpeedMultiplier;
+        this.slowPetWakeUpProgress = template.slowPetWakeUpProgress;
+
+        // Safety Settings
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+
+        // Anti-Bottleneck Settings
+        this.finishLineSpread = template.finishLineSpread;
+        this.stuckDetectionTime = template.stuckDetectionTime;
+        this.detourRadius = template.detourRadius;
+
+        // Arrow Disappearance
+        this.arrowDisappearDistance = template.arrowDisappearDistance;
+
+        // Fast Pet Nap Settings
+        this.fastPetSlowDownDuration = template.fastPetSlowDownDuration;
+        this.fastPetMinSpeedBeforeSleep = template.fastPetMinSpeedBeforeSleep;
+    }
+
     /// <summary>
     /// 이 상호작용의 타입을 InteractionType.TurtleRabbitRace로 결정합니다.
     /// </summary>
