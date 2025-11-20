@@ -81,9 +81,23 @@ public class WalkTogetherInteraction : BasePetInteraction
     {
         PetType type1 = pet1.PetType;
         PetType type2 = pet2.PetType;
-        
-        return (type1 == PetType.Monkey && type2 == PetType.Gorilla) || 
-               (type1 == PetType.Gorilla && type2 == PetType.Monkey);
+
+        return (type1 == PetType.Monkey && type2 == PetType.Gorilla) ||
+               (type1 == PetType.Gorilla && type2 == PetType.Monkey) ||
+               (type1 == PetType.Anteater && type2 == PetType.Malayan) ||
+               (type1 == PetType.Malayan && type2 == PetType.Anteater) ||
+               (type1 == PetType.Pangolin && type2 == PetType.Armadillo) ||
+               (type1 == PetType.Armadillo && type2 == PetType.Pangolin) ||
+               (type1 == PetType.Raccoon && type2 == PetType.RedPanda) ||
+               (type1 == PetType.RedPanda && type2 == PetType.Raccoon) ||
+               (type1 == PetType.Ostrich && type2 == PetType.Flamingo) ||
+               (type1 == PetType.Flamingo && type2 == PetType.Ostrich) ||
+               (type1 == PetType.Mule && type2 == PetType.Zebra) ||
+               (type1 == PetType.Zebra && type2 == PetType.Mule) ||
+               (type1 == PetType.Elephant && type2 == PetType.Giraffe) ||
+               (type1 == PetType.Giraffe && type2 == PetType.Elephant) ||
+               (type1 == PetType.Elk && type2 == PetType.Deer) ||
+               (type1 == PetType.Deer && type2 == PetType.Elk);
     }
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)

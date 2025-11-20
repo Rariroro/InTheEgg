@@ -277,7 +277,9 @@ public class SkunkDefenseInteraction : BasePetInteraction
         if (skunkSprayParticlePrefab != null)
         {
             Vector3 particlePos = skunk.transform.position + skunk.transform.TransformDirection(particleOffset);
-            GameObject particles = Instantiate(skunkSprayParticlePrefab, particlePos, skunk.transform.rotation);
+            // 스컹크가 바라보는 반대 방향(뒤쪽)으로 분사
+            GameObject particles = Instantiate(skunkSprayParticlePrefab, particlePos,
+                Quaternion.LookRotation(-skunk.transform.forward));
             Destroy(particles, particleDuration);
         }
         // 방어 애니메이션 (방구 뀌기)
