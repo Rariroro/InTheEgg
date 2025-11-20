@@ -56,6 +56,36 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     private Dictionary<Renderer, Material[]> currentOriginalMaterials = null;
     private PetController currentChameleon = null;
 
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(ChameleonCamouflageInteraction template)
+    {
+        if (template == null) return;
+
+        // Material Settings
+        this.transparentMaterial = template.transparentMaterial;
+
+        // Interaction Settings
+        this.camouflageTriggerDistance = template.camouflageTriggerDistance;
+        this.camouflageDuration = template.camouflageDuration;
+        this.predatorConfusionDuration = template.predatorConfusionDuration;
+        this.predatorGiveUpDelay = template.predatorGiveUpDelay;
+
+        // Predator Behavior
+        this.predatorApproachSpeedMultiplier = template.predatorApproachSpeedMultiplier;
+        this.predatorLeaveDistance = template.predatorLeaveDistance;
+        this.safeDistanceForChameleon = template.safeDistanceForChameleon;
+        this.confusionSearchRadius = template.confusionSearchRadius;
+
+        // Visual Effects
+        this.fadeOutDuration = template.fadeOutDuration;
+        this.fadeInDuration = template.fadeInDuration;
+
+        // Safety Settings
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+    }
+
     // 상호작용 타입 결정
     protected override InteractionType DetermineInteractionType()
     {

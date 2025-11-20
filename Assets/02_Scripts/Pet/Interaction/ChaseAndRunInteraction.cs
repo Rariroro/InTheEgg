@@ -114,6 +114,52 @@ public class ChaseAndRunInteraction : BasePetInteraction
     private float updateTimer = 0f;
     private const float UPDATE_INTERVAL = 0.3f;
 
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(ChaseAndRunInteraction template)
+    {
+        if (template == null) return;
+
+        // Chase Settings
+        this.chaseDuration = template.chaseDuration;
+        this.chaserBaseSpeedMultiplier = template.chaserBaseSpeedMultiplier;
+        this.chaserSprintSpeedMultiplier = template.chaserSprintSpeedMultiplier;
+        this.runnerBaseSpeedMultiplier = template.runnerBaseSpeedMultiplier;
+        this.runnerPanicSpeedMultiplier = template.runnerPanicSpeedMultiplier;
+
+        // Behavior Settings
+        this.panicDistance = template.panicDistance;
+        this.farDistance = template.farDistance;
+        this.directionChangeInterval = template.directionChangeInterval;
+        this.normalUpdateInterval = template.normalUpdateInterval;
+        this.closeUpdateInterval = template.closeUpdateInterval;
+        this.sprintChance = template.sprintChance;
+        this.sprintDuration = template.sprintDuration;
+
+        // 새로운 재미 요소
+        this.uturnChance = template.uturnChance;
+        this.stopFakeChance = template.stopFakeChance;
+        this.predictShotChance = template.predictShotChance;
+        this.catchDistance = template.catchDistance;
+        this.staminaDecreaseRate = template.staminaDecreaseRate;
+        this.staminaRecoveryRate = template.staminaRecoveryRate;
+        this.minSpeedMultiplier = template.minSpeedMultiplier;
+
+        // Visual Effects
+        this.dustParticlePrefab = template.dustParticlePrefab;
+        this.catchParticlePrefab = template.catchParticlePrefab;
+        this.scareRadius = template.scareRadius;
+
+        // End Chase Settings
+        this.chaserRestDuration = template.chaserRestDuration;
+        this.safeDistance = template.safeDistance;
+        this.maxEscapeTime = template.maxEscapeTime;
+
+        // Safety Settings
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+    }
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.ChaseAndRun;

@@ -104,9 +104,14 @@ public class FightInteraction : BasePetInteraction
         // 같은 육식동물끼리만 싸움 (서로 다른 종일 때)
         if (pet1IsMeatEater && pet2IsMeatEater && pet1.PetType != pet2.PetType)
         {
-            // 크기 차이가 너무 크면 싸우지 않음 (선택사항)
-            // 여기에 추가 로직 구현 가능
-            return true;
+            // [변경] Brave 성격을 가진 펫들만 싸움
+            bool pet1IsBrave = pet1.personality == PetAIProperties.Personality.Brave;
+            bool pet2IsBrave = pet2.personality == PetAIProperties.Personality.Brave;
+
+            if (pet1IsBrave && pet2IsBrave)
+            {
+                return true;
+            }
         }
 
         return false;

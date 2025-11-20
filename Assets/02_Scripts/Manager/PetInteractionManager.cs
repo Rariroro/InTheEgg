@@ -335,6 +335,20 @@ public class PetInteractionManager : MonoBehaviour
             newComp.CopySettingsFrom(original);
             newInstance = newComp;
         }
+        else if (template is ChaseAndRunInteraction)
+        {
+            var original = template as ChaseAndRunInteraction;
+            var newComp = interactionObj.AddComponent<ChaseAndRunInteraction>();
+            newComp.CopySettingsFrom(original);
+            newInstance = newComp;
+        }
+        else if (template is ChameleonCamouflageInteraction)
+        {
+            var original = template as ChameleonCamouflageInteraction;
+            var newComp = interactionObj.AddComponent<ChameleonCamouflageInteraction>();
+            newComp.CopySettingsFrom(original);
+            newInstance = newComp;
+        }
         else
         {
             // 다른 상호작용은 기존 방식 사용 (템플릿 그대로)
