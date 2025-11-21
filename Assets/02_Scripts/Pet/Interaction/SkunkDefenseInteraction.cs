@@ -442,6 +442,15 @@ public class SkunkDefenseInteraction : BasePetInteraction
     {
         Debug.Log($"[{InteractionName}] 6단계: 승리의 기쁨!");
 
+        // 공격자가 Rest 애니메이션 중이면 Idle로 전환
+        var attackerAnim = attacker.GetComponent<PetAnimationController>();
+        if (attackerAnim != null)
+        {
+            attackerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            // 애니메이션 전환 대기
+            yield return new WaitForSeconds(0.5f);
+        }
+
         // 공격자를 향해 돌아보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(skunk, attacker, 0.5f));
 
@@ -452,6 +461,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
         // 스컹크 승리 점프
         var skunkAnim = skunk.GetComponent<PetAnimationController>();
         yield return StartCoroutine(skunkAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Jump));
+        yield return StartCoroutine(attackerAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Eat));
 
         yield return new WaitForSeconds(1f);
     }
