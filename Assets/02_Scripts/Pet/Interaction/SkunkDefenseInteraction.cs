@@ -61,6 +61,9 @@ public class SkunkDefenseInteraction : BasePetInteraction
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
 
+    // 기본 위치 이동(중간 지점으로 모이기)을 하지 않고, 공격자가 직접 접근하도록 설정
+    public override bool ShouldPerformInitialMovement => false;
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.ChaseAndRun;
@@ -179,10 +182,17 @@ public class SkunkDefenseInteraction : BasePetInteraction
     {
         Debug.Log($"[{InteractionName}] 1단계: {attacker.petName}이(가) {skunk.petName}에게 접근합니다.");
 
+        // 펫 크기에 따른 거리 조정
+        float attackerMultiplier = attacker.Profile.GetInteractionDistanceMultiplier();
+        float skunkMultiplier = skunk.Profile.GetInteractionDistanceMultiplier();
+        float averageMultiplier = (attackerMultiplier + skunkMultiplier) / 2f;
+        float adjustedApproachDistance = approachDistance * averageMultiplier;
+
         // 스컹크 앞쪽으로 접근할 위치 계산
         Vector3 direction = (skunk.transform.position - attacker.transform.position).normalized;
-        Vector3 approachTarget = skunk.transform.position - direction * approachDistance;
-        approachTarget = FindValidPositionOnNavMesh(approachTarget, approachDistance * 2);
+        if (direction == Vector3.zero) direction = attacker.transform.forward; // 위치가 겹쳤을 경우 대비
+        Vector3 approachTarget = skunk.transform.position - direction * adjustedApproachDistance;
+        approachTarget = FindValidPositionOnNavMesh(approachTarget, adjustedApproachDistance * 2);
 
         // 공격자 이동 시작
         attacker.agent.isStopped = false;
@@ -197,8 +207,18 @@ public class SkunkDefenseInteraction : BasePetInteraction
         float timer = 0f;
         while (timer < approachTimeout)
         {
-            // 스컹크가 공격자를 계속 바라봄
-            LookAtOther(skunk, attacker);
+            // 스컹크가 공격자를 부드럽게 바라봄
+            Vector3 directionToAttacker = (attacker.transform.position - skunk.transform.position).normalized;
+            directionToAttacker.y = 0;
+            if (directionToAttacker.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToAttacker);
+                skunk.transform.rotation = Quaternion.Slerp(skunk.transform.rotation, targetRotation, Time.deltaTime * 5f);
+                if (skunk.petModelTransform != null)
+                {
+                    skunk.petModelTransform.rotation = skunk.transform.rotation;
+                }
+            }
 
             // 도착 체크
             if (!attacker.agent.pathPending && attacker.agent.remainingDistance < 0.5f)
@@ -230,12 +250,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 2단계: {attacker.petName}이(가) 공격을 시도합니다.");
 
         // 공격자 감정 변경
-        attacker.ShowEmotion(EmotionType.Hungry, 5f);
+        attacker.ShowEmotion(EmotionType.Hungry, 3f);
 
-        // 공격 애니메이션
+        // 공격 애니메이션 (한 번만 재생)
         var attackerAnim = attacker.GetComponent<PetAnimationController>();
-        yield return StartCoroutine(attackerAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Attack, 1.5f, false, false));
+        yield return StartCoroutine(attackerAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
 
         // 스컹크 놀람 반응
         skunk.ShowEmotion(EmotionType.Scared, 3f);
@@ -273,7 +292,8 @@ public class SkunkDefenseInteraction : BasePetInteraction
             elapsedTime += Time.deltaTime;
             yield return null;
         }
- // 파티클 효과 생성
+        
+        // 파티클 효과 생성
         if (skunkSprayParticlePrefab != null)
         {
             Vector3 particlePos = skunk.transform.position + skunk.transform.TransformDirection(particleOffset);
@@ -282,11 +302,12 @@ public class SkunkDefenseInteraction : BasePetInteraction
                 Quaternion.LookRotation(-skunk.transform.forward));
             Destroy(particles, particleDuration);
         }
-        // 방어 애니메이션 (방구 뀌기)
-        yield return StartCoroutine(skunkAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Attack, skunkDefenseAnimationDuration, false, false));
 
-       
+        // 방어 애니메이션 (방구 뀌기 - 한 번만 재생)
+        yield return StartCoroutine(skunkAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
+
+        // 파티클이 충분히 퍼질 때까지 잠시 대기
+        yield return new WaitForSeconds(2.0f);
 
         // 다시 원래 방향으로 돌아오기
         elapsedTime = 0f;
@@ -412,6 +433,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
         skunk.agent.isStopped = true;
         skunk.GetComponent<PetAnimationController>().StopContinuousAnimation();
     }
+    
 
     /// <summary>
     /// 6단계: 승리 표현
@@ -429,8 +451,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
         // 스컹크 승리 점프
         var skunkAnim = skunk.GetComponent<PetAnimationController>();
-        yield return StartCoroutine(skunkAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 2.0f, true, false));
+        yield return StartCoroutine(skunkAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Jump));
 
         yield return new WaitForSeconds(1f);
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+
 // 기본 상호작용 추상 클래스
 public abstract class BasePetInteraction : MonoBehaviour
 {
@@ -31,6 +32,12 @@ public abstract class BasePetInteraction : MonoBehaviour
     [Tooltip("상호작용 시작 시 펫들이 유지할 기본 거리입니다.")]
     public float interactionStartDistance = 5f;
     // ▲▲▲ [여기까지 수정] ▲▲▲
+    /// <summary>
+    /// 상호작용 시작 시 기본 위치 이동(중간 지점으로 모이기)을 수행할지 여부
+    /// 기본값: true. false로 오버라이드하면 제자리에서 시작하거나 직접 이동 로직을 구현해야 함.
+    /// </summary>
+    public virtual bool ShouldPerformInitialMovement => true;
+
     // 해당 펫들이 이 상호작용을 할 수 있는지 확인
     public abstract bool CanInteract(PetController pet1, PetController pet2);
     // ★★★ 핵심 변경: 상호작용의 시작을 책임지는 새로운 public 메서드 ★★★
@@ -46,7 +53,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             Debug.Log($"[{InteractionName}] 모이기 상태로 인해 상호작용 시작이 차단됨");
             return;
         }
-        Debug.Log("StartInteraction2");
+        // Debug.Log("StartInteraction2");
 
         // ✅ 토스트 알림을 준비 완료 후로 이동 (InteractionLifecycle에서 발생)
 
@@ -95,24 +102,31 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
 
         // ▼▼▼ [수정] 상호작용 시작 시 펫들을 지정된 거리로 자연스럽게 이동시키는 로직 추가 ▼▼▼
-        Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
+        if (ShouldPerformInitialMovement)
+        {
+            Debug.Log($"[{InteractionName}] 상호작용 시작을 위해 펫들을 정렬합니다. 목표 거리: {interactionStartDistance}m");
 
-        // 펫 크기에 따른 거리 조정
-        float adjustedDistance = CalculateAdjustedDistance(pet1, pet2);
+            // 펫 크기에 따른 거리 조정
+            float adjustedDistance = CalculateAdjustedDistance(pet1, pet2);
 
-        // 펫들이 서로 마주볼 위치 계산
-        Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
-        if (direction == Vector3.zero) direction = pet1.transform.forward; // 위치가 겹쳤을 경우를 대비
-        Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
+            // 펫들이 서로 마주볼 위치 계산
+            Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
+            if (direction == Vector3.zero) direction = pet1.transform.forward; // 위치가 겹쳤을 경우를 대비
+            Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
 
-        Vector3 pet1TargetPos = midpoint - direction * (adjustedDistance / 2f);
-        Vector3 pet2TargetPos = midpoint + direction * (adjustedDistance / 2f);
+            Vector3 pet1TargetPos = midpoint - direction * (adjustedDistance / 2f);
+            Vector3 pet2TargetPos = midpoint + direction * (adjustedDistance / 2f);
 
-        pet1TargetPos = FindValidPositionOnNavMesh(pet1TargetPos);
-        pet2TargetPos = FindValidPositionOnNavMesh(pet2TargetPos);
+            pet1TargetPos = FindValidPositionOnNavMesh(pet1TargetPos);
+            pet2TargetPos = FindValidPositionOnNavMesh(pet2TargetPos);
 
-        // 계산된 위치로 이동
-        yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1TargetPos, pet2TargetPos, 10f));
+            // 계산된 위치로 이동
+            yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1TargetPos, pet2TargetPos, 10f));
+        }
+        else
+        {
+            Debug.Log($"[{InteractionName}] 기본 위치 이동을 건너뜁니다 (ShouldPerformInitialMovement = false).");
+        }
 
         // 이동 중단 체크 (터치/홀드/모이기)
         if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
