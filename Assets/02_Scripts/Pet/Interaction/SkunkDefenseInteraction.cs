@@ -132,29 +132,29 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
         try
         {
-            // 0. 초기 위치 조정 (거리가 너무 가깝거나 멀 경우)
-            yield return StartCoroutine(AdjustInitialPositions(attacker, skunk));
+            // 0. 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
+            yield return StartCoroutine(PreparePositionAndFacing(attacker, skunk));
 
             // 감정 표현
             attacker.ShowEmotion(EmotionType.Hungry, emotionDuration);
             skunk.ShowEmotion(EmotionType.Surprised, emotionDuration);
 
-            // 1. 접근 단계
-            yield return StartCoroutine(ApproachPhase(attacker, skunk));
+            // 짧은 대기 (감정 표현이 보이도록)
+            yield return new WaitForSeconds(0.5f);
 
-            // 2. 공격 시도 단계
+            // 1. 공격 시도 단계
             yield return StartCoroutine(AttackAttemptPhase(attacker, skunk));
 
-            // 3. 스컹크 방어 단계
+            // 2. 스컹크 방어 단계
             yield return StartCoroutine(SkunkDefensePhase(skunk, attacker));
 
-            // 4. 공격자 후퇴 단계
+            // 3. 공격자 후퇴 단계
             yield return StartCoroutine(AttackerRetreatPhase(attacker, skunk));
 
-            // 5. 스컹크 도망 단계
+            // 4. 스컹크 도망 단계
             yield return StartCoroutine(SkunkEscapePhase(skunk, attacker));
 
-            // 6. 승리 표현 단계
+            // 5. 승리 표현 단계
             yield return StartCoroutine(VictoryCelebrationPhase(skunk, attacker));
 
             Debug.Log($"[{InteractionName}] 상호작용 완료!");
@@ -179,85 +179,22 @@ public class SkunkDefenseInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 0단계: 초기 위치 조정 (너무 가까우면 공격자를 뒤로 이동)
+    /// 0단계: 초기 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
     /// </summary>
-    private IEnumerator AdjustInitialPositions(PetController attacker, PetController skunk)
+    private IEnumerator PreparePositionAndFacing(PetController attacker, PetController skunk)
     {
-        // 펫 크기에 따른 거리 조정
+        Debug.Log($"[{InteractionName}] 0단계: 위치 및 방향 준비 시작");
+
+        // 1. 거리 계산 (한 번만)
         float attackerMultiplier = attacker.Profile.GetInteractionDistanceMultiplier();
         float skunkMultiplier = skunk.Profile.GetInteractionDistanceMultiplier();
         float averageMultiplier = (attackerMultiplier + skunkMultiplier) / 2f;
-        float adjustedApproachDistance = approachDistance * averageMultiplier;
-        float minDistance = adjustedApproachDistance * 1.2f; // 최소 거리 (약간 여유 있게)
-
+        float targetDistance = approachDistance * averageMultiplier;
         float currentDistance = Vector3.Distance(attacker.transform.position, skunk.transform.position);
 
-        // 너무 가까우면 공격자를 뒤로 이동
-        if (currentDistance < minDistance)
-        {
-            Debug.Log($"[{InteractionName}] 초기 거리({currentDistance:F2}m)가 너무 가까움. 공격자를 {minDistance:F2}m 거리로 이동");
+        Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-            // 공격자를 스컹크 반대편으로 이동
-            Vector3 directionAway = (attacker.transform.position - skunk.transform.position).normalized;
-            if (directionAway == Vector3.zero)
-            {
-                // 위치가 겹쳤을 경우 랜덤 방향
-                directionAway = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-            }
-
-            Vector3 targetPosition = skunk.transform.position + directionAway * minDistance;
-            targetPosition = FindValidPositionOnNavMesh(targetPosition, minDistance * 1.5f);
-
-            // 공격자 이동
-            attacker.agent.isStopped = false;
-            attacker.agent.speed = attacker.baseSpeed * attackerApproachSpeedMultiplier;
-            attacker.agent.SetDestination(targetPosition);
-            attacker.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-
-            // 이동 완료 대기
-            float timer = 0f;
-            while (timer < approachTimeout)
-            {
-                if (!attacker.agent.pathPending && attacker.agent.remainingDistance < 0.5f)
-                {
-                    Debug.Log($"[{InteractionName}] 초기 위치 조정 완료");
-                    break;
-                }
-
-                attacker.HandleRotation();
-                timer += Time.deltaTime;
-                yield return null;
-            }
-
-            // 정지
-            attacker.agent.isStopped = true;
-            attacker.GetComponent<PetAnimationController>().StopContinuousAnimation();
-
-            yield return new WaitForSeconds(0.2f); // 짧은 대기
-        }
-        else
-        {
-            Debug.Log($"[{InteractionName}] 초기 거리({currentDistance:F2}m) 적절함. 위치 조정 생략");
-        }
-    }
-
-    /// <summary>
-    /// 1단계: 공격자가 스컹크에게 접근
-    /// </summary>
-    private IEnumerator ApproachPhase(PetController attacker, PetController skunk)
-    {
-        Debug.Log($"[{InteractionName}] 1단계: {attacker.petName}이(가) {skunk.petName}에게 접근합니다.");
-
-        // 펫 크기에 따른 거리 조정
-        float attackerMultiplier = attacker.Profile.GetInteractionDistanceMultiplier();
-        float skunkMultiplier = skunk.Profile.GetInteractionDistanceMultiplier();
-        float averageMultiplier = (attackerMultiplier + skunkMultiplier) / 2f;
-        float adjustedApproachDistance = approachDistance * averageMultiplier;
-
-        // 현재 거리 확인
-        float currentDistance = Vector3.Distance(attacker.transform.position, skunk.transform.position);
-
-        // 스컹크가 먼저 공격자를 바라보도록 설정
+        // 2. 스컹크가 먼저 공격자를 바라보도록 설정 (방향 기준 설정)
         Vector3 directionToAttacker = (attacker.transform.position - skunk.transform.position).normalized;
         directionToAttacker.y = 0;
         if (directionToAttacker != Vector3.zero)
@@ -274,25 +211,49 @@ public class SkunkDefenseInteraction : BasePetInteraction
         skunk.agent.isStopped = true;
         skunk.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
 
-        // 적절한 거리가 아니면 이동 필요
-        if (currentDistance < adjustedApproachDistance * 0.8f || currentDistance > adjustedApproachDistance * 1.5f)
-        {
-            // 스컹크 정면 기준으로 접근 위치 계산 (스컹크가 바라보는 방향의 반대편)
-            Vector3 approachTarget = skunk.transform.position + skunk.transform.forward * adjustedApproachDistance;
-            approachTarget = FindValidPositionOnNavMesh(approachTarget, adjustedApproachDistance * 2);
+        // 3. 거리 조정 필요 여부 확인
+        bool needsMovement = currentDistance < targetDistance * 0.8f || currentDistance > targetDistance * 1.5f;
 
-            Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {adjustedApproachDistance:F2}m - 이동 시작");
+        if (needsMovement)
+        {
+            Vector3 targetPosition;
+
+            if (currentDistance < targetDistance * 0.8f)
+            {
+                // 너무 가까움 → 공격자를 뒤로 이동
+                Debug.Log($"[{InteractionName}] 너무 가까움 → 공격자를 뒤로 {targetDistance:F2}m 거리로 이동");
+
+                Vector3 directionAway = (attacker.transform.position - skunk.transform.position).normalized;
+                if (directionAway == Vector3.zero)
+                {
+                    // 위치가 겹쳤을 경우 랜덤 방향
+                    directionAway = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+                }
+                targetPosition = skunk.transform.position + directionAway * targetDistance;
+            }
+            else
+            {
+                // 너무 멀음 → 공격자를 앞으로 이동
+                Debug.Log($"[{InteractionName}] 너무 멀음 → 공격자를 앞으로 {targetDistance:F2}m 거리로 이동");
+
+                // 스컹크 정면 기준으로 접근 (스컹크가 바라보는 방향의 반대편)
+                targetPosition = skunk.transform.position + skunk.transform.forward * targetDistance;
+            }
+
+            // NavMesh 상 유효한 위치 찾기
+            targetPosition = FindValidPositionOnNavMesh(targetPosition, targetDistance * 1.5f);
 
             // 공격자 이동 시작
             attacker.agent.isStopped = false;
             attacker.agent.speed = attacker.baseSpeed * attackerApproachSpeedMultiplier;
-            attacker.agent.SetDestination(approachTarget);
+            attacker.agent.SetDestination(targetPosition);
             attacker.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
+            // 이동 완료 대기
             float timer = 0f;
             while (timer < approachTimeout)
             {
-                // 스컹크가 공격자를 부드럽게 바라봄
+                // 스컹크가 공격자를 부드럽게 계속 바라봄
                 directionToAttacker = (attacker.transform.position - skunk.transform.position).normalized;
                 directionToAttacker.y = 0;
                 if (directionToAttacker.sqrMagnitude > 0.001f)
@@ -308,13 +269,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
                 // 도착 체크
                 if (!attacker.agent.pathPending && attacker.agent.remainingDistance < 0.5f)
                 {
-                    Debug.Log($"[{InteractionName}] {attacker.petName}이(가) 접근 완료!");
+                    Debug.Log($"[{InteractionName}] 위치 조정 완료");
                     break;
                 }
 
-                // 회전 처리
                 attacker.HandleRotation();
-
                 timer += Time.deltaTime;
                 yield return null;
             }
@@ -322,24 +281,28 @@ public class SkunkDefenseInteraction : BasePetInteraction
             // 공격자 정지
             attacker.agent.isStopped = true;
             attacker.GetComponent<PetAnimationController>().StopContinuousAnimation();
+
+            yield return new WaitForSeconds(0.2f); // 짧은 대기
         }
         else
         {
-            Debug.Log($"[{InteractionName}] 이미 적절한 거리({currentDistance:F2}m)에 있어 이동 생략");
-            // 공격자만 스컹크를 바라보도록 설정
+            Debug.Log($"[{InteractionName}] 거리 적절함 ({currentDistance:F2}m) → 이동 생략");
             attacker.agent.isStopped = true;
         }
 
-        // 서로 정확히 마주보기
+        // 4. 서로 정확히 마주보기
+        Debug.Log($"[{InteractionName}] 서로 마주보기 시작");
         yield return StartCoroutine(SmoothlyLookAtEachOther(attacker, skunk, 1f));
+
+        Debug.Log($"[{InteractionName}] 위치 및 방향 준비 완료");
     }
 
     /// <summary>
-    /// 2단계: 공격 시도
+    /// 1단계: 공격 시도
     /// </summary>
     private IEnumerator AttackAttemptPhase(PetController attacker, PetController skunk)
     {
-        Debug.Log($"[{InteractionName}] 2단계: {attacker.petName}이(가) 공격을 시도합니다.");
+        Debug.Log($"[{InteractionName}] 1단계: {attacker.petName}이(가) 공격을 시도합니다.");
 
         // 공격자 감정 변경
         attacker.ShowEmotion(EmotionType.Hungry, 3f);
@@ -353,11 +316,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 3단계: 스컹크 방어
+    /// 2단계: 스컹크 방어
     /// </summary>
     private IEnumerator SkunkDefensePhase(PetController skunk, PetController attacker)
     {
-        Debug.Log($"[{InteractionName}] 3단계: {skunk.petName}이(가) 방어태세를 취합니다!");
+        Debug.Log($"[{InteractionName}] 2단계: {skunk.petName}이(가) 방어태세를 취합니다!");
 
         // 스컹크 감정 변경
         skunk.ShowEmotion(EmotionType.Angry, 5f);
@@ -420,11 +383,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
 
     /// <summary>
-    /// 4단계: 공격자 후퇴
+    /// 3단계: 공격자 후퇴
     /// </summary>
     private IEnumerator AttackerRetreatPhase(PetController attacker, PetController skunk)
     {
-        Debug.Log($"[{InteractionName}] 4단계: {attacker.petName}이(가) 놀라서 후퇴합니다!");
+        Debug.Log($"[{InteractionName}] 3단계: {attacker.petName}이(가) 놀라서 후퇴합니다!");
 
         // 공격자 감정 변경 - 스컹크 방구를 맞아서 어지럽고 역겨움
         attacker.ShowEmotion(EmotionType.Dizzy, 8f);
@@ -481,11 +444,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 5단계: 스컹크 도망
+    /// 4단계: 스컹크 도망
     /// </summary>
     private IEnumerator SkunkEscapePhase(PetController skunk, PetController attacker)
     {
-        Debug.Log($"[{InteractionName}] 5단계: {skunk.petName}이(가) 안전한 곳으로 이동합니다.");
+        Debug.Log($"[{InteractionName}] 4단계: {skunk.petName}이(가) 안전한 곳으로 이동합니다.");
 
         // 스컹크 감정 변경 - 안심
         skunk.ShowEmotion(EmotionType.Happy, 10f);
@@ -528,11 +491,11 @@ public class SkunkDefenseInteraction : BasePetInteraction
     
 
     /// <summary>
-    /// 6단계: 승리 표현
+    /// 5단계: 승리 표현
     /// </summary>
     private IEnumerator VictoryCelebrationPhase(PetController skunk, PetController attacker)
     {
-        Debug.Log($"[{InteractionName}] 6단계: 승리의 기쁨!");
+        Debug.Log($"[{InteractionName}] 5단계: 승리의 기쁨!");
 
         // 공격자가 Rest 애니메이션 중이면 Idle로 전환
         var attackerAnim = attacker.GetComponent<PetAnimationController>();
