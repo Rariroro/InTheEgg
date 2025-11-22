@@ -13,9 +13,9 @@ public class PredatorMoleInteraction : BasePetInteraction
     // 상태 추적을 위한 클래스 레벨 변수
     private bool _moleIsHidden = false;
 
-    [Header("Chase Settings")]
-    [Tooltip("포식자가 두더지에게 접근했다고 판단하는 거리")]
-    public float catchDistance = 5.0f;
+    [Header("거리 설정")]
+    [Tooltip("상호작용 시 유지할 거리")]
+    public float interactionDistance = 5.0f;
 
     [Tooltip("추격 최대 시간 (초)")]
     public float maxChaseTime = 10f;
@@ -182,7 +182,7 @@ public class PredatorMoleInteraction : BasePetInteraction
         float predatorMultiplier = predator.Profile.GetInteractionDistanceMultiplier();
         float moleMultiplier = mole.Profile.GetInteractionDistanceMultiplier();
         float averageMultiplier = (predatorMultiplier + moleMultiplier) / 2f;
-        float targetDistance = catchDistance * averageMultiplier;
+        float targetDistance = interactionDistance * averageMultiplier;
         float currentDistance = Vector3.Distance(predator.transform.position, mole.transform.position);
 
         Debug.Log($"[PredatorMoleHunt] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");

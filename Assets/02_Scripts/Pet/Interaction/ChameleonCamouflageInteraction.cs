@@ -15,9 +15,9 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
     [Tooltip("카멜레온이 투명해질 때 사용할 투명 머티리얼입니다.")]
     [SerializeField] private Material transparentMaterial;
 
-    [Header("Interaction Settings")]
-    [Tooltip("포식자가 위협을 감지하고 위장을 시작할 거리입니다.")]
-    public float camouflageTriggerDistance = 8f;
+    [Header("거리 설정")]
+    [Tooltip("상호작용 시 유지할 거리")]
+    public float interactionDistance = 8f;
     
     [Tooltip("카멜레온이 위장(투명화)을 유지하는 시간입니다.")]
     public float camouflageDuration = 5f;
@@ -215,7 +215,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
         float predatorMultiplier = predator.Profile.GetInteractionDistanceMultiplier();
         float chameleonMultiplier = chameleon.Profile.GetInteractionDistanceMultiplier();
         float averageMultiplier = (predatorMultiplier + chameleonMultiplier) / 2f;
-        float targetDistance = camouflageTriggerDistance * averageMultiplier;
+        float targetDistance = interactionDistance * averageMultiplier;
         float currentDistance = Vector3.Distance(predator.transform.position, chameleon.transform.position);
 
         Debug.Log($"[ChameleonCamouflage] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");

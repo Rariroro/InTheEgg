@@ -10,9 +10,9 @@ public class SkunkDefenseInteraction : BasePetInteraction
     // 우선순위: 75 (6순위)
     public override int Priority => 75;
 
-    [Header("접근 설정")]
-    [Tooltip("공격자가 스컹크에게 접근할 거리")]
-    public float approachDistance = 3f;
+    [Header("거리 설정")]
+    [Tooltip("상호작용 시 유지할 거리")]
+    public float interactionDistance = 3f;
 
     [Tooltip("공격자가 접근하는 속도 배율")]
     public float attackerApproachSpeedMultiplier = 1.2f;
@@ -182,7 +182,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
         float attackerMultiplier = attacker.Profile.GetInteractionDistanceMultiplier();
         float skunkMultiplier = skunk.Profile.GetInteractionDistanceMultiplier();
         float averageMultiplier = (attackerMultiplier + skunkMultiplier) / 2f;
-        float targetDistance = approachDistance * averageMultiplier;
+        float targetDistance = interactionDistance * averageMultiplier;
         float currentDistance = Vector3.Distance(attacker.transform.position, skunk.transform.position);
 
         Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");

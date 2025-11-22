@@ -10,11 +10,13 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
     // 우선순위를 설정하지 않아 기본값 50 사용
 
+    [Header("거리 설정")]
+    [Tooltip("상호작용 시 유지할 거리")]
+    public float interactionDistance = 2f;
+
     [Header("Interaction Settings")]
     [Tooltip("포식자가 잠들 위치를 찾을 때의 반경입니다.")]
     public float sleepSpotRadius = 3f;
-    [Tooltip("주머니쥐가 장난치기 위해 포식자에게 접근할 거리입니다.")]
-    public float prankApproachDistance = 2f;
     [Tooltip("포식자가 잠드는 데 걸리는 시간입니다.")]
     public float predatorSleepDuration = 5f;
     [Tooltip("주머니쥐가 죽은 척을 유지하는 시간입니다.")]
@@ -131,7 +133,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         float predatorMultiplier = predator.Profile.GetInteractionDistanceMultiplier();
         float possumMultiplier = possum.Profile.GetInteractionDistanceMultiplier();
         float averageMultiplier = (predatorMultiplier + possumMultiplier) / 2f;
-        float targetDistance = prankApproachDistance * averageMultiplier;
+        float targetDistance = interactionDistance * averageMultiplier;
         float currentDistance = Vector3.Distance(predator.transform.position, possum.transform.position);
 
         Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
