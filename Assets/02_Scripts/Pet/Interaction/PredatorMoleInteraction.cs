@@ -394,7 +394,7 @@ public class PredatorMoleInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
 
         // 실패 후 혼란
-        predator.ShowEmotion(EmotionType.Confused, 2f);
+        predator.ShowEmotion(EmotionType.Confused, 4f);
         yield return new WaitForSeconds(0.5f);
 
         // 4. 주변을 돌아다니며 여러 곳 파보기

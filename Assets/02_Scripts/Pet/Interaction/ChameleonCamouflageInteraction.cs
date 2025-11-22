@@ -220,12 +220,30 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
 
         Debug.Log($"[ChameleonCamouflage] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-        // 2. 카멜레온이 먼저 포식자를 바라보도록 설정
+        // 2. 카멜레온이 먼저 포식자를 바라보도록 부드럽게 회전
         Vector3 directionToPredator = (predator.transform.position - chameleon.transform.position).normalized;
         directionToPredator.y = 0;
         if (directionToPredator != Vector3.zero)
         {
+            Quaternion startRotation = chameleon.transform.rotation;
             Quaternion targetRotation = Quaternion.LookRotation(directionToPredator);
+
+            // 부드럽게 회전
+            float turnDuration = 0.5f;
+            float elapsedTime = 0f;
+            while (elapsedTime < turnDuration)
+            {
+                float t = elapsedTime / turnDuration;
+                chameleon.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                if (chameleon.petModelTransform != null)
+                {
+                    chameleon.petModelTransform.rotation = chameleon.transform.rotation;
+                }
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // 최종 회전 확정
             chameleon.transform.rotation = targetRotation;
             if (chameleon.petModelTransform != null)
             {

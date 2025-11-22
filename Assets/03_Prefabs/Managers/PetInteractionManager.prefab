@@ -75,7 +75,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
   transparentMaterial: {fileID: 2100000, guid: 5004f3067f3dd44b888b888e23f734f2, type: 2}
-  camouflageTriggerDistance: 8
+  interactionDistance: 8
   camouflageDuration: 5
   predatorConfusionDuration: 4
   predatorGiveUpDelay: 2
@@ -353,7 +353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  catchDistance: 7
+  interactionDistance: 5
   maxChaseTime: 10
   predatorChaseSpeedMultiplier: 2.5
   moleEscapeSpeedMultiplier: 1
@@ -380,8 +380,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 15
+  interactionDistance: 2
   sleepSpotRadius: 4
-  prankApproachDistance: 4
   predatorSleepDuration: 5
   playDeadDuration: 10
   predatorInspectDuration: 3
@@ -455,7 +455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  approachDistance: 7
+  interactionDistance: 7
   attackerApproachSpeedMultiplier: 1.2
   approachTimeout: 8
   skunkTurnDuration: 0.5
