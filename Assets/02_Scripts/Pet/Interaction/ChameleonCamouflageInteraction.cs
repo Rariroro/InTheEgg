@@ -514,6 +514,7 @@ private IEnumerator PredatorSearchBehavior(PetController predator, Vector3 lastS
             yield return null;
         }
 
+        predator.agent.isStopped = true;
         predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
     }
 
