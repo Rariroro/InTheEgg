@@ -455,7 +455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  approachDistance: 3
+  approachDistance: 7
   attackerApproachSpeedMultiplier: 1.2
   approachTimeout: 8
   skunkTurnDuration: 0.5
@@ -465,7 +465,7 @@ MonoBehaviour:
   skunkEscapeDistance: 15
   skunkEscapeSpeedMultiplier: 1.5
   escapeTimeout: 6
-  skunkSprayParticlePrefab: {fileID: 0}
+  skunkSprayParticlePrefab: {fileID: 130900, guid: 4d6ad3696a0aa43bdaf5c129f8999508, type: 3}
   particleOffset: {x: 0, y: 0.5, z: -1}
   particleDuration: 3
   emotionDuration: 30

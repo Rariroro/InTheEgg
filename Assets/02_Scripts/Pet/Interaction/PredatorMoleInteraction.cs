@@ -49,6 +49,9 @@ public class PredatorMoleInteraction : BasePetInteraction
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
 
+    // 기본 위치 이동(중간 지점으로 모이기)을 하지 않고, 공격자가 직접 접근하도록 설정
+    public override bool ShouldPerformInitialMovement => false;
+
     [Header("Visual Settings")]
     [Tooltip("두더지가 주변을 둘러보는 시간")]
     public float lookAroundDuration = 2.0f;
@@ -110,27 +113,30 @@ public class PredatorMoleInteraction : BasePetInteraction
 
         try
         {
+            // 0. 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
+            yield return StartCoroutine(PreparePositionAndFacing(predator, mole));
+
             // 감정 표현
             predator.ShowEmotion(EmotionType.Hungry, 30f);
             mole.ShowEmotion(EmotionType.Scared, 30f);
 
-            // 1. 추격 단계
-            yield return StartCoroutine(ChasePhase(predator, mole));
+            // 짧은 대기 (감정 표현이 보이도록)
+            yield return new WaitForSeconds(0.5f);
 
-            // 2. 공격 단계
-            yield return StartCoroutine(AttackPhase(predator, mole));
+            // 1. 공격 시도 단계
+            yield return StartCoroutine(AttackAttemptPhase(predator, mole));
 
-            // 3. 두더지 숨기 단계
+            // 2. 두더지 숨기 단계
             moleBurrowPosition = mole.transform.position;
             yield return StartCoroutine(BurrowPhase(mole));
 
-            // 4. 포식자 반응 단계
+            // 3. 포식자 반응 단계
             yield return StartCoroutine(PredatorDigPhase(predator, moleBurrowPosition));
 
-            // 5. 포식자 떠나기 단계
+            // 4. 포식자 떠나기 단계
             yield return StartCoroutine(PredatorLeavePhase(predator, moleBurrowPosition));
 
-            // 6. 두더지 재등장 단계
+            // 5. 두더지 재등장 단계
             yield return StartCoroutine(MoleEmergePhase(mole, moleBurrowPosition));
 
             Debug.Log($"[PredatorMoleHunt] {mole.petName}이(가) 위기를 모면했습니다!");
@@ -165,101 +171,137 @@ public class PredatorMoleInteraction : BasePetInteraction
         }
     }
 
-    // 1. 추격 단계
-    private IEnumerator ChasePhase(PetController predator, PetController mole)
+    /// <summary>
+    /// 0단계: 초기 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
+    /// </summary>
+    private IEnumerator PreparePositionAndFacing(PetController predator, PetController mole)
     {
-        Debug.Log($"[PredatorMoleHunt] 1단계: {predator.petName}이(가) {mole.petName}을(를) 추격합니다.");
+        Debug.Log($"[PredatorMoleHunt] 0단계: 위치 및 방향 준비 시작");
 
-        // NavMeshAgent 활성화
-        if (predator.agent != null) predator.agent.isStopped = false;
-        if (mole.agent != null) mole.agent.isStopped = false;
+        // 1. 거리 계산
+        float predatorMultiplier = predator.Profile.GetInteractionDistanceMultiplier();
+        float moleMultiplier = mole.Profile.GetInteractionDistanceMultiplier();
+        float averageMultiplier = (predatorMultiplier + moleMultiplier) / 2f;
+        float targetDistance = catchDistance * averageMultiplier;
+        float currentDistance = Vector3.Distance(predator.transform.position, mole.transform.position);
 
-        // 속도 설정
-        predator.agent.speed = predator.baseSpeed * predatorChaseSpeedMultiplier;
-        predator.agent.acceleration = predator.baseAcceleration * 1.5f;
-        predator.agent.updateRotation = true;
+        Debug.Log($"[PredatorMoleHunt] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-        mole.agent.speed = mole.baseSpeed * moleEscapeSpeedMultiplier;
-        mole.agent.acceleration = mole.baseAcceleration * 1.4f;
-        mole.agent.updateRotation = true;
-
-        // 애니메이션 설정
-        predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        mole.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-
-        float chaseTimer = 0f;
-        bool caught = false;
-
-        while (chaseTimer < maxChaseTime && !caught)
+        // 2. 두더지가 먼저 포식자를 바라보도록 설정
+        Vector3 directionToPredator = (predator.transform.position - mole.transform.position).normalized;
+        directionToPredator.y = 0;
+        if (directionToPredator != Vector3.zero)
         {
-            // 두더지 도망 방향 계산
-            Vector3 escapeDirection = (mole.transform.position - predator.transform.position).normalized;
-            Vector3 escapeTarget = mole.transform.position + escapeDirection * 10f;
-
-            if (NavMesh.SamplePosition(escapeTarget, out NavMeshHit hit, 15f, NavMesh.AllAreas))
+            Quaternion targetRotation = Quaternion.LookRotation(directionToPredator);
+            mole.transform.rotation = targetRotation;
+            if (mole.petModelTransform != null)
             {
-                mole.agent.SetDestination(hit.position);
+                mole.petModelTransform.rotation = mole.transform.rotation;
             }
-
-            // 포식자 추적
-            predator.agent.SetDestination(mole.transform.position);
-
-            // 거리 체크
-            float distance = Vector3.Distance(predator.transform.position, mole.transform.position);
-            if (distance < catchDistance)
-            {
-                caught = true;
-                Debug.Log($"[PredatorMoleHunt] {predator.petName}이(가) {mole.petName}에게 접근했습니다!");
-            }
-
-            // 회전 처리
-            predator.HandleRotation();
-            mole.HandleRotation();
-
-            chaseTimer += Time.deltaTime;
-            yield return null;
         }
 
-        // 시간 초과 시 강제 접근
-        if (!caught)
-        {
-            Debug.Log("[PredatorMoleHunt] 추격 시간 초과. 공격 단계로 진행합니다.");
-            Vector3 teleportPos = predator.transform.position + predator.transform.forward * 2.5f;
-            teleportPos = FindValidPositionOnNavMesh(teleportPos, 3f);
-            mole.agent.Warp(teleportPos);
-        }
-
-        // 이동 중지
-        predator.agent.isStopped = true;
+        // 두더지는 제자리에서 경계
         mole.agent.isStopped = true;
+        mole.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
+        // 3. 거리 조정 필요 여부 확인
+        bool needsMovement = currentDistance < targetDistance * 0.8f || currentDistance > targetDistance * 1.5f;
+
+        if (needsMovement)
+        {
+            Vector3 targetPosition;
+
+            if (currentDistance < targetDistance * 0.8f)
+            {
+                // 너무 가까움 → 포식자를 뒤로 이동
+                Debug.Log($"[PredatorMoleHunt] 너무 가까움 → 포식자를 뒤로 {targetDistance:F2}m 거리로 이동");
+                Vector3 directionAway = (predator.transform.position - mole.transform.position).normalized;
+                if (directionAway == Vector3.zero)
+                {
+                    directionAway = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+                }
+                targetPosition = mole.transform.position + directionAway * targetDistance;
+            }
+            else
+            {
+                // 너무 멀음 → 포식자를 앞으로 이동
+                Debug.Log($"[PredatorMoleHunt] 너무 멀음 → 포식자를 앞으로 {targetDistance:F2}m 거리로 이동");
+                targetPosition = mole.transform.position + mole.transform.forward * targetDistance;
+            }
+
+            // NavMesh 상 유효한 위치 찾기
+            targetPosition = FindValidPositionOnNavMesh(targetPosition, targetDistance * 1.5f);
+
+            // 포식자 이동 시작
+            predator.agent.isStopped = false;
+            predator.agent.speed = predator.baseSpeed * predatorChaseSpeedMultiplier;
+            predator.agent.SetDestination(targetPosition);
+            predator.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+            // 이동 완료 대기
+            float timer = 0f;
+            while (timer < maxChaseTime)
+            {
+                // 두더지가 포식자를 부드럽게 계속 바라봄
+                directionToPredator = (predator.transform.position - mole.transform.position).normalized;
+                directionToPredator.y = 0;
+                if (directionToPredator.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRot = Quaternion.LookRotation(directionToPredator);
+                    mole.transform.rotation = Quaternion.Slerp(mole.transform.rotation, targetRot, Time.deltaTime * 5f);
+                    if (mole.petModelTransform != null)
+                    {
+                        mole.petModelTransform.rotation = mole.transform.rotation;
+                    }
+                }
+
+                // 도착 체크
+                if (!predator.agent.pathPending && predator.agent.remainingDistance < 0.5f)
+                {
+                    Debug.Log($"[PredatorMoleHunt] 위치 조정 완료");
+                    break;
+                }
+
+                predator.HandleRotation();
+                timer += Time.deltaTime;
+                yield return null;
+            }
+
+            // 포식자 정지
+            predator.agent.isStopped = true;
+            predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
+            yield return new WaitForSeconds(0.2f);
+        }
+        else
+        {
+            Debug.Log($"[PredatorMoleHunt] 거리 적절함 ({currentDistance:F2}m) → 이동 생략");
+            predator.agent.isStopped = true;
+        }
+
+        // 4. 서로 정확히 마주보기
+        Debug.Log($"[PredatorMoleHunt] 서로 마주보기 시작");
+        yield return StartCoroutine(SmoothlyLookAtEachOther(predator, mole, 1f));
+
+        Debug.Log($"[PredatorMoleHunt] 위치 및 방향 준비 완료");
     }
 
-    // 2. 공격 단계
-    // 수정 후 AttackPhase
-    private IEnumerator AttackPhase(PetController predator, PetController mole)
+    /// <summary>
+    /// 1단계: 공격 시도
+    /// </summary>
+    private IEnumerator AttackAttemptPhase(PetController predator, PetController mole)
     {
-        Debug.Log($"[PredatorMoleHunt] 2단계: {predator.petName}이(가) {mole.petName}을(를) 공격합니다!");
+        Debug.Log($"[PredatorMoleHunt] 1단계: {predator.petName}이(가) 공격을 시도합니다.");
 
-        // 달리기 애니메이션 정지
-        predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
-        mole.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        // 포식자 감정 변경
+        predator.ShowEmotion(EmotionType.Hungry, 3f);
 
-        // 부드럽게 서로를 마주보도록 회전 (병렬 실행)
-        StartCoroutine(SmoothTurnAround(predator, mole, 0.5f));
-        yield return StartCoroutine(SmoothTurnAround(mole, predator, 0.5f)); // mole의 회전이 끝날 때까지 대기
-
-        // 회전 후 잠시 대기하여 자연스러운 멈춤 연출
-        yield return new WaitForSeconds(0.2f);
-
-        // 공격 및 피격 애니메이션 재생
+        // 공격 애니메이션
         var predatorAnim = predator.GetComponent<PetAnimationController>();
+        yield return StartCoroutine(predatorAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
+
+        // 두더지 피격 반응
+        mole.ShowEmotion(EmotionType.Scared, 3f);
         var moleAnim = mole.GetComponent<PetAnimationController>();
-
-        // 포식자 공격
-        yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Attack, 0.5f, false, false));
-
-        // 두더지 피격
         yield return StartCoroutine(moleAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Damage, 0.5f, false, false));
     }
@@ -288,10 +330,10 @@ public class PredatorMoleInteraction : BasePetInteraction
         }
     }
     // ▲▲▲ [여기까지 추가] ▲▲▲
-    // 3. 두더지 숨기 단계
+    // 2. 두더지 숨기 단계
     private IEnumerator BurrowPhase(PetController mole)
     {
-        Debug.Log($"[PredatorMoleHunt] 3단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
+        Debug.Log($"[PredatorMoleHunt] 2단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
 
         Vector3 burrowPosition = mole.transform.position;
         StartCoroutine(SpawnBurrowParticles(burrowPosition));
@@ -320,10 +362,10 @@ public class PredatorMoleInteraction : BasePetInteraction
         _moleIsHidden = true; // 클래스 레벨 변수 설정
     }
 
-    // 4. 포식자 땅파기 단계 (수정된 버전)
+    // 3. 포식자 땅파기 단계
     private IEnumerator PredatorDigPhase(PetController predator, Vector3 burrowPosition)
     {
-        Debug.Log($"[PredatorMoleHunt] 4단계: {predator.petName}이(가) 두더지를 찾기 시작합니다.");
+        Debug.Log($"[PredatorMoleHunt] 3단계: {predator.petName}이(가) 두더지를 찾기 시작합니다.");
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
@@ -465,51 +507,6 @@ public class PredatorMoleInteraction : BasePetInteraction
             }
         }
     }
-    /// <summary>
-    /// 지정된 펫이 목표 펫을 향해 일정 시간 동안 부드럽게 회전하는 코루틴입니다.
-    /// </summary>
-    /// <param name="petToTurn">회전할 펫</param>
-    /// <param name="target">바라볼 목표 펫</param>
-    /// <param name="duration">회전에 걸리는 시간 (초)</param>
-    private IEnumerator SmoothTurnAround(PetController petToTurn, PetController target, float duration)
-    {
-        // 펫의 이동과 애니메이션을 잠시 정지하여 회전에 집중하도록 합니다.
-        petToTurn.agent.isStopped = true;
-        petToTurn.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-
-        Quaternion startRotation = petToTurn.transform.rotation;
-        Vector3 directionToTarget = (target.transform.position - petToTurn.transform.position).normalized;
-        directionToTarget.y = 0; // 수평으로만 회전하도록 Y축 고정
-
-        // 바라볼 방향이 없는 경우(위치가 겹친 경우 등) 코루틴 중단
-        if (directionToTarget == Vector3.zero) yield break;
-
-        Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
-
-        float elapsedTime = 0f;
-        while (elapsedTime < duration)
-        {
-            // Quaternion.Slerp를 사용하여 부드러운 구면 선형 보간을 수행합니다.
-            float t = elapsedTime / duration;
-            petToTurn.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
-
-            // 모델이 별도로 회전하는 경우를 대비하여 모델의 회전도 맞춰줍니다.
-            if (petToTurn.petModelTransform != null)
-            {
-                petToTurn.petModelTransform.rotation = petToTurn.transform.rotation;
-            }
-
-            elapsedTime += Time.deltaTime;
-            yield return null; // 다음 프레임까지 대기
-        }
-
-        // 최종 회전값을 정확하게 설정합니다.
-        petToTurn.transform.rotation = targetRotation;
-        if (petToTurn.petModelTransform != null)
-        {
-            petToTurn.petModelTransform.rotation = targetRotation;
-        }
-    }
     // 빠른 둘러보기
     private IEnumerator QuickLookAround(PetController predator)
     {
@@ -560,10 +557,10 @@ public class PredatorMoleInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Attack, 2.5f, false, false));
     }
 
-    // 5. 포식자 떠나기 단계
+    // 4. 포식자 떠나기 단계
     private IEnumerator PredatorLeavePhase(PetController predator, Vector3 burrowPosition)
     {
-        Debug.Log($"[PredatorMoleHunt] 5단계: {predator.petName}이(가) 포기하고 떠납니다.");
+        Debug.Log($"[PredatorMoleHunt] 4단계: {predator.petName}이(가) 포기하고 떠납니다.");
 
         // 랜덤 방향으로 이동
         Vector3 randomDirection = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
@@ -606,12 +603,12 @@ public class PredatorMoleInteraction : BasePetInteraction
         predator.GetComponent<PetAnimationController>().StopContinuousAnimation();
     }
 
-    // 6. 두더지 재등장 단계
+    // 5. 두더지 재등장 단계
     private IEnumerator MoleEmergePhase(PetController mole, Vector3 burrowPosition)
     {
         if (!_moleIsHidden) yield break;
 
-        Debug.Log($"[PredatorMoleHunt] 6단계: {mole.petName}이(가) 땅에서 나옵니다.");
+        Debug.Log($"[PredatorMoleHunt] 5단계: {mole.petName}이(가) 땅에서 나옵니다.");
         StartCoroutine(SpawnBurrowParticles(burrowPosition));
 
         // 원래 위치로 이동

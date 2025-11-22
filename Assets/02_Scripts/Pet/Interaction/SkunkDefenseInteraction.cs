@@ -77,14 +77,7 @@ public class SkunkDefenseInteraction : BasePetInteraction
 
         PetController otherPet = (pet1.PetType == PetType.Skunk) ? pet2 : pet1;
 
-        // 스컹크가 상호작용하는 경우:
-        // 1. 너구리와의 상호작용
-        if (otherPet.PetType == PetType.Raccoon)
-        {
-            return true;
-        }
-
-        // 2. 고기를 먹는 육식동물과의 상호작용 (Fish만 먹는 동물은 제외)
+        // 고기를 먹는 육식동물과의 상호작용 (Fish만 먹는 동물은 제외)
         bool isMeatEater = (otherPet.diet & PetAIProperties.DietaryFlags.Meat) != 0;
         return isMeatEater;
     }
