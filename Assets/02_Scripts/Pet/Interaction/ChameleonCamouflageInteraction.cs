@@ -70,7 +70,7 @@ public class ChameleonCamouflageInteraction : BasePetInteraction
         this.transparentMaterial = template.transparentMaterial;
 
         // Interaction Settings
-        this.camouflageTriggerDistance = template.camouflageTriggerDistance;
+        this.interactionDistance = template.interactionDistance;
         this.camouflageDuration = template.camouflageDuration;
         this.predatorConfusionDuration = template.predatorConfusionDuration;
         this.predatorGiveUpDelay = template.predatorGiveUpDelay;
