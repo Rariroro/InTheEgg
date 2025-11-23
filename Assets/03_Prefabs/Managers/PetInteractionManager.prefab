@@ -353,7 +353,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  interactionDistance: 5
+  interactionDistance: 7
   maxChaseTime: 10
   predatorChaseSpeedMultiplier: 2.5
   moleEscapeSpeedMultiplier: 1
@@ -380,7 +380,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 15
-  interactionDistance: 2
+  interactionDistance: 7
   sleepSpotRadius: 4
   predatorSleepDuration: 5
   playDeadDuration: 10

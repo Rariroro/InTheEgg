@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 using PetAIProperties = PetTraits;
+using InTheEgg.Extensions;
 public class PredatorPossumPrankInteraction : BasePetInteraction
 {
     // 상호작용 이름 변경
@@ -15,26 +16,28 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     public float interactionDistance = 2f;
 
     [Header("Interaction Settings")]
-    [Tooltip("포식자가 잠들 위치를 찾을 때의 반경입니다.")]
-    public float sleepSpotRadius = 3f;
-    [Tooltip("포식자가 잠드는 데 걸리는 시간입니다.")]
-    public float predatorSleepDuration = 5f;
-    [Tooltip("주머니쥐가 죽은 척을 유지하는 시간입니다.")]
-    public float playDeadDuration = 8f;
-    [Tooltip("포식자가 죽은 척하는 주머니쥐를 살펴보는 시간입니다.")]
+    [Tooltip("포식자가 처음 멈춰서 죽은 척하는 주머니쥐를 관찰하는 시간입니다.")]
+    public float predatorInitialObserveDuration = 8f;
+    [Tooltip("포식자가 건드려본 후 추가로 관찰하는 시간입니다.")]
     public float predatorInspectDuration = 3f;
     [Tooltip("포식자가 흥미를 잃고 떠날 때 이동할 거리입니다.")]
     public float predatorLeaveDistance = 15f;
+    [Tooltip("포식자가 떠날 때 최대 대기 시간입니다.")]
+    public float predatorLeaveTimeout = 10f;
 
     [Header("Animation Timings")]
-    [Tooltip("주머니쥐가 장난치는 애니메이션 시간입니다.")]
-    public float prankAnimationDuration = 2.5f;
-    [Tooltip("포식자가 놀라서 깨어나는 애니메이션 시간입니다.")]
-    public float wakeUpAnimationDuration = 1.5f;
-    [Tooltip("포식자가 화내는 애니메이션 시간입니다.")]
-    public float angryAnimationDuration = 2.0f;
     [Tooltip("주머니쥐가 일어나서 기뻐하는 애니메이션 시간입니다.")]
     public float celebrationDuration = 2.0f;
+
+    [Header("Emotion Durations")]
+    [Tooltip("상호작용 시작 시 지속적으로 표시되는 감정 시간 (매우 긴 시간)")]
+    public float persistentEmotionDuration = 999f;
+    [Tooltip("공격/놀람 등 짧은 감정 표시 시간")]
+    public float shortEmotionDuration = 3f;
+    [Tooltip("중간 길이 감정 표시 시간")]
+    public float mediumEmotionDuration = 5f;
+    [Tooltip("매우 짧은 대기 시간")]
+    public float veryShortWaitTime = 1f;
 
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
@@ -79,7 +82,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         yield return StartCoroutine(WaitUntilAgentIsReady(possum, agentSafetyTimeout));
         yield return StartCoroutine(WaitUntilAgentIsReady(predator, agentSafetyTimeout));
 
-        if (!IsAgentSafelyReady(possum) || !IsAgentSafelyReady(predator))
+        if (!possum.agent.IsReady() || !predator.agent.IsReady())
         {
             Debug.LogError($"[{InteractionName}] NavMeshAgent 준비 실패로 상호작용을 중단합니다.");
             EndInteraction(possum, predator);
@@ -96,8 +99,8 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
             yield return StartCoroutine(PreparePositionAndFacing(predator, possum));
 
             // 감정 표현
-            predator.ShowEmotion(EmotionType.Hungry, 30f);
-            possum.ShowEmotion(EmotionType.Scared, 30f);
+            predator.ShowEmotion(EmotionType.Hungry, persistentEmotionDuration);
+            possum.ShowEmotion(EmotionType.Scared, persistentEmotionDuration);
 
             // 짧은 대기 (감정 표현이 보이도록)
             yield return new WaitForSeconds(0.5f);
@@ -138,12 +141,30 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-        // 2. 주머니쥐가 먼저 포식자를 바라보도록 설정
+        // 2. 주머니쥐가 먼저 포식자를 바라보도록 부드럽게 회전
         Vector3 directionToPredator = (predator.transform.position - possum.transform.position).normalized;
         directionToPredator.y = 0;
         if (directionToPredator != Vector3.zero)
         {
+            Quaternion startRotation = possum.transform.rotation;
             Quaternion targetRotation = Quaternion.LookRotation(directionToPredator);
+
+            // 부드럽게 회전
+            float turnDuration = 0.5f;
+            float elapsedTime = 0f;
+            while (elapsedTime < turnDuration)
+            {
+                float t = elapsedTime / turnDuration;
+                possum.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                if (possum.petModelTransform != null)
+                {
+                    possum.petModelTransform.rotation = possum.transform.rotation;
+                }
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // 최종 회전 확정
             possum.transform.rotation = targetRotation;
             if (possum.petModelTransform != null)
             {
@@ -245,14 +266,14 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 1단계: {predator.petName}이(가) 공격을 시도합니다.");
 
         // 포식자 감정 변경
-        predator.ShowEmotion(EmotionType.Hungry, 3f);
+        predator.ShowEmotion(EmotionType.Hungry, shortEmotionDuration);
 
         // 공격 애니메이션
         var predatorAnim = predator.GetComponent<PetAnimationController>();
         yield return StartCoroutine(predatorAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
 
         // 주머니쥐 놀람 반응
-        possum.ShowEmotion(EmotionType.Scared, 3f);
+        possum.ShowEmotion(EmotionType.Scared, shortEmotionDuration);
     }
 
     /// <summary>
@@ -263,7 +284,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 2단계: {possum.petName}이(가) 재빨리 죽은 척을 합니다!");
 
         // 주머니쥐 감정 변경
-        possum.ShowEmotion(EmotionType.Scared, playDeadDuration + 5f);
+        possum.ShowEmotion(EmotionType.Scared, predatorInitialObserveDuration + mediumEmotionDuration);
 
         // 죽은 척 애니메이션
         var possumAnim = possum.GetComponent<PetAnimationController>();
@@ -271,6 +292,9 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         // 죽은 척 유지
         possumAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Die);
+
+        // 포식자가 처음 멈춰서 관찰하는 시간 동안 대기
+        yield return new WaitForSeconds(predatorInitialObserveDuration);
     }
 
     /// <summary>
@@ -283,7 +307,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
         // 포식자 감정 변경
-        predator.ShowEmotion(EmotionType.Scared, predatorInspectDuration + 4f);
+        predator.ShowEmotion(EmotionType.Scared, predatorInspectDuration + shortEmotionDuration);
 
         // 죽은 척하는 주머니쥐 쪽으로 시선 돌리기
         yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.5f));
@@ -303,7 +327,8 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, 1.5f, true, false));
 
-        yield return new WaitForSeconds(1f);
+        // predatorInspectDuration 동안 살펴보기
+        yield return new WaitForSeconds(predatorInspectDuration);
     }
 
     /// <summary>
@@ -316,8 +341,8 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
         // 포식자 감정 변경
-        predator.ShowEmotion(EmotionType.Sad, 5f);
-        yield return new WaitForSeconds(1f);
+        predator.ShowEmotion(EmotionType.Sad, mediumEmotionDuration);
+        yield return new WaitForSeconds(veryShortWaitTime);
 
         // 멀리 떠나기
         Vector3 leaveDirection = (predator.transform.position - possum.transform.position).normalized;
@@ -328,7 +353,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         // 충분히 멀어질 때까지 대기
-        yield return StartCoroutine(WaitForMovement(predator, 10f, 10f));
+        yield return StartCoroutine(WaitForMovement(predator, predatorLeaveTimeout, 10f));
         predatorAnim.StopContinuousAnimation();
     }
 
@@ -410,14 +435,6 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         pet.transform.rotation = targetRotation;
         if (pet.petModelTransform) pet.petModelTransform.rotation = targetRotation;
-    }
-
-    /// <summary>
-    /// NavMeshAgent가 안전하게 준비되었는지 확인하는 헬퍼 메서드
-    /// </summary>
-    private bool IsAgentSafelyReady(PetController pet)
-    {
-        return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
     }
 
     #endregion
