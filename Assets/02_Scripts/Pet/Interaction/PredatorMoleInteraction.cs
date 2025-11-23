@@ -110,11 +110,20 @@ public class PredatorMoleInteraction : BasePetInteraction
         // 두더지 숨김 처리를 위한 변수
         Vector3 moleBurrowPosition = Vector3.zero;
         _moleIsHidden = false; // 초기화
+        bool forceEnd = false; // 강제 종료 플래그 추가
 
         try
         {
             // 0. 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
             yield return StartCoroutine(PreparePositionAndFacing(predator, mole));
+
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                yield break;
+            }
 
             // 감정 표현
             predator.ShowEmotion(EmotionType.Hungry, 30f);
@@ -123,18 +132,59 @@ public class PredatorMoleInteraction : BasePetInteraction
             // 짧은 대기 (감정 표현이 보이도록)
             yield return new WaitForSeconds(0.5f);
 
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                yield break;
+            }
+
             // 1. 공격 시도 단계
             yield return StartCoroutine(AttackAttemptPhase(predator, mole));
+
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                yield break;
+            }
 
             // 2. 두더지 숨기 단계
             moleBurrowPosition = mole.transform.position;
             yield return StartCoroutine(BurrowPhase(mole));
 
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                moleBurrowPosition = mole.transform.position + Vector3.up * burrowDepth; // 숨어있던 위치 보정
+                yield break;
+            }
+
             // 3. 포식자 반응 단계
             yield return StartCoroutine(PredatorDigPhase(predator, moleBurrowPosition));
 
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                yield break;
+            }
+
             // 4. 포식자 떠나기 단계
             yield return StartCoroutine(PredatorLeavePhase(predator, moleBurrowPosition));
+
+            // 유저가 펫을 잡았는지 체크
+            if (predator.State.IsHolding || mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 유저가 펫을 잡아서 상호작용을 종료합니다.");
+                forceEnd = true;
+                yield break;
+            }
 
             // 5. 두더지 재등장 단계
             yield return StartCoroutine(MoleEmergePhase(mole, moleBurrowPosition));
@@ -150,11 +200,21 @@ public class PredatorMoleInteraction : BasePetInteraction
             // 최종 정리
             Debug.Log("[PredatorMoleHunt] 상호작용 정리 시작.");
 
-            // 두더지가 여전히 숨어있다면 원래 위치로 복원
-            if (_moleIsHidden && mole.agent != null)
+            // 두더지가 여전히 숨어있다면 올라오게 처리
+            if (_moleIsHidden && mole != null && mole.gameObject.activeInHierarchy)
             {
-                mole.transform.position = moleBurrowPosition;
-                if (!mole.agent.enabled) mole.agent.enabled = true;
+                Debug.Log("[PredatorMoleHunt] 두더지가 아직 숨어있어서 긴급 복원합니다.");
+
+                // 강제 종료일 경우 빠르게 올라오기 코루틴 시작
+                if (forceEnd)
+                {
+                    StartCoroutine(EmergeMoleImmediately(mole, moleBurrowPosition));
+                }
+                else
+                {
+                    // 정상 종료인데 숨어있다면 일반 올라오기 코루틴 시작
+                    StartCoroutine(MoleEmergePhase(mole, moleBurrowPosition));
+                }
             }
 
             // 원래 상태 복원
@@ -336,6 +396,11 @@ public class PredatorMoleInteraction : BasePetInteraction
         Debug.Log($"[PredatorMoleHunt] 2단계: {mole.petName}이(가) 땅을 파고 들어갑니다!");
 
         Vector3 burrowPosition = mole.transform.position;
+
+        // 클래스 레벨 변수에 저장 (강제 종료 대비)
+        currentMole = mole;
+        currentMoleBurrowPosition = burrowPosition;
+
         StartCoroutine(SpawnBurrowParticles(burrowPosition));
 
         // NavMeshAgent 비활성화
@@ -343,6 +408,20 @@ public class PredatorMoleInteraction : BasePetInteraction
 
         // 땅 파기 애니메이션
         var moleAnim = mole.GetComponent<PetAnimationController>();
+
+        // 유저가 두더지를 잡았는지 체크
+        if (mole.State.IsHolding)
+        {
+            Debug.Log("[PredatorMoleHunt] 두더지가 잡혀서 BurrowPhase 중단");
+            mole.agent.enabled = true; // NavMeshAgent 재활성화
+
+            // 클래스 변수 초기화 추가 (상호작용이 중단되었으므로)
+            currentMole = null;
+            currentMoleBurrowPosition = Vector3.zero;
+
+            yield break;
+        }
+
         yield return StartCoroutine(moleAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
 
@@ -353,6 +432,20 @@ public class PredatorMoleInteraction : BasePetInteraction
         float elapsedTime = 0f;
         while (elapsedTime < burrowAnimationTime)
         {
+            // 유저가 두더지를 잡았는지 체크
+            if (mole.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 두더지가 잡혀서 땅속으로 들어가는 것을 중단");
+                mole.transform.position = burrowPosition; // 원래 위치로 복원
+                mole.agent.enabled = true; // NavMeshAgent 재활성화
+
+                // 클래스 변수 초기화 추가 (상호작용이 중단되었으므로)
+                currentMole = null;
+                currentMoleBurrowPosition = Vector3.zero;
+
+                yield break;
+            }
+
             mole.transform.position = Vector3.Lerp(burrowPosition, hiddenPosition, elapsedTime / burrowAnimationTime);
             elapsedTime += Time.deltaTime;
             yield return null;
@@ -369,6 +462,13 @@ public class PredatorMoleInteraction : BasePetInteraction
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
+        // 유저가 포식자를 잡았는지 체크
+        if (predator.State.IsHolding)
+        {
+            Debug.Log("[PredatorMoleHunt] 포식자가 잡혀서 PredatorDigPhase 중단");
+            yield break;
+        }
+
         // 1. 먼저 구멍 위치로 천천히 접근
         predator.agent.isStopped = false;
         predator.agent.speed = predator.baseSpeed * 0.5f;
@@ -378,6 +478,15 @@ public class PredatorMoleInteraction : BasePetInteraction
         // 구멍에 도착할 때까지 대기
         while (!predator.agent.pathPending && predator.agent.remainingDistance > 1f)
         {
+            // 유저가 포식자를 잡았는지 체크
+            if (predator.State.IsHolding)
+            {
+                Debug.Log("[PredatorMoleHunt] 포식자가 잡혀서 접근 중단");
+                predator.agent.isStopped = true;
+                predatorAnim.StopContinuousAnimation();
+                yield break;
+            }
+
             predator.HandleRotation();
             yield return null;
         }
@@ -625,6 +734,10 @@ public class PredatorMoleInteraction : BasePetInteraction
         mole.transform.position = burrowPosition;
         _moleIsHidden = false; // 더 이상 숨어있지 않음
 
+        // 클래스 레벨 변수 초기화
+        currentMole = null;
+        currentMoleBurrowPosition = Vector3.zero;
+
         // NavMeshAgent 재활성화
         mole.agent.enabled = true;
 
@@ -666,5 +779,109 @@ public class PredatorMoleInteraction : BasePetInteraction
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+    }
+
+    /// <summary>
+    /// 강제 종료 시 두더지를 빠르게 올라오게 하는 메서드
+    /// </summary>
+    private IEnumerator EmergeMoleImmediately(PetController mole, Vector3 burrowPosition)
+    {
+        if (!_moleIsHidden) yield break;
+
+        Debug.Log($"[PredatorMoleHunt] 긴급: {mole.petName}이(가) 빠르게 땅에서 나옵니다.");
+
+        // 파티클 생성 (선택적)
+        StartCoroutine(SpawnBurrowParticles(burrowPosition));
+
+        // 빠르게 올라오기 (0.5초)
+        Vector3 hiddenPosition = mole.transform.position;
+        float quickEmergeTime = 0.5f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < quickEmergeTime)
+        {
+            mole.transform.position = Vector3.Lerp(hiddenPosition, burrowPosition, elapsedTime / quickEmergeTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        mole.transform.position = burrowPosition;
+        _moleIsHidden = false;
+
+        // NavMeshAgent 재활성화
+        if (!mole.agent.enabled)
+        {
+            mole.agent.enabled = true;
+        }
+
+        // 간단한 애니메이션만 재생
+        var moleAnim = mole.GetComponent<PetAnimationController>();
+        if (moleAnim != null)
+        {
+            yield return StartCoroutine(moleAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
+        }
+
+        Debug.Log($"[PredatorMoleHunt] {mole.petName}이(가) 긴급 복원 완료.");
+    }
+
+    // 클래스 레벨 변수에 현재 두더지와 위치 저장
+    private PetController currentMole = null;
+    private Vector3 currentMoleBurrowPosition = Vector3.zero;
+
+    // 컴포넌트 비활성화 시 정리
+    private void OnDisable()
+    {
+        CleanupMole();
+    }
+
+    // 컴포넌트 파괴 시 정리
+    private void OnDestroy()
+    {
+        CleanupMole();
+    }
+
+    // 강제 종료 시 두더지 정리
+    private void CleanupMole()
+    {
+        // _moleIsHidden 체크를 제거하고, currentMole만 체크
+        if (currentMole != null)
+        {
+            Debug.Log($"[PredatorMoleHunt] 강제 종료 감지 - {currentMole.petName} 복원 시작");
+            Debug.Log($"[PredatorMoleHunt] _moleIsHidden: {_moleIsHidden}, currentMoleBurrowPosition: {currentMoleBurrowPosition}");
+
+            // 두더지가 숨어있었다면 위치 복원
+            if (_moleIsHidden)
+            {
+                currentMole.transform.position = currentMoleBurrowPosition;
+                Debug.Log($"[PredatorMoleHunt] 두더지를 {currentMoleBurrowPosition} 위치로 복원");
+            }
+
+            _moleIsHidden = false;
+
+            // NavMeshAgent 재활성화
+            if (currentMole.agent != null && !currentMole.agent.enabled)
+            {
+                currentMole.agent.enabled = true;
+                Debug.Log("[PredatorMoleHunt] NavMeshAgent 재활성화");
+            }
+
+            // 코루틴 제거! (OnDisable/OnDestroy에서는 코루틴이 실행되지 않음)
+            // ChameleonCamouflageInteraction처럼 즉시 복원만 수행
+
+            currentMole = null;
+            currentMoleBurrowPosition = Vector3.zero;
+        }
+        else
+        {
+            Debug.Log("[PredatorMoleHunt] CleanupMole 호출됐지만 currentMole이 null");
+        }
+    }
+
+    // 외부에서 강제로 정리를 요청할 때 사용하는 public 메서드
+    public void ForceCleanup()
+    {
+        Debug.Log($"[PredatorMoleHunt] ForceCleanup 호출됨 - 상호작용 강제 종료 처리");
+        CleanupMole();
     }
 }

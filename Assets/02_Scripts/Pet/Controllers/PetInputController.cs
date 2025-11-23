@@ -1083,6 +1083,14 @@ public class PetInputController : PetControllerBase
                 chameleonInteraction.ForceCleanup();
             }
 
+            // PredatorMoleInteraction 특별 처리 - 두더지 복원
+            var predatorMoleInteraction = interactionLogic as PredatorMoleInteraction;
+            if (predatorMoleInteraction != null)
+            {
+                Debug.Log($"[ForceStopInteraction] PredatorMoleInteraction 감지 - 강제 정리 실행");
+                predatorMoleInteraction.ForceCleanup();
+            }
+
             interactionLogic.StopAllCoroutines();
 
             // 상대 펫 처리
@@ -1099,6 +1107,14 @@ public class PetInputController : PetControllerBase
                     {
                         Debug.Log($"[ForceStopInteraction] 상대 펫도 ChameleonCamouflageInteraction 중 - 강제 정리 실행");
                         partnerChameleonInteraction.ForceCleanup();
+                    }
+
+                    // 상대 펫도 PredatorMoleInteraction에 참여 중일 수 있으므로 동일하게 처리
+                    var partnerPredatorMoleInteraction = partner.State.InteractionLogic as PredatorMoleInteraction;
+                    if (partnerPredatorMoleInteraction != null)
+                    {
+                        Debug.Log($"[ForceStopInteraction] 상대 펫도 PredatorMoleInteraction 중 - 강제 정리 실행");
+                        partnerPredatorMoleInteraction.ForceCleanup();
                     }
 
                     partner.State.InteractionLogic.StopAllCoroutines();
