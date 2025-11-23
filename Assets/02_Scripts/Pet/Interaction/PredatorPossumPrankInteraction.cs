@@ -298,7 +298,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 3단계: 포식자가 주머니쥐를 살펴보는 단계
+    /// 3단계: 포식자가 주머니쥐를 살펴보는 단계 (확장됨)
     /// </summary>
     private IEnumerator PredatorInspectPhase(PetController predator, PetController possum)
     {
@@ -306,14 +306,16 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         var predatorAnim = predator.GetComponent<PetAnimationController>();
 
-        // 포식자 감정 변경
-        predator.ShowEmotion(EmotionType.Scared, predatorInspectDuration + shortEmotionDuration);
+        // 포식자 감정 변경 (호기심/의심)
+        predator.ShowEmotion(EmotionType.Scared, predatorInspectDuration + shortEmotionDuration + 5f); // 시간 넉넉히
 
-        // 죽은 척하는 주머니쥐 쪽으로 시선 돌리기
+        // 1. 죽은 척하는 주머니쥐 쪽으로 시선 돌리기
         yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.5f));
 
-        // 더 가까이 다가가기
-        Vector3 touchPosition = possum.transform.position - (possum.transform.position - predator.transform.position).normalized * 1.5f;
+        // 2. 더 가까이 다가가기 (첫 번째 접근)
+        Vector3 directionToPossum = (possum.transform.position - predator.transform.position).normalized;
+        Vector3 touchPosition = possum.transform.position - directionToPossum * 1.5f;
+        
         predator.agent.SetDestination(FindValidPositionOnNavMesh(touchPosition, 2f));
         predator.agent.isStopped = false;
         predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -322,13 +324,90 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         predatorAnim.StopContinuousAnimation();
         yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
 
-        // 건드려보기
-        Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 툭 쳐보며 반응을 살핍니다.");
+        // 3. 첫 번째 건드려보기 (기존 동작)
+        Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 처음 살펴봅니다.");
+        yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Eat, 1.5f, true, false));
+        
+        yield return new WaitForSeconds(1.0f);
+
+        // 4. [NEW] 주머니쥐 주위로 90도 이동하여 살펴보기
+        Debug.Log($"[{InteractionName}] {predator.petName}이(가) 옆으로 이동하여 다시 살펴봅니다.");
+        
+        // 현재 위치에서 주머니쥐를 기준으로 90도 회전한 위치 계산
+        Vector3 currentRelPos = predator.transform.position - possum.transform.position;
+        Vector3 rotatedPos = Quaternion.Euler(0, 90, 0) * currentRelPos; // 90도 회전
+        Vector3 sideInspectPosition = possum.transform.position + rotatedPos.normalized * 1.5f; // 거리는 1.5m 유지
+
+        predator.agent.SetDestination(FindValidPositionOnNavMesh(sideInspectPosition, 2f));
+        predator.agent.isStopped = false;
+        predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        // 이동 중에도 계속 주머니쥐를 바라보도록 함
+        float moveTimer = 0f;
+        while (moveTimer < 4f)
+        {
+            if (!predator.agent.pathPending && predator.agent.remainingDistance <= 0.5f) break;
+            
+            // 이동 중 시선 고정
+            Vector3 lookDir = (possum.transform.position - predator.transform.position).normalized;
+            lookDir.y = 0;
+            if (lookDir != Vector3.zero)
+            {
+                predator.transform.rotation = Quaternion.Slerp(predator.transform.rotation, Quaternion.LookRotation(lookDir), Time.deltaTime * 5f);
+            }
+            
+            moveTimer += Time.deltaTime;
+            yield return null;
+        }
+        
+        predator.agent.isStopped = true;
+        predatorAnim.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
+
+        // 5. [NEW] 두 번째 건드려보기 (Eat 애니메이션)
         yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, 1.5f, true, false));
 
-        // predatorInspectDuration 동안 살펴보기
-        yield return new WaitForSeconds(predatorInspectDuration);
+        yield return new WaitForSeconds(0.5f);
+
+        // 6. [NEW] 툭툭 건드리기 (Nudge) - 2회 반복
+        Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 툭툭 건드려봅니다.");
+        
+        for (int i = 0; i < 2; i++)
+        {
+            // 살짝 앞으로
+            Vector3 nudgeTarget = possum.transform.position - (possum.transform.position - predator.transform.position).normalized * 1.0f; // 조금 더 가까이 (1.0m)
+            predator.agent.SetDestination(nudgeTarget);
+            predator.agent.isStopped = false;
+            predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            
+            yield return new WaitForSeconds(0.3f); // 짧게 이동
+            
+            predator.agent.isStopped = true;
+            predatorAnim.StopContinuousAnimation();
+
+            // 툭 치는 모션 (짧은 Attack)
+            yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Attack, 0.5f, true, false));
+            
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        // 7. 살짝 뒤로 물러나기 (반응 관찰)
+        Vector3 backOffPos = possum.transform.position + (predator.transform.position - possum.transform.position).normalized * 2.0f;
+        predator.agent.SetDestination(FindValidPositionOnNavMesh(backOffPos, 2f));
+        predator.agent.isStopped = false;
+        predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        
+        yield return new WaitForSeconds(1.0f);
+        
+        predator.agent.isStopped = true;
+        predatorAnim.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.5f));
+
+        // 마지막 관찰
+        yield return new WaitForSeconds(1.0f);
     }
 
     /// <summary>
