@@ -381,15 +381,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionStartDistance: 15
   interactionDistance: 7
-  sleepSpotRadius: 4
-  predatorSleepDuration: 5
-  playDeadDuration: 10
-  predatorInspectDuration: 3
-  predatorLeaveDistance: 15
-  prankAnimationDuration: 2.5
-  wakeUpAnimationDuration: 1.5
-  angryAnimationDuration: 2
+  predatorInitialObserveDuration: 1
+  predatorInspectDuration: 2
+  predatorLeaveDistance: 30
+  predatorLeaveTimeout: 100
   celebrationDuration: 2
+  persistentEmotionDuration: 999
+  shortEmotionDuration: 2
+  mediumEmotionDuration: 5
+  veryShortWaitTime: 1
   agentSafetyTimeout: 3
 --- !u!114 &-8314337667573088611
 MonoBehaviour:

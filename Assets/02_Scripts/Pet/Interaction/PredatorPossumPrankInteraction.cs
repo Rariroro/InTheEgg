@@ -501,31 +501,29 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
     {
         Debug.Log($"[{InteractionName}] 5단계: {possum.petName}이(가) 일어나서 장난 성공을 자축합니다!");
         var possumAnim = possum.GetComponent<PetAnimationController>();
-        var predatorAnim = predator.GetComponent<PetAnimationController>();
 
         // 주머니쥐가 '죽은 척' 애니메이션을 멈추고 일어납니다.
         possumAnim.StopContinuousAnimation();
 
-        // 잠시 주변을 살피는 연출
+        // 잠시 주변을 살피는 연출 (포식자가 멀리 갔는지 확인)
         yield return StartCoroutine(SmoothlyLookAt(possum, possum.transform.position + possum.transform.right, 0.5f));
         yield return new WaitForSeconds(0.3f);
         yield return StartCoroutine(SmoothlyLookAt(possum, possum.transform.position - possum.transform.right, 0.7f));
         yield return new WaitForSeconds(0.3f);
-        
-        // ★★★ 수정: 축하하기 전에 서로 마주보도록 변경합니다. ★★★
-        Debug.Log($"[{InteractionName}] {possum.petName}과(와) {predator.petName}이(가) 서로 마주봅니다.");
-        yield return StartCoroutine(SmoothlyLookAtEachOther(possum, predator, 1.0f));
 
-        // 두 펫이 동시에 기뻐합니다.
+        // 주머니쥐만 기뻐합니다!
         possum.ShowEmotion(EmotionType.Happy, celebrationDuration * 2);
-        predator.ShowEmotion(EmotionType.Happy, celebrationDuration * 2);
-        
-        // 두 펫이 동시에 점프하며 축하합니다.
-        StartCoroutine(possumAnim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, celebrationDuration, true, false));
-        StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, celebrationDuration, true, false));
+
+        // 주머니쥐만 점프하며 자축합니다!
+        yield return StartCoroutine(possumAnim.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump,
+            celebrationDuration,
+            true,
+            false
+        ));
 
         // 애니메이션이 끝날 때까지 대기
-        yield return new WaitForSeconds(celebrationDuration + 0.5f);
+        yield return new WaitForSeconds(0.5f);
     }
 
     #endregion
