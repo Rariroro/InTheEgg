@@ -385,13 +385,23 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
             // NavMeshAgent 비활성화하고 직접 이동
             predator.agent.enabled = false;
-            predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
+            // 뒷걸음질 설정
             float backDistance = 1.5f;
             float backSpeed = predator.baseSpeed * 0.8f;
-            float movedDistance = 0f;
+            float backDuration = backDistance / backSpeed; // 이동에 필요한 시간 계산
+
+            // PlayAnimationWithCustomDuration으로 Walk 애니메이션 시작
+            // 코루틴을 동시에 시작하여 애니메이션과 이동을 함께 처리
+            StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Walk,
+                backDuration + 0.2f, // 약간의 여유 시간 추가
+                returnToIdle: true,
+                resumeMovementAfter: false
+            ));
 
             // 뒷걸음질 (Transform 직접 조작)
+            float movedDistance = 0f;
             while (movedDistance < backDistance)
             {
                 float moveStep = backSpeed * Time.deltaTime;
@@ -404,7 +414,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
             predator.agent.enabled = true;
             yield return new WaitForSeconds(0.1f); // Agent 준비 대기
 
-            predatorAnim.StopContinuousAnimation();
+            // 애니메이션이 끝나기를 기다림 (이미 Idle로 전환됨)
             yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
 
             yield return new WaitForSeconds(0.5f); // 관찰 시간
