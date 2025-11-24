@@ -125,6 +125,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
     #region Interaction Phases
 
+
     /// <summary>
     /// 0단계: 초기 위치 및 방향 준비 (거리 조정 + 서로 마주보기)
     /// </summary>
@@ -284,11 +285,12 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 2단계: {possum.petName}이(가) 재빨리 죽은 척을 합니다!");
 
         // 주머니쥐 감정 변경
-        possum.ShowEmotion(EmotionType.Scared, predatorInitialObserveDuration + mediumEmotionDuration);
+        // possum.ShowEmotion(EmotionType.Scared, predatorInitialObserveDuration + mediumEmotionDuration);
 
         // 죽은 척 애니메이션
         var possumAnim = possum.GetComponent<PetAnimationController>();
         yield return StartCoroutine(possumAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Die));
+
 
         // 죽은 척 유지
         possumAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Die);
@@ -373,25 +375,59 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
         // 6. [NEW] 툭툭 건드리기 (Nudge) - 2회 반복
         Debug.Log($"[{InteractionName}] {predator.petName}이(가) {possum.petName}을(를) 툭툭 건드려봅니다.");
-        
+
         for (int i = 0; i < 2; i++)
         {
-            // 살짝 앞으로
-            Vector3 nudgeTarget = possum.transform.position - (possum.transform.position - predator.transform.position).normalized * 1.0f; // 조금 더 가까이 (1.0m)
-            predator.agent.SetDestination(nudgeTarget);
+            Debug.Log($"[{InteractionName}] {i+1}번째 툭툭 건드리기 시작");
+
+            // 1단계: 뒤로 물러나서 관찰 (NavMeshAgent 사용하지 않고 직접 이동)
+            Debug.Log($"[{InteractionName}] {i+1}번째 뒤로 물러나서 관찰");
+
+            // NavMeshAgent 비활성화하고 직접 이동
+            predator.agent.enabled = false;
+            predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+            float backDistance = 1.5f;
+            float backSpeed = predator.baseSpeed * 0.8f;
+            float movedDistance = 0f;
+
+            // 뒷걸음질 (Transform 직접 조작)
+            while (movedDistance < backDistance)
+            {
+                float moveStep = backSpeed * Time.deltaTime;
+                predator.transform.position -= predator.transform.forward * moveStep;
+                movedDistance += moveStep;
+                yield return null;
+            }
+
+            // NavMeshAgent 재활성화
+            predator.agent.enabled = true;
+            yield return new WaitForSeconds(0.1f); // Agent 준비 대기
+
+            predatorAnim.StopContinuousAnimation();
+            yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
+
+            yield return new WaitForSeconds(0.5f); // 관찰 시간
+
+            // 2단계: 앞으로 접근해서 툭 밀기
+            Debug.Log($"[{InteractionName}] {i+1}번째 앞으로 접근 시작");
+            Vector3 nudgeTarget = possum.transform.position - (possum.transform.position - predator.transform.position).normalized * 0.5f; // 더 가까이 (0.5m)
+            predator.agent.SetDestination(FindValidPositionOnNavMesh(nudgeTarget, 2f));
             predator.agent.isStopped = false;
             predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-            
-            yield return new WaitForSeconds(0.3f); // 짧게 이동
-            
+
+            yield return new WaitForSeconds(0.8f); // 앞으로 이동 시간
+
             predator.agent.isStopped = true;
             predatorAnim.StopContinuousAnimation();
 
-            // 툭 치는 모션 (짧은 Attack)
+            // 3단계: 툭 치는 모션
+            Debug.Log($"[{InteractionName}] {i+1}번째 툭 건드림");
             yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Attack, 0.5f, true, false));
-            
-            yield return new WaitForSeconds(0.5f);
+                PetAnimationController.PetAnimationType.Attack, 1.5f, true, false)); // 1.0초 → 1.5초
+
+            Debug.Log($"[{InteractionName}] {i+1}번째 툭툭 건드리기 완료");
+            yield return new WaitForSeconds(1.0f); // 대기 시간
         }
 
         // 7. 살짝 뒤로 물러나기 (반응 관찰)
