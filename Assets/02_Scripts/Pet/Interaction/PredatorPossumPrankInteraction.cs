@@ -410,9 +410,18 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
                 yield return null;
             }
 
-            // NavMeshAgent 재활성화
+            // NavMeshAgent 재활성화 및 위치 동기화
             predator.agent.enabled = true;
-            yield return new WaitForSeconds(0.1f); // Agent 준비 대기
+            yield return new WaitForSeconds(0.05f); // Agent 초기화 대기
+
+            // Transform 위치를 NavMeshAgent에 동기화
+            if (predator.agent.isOnNavMesh)
+            {
+                predator.agent.Warp(predator.transform.position);
+            }
+
+            // Agent가 안정화되도록 짧은 대기
+            yield return new WaitForSeconds(0.1f);
 
             // 애니메이션이 끝나기를 기다림 (이미 Idle로 전환됨)
             yield return StartCoroutine(SmoothlyLookAt(predator, possum.transform.position, 0.3f));
@@ -421,7 +430,10 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
 
             // 2단계: 앞으로 접근해서 툭 밀기
             Debug.Log($"[{InteractionName}] {i+1}번째 앞으로 접근 시작");
-            Vector3 nudgeTarget = possum.transform.position - (possum.transform.position - predator.transform.position).normalized * 0.5f; // 더 가까이 (0.5m)
+
+            // 포식자와 주머니쥐 사이의 정확한 방향 재계산
+            Vector3 currentDirection = (possum.transform.position - predator.transform.position).normalized;
+            Vector3 nudgeTarget = possum.transform.position - currentDirection * 0.5f; // 더 가까이 (0.5m)
             predator.agent.SetDestination(FindValidPositionOnNavMesh(nudgeTarget, 2f));
             predator.agent.isStopped = false;
             predatorAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
