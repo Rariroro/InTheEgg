@@ -446,7 +446,7 @@ public class PredatorPossumPrankInteraction : BasePetInteraction
             // 3단계: 툭 치는 모션
             Debug.Log($"[{InteractionName}] {i+1}번째 툭 건드림");
             yield return StartCoroutine(predatorAnim.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Attack, 1.5f, true, false)); // 1.0초 → 1.5초
+                PetAnimationController.PetAnimationType.Attack, 0.5f, true, false)); // 1.0초 → 1.5초
 
             Debug.Log($"[{InteractionName}] {i+1}번째 툭툭 건드리기 완료");
             yield return new WaitForSeconds(1.0f); // 대기 시간
