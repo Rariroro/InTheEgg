@@ -84,6 +84,24 @@ public class TurtleRabbitRace : BasePetInteraction
     public float arrowDisappearDistance = 15f;
     // ▲▲▲ [여기까지 추가] ▲▲▲
 
+    [Header("Debug Visualization")]
+    [Tooltip("Scene 뷰에서 경주 경로와 깨우기 지점을 표시할지 여부")]
+    public bool showDebugGizmos = true;
+
+    [Tooltip("깨우기 지점 표시 색상")]
+    public Color wakeUpPointColor = Color.yellow;
+
+    [Tooltip("낮잠 지점 표시 색상")]
+    public Color napPointColor = Color.blue;
+
+    // 경주 정보 저장용 (PerformInteraction 메서드에서 설정)
+    private Vector3 debugStartPosition;
+    private Vector3 debugFinishLine;
+    private Vector3 debugDirectionToFinish;
+    private float debugTotalRaceDistance;
+    private bool debugRaceActive = false;
+    private PetController debugFastPet;
+    private PetController debugSlowPet;
 
     // 빠른 펫이 깨어나야 하는지를 외부에서 알 수 있도록 하는 플래그 변수입니다.
     private bool fastPetShouldWakeUp = false;
@@ -288,6 +306,15 @@ public class TurtleRabbitRace : BasePetInteraction
             Vector3 fastPetStartPos, slowPetStartPos;
             CalculateAlignedStartPositions(startPosition, dirToFinish, out fastPetStartPos, out slowPetStartPos, 3f);
 
+            // 디버그 정보 저장 (OnDrawGizmos용)
+            debugStartPosition = startPosition;
+            debugFinishLine = finishLine;
+            debugDirectionToFinish = dirToFinish;
+            debugTotalRaceDistance = totalRaceDistance;
+            debugRaceActive = true;
+            debugFastPet = fastPet;
+            debugSlowPet = slowPet;
+
             // 1단계: 출발선 근처로 이동
             yield return StartCoroutine(MoveToPositions(fastPet, slowPet, fastPetStartPos, slowPetStartPos, 10f));
 
@@ -450,6 +477,9 @@ public class TurtleRabbitRace : BasePetInteraction
         }
         finally
         {
+            // 디버그 표시 종료
+            debugRaceActive = false;
+
             // ★★★ 수정: finally 블록을 대폭 간소화합니다. ★★★
             // 복잡한 NavMeshAgent 복구 로직을 제거합니다.
             // PetOriginalState 복원과 EndInteraction 호출만으로 충분합니다.
@@ -853,6 +883,107 @@ public class TurtleRabbitRace : BasePetInteraction
         {
             pet.animator.speed = 1.0f;  // 정상 속도로 복귀
             Debug.Log($"[Race] {pet.petName}의 애니메이션 속도를 정상으로 복귀했습니다.");
+        }
+    }
+
+    /// <summary>
+    /// Scene 뷰에서 경주 경로와 중요 지점들을 시각화
+    /// </summary>
+    private void OnDrawGizmos()
+    {
+        if (!showDebugGizmos || !Application.isPlaying || !debugRaceActive)
+            return;
+
+        // 1. 경주 경로 표시 (시작점 → 결승점)
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(debugStartPosition, debugFinishLine);
+
+        // 시작점 표시
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(debugStartPosition, 1f);
+        Gizmos.DrawRay(debugStartPosition, Vector3.up * 3f);
+
+        // 결승선 표시
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(debugFinishLine, 1f);
+        Gizmos.DrawRay(debugFinishLine, Vector3.up * 5f);
+
+        // 2. 토끼 낮잠 지점 표시 (40% 지점)
+        Vector3 napPoint = debugStartPosition + debugDirectionToFinish * (debugTotalRaceDistance * fastPetNapProgress);
+        Gizmos.color = napPointColor;
+        Gizmos.DrawWireSphere(napPoint, 2f);
+        Gizmos.DrawRay(napPoint, Vector3.up * 10f);
+
+        // 낮잠 지점 텍스트 (Unity Editor 전용)
+        #if UNITY_EDITOR
+        UnityEditor.Handles.Label(napPoint + Vector3.up * 12f,
+            $"NAP POINT ({(fastPetNapProgress * 100):F0}%)",
+            new GUIStyle() {
+                normal = new GUIStyleState() { textColor = napPointColor },
+                fontSize = 14,
+                fontStyle = FontStyle.Bold
+            });
+        #endif
+
+        // 3. 거북이 깨우기 지점 표시 (94% 지점)
+        Vector3 wakeUpPoint = debugStartPosition + debugDirectionToFinish * (debugTotalRaceDistance * slowPetWakeUpProgress);
+        Gizmos.color = wakeUpPointColor;
+        Gizmos.DrawWireSphere(wakeUpPoint, 2f);
+        Gizmos.DrawRay(wakeUpPoint, Vector3.up * 10f);
+
+        // 깨우기 지점 평면 표시 (경주 방향에 수직)
+        Vector3 perpendicular = Vector3.Cross(debugDirectionToFinish, Vector3.up).normalized;
+        Gizmos.color = new Color(wakeUpPointColor.r, wakeUpPointColor.g, wakeUpPointColor.b, 0.3f);
+        for (int i = -5; i <= 5; i++)
+        {
+            Vector3 lineStart = wakeUpPoint + perpendicular * i * 2f;
+            Vector3 lineEnd = wakeUpPoint + perpendicular * i * 2f + Vector3.up * 10f;
+            Gizmos.DrawLine(lineStart, lineEnd);
+        }
+
+        #if UNITY_EDITOR
+        UnityEditor.Handles.Label(wakeUpPoint + Vector3.up * 12f,
+            $"WAKE UP POINT ({(slowPetWakeUpProgress * 100):F0}%)",
+            new GUIStyle() {
+                normal = new GUIStyleState() { textColor = wakeUpPointColor },
+                fontSize = 14,
+                fontStyle = FontStyle.Bold
+            });
+        #endif
+
+        // 4. 실시간 진행 상황 표시
+        if (debugFastPet != null && debugSlowPet != null && debugTotalRaceDistance > 0)
+        {
+            // 토끼 현재 위치와 진행도
+            float fastPetProjectedDistance = Vector3.Dot(debugFastPet.transform.position - debugStartPosition, debugDirectionToFinish);
+            float fastPetProgress = Mathf.Clamp01(fastPetProjectedDistance / debugTotalRaceDistance);
+
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireCube(debugFastPet.transform.position + Vector3.up * 5f, Vector3.one * 0.5f);
+
+            // 거북이 현재 위치와 진행도
+            float slowPetProjectedDistance = Vector3.Dot(debugSlowPet.transform.position - debugStartPosition, debugDirectionToFinish);
+            float slowPetProgress = Mathf.Clamp01(slowPetProjectedDistance / debugTotalRaceDistance);
+
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireCube(debugSlowPet.transform.position + Vector3.up * 5f, Vector3.one * 0.5f);
+
+            #if UNITY_EDITOR
+            // 진행도 텍스트
+            UnityEditor.Handles.Label(debugFastPet.transform.position + Vector3.up * 7f,
+                $"Fast: {(fastPetProgress * 100):F1}%",
+                new GUIStyle() {
+                    normal = new GUIStyleState() { textColor = Color.cyan },
+                    fontSize = 12
+                });
+
+            UnityEditor.Handles.Label(debugSlowPet.transform.position + Vector3.up * 7f,
+                $"Slow: {(slowPetProgress * 100):F1}%",
+                new GUIStyle() {
+                    normal = new GUIStyleState() { textColor = Color.magenta },
+                    fontSize = 12
+                });
+            #endif
         }
     }
 

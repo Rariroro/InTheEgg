@@ -240,14 +240,17 @@ MonoBehaviour:
   raceTimeoutSeconds: 180
   fastPetStartSpeedMultiplier: 3.5
   fastPetNapProgress: 0.4
-  fastPetFinalSprintSpeedMultiplier: 5
-  slowPetSpeedMultiplier: 0.8
-  slowPetWakeUpProgress: 0.94
+  fastPetFinalSprintSpeedMultiplier: 3.55
+  slowPetSpeedMultiplier: 0.9
+  slowPetWakeUpProgress: 0.89
   agentSafetyTimeout: 3
   finishLineSpread: 5
   stuckDetectionTime: 3
   detourRadius: 8
   arrowDisappearDistance: 5
+  showDebugGizmos: 1
+  wakeUpPointColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  napPointColor: {r: 0, g: 0, b: 1, a: 1}
   fastPetSlowDownDuration: 1
   fastPetMinSpeedBeforeSleep: 0.5
 --- !u!114 &4223720624493054833
