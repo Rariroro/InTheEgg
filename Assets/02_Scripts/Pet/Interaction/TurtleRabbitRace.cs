@@ -315,8 +315,12 @@ public class TurtleRabbitRace : BasePetInteraction
             Debug.Log("[Race] 경주 시작!");
             fastPet.agent.updateRotation = true;
             slowPet.agent.updateRotation = true;
-            fastPet.agent.speed = fastPetOriginalState.originalSpeed * fastPetStartSpeedMultiplier;
-            slowPet.agent.speed = slowPetOriginalState.originalSpeed * slowPetSpeedMultiplier;
+            // baseSpeed 사용으로 수정 (다른 활동의 영향을 받지 않도록)
+            fastPet.agent.speed = fastPet.baseSpeed * fastPetStartSpeedMultiplier;
+            slowPet.agent.speed = slowPet.baseSpeed * slowPetSpeedMultiplier;
+            // acceleration도 비례하여 설정 (자연스러운 가속)
+            fastPet.agent.acceleration = fastPet.baseAcceleration * fastPetStartSpeedMultiplier;
+            slowPet.agent.acceleration = slowPet.baseAcceleration * slowPetSpeedMultiplier;
 
             fastPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
             slowPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -403,7 +407,9 @@ public class TurtleRabbitRace : BasePetInteraction
                     {
                         fastPet.agent.avoidancePriority = fastPetOriginalPriority;
 
-                        fastPet.agent.speed = fastPetOriginalState.originalSpeed * fastPetFinalSprintSpeedMultiplier;
+                        // baseSpeed 사용으로 수정
+                        fastPet.agent.speed = fastPet.baseSpeed * fastPetFinalSprintSpeedMultiplier;
+                        fastPet.agent.acceleration = fastPet.baseAcceleration * fastPetFinalSprintSpeedMultiplier;
                         fastPet.agent.updateRotation = true; // 회전 재개
                         fastPet.agent.isStopped = false;     // 이동 재개
                     }
@@ -608,8 +614,8 @@ public class TurtleRabbitRace : BasePetInteraction
 
         Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
 
-        // 현재 속도 저장
-        float currentSpeed = fastPet.agent.speed;
+        // 경주 속도 사용 (현재 agent.speed가 아닌 설정된 경주 속도)
+        float currentSpeed = fastPet.baseSpeed * fastPetStartSpeedMultiplier;
         float slowDownDuration = fastPetSlowDownDuration; // 2.0f 대신
         float elapsedTime = 0f;
 
