@@ -392,31 +392,30 @@ public class TurtleRabbitRace : BasePetInteraction
 
                 if (fastPetIsSleeping && !fastPetWokeUp && slowPetProgress >= slowPetWakeUpProgress)
                 {
-                    // ★★★ 수정: 토끼 깨우기 로직을 isStopped로 제어 ★★★
+                    // ★★★ 수정: 토끼 깨우기 로직 - 애니메이션 후 이동 시작 ★★★
                     fastPetWokeUp = true;
                     var fastPetAnimController = fastPet.GetComponent<PetAnimationController>();
+
+                    // 1. 애니메이션과 감정 먼저 변경
                     fastPetAnimController.StopContinuousAnimation(); // 잠자는 애니메이션 중지
-                                                                    // ▼▼▼▼▼ [핵심 수정] 이 부분을 추가합니다. ▼▼▼▼▼
-                                                                    // 기존의 '잠자기' 파티클을 즉시 제거합니다.
-                    fastPet.HideEmotion();
-                    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+                    fastPet.HideEmotion(); // 잠자기 파티클 제거
+                    fastPet.ShowEmotion(EmotionType.Scared, 10f); // 놀란 감정 표시
 
-                    fastPet.ShowEmotion(EmotionType.Scared, 10f);
+                    // 2. 일어나는 애니메이션 재생 (정지 상태에서)
+                    yield return StartCoroutine(fastPetAnimController.PlayAnimationWithCustomDuration(
+                        PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
 
+                    // 3. 애니메이션 완료 후 이동 시작
                     if (IsAgentSafelyReady(fastPet))
                     {
                         fastPet.agent.avoidancePriority = fastPetOriginalPriority;
-
-                        // baseSpeed 사용으로 수정
                         fastPet.agent.speed = fastPet.baseSpeed * fastPetFinalSprintSpeedMultiplier;
                         fastPet.agent.acceleration = fastPet.baseAcceleration * fastPetFinalSprintSpeedMultiplier;
                         fastPet.agent.updateRotation = true; // 회전 재개
-                        fastPet.agent.isStopped = false;     // 이동 재개
+                        fastPet.agent.isStopped = false;     // 이동 재개 (마지막에!)
                     }
 
-                    yield return StartCoroutine(fastPetAnimController.PlayAnimationWithCustomDuration(
-                        PetAnimationController.PetAnimationType.Jump, 0.5f, false, false));
-
+                    // 4. Run 애니메이션 시작
                     fastPetAnimController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
                     Debug.Log($"[Race] {fastPet.petName}이(가) 잠에서 깨어나 전력질주합니다!");
                 }
@@ -653,10 +652,18 @@ public class TurtleRabbitRace : BasePetInteraction
 
         // 4. 잠자는 감정 표현과 애니메이션 시작
         fastPet.ShowEmotion(EmotionType.Sleep, 60f);
-        if (animController != null)
+
+        if (animController != null && fastPet.animator != null)
         {
+            // 애니메이션 속도 1.5배로 설정하여 빠르게 눕기
+            fastPet.animator.speed = 1.5f;
+
+            // 비동기로 Rest 애니메이션 시작 (999초)
             StartCoroutine(animController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Rest, 999f, true, false));
+
+            // 1초 후 속도를 정상으로 되돌리기
+            StartCoroutine(ResetAnimationSpeedAfterDelay(fastPet, 1.0f));
         }
 
         Debug.Log($"[Race] {fastPet.petName}이(가) 편안하게 잠들었습니다.");
@@ -836,6 +843,19 @@ public class TurtleRabbitRace : BasePetInteraction
         Debug.Log($"[Race] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
     }
     
+    /// <summary>
+    /// 애니메이션 속도를 일정 시간 후에 리셋하는 헬퍼 코루틴
+    /// </summary>
+    private IEnumerator ResetAnimationSpeedAfterDelay(PetController pet, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (pet != null && pet.animator != null)
+        {
+            pet.animator.speed = 1.0f;  // 정상 속도로 복귀
+            Debug.Log($"[Race] {pet.petName}의 애니메이션 속도를 정상으로 복귀했습니다.");
+        }
+    }
+
     /// <summary>
     /// 컴포넌트가 파괴될 때 남아있는 화살표 정리
     /// </summary>
