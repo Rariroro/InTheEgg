@@ -171,8 +171,36 @@ public class ChaseAndRunInteraction : BasePetInteraction
         PetType type2 = pet2.PetType;
 
         // 고양이와 개는 쫓고 쫓김
-        if ((type1 == PetType.Cat && type2 == PetType.Dog) || 
+        if ((type1 == PetType.Cat && type2 == PetType.Dog) ||
             (type1 == PetType.Dog && type2 == PetType.Cat))
+        {
+            return true;
+        }
+
+        // 노새와 얼룩말 추격전
+        if ((type1 == PetType.Mule && type2 == PetType.Zebra) ||
+            (type1 == PetType.Zebra && type2 == PetType.Mule))
+        {
+            return true;
+        }
+
+        // 타조와 플라밍고 추격전
+        if ((type1 == PetType.Ostrich && type2 == PetType.Flamingo) ||
+            (type1 == PetType.Flamingo && type2 == PetType.Ostrich))
+        {
+            return true;
+        }
+
+        // 너구리와 레서판다 추격전
+        if ((type1 == PetType.Raccoon && type2 == PetType.RedPanda) ||
+            (type1 == PetType.RedPanda && type2 == PetType.Raccoon))
+        {
+            return true;
+        }
+
+        // 오리와 공작 추격전
+        if ((type1 == PetType.Duck && type2 == PetType.Peacock) ||
+            (type1 == PetType.Peacock && type2 == PetType.Duck))
         {
             return true;
         }
@@ -188,6 +216,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         PetController chaser = null;
         PetController runner = null;
 
+        // 개가 고양이를 추격
         if (pet1.PetType == PetType.Dog && pet2.PetType == PetType.Cat)
         {
             chaser = pet1;
@@ -198,9 +227,53 @@ public class ChaseAndRunInteraction : BasePetInteraction
             chaser = pet2;
             runner = pet1;
         }
+        // 노새가 얼룩말을 추격
+        else if (pet1.PetType == PetType.Mule && pet2.PetType == PetType.Zebra)
+        {
+            chaser = pet1;
+            runner = pet2;
+        }
+        else if (pet1.PetType == PetType.Zebra && pet2.PetType == PetType.Mule)
+        {
+            chaser = pet2;
+            runner = pet1;
+        }
+        // 타조가 플라밍고를 추격
+        else if (pet1.PetType == PetType.Ostrich && pet2.PetType == PetType.Flamingo)
+        {
+            chaser = pet1;
+            runner = pet2;
+        }
+        else if (pet1.PetType == PetType.Flamingo && pet2.PetType == PetType.Ostrich)
+        {
+            chaser = pet2;
+            runner = pet1;
+        }
+        // 너구리가 레서판다를 추격
+        else if (pet1.PetType == PetType.Raccoon && pet2.PetType == PetType.RedPanda)
+        {
+            chaser = pet1;
+            runner = pet2;
+        }
+        else if (pet1.PetType == PetType.RedPanda && pet2.PetType == PetType.Raccoon)
+        {
+            chaser = pet2;
+            runner = pet1;
+        }
+        // 오리가 공작을 추격
+        else if (pet1.PetType == PetType.Duck && pet2.PetType == PetType.Peacock)
+        {
+            chaser = pet1;
+            runner = pet2;
+        }
+        else if (pet1.PetType == PetType.Peacock && pet2.PetType == PetType.Duck)
+        {
+            chaser = pet2;
+            runner = pet1;
+        }
         else
         {
-            // 기본값
+            // 기본값 (랜덤)
             chaser = Random.value > 0.5f ? pet1 : pet2;
             runner = chaser == pet1 ? pet2 : pet1;
         }
@@ -581,13 +654,29 @@ public class ChaseAndRunInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 먼지 파티클 생성 - Object Pool 사용
+    /// 먼지 파티클 생성 - Object Pool 사용 (풀이 없어도 안전하게 처리)
     /// </summary>
     private void CreateDustParticles(PetController chaser, PetController runner)
     {
         if (EffectPool.Instance == null)
         {
             Debug.LogWarning("[ChaseAndRun] EffectPool이 초기화되지 않았습니다. 파티클을 생성하지 않습니다.");
+            return;
+        }
+
+        // DustEffect 풀이 없을 경우 안전하게 처리
+        if (!EffectPool.Instance.HasPool("DustEffect"))
+        {
+            Debug.LogWarning("[ChaseAndRun] DustEffect 풀이 없습니다. 먼지 효과를 건너뜁니다.");
+            Debug.Log("[ChaseAndRun] Unity Editor에서 EffectPool에 DustEffect를 추가하려면:");
+            Debug.Log("1. Hierarchy에 빈 GameObject 생성 후 이름을 'EffectPool'로 변경");
+            Debug.Log("2. EffectPool 스크립트를 컴포넌트로 추가");
+            Debug.Log("3. Inspector에서 Pool Items 리스트 크기를 1로 설정");
+            Debug.Log("4. Pool Item 0에 다음 설정:");
+            Debug.Log("   - Name: DustEffect");
+            Debug.Log("   - Prefab: Assets/03_Prefabs/Particle/DustDirtyPoof.prefab 드래그");
+            Debug.Log("   - Pool Size: 10");
+            Debug.Log("   - Auto Expand: 체크");
             return;
         }
 
@@ -601,6 +690,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
             var ps = chaserDustParticles.GetComponent<ParticleSystem>();
             if (ps != null) ps.Play();
         }
+        else
+        {
+            Debug.LogWarning("[ChaseAndRun] 추격자 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
+        }
 
         // 도망자 먼지 - Pool에서 가져오기
         runnerDustParticles = EffectPool.Instance.Get("DustEffect");
@@ -611,6 +704,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
             var ps = runnerDustParticles.GetComponent<ParticleSystem>();
             if (ps != null) ps.Play();
+        }
+        else
+        {
+            Debug.LogWarning("[ChaseAndRun] 도망자 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
         }
     }
 
@@ -665,21 +762,33 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaser.agent.isStopped = true;
         runner.agent.isStopped = true;
         
-        // 파티클 효과 - Object Pool 사용
+        // 파티클 효과 - Object Pool 사용 (안전 처리)
         if (EffectPool.Instance != null)
         {
-            Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
-            GameObject catchEffect = EffectPool.Instance.Get("CatchEffect");
-            if (catchEffect != null)
+            if (!EffectPool.Instance.HasPool("CatchEffect"))
             {
-                catchEffect.transform.position = midPoint;
-                catchEffect.transform.rotation = Quaternion.identity;
+                Debug.LogWarning("[ChaseAndRun] CatchEffect 풀이 없습니다. 잡기 효과를 건너뜁니다.");
+                Debug.Log("[ChaseAndRun] CatchEffect를 추가하려면 EffectPool의 Pool Items에 추가하세요.");
+            }
+            else
+            {
+                Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
+                GameObject catchEffect = EffectPool.Instance.Get("CatchEffect");
+                if (catchEffect != null)
+                {
+                    catchEffect.transform.position = midPoint;
+                    catchEffect.transform.rotation = Quaternion.identity;
 
-                var ps = catchEffect.GetComponent<ParticleSystem>();
-                if (ps != null) ps.Play();
+                    var ps = catchEffect.GetComponent<ParticleSystem>();
+                    if (ps != null) ps.Play();
 
-                // 3초 후 풀로 반환
-                StartCoroutine(ReturnToPoolAfter(catchEffect, "CatchEffect", 3f));
+                    // 3초 후 풀로 반환
+                    StartCoroutine(ReturnToPoolAfter(catchEffect, "CatchEffect", 3f));
+                }
+                else
+                {
+                    Debug.LogWarning("[ChaseAndRun] CatchEffect를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
+                }
             }
         }
         

@@ -88,12 +88,6 @@ public class WalkTogetherInteraction : BasePetInteraction
                (type1 == PetType.Malayan && type2 == PetType.Anteater) ||
                (type1 == PetType.Pangolin && type2 == PetType.Armadillo) ||
                (type1 == PetType.Armadillo && type2 == PetType.Pangolin) ||
-               (type1 == PetType.Raccoon && type2 == PetType.RedPanda) ||
-               (type1 == PetType.RedPanda && type2 == PetType.Raccoon) ||
-               (type1 == PetType.Ostrich && type2 == PetType.Flamingo) ||
-               (type1 == PetType.Flamingo && type2 == PetType.Ostrich) ||
-               (type1 == PetType.Mule && type2 == PetType.Zebra) ||
-               (type1 == PetType.Zebra && type2 == PetType.Mule) ||
                (type1 == PetType.Elephant && type2 == PetType.Giraffe) ||
                (type1 == PetType.Giraffe && type2 == PetType.Elephant) ||
                (type1 == PetType.Elk && type2 == PetType.Deer) ||

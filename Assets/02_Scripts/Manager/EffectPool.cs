@@ -258,6 +258,14 @@ public class EffectPool : MonoBehaviour
     }
 
     /// <summary>
+    /// 특정 이름의 풀이 존재하는지 확인합니다
+    /// </summary>
+    public bool HasPool(string effectName)
+    {
+        return pools != null && pools.ContainsKey(effectName);
+    }
+
+    /// <summary>
     /// 모든 풀의 상태를 디버그 로그로 출력합니다
     /// </summary>
     public void PrintPoolStatus()
