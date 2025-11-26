@@ -15,7 +15,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
     public override bool ShouldPerformInitialMovement => false;
 
     // ===== 상수 정의 =====
-    private const float CHASE_START_DISTANCE = 15f;  // 추격 시작 거리
     private const float DUST_PARTICLE_HEIGHT = 0.1f;
     private const float DUST_PARTICLE_OFFSET = -0.5f;
     private const float SCARE_CHECK_INTERVAL = 0.5f;
@@ -280,8 +279,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             chaserState.Restore(chaser);
             runnerState.Restore(runner);
 
-            // 상호작용 종료
-            EndInteraction(chaser, runner);
+            // EndInteraction 제거 - BasePetInteraction의 finally에서 처리
             Debug.Log("[ChaseAndRun] 상호작용 정리 완료.");
         }
     }
@@ -293,41 +291,66 @@ public class ChaseAndRunInteraction : BasePetInteraction
     {
         Debug.Log("[ChaseAndRun] 1단계: 추격 준비");
 
-        // 도망자를 추격자로부터 일정 거리 떨어뜨리기
+        var chaserAnim = chaser.GetComponent<PetAnimationController>();
+        var runnerAnim = runner.GetComponent<PetAnimationController>();
+
+        // ====== 1단계: 추격자가 도망자에게 다가가기 ======
         Vector3 direction = (runner.transform.position - chaser.transform.position).normalized;
-        if (direction == Vector3.zero) direction = chaser.transform.forward; // 위치가 겹쳤을 경우
+        if (direction == Vector3.zero) direction = runner.transform.forward;
 
-        Vector3 runnerTarget = chaser.transform.position + direction * CHASE_START_DISTANCE;
-        runnerTarget = FindValidPositionOnNavMesh(runnerTarget, 20f);
+        // 추격자가 도망자 근처(5m)까지 이동
+        Vector3 chaserApproachTarget = runner.transform.position - direction * 5f;
+        chaserApproachTarget = FindValidPositionOnNavMesh(chaserApproachTarget, 20f);
 
-        Debug.Log($"[ChaseAndRun] 도망자를 {CHASE_START_DISTANCE}m 거리로 이동: {chaser.petName} -> {runner.petName}");
+        Debug.Log($"[ChaseAndRun] 추격자가 도망자에게 다가가는 중: {chaser.petName} -> {runner.petName}");
 
-        // 도망자 이동
-        runner.agent.isStopped = false;
-        runner.agent.SetDestination(runnerTarget);
+        chaser.agent.isStopped = false;
+        chaser.agent.SetDestination(chaserApproachTarget);
+        chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
-        // 도망자가 목표 위치 근처에 도달할 때까지 대기 (최대 5초)
+        // 도망자는 긴장하며 대기
+        runner.ShowEmotion(EmotionType.Surprised, 3f);
+        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
+        // 추격자가 목표 위치 근처에 도달할 때까지 대기
         float waitTime = 0f;
-        while (waitTime < 5f && runner.agent.pathPending ||
-               (runner.agent.remainingDistance > 1f && !runner.agent.isStopped))
+        while (waitTime < 5f && (chaser.agent.pathPending ||
+               (chaser.agent.remainingDistance > 1f && !chaser.agent.isStopped)))
         {
             waitTime += Time.deltaTime;
             yield return null;
         }
 
-        runner.agent.isStopped = true;
+        chaser.agent.isStopped = true;
+        chaserAnim.StopContinuousAnimation();
 
-        // 서로 마주보기
+        // ====== 2단계: 서로 마주보며 긴장감 조성 ======
         yield return StartCoroutine(SmoothlyLookAtEachOther(chaser, runner, 0.5f));
 
+        chaserAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
         // 긴장감 조성
-        yield return new WaitForSeconds(1.0f);
-
-        // 애니메이션 설정
-        chaser.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-        runner.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-
         yield return new WaitForSeconds(0.5f);
+
+        // ====== 3단계: 도망자가 도망가기 시작 ======
+        Vector3 escapeDirection = (runner.transform.position - chaser.transform.position).normalized;
+        Vector3 runnerEscapeTarget = runner.transform.position + escapeDirection * 10f;
+        runnerEscapeTarget = FindValidPositionOnNavMesh(runnerEscapeTarget, 20f);
+
+        Debug.Log($"[ChaseAndRun] 도망자가 도망치기 시작: {runner.petName}");
+
+        runner.ShowEmotion(EmotionType.Surprised, 2f);
+        runner.agent.isStopped = false;
+        runner.agent.SetDestination(runnerEscapeTarget);
+        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
+        // 도망자가 어느 정도 거리 확보할 때까지 대기 (짧게)
+        yield return new WaitForSeconds(1f);
+
+        runnerAnim.StopContinuousAnimation();
+
+        Debug.Log("[ChaseAndRun] 준비 완료, 추격 시작!");
     }
 
     /// <summary>
@@ -747,37 +770,30 @@ public class ChaseAndRunInteraction : BasePetInteraction
         
         yield return new WaitForSeconds(2f);
     }
-
     /// <summary>
     /// 도망 성공 단계
     /// </summary>
     private IEnumerator EscapeSuccessPhase(PetController chaser, PetController runner)
     {
         Debug.Log("[ChaseAndRun] 3단계: 도망 성공!");
-            var chaserAnim = chaser.GetComponent<PetAnimationController>();
-                var runnerAnim = runner.GetComponent<PetAnimationController>();
- yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Idle, chaserRestDuration, true, false));
+
+        var chaserAnim = chaser.GetComponent<PetAnimationController>();
+        var runnerAnim = runner.GetComponent<PetAnimationController>();
+
+        // 즉시 펫들 멈추고 감정 표시
+        chaser.agent.isStopped = true;
+        runner.agent.isStopped = true;
+
+        chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
+        runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
+
+        // 추격자가 실망하며 먹기 시작
         yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, chaserRestDuration, false, false));
 
-        // 쫓던 펫 멈춤
-        chaser.agent.isStopped = true;
-        chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
+        // 도망자 승리 포즈 시작 - 추격자를 보며
+        yield return StartCoroutine(SmoothlyLookAtEachOther(runner, chaser, 0.7f));
 
-    
-        // 도망자 승리 포즈
-        runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
-        runner.agent.isStopped = true;
-        
-        
-         // ▼▼▼▼▼ [수정된 부분] ▼▼▼▼▼
-    // 뒤돌아서 추격자를 보며 승리 포즈 (부드러운 회전으로 변경)
-    // 기존의 LookAtOther 대신 SmoothlyLookAtEachOther 코루틴을 호출합니다.
-    yield return StartCoroutine(SmoothlyLookAtEachOther(runner, chaser, 0.7f));
-    // ▲▲▲▲▲ [여기까지 수정] ▲▲▲▲▲
-    
-        
         // 승리 점프
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
