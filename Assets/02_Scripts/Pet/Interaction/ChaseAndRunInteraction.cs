@@ -123,6 +123,9 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Tooltip("추격 종료 후 쫓는 펫이 쉬는 시간")]
     public float chaserRestDuration = 3f;
 
+    [Tooltip("도망 성공 후 추가로 도망갈 거리")]
+    public float escapeVictoryDistance = 15f;
+
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
@@ -179,6 +182,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
         // End Chase Settings
         this.chaserRestDuration = template.chaserRestDuration;
+        this.escapeVictoryDistance = template.escapeVictoryDistance;
 
         // Safety Settings
         this.agentSafetyTimeout = template.agentSafetyTimeout;
@@ -780,43 +784,67 @@ public class ChaseAndRunInteraction : BasePetInteraction
         var chaserAnim = chaser.GetComponent<PetAnimationController>();
         var runnerAnim = runner.GetComponent<PetAnimationController>();
 
-        // 즉시 펫들 멈추고 감정 표시
+        // 추격자는 즉시 멈춤 (지쳐서 포기)
         chaser.agent.isStopped = true;
-        runner.agent.isStopped = true;
-
         chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
-        runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
 
-        // 추격자가 실망하며 먹기 시작
-        yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
+        // ====== 도망자 추가 도망 연출 ======
+        Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 승리 후 {escapeVictoryDistance}m 더 도망갑니다!");
+
+        // 도망 방향 계산 (추격자 반대 방향)
+        Vector3 escapeDirection = (runner.transform.position - chaser.transform.position).normalized;
+        Vector3 victoryEscapeTarget = runner.transform.position + escapeDirection * escapeVictoryDistance;
+        victoryEscapeTarget = FindValidPositionOnNavMesh(victoryEscapeTarget, 20f);
+
+        // 도망자는 계속 달림
+        runner.agent.isStopped = false;
+        runner.agent.speed = runner.baseSpeed * 1.5f;  // 여유롭게 속도 낮춤
+        runner.agent.SetDestination(victoryEscapeTarget);
+        runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
+        // 추격자가 실망하며 먹기 시작 (동시에 진행)
+        StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, chaserRestDuration, false, false));
 
-        // 도망자 승리 포즈 시작 - 추격자를 보며
+        // 도망자가 안전거리에 도달할 때까지 대기 (최대 5초)
+        float escapeTime = 0f;
+        while (escapeTime < 5f && (runner.agent.pathPending ||
+               (runner.agent.remainingDistance > 2f && !runner.agent.isStopped)))
+        {
+            escapeTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 도망자 멈춤 및 승리 감정 표시
+        runner.agent.isStopped = true;
+        runnerAnim.StopContinuousAnimation();
+        runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
+
+        // 추격자를 보며 승리 포즈
         yield return StartCoroutine(SmoothlyLookAtEachOther(runner, chaser, 0.7f));
 
         // 승리 점프
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
-        
+
         // 도발하는 듯한 동작
         runner.ShowEmotion(EmotionType.Joke, EMOTION_DURATION_MEDIUM);
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Attack, 1f, true, false));
-        
+
         yield return new WaitForSeconds(1f);
-        
+
         // 유유히 걸어가기
         runnerAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         runner.agent.isStopped = false;
         runner.agent.speed = runner.baseSpeed * 0.5f;
-        
-        Vector3 escapeDirection = (runner.transform.position - chaser.transform.position).normalized;
-        Vector3 escapeTarget = runner.transform.position + escapeDirection * 10f;
-        escapeTarget = FindValidPositionOnNavMesh(escapeTarget, 20f);
-        runner.agent.SetDestination(escapeTarget);
-        
+
+        Vector3 finalEscapeTarget = runner.transform.position + escapeDirection * 10f;
+        finalEscapeTarget = FindValidPositionOnNavMesh(finalEscapeTarget, 20f);
+        runner.agent.SetDestination(finalEscapeTarget);
+
         yield return new WaitForSeconds(3f);
-        
+
         runnerAnim.StopContinuousAnimation();
         chaserAnim.StopContinuousAnimation();
     }
