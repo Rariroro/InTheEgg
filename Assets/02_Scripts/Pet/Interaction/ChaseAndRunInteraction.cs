@@ -11,6 +11,43 @@ public class ChaseAndRunInteraction : BasePetInteraction
     // 우선순위: 65 (8순위)
     public override int Priority => 65;
 
+    // ===== 상수 정의 =====
+    private const float DUST_PARTICLE_HEIGHT = 0.1f;
+    private const float DUST_PARTICLE_OFFSET = -0.5f;
+    private const float SCARE_CHECK_INTERVAL = 0.5f;
+    private const float SPECIAL_MOVE_COOLDOWN = 2f;
+    private const float EMOTION_DURATION_SHORT = 2f;
+    private const float EMOTION_DURATION_MEDIUM = 5f;
+    private const float EMOTION_DURATION_LONG = 10f;
+    private const float PREDICT_SHOT_SUCCESS_RATE = 0.2f;
+    private const float SCARE_CHANCE = 0.1f;
+
+    // ===== 최적화용 정적 데이터 =====
+    // 유효한 펫 조합 (HashSet으로 O(1) 룩업)
+    private static readonly HashSet<(PetType, PetType)> ValidPairs = new()
+    {
+        (PetType.Cat, PetType.Dog), (PetType.Dog, PetType.Cat),
+        (PetType.Mule, PetType.Zebra), (PetType.Zebra, PetType.Mule),
+        (PetType.Ostrich, PetType.Flamingo), (PetType.Flamingo, PetType.Ostrich),
+        (PetType.Raccoon, PetType.RedPanda), (PetType.RedPanda, PetType.Raccoon),
+        (PetType.Duck, PetType.Peacock), (PetType.Peacock, PetType.Duck)
+    };
+
+    // 추격자 역할 결정 (true = pet1이 추격자, false = pet2가 추격자)
+    private static readonly Dictionary<(PetType, PetType), bool> ChaserRoles = new()
+    {
+        { (PetType.Dog, PetType.Cat), true },
+        { (PetType.Cat, PetType.Dog), false },
+        { (PetType.Mule, PetType.Zebra), true },
+        { (PetType.Zebra, PetType.Mule), false },
+        { (PetType.Ostrich, PetType.Flamingo), true },
+        { (PetType.Flamingo, PetType.Ostrich), false },
+        { (PetType.Raccoon, PetType.RedPanda), true },
+        { (PetType.RedPanda, PetType.Raccoon), false },
+        { (PetType.Duck, PetType.Peacock), true },
+        { (PetType.Peacock, PetType.Duck), false }
+    };
+
     [Header("Chase Settings")]
     [Tooltip("추격 지속 시간")]
     public float chaseDuration = 20f;
@@ -167,113 +204,26 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        PetType type1 = pet1.PetType;
-        PetType type2 = pet2.PetType;
-
-        // 고양이와 개는 쫓고 쫓김
-        if ((type1 == PetType.Cat && type2 == PetType.Dog) ||
-            (type1 == PetType.Dog && type2 == PetType.Cat))
-        {
-            return true;
-        }
-
-        // 노새와 얼룩말 추격전
-        if ((type1 == PetType.Mule && type2 == PetType.Zebra) ||
-            (type1 == PetType.Zebra && type2 == PetType.Mule))
-        {
-            return true;
-        }
-
-        // 타조와 플라밍고 추격전
-        if ((type1 == PetType.Ostrich && type2 == PetType.Flamingo) ||
-            (type1 == PetType.Flamingo && type2 == PetType.Ostrich))
-        {
-            return true;
-        }
-
-        // 너구리와 레서판다 추격전
-        if ((type1 == PetType.Raccoon && type2 == PetType.RedPanda) ||
-            (type1 == PetType.RedPanda && type2 == PetType.Raccoon))
-        {
-            return true;
-        }
-
-        // 오리와 공작 추격전
-        if ((type1 == PetType.Duck && type2 == PetType.Peacock) ||
-            (type1 == PetType.Peacock && type2 == PetType.Duck))
-        {
-            return true;
-        }
-
-        return false;
+        // HashSet을 사용한 O(1) 룩업으로 최적화
+        return ValidPairs.Contains((pet1.PetType, pet2.PetType));
     }
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[ChaseAndRun] {pet1.petName}와(과) {pet2.petName} 사이의 쫓고 쫓기기 상호작용 시작!");
 
-        // 역할 결정
-        PetController chaser = null;
-        PetController runner = null;
+        // 역할 결정 (Dictionary를 사용한 최적화)
+        PetController chaser, runner;
 
-        // 개가 고양이를 추격
-        if (pet1.PetType == PetType.Dog && pet2.PetType == PetType.Cat)
+        var key = (pet1.PetType, pet2.PetType);
+        if (ChaserRoles.TryGetValue(key, out bool pet1IsChaser))
         {
-            chaser = pet1;
-            runner = pet2;
-        }
-        else if (pet1.PetType == PetType.Cat && pet2.PetType == PetType.Dog)
-        {
-            chaser = pet2;
-            runner = pet1;
-        }
-        // 노새가 얼룩말을 추격
-        else if (pet1.PetType == PetType.Mule && pet2.PetType == PetType.Zebra)
-        {
-            chaser = pet1;
-            runner = pet2;
-        }
-        else if (pet1.PetType == PetType.Zebra && pet2.PetType == PetType.Mule)
-        {
-            chaser = pet2;
-            runner = pet1;
-        }
-        // 타조가 플라밍고를 추격
-        else if (pet1.PetType == PetType.Ostrich && pet2.PetType == PetType.Flamingo)
-        {
-            chaser = pet1;
-            runner = pet2;
-        }
-        else if (pet1.PetType == PetType.Flamingo && pet2.PetType == PetType.Ostrich)
-        {
-            chaser = pet2;
-            runner = pet1;
-        }
-        // 너구리가 레서판다를 추격
-        else if (pet1.PetType == PetType.Raccoon && pet2.PetType == PetType.RedPanda)
-        {
-            chaser = pet1;
-            runner = pet2;
-        }
-        else if (pet1.PetType == PetType.RedPanda && pet2.PetType == PetType.Raccoon)
-        {
-            chaser = pet2;
-            runner = pet1;
-        }
-        // 오리가 공작을 추격
-        else if (pet1.PetType == PetType.Duck && pet2.PetType == PetType.Peacock)
-        {
-            chaser = pet1;
-            runner = pet2;
-        }
-        else if (pet1.PetType == PetType.Peacock && pet2.PetType == PetType.Duck)
-        {
-            chaser = pet2;
-            runner = pet1;
+            chaser = pet1IsChaser ? pet1 : pet2;
+            runner = pet1IsChaser ? pet2 : pet1;
         }
         else
         {
-            // 기본값 (랜덤)
+            // 기본값 (랜덤) - 등록되지 않은 조합의 경우
             chaser = Random.value > 0.5f ? pet1 : pet2;
             runner = chaser == pet1 ? pet2 : pet1;
         }
@@ -397,6 +347,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         float chaseTimer = 0f;
         float lastDirectionChangeTime = 0f;
         float lastSpecialMoveTime = 0f;
+        float lastScareCheckTime = 0f;
         int chasePhase = 0;
 
         while (chaseTimer < chaseDuration && !chaseCaught)
@@ -422,7 +373,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             }
 
             // 특별 동작들
-            if (chaseTimer - lastSpecialMoveTime > 2f) // 2초마다 특별 동작 가능
+            if (chaseTimer - lastSpecialMoveTime > SPECIAL_MOVE_COOLDOWN) // 일정 시간마다 특별 동작 가능
             {
                 // 도망자의 특별 동작
                 if (Random.value < uturnChance && distance > catchDistance * 2)
@@ -457,8 +408,12 @@ public class ChaseAndRunInteraction : BasePetInteraction
                 chaser.agent.SetDestination(runner.transform.position);
             }
 
-            // 주변 펫들 놀라게 하기
-            ScareNearbyPets(runner, scareRadius);
+            // 주변 펫들 놀라게 하기 (일정 간격으로만 체크)
+            if (chaseTimer - lastScareCheckTime >= SCARE_CHECK_INTERVAL)
+            {
+                ScareNearbyPets(runner, scareRadius);
+                lastScareCheckTime = chaseTimer;
+            }
 
             // 회전 처리
             chaser.HandleRotation();
@@ -479,7 +434,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
         Debug.Log($"[ChaseAndRun] {runner.petName}이(가) 180도 회전 페이크!");
         
         // 감정 표현
-        runner.ShowEmotion(EmotionType.Confused, 2f);
+        runner.ShowEmotion(EmotionType.Confused, EMOTION_DURATION_SHORT);
         
         // 현재 방향의 반대로 급회전
         Vector3 currentDirection = (runner.transform.position - chaser.transform.position).normalized;
@@ -525,13 +480,13 @@ public class ChaseAndRunInteraction : BasePetInteraction
         CreateDustParticles(chaser, runner);
 
         // 추격자 혼란
-        chaser.ShowEmotion(EmotionType.Love, 2f);
+        chaser.ShowEmotion(EmotionType.Love, EMOTION_DURATION_SHORT);
         
         yield return new WaitForSeconds(0.8f);
         
         // 다시 도망 - 가속
         runner.agent.isStopped = false;
-        runner.ShowEmotion(EmotionType.Confused, 2f);
+        runner.ShowEmotion(EmotionType.Confused, EMOTION_DURATION_SHORT);
         
         // 속도를 서서히 증가
         float accelerateTime = 0.5f;
@@ -573,10 +528,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
         yield return new WaitForSeconds(1.5f);
         
         // 대부분 실패
-        if (Random.value > 0.2f) // 80% 실패
+        if (Random.value > PREDICT_SHOT_SUCCESS_RATE) // 80% 실패
         {
             Debug.Log($"[ChaseAndRun] 예측 샷 실패!");
-            chaser.ShowEmotion(EmotionType.Love, 2f);
+            chaser.ShowEmotion(EmotionType.Love, EMOTION_DURATION_SHORT);
         }
         
         // 속도 원래대로
@@ -595,11 +550,11 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // 지쳐서 헐떡거리는 감정
         if (chaserStamina < 0.3f && Random.value < 0.01f)
         {
-            chaser.ShowEmotion(EmotionType.Sleepy, 2f);
+            chaser.ShowEmotion(EmotionType.Sleepy, EMOTION_DURATION_SHORT);
         }
         if (runnerStamina < 0.3f && Random.value < 0.01f)
         {
-            runner.ShowEmotion(EmotionType.Sleepy, 2f);
+            runner.ShowEmotion(EmotionType.Sleepy, EMOTION_DURATION_SHORT);
         }
     }
 
@@ -680,35 +635,30 @@ public class ChaseAndRunInteraction : BasePetInteraction
             return;
         }
 
-        // 추격자 먼지 - Pool에서 가져오기
-        chaserDustParticles = EffectPool.Instance.Get("DustEffect");
-        if (chaserDustParticles != null)
-        {
-            chaserDustParticles.transform.SetParent(chaser.transform);
-            chaserDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
+        // 추격자와 도망자에게 먼지 효과 추가
+        chaserDustParticles = AttachDustParticle(chaser, "추격자");
+        runnerDustParticles = AttachDustParticle(runner, "도망자");
+    }
 
-            var ps = chaserDustParticles.GetComponent<ParticleSystem>();
+    /// <summary>
+    /// 펫에게 먼지 파티클을 부착하는 헬퍼 메서드
+    /// </summary>
+    private GameObject AttachDustParticle(PetController pet, string petRole)
+    {
+        GameObject dustParticle = EffectPool.Instance.Get("DustEffect");
+        if (dustParticle != null)
+        {
+            dustParticle.transform.SetParent(pet.transform);
+            dustParticle.transform.localPosition = new Vector3(0, DUST_PARTICLE_HEIGHT, DUST_PARTICLE_OFFSET);
+
+            var ps = dustParticle.GetComponent<ParticleSystem>();
             if (ps != null) ps.Play();
         }
         else
         {
-            Debug.LogWarning("[ChaseAndRun] 추격자 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
+            Debug.LogWarning($"[ChaseAndRun] {petRole} 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
         }
-
-        // 도망자 먼지 - Pool에서 가져오기
-        runnerDustParticles = EffectPool.Instance.Get("DustEffect");
-        if (runnerDustParticles != null)
-        {
-            runnerDustParticles.transform.SetParent(runner.transform);
-            runnerDustParticles.transform.localPosition = new Vector3(0, 0.1f, -0.5f);
-
-            var ps = runnerDustParticles.GetComponent<ParticleSystem>();
-            if (ps != null) ps.Play();
-        }
-        else
-        {
-            Debug.LogWarning("[ChaseAndRun] 도망자 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
-        }
+        return dustParticle;
     }
 
     /// <summary>
@@ -735,10 +685,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
         foreach (Collider col in nearbyColliders)
         {
             PetController nearbyPet = col.GetComponent<PetController>();
-            if (nearbyPet != null && nearbyPet != runner && 
-                !nearbyPet.State.IsInteracting && Random.value < 0.1f) // 10% 확률
+            if (nearbyPet != null && nearbyPet != runner &&
+                !nearbyPet.State.IsInteracting && Random.value < SCARE_CHANCE)
             {
-                nearbyPet.ShowEmotion(EmotionType.Surprised, 2f);
+                nearbyPet.ShowEmotion(EmotionType.Surprised, EMOTION_DURATION_SHORT);
                 
                 // 살짝 피하는 애니메이션
                 var nearbyAnim = nearbyPet.GetComponent<PetAnimationController>();
