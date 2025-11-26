@@ -162,10 +162,13 @@ public abstract class BasePetInteraction : MonoBehaviour
             // 3. 사후 정리 단계
             // 코루틴이 어떤 이유로든 종료될 때(성공, 실패, 중단), 반드시 정리를 수행합니다.
             Debug.Log($"[{InteractionName}] 상호작용 종료 및 정리 시작.");
-            EndInteraction(pet1, pet2);
+
+            // OnDisable 경고 방지: EndInteraction 호출 전에 플래그 먼저 해제
             isInteractionActive = false;
             activePet1 = null;
             activePet2 = null;
+
+            EndInteraction(pet1, pet2);
         }
     }
 
