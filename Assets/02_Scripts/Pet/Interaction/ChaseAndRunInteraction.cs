@@ -11,7 +11,11 @@ public class ChaseAndRunInteraction : BasePetInteraction
     // 우선순위: 65 (8순위)
     public override int Priority => 65;
 
+    // 기본 위치 이동 비활성화 - PreparePhase에서 직접 거리 조정
+    public override bool ShouldPerformInitialMovement => false;
+
     // ===== 상수 정의 =====
+    private const float CHASE_START_DISTANCE = 15f;  // 추격 시작 거리
     private const float DUST_PARTICLE_HEIGHT = 0.1f;
     private const float DUST_PARTICLE_OFFSET = -0.5f;
     private const float SCARE_CHECK_INTERVAL = 0.5f;
@@ -288,6 +292,30 @@ public class ChaseAndRunInteraction : BasePetInteraction
     private IEnumerator PreparePhase(PetController chaser, PetController runner)
     {
         Debug.Log("[ChaseAndRun] 1단계: 추격 준비");
+
+        // 도망자를 추격자로부터 일정 거리 떨어뜨리기
+        Vector3 direction = (runner.transform.position - chaser.transform.position).normalized;
+        if (direction == Vector3.zero) direction = chaser.transform.forward; // 위치가 겹쳤을 경우
+
+        Vector3 runnerTarget = chaser.transform.position + direction * CHASE_START_DISTANCE;
+        runnerTarget = FindValidPositionOnNavMesh(runnerTarget, 20f);
+
+        Debug.Log($"[ChaseAndRun] 도망자를 {CHASE_START_DISTANCE}m 거리로 이동: {chaser.petName} -> {runner.petName}");
+
+        // 도망자 이동
+        runner.agent.isStopped = false;
+        runner.agent.SetDestination(runnerTarget);
+
+        // 도망자가 목표 위치 근처에 도달할 때까지 대기 (최대 5초)
+        float waitTime = 0f;
+        while (waitTime < 5f && runner.agent.pathPending ||
+               (runner.agent.remainingDistance > 1f && !runner.agent.isStopped))
+        {
+            waitTime += Time.deltaTime;
+            yield return null;
+        }
+
+        runner.agent.isStopped = true;
 
         // 서로 마주보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(chaser, runner, 0.5f));
@@ -726,18 +754,18 @@ public class ChaseAndRunInteraction : BasePetInteraction
     private IEnumerator EscapeSuccessPhase(PetController chaser, PetController runner)
     {
         Debug.Log("[ChaseAndRun] 3단계: 도망 성공!");
-        
-        // 쫓던 펫 멈춤
-        chaser.agent.isStopped = true;
-        chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
-
-        var chaserAnim = chaser.GetComponent<PetAnimationController>();
+            var chaserAnim = chaser.GetComponent<PetAnimationController>();
                 var runnerAnim = runner.GetComponent<PetAnimationController>();
  yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Idle, chaserRestDuration, true, false));
         yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, chaserRestDuration, false, false));
 
+        // 쫓던 펫 멈춤
+        chaser.agent.isStopped = true;
+        chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
+
+    
         // 도망자 승리 포즈
         runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
         runner.agent.isStopped = true;
