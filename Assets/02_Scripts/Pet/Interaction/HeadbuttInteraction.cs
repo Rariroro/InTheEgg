@@ -1,7 +1,10 @@
 // 박치기 상호작용 구현 - 염소-양, 황소-버팔로, 코뿔소-들소 조합 지원
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using InTheEgg.Extensions;
+using InTheEgg.Constants;
 
 /// <summary>
 /// 박치기 상호작용을 처리하는 클래스입니다.
@@ -13,6 +16,37 @@ public class HeadbuttInteraction : BasePetInteraction
 
     // 우선순위: 60 (9순위)
     public override int Priority => 60;
+
+    #region Constants
+
+    // NavMesh 관련 상수
+    private const float NAVMESH_SEARCH_RADIUS = 10f;
+    private const float NAVMESH_SEARCH_RADIUS_LARGE = 15f;
+    private const float NAVMESH_SEARCH_RADIUS_SMALL = 5f;
+    private const float NAVMESH_SAMPLE_DISTANCE = 1f;
+
+    // 타이밍 관련 상수
+    private const float POSITION_MOVE_TIMEOUT = 10f;
+    private const float TENSION_WAIT_TIME = 1.0f;
+    private const float NEXT_HEADBUTT_DELAY = 0.7f;
+    private const float CHARGE_PREPARATION_DELAY = 0.5f;
+    private const float SMOOTH_ROTATION_DURATION = 0.5f;
+    private const float QUICK_ROTATION_DURATION = 0.3f;
+    private const float WINNER_CELEBRATION_DELAY = 2.0f;
+
+    // 애니메이션 관련 상수
+    private const float HEAD_HEIGHT_RATIO = 0.8f;
+    private const float ANIMATION_BUFFER_TIME = 0.5f;
+
+    #endregion
+
+    #region Cached Components
+
+    // 컴포넌트 캐싱용 Dictionary
+    private readonly Dictionary<PetController, PetAnimationController> animControllerCache = new Dictionary<PetController, PetAnimationController>();
+    private readonly Dictionary<PetController, Collider> colliderCache = new Dictionary<PetController, Collider>();
+
+    #endregion
     
     [Header("Headbutt Settings")]
     [Tooltip("박치기를 위해 떨어지는 기본 거리입니다.")]
@@ -132,12 +166,9 @@ public class HeadbuttInteraction : BasePetInteraction
     
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        return (pet1.PetType == PetType.Goat && pet2.PetType == PetType.Sheep) || 
-               (pet1.PetType == PetType.Sheep && pet2.PetType == PetType.Goat) ||
-               (pet1.PetType == PetType.Bull && pet2.PetType == PetType.Buffalo) ||
-               (pet1.PetType == PetType.Buffalo && pet2.PetType == PetType.Bull) ||
-               (pet1.PetType == PetType.Rhino && pet2.PetType == PetType.Bison) ||
-               (pet1.PetType == PetType.Bison && pet2.PetType == PetType.Rhino);
+        return IsPetPair(pet1, pet2, PetType.Goat, PetType.Sheep) ||
+               IsPetPair(pet1, pet2, PetType.Bull, PetType.Buffalo) ||
+               IsPetPair(pet1, pet2, PetType.Rhino, PetType.Bison);
     }
     
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
@@ -197,35 +228,35 @@ public class HeadbuttInteraction : BasePetInteraction
     private IEnumerator PreparePhase(PetController firstPet, PetController secondPet, HeadbuttPair pairType)
     {
         Debug.Log($"[{InteractionName}] 1단계: 박치기 준비");
-        
-        // 감정 표현
-        firstPet.ShowEmotion(EmotionType.Angry, 30f);
-        secondPet.ShowEmotion(EmotionType.Angry, 30f);
-        
+
+        // 감정 표현 - EmotionConstants 사용
+        firstPet.ShowEmotion(EmotionType.Angry, EmotionConstants.DURATION_PERSISTENT);
+        secondPet.ShowEmotion(EmotionType.Angry, EmotionConstants.DURATION_PERSISTENT);
+
         // 박치기 위치 계산
         Vector3 headbuttSpot = (firstPet.transform.position + secondPet.transform.position) / 2;
-        headbuttSpot = FindValidPositionOnNavMesh(headbuttSpot, 10f);
-        
+        headbuttSpot = FindValidPositionOnNavMesh(headbuttSpot, NAVMESH_SEARCH_RADIUS);
+
         // 서로 마주보는 위치로 이동
         Vector3 direction = (secondPet.transform.position - firstPet.transform.position).normalized;
         if (direction == Vector3.zero) direction = firstPet.transform.forward;
-        
+
         float distance = GetHeadbuttDistance(pairType);
-        
+
         Vector3 firstPetPos = headbuttSpot - direction * (distance / 2);
         Vector3 secondPetPos = headbuttSpot + direction * (distance / 2);
-        
-        firstPetPos = FindValidPositionOnNavMesh(firstPetPos, 15f);
-        secondPetPos = FindValidPositionOnNavMesh(secondPetPos, 15f);
-        
+
+        firstPetPos = FindValidPositionOnNavMesh(firstPetPos, NAVMESH_SEARCH_RADIUS_LARGE);
+        secondPetPos = FindValidPositionOnNavMesh(secondPetPos, NAVMESH_SEARCH_RADIUS_LARGE);
+
         // 위치 이동
-        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, 10f));
-        
+        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, POSITION_MOVE_TIMEOUT));
+
         // 서로 마주보기
-        yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, 0.5f));
-        
+        yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, SMOOTH_ROTATION_DURATION));
+
         // 긴장감 조성
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(TENSION_WAIT_TIME);
     }
     
     /// <summary>
@@ -246,19 +277,19 @@ public class HeadbuttInteraction : BasePetInteraction
             yield return StartCoroutine(BackupForCharge(firstPet, secondPet, pairType));
             
             // 잠시 대기 (긴장감)
-            yield return new WaitForSeconds(0.5f);
-            
+            yield return new WaitForSeconds(CHARGE_PREPARATION_DELAY);
+
             // 달려들어 충돌
             yield return StartCoroutine(ChargeAndCollide(firstPet, secondPet, pairType, firstPetState, secondPetState));
-            
+
             // 충돌 후 밀려나기
             // yield return StartCoroutine(KnockbackAfterCollision(firstPet, secondPet, pairType));
-            
+
             // 다음 박치기 준비
-            yield return new WaitForSeconds(0.7f);
-            
+            yield return new WaitForSeconds(NEXT_HEADBUTT_DELAY);
+
             // 다시 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, 0.3f));
+            yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, QUICK_ROTATION_DURATION));
         }
     }
     
@@ -274,42 +305,80 @@ public class HeadbuttInteraction : BasePetInteraction
         PetController loser = winner == firstPet ? secondPet : firstPet;
         
         Debug.Log($"[{InteractionName}] 승자: {winner.petName}!");
-        
+
         // 감정 표현
-        winner.ShowEmotion(EmotionType.Victory, 5f);
-        loser.ShowEmotion(EmotionType.Defeat, 5f);
-        
+        winner.ShowEmotion(EmotionType.Victory, EmotionConstants.DURATION_SHORT);
+        loser.ShowEmotion(EmotionType.Defeat, EmotionConstants.DURATION_SHORT);
+
         // 승리/패배 애니메이션
         yield return StartCoroutine(PlayWinnerLoserAnimations(
-            winner, loser, 
-            PetAnimationController.PetAnimationType.Jump, 
+            winner, loser,
+            PetAnimationController.PetAnimationType.Jump,
             PetAnimationController.PetAnimationType.Damage
         ));
-        
-        yield return new WaitForSeconds(2.0f);
+
+        yield return new WaitForSeconds(WINNER_CELEBRATION_DELAY);
     }
     
     #endregion
-    
+
     #region Helper Methods
-    
+
+    /// <summary>
+    /// 캐싱된 AnimationController를 가져옵니다.
+    /// </summary>
+    private PetAnimationController GetCachedAnimController(PetController pet)
+    {
+        if (!animControllerCache.ContainsKey(pet))
+        {
+            animControllerCache[pet] = pet.GetComponent<PetAnimationController>();
+        }
+        return animControllerCache[pet];
+    }
+
+    /// <summary>
+    /// 캐싱된 Collider를 가져옵니다.
+    /// </summary>
+    private Collider GetCachedCollider(PetController pet)
+    {
+        if (!colliderCache.ContainsKey(pet))
+        {
+            colliderCache[pet] = pet.GetComponent<Collider>();
+        }
+        return colliderCache[pet];
+    }
+
+    /// <summary>
+    /// 큰 동물 쌍인지 확인합니다.
+    /// </summary>
+    private bool IsLargeAnimalPair(HeadbuttPair pairType)
+    {
+        return pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison;
+    }
+
+    /// <summary>
+    /// 두 펫이 특정 타입 조합인지 확인합니다.
+    /// </summary>
+    private bool IsPetPair(PetController pet1, PetController pet2, PetType type1, PetType type2)
+    {
+        return (pet1.PetType == type1 && pet2.PetType == type2) ||
+               (pet1.PetType == type2 && pet2.PetType == type1);
+    }
+
     /// <summary>
     /// 두 펫의 조합 유형을 결정합니다.
     /// </summary>
     private HeadbuttPair GetPairType(PetController pet1, PetController pet2)
     {
-        if ((pet1.PetType == PetType.Goat && pet2.PetType == PetType.Sheep) ||
-            (pet1.PetType == PetType.Sheep && pet2.PetType == PetType.Goat))
+        if (IsPetPair(pet1, pet2, PetType.Goat, PetType.Sheep))
             return HeadbuttPair.GoatSheep;
-            
-        if ((pet1.PetType == PetType.Bull && pet2.PetType == PetType.Buffalo) ||
-            (pet1.PetType == PetType.Buffalo && pet2.PetType == PetType.Bull))
+
+        if (IsPetPair(pet1, pet2, PetType.Bull, PetType.Buffalo))
             return HeadbuttPair.BullBuffalo;
-            
-        if ((pet1.PetType == PetType.Rhino && pet2.PetType == PetType.Bison) ||
-            (pet1.PetType == PetType.Bison && pet2.PetType == PetType.Rhino))
+
+        if (IsPetPair(pet1, pet2, PetType.Rhino, PetType.Bison))
             return HeadbuttPair.RhinoBison;
-            
+
         return HeadbuttPair.Other;
     }
     
@@ -345,45 +414,41 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private float GetHeadbuttDistance(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? largeAnimalHeadbuttDistance : baseHeadbuttDistance;
+        return IsLargeAnimalPair(pairType) ? largeAnimalHeadbuttDistance : baseHeadbuttDistance;
     }
-    
+
     /// <summary>
     /// 동물 크기에 따른 후진 거리를 반환합니다.
     /// </summary>
     private float GetBackupDistance(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? largeAnimalBackupDistance : backupDistance;
+        return IsLargeAnimalPair(pairType) ? largeAnimalBackupDistance : backupDistance;
     }
-    
+
     /// <summary>
     /// 동물 크기에 따른 넉백 거리를 반환합니다.
     /// </summary>
     private float GetKnockbackDistance(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? largeAnimalKnockbackDistance : knockbackDistance;
+        return IsLargeAnimalPair(pairType) ? largeAnimalKnockbackDistance : knockbackDistance;
     }
-    
+
     /// <summary>
     /// 동물 크기에 따른 박치기 횟수를 반환합니다.
     /// </summary>
     private int GetHeadbuttCount(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? Random.Range(largeAnimalMinCount, largeAnimalMaxCount) 
+        return IsLargeAnimalPair(pairType)
+            ? Random.Range(largeAnimalMinCount, largeAnimalMaxCount)
             : Random.Range(minHeadbuttCount, maxHeadbuttCount);
     }
-    
+
     /// <summary>
     /// 충돌 감지 거리를 반환합니다.
     /// </summary>
     private float GetCollisionDistance(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? largeAnimalCollisionDistance : collisionDetectionDistance;
+        return IsLargeAnimalPair(pairType) ? largeAnimalCollisionDistance : collisionDetectionDistance;
     }
     
     /// <summary>
@@ -391,7 +456,7 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private void GetSpeedSettings(HeadbuttPair pairType, out float speedMult, out float accelMult)
     {
-        if (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison)
+        if (IsLargeAnimalPair(pairType))
         {
             speedMult = largeAnimalSpeedMultiplier;
             accelMult = largeAnimalAccelerationMultiplier;
@@ -426,7 +491,7 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private bool IsAgentSafelyReady(PetController pet)
     {
-        return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+        return pet != null && pet.agent != null && pet.agent.IsReady();
     }
     
     /// <summary>
@@ -452,8 +517,7 @@ public class HeadbuttInteraction : BasePetInteraction
     /// </summary>
     private float GetEffectScale(HeadbuttPair pairType)
     {
-        return (pairType == HeadbuttPair.BullBuffalo || pairType == HeadbuttPair.RhinoBison) 
-            ? largeAnimalEffectScale : effectScale;
+        return IsLargeAnimalPair(pairType) ? largeAnimalEffectScale : effectScale;
     }
     
     /// <summary>
@@ -462,12 +526,12 @@ public class HeadbuttInteraction : BasePetInteraction
     private Vector3 GetCollisionEffectPosition(PetController firstPet, PetController secondPet)
     {
         // 두 펫의 머리 위치를 추정
-        float firstPetHeadHeight = firstPet.GetComponent<Collider>().bounds.size.y * 0.8f;
-        float secondPetHeadHeight = secondPet.GetComponent<Collider>().bounds.size.y * 0.8f;
-        
+        float firstPetHeadHeight = GetCachedCollider(firstPet).bounds.size.y * HEAD_HEIGHT_RATIO;
+        float secondPetHeadHeight = GetCachedCollider(secondPet).bounds.size.y * HEAD_HEIGHT_RATIO;
+
         Vector3 firstPetHeadPos = firstPet.transform.position + Vector3.up * firstPetHeadHeight;
         Vector3 secondPetHeadPos = secondPet.transform.position + Vector3.up * secondPetHeadHeight;
-        
+
         // 두 머리 위치의 중간점
         return (firstPetHeadPos + secondPetHeadPos) / 2f;
     }
@@ -514,8 +578,8 @@ public class HeadbuttInteraction : BasePetInteraction
         Vector3 firstPetBackupPos = firstPet.transform.position - firstPet.transform.forward * backDistance;
         Vector3 secondPetBackupPos = secondPet.transform.position - secondPet.transform.forward * backDistance;
         
-        firstPetBackupPos = FindValidPositionOnNavMesh(firstPetBackupPos, 8f);
-        secondPetBackupPos = FindValidPositionOnNavMesh(secondPetBackupPos, 8f);
+        firstPetBackupPos = FindValidPositionOnNavMesh(firstPetBackupPos, NAVMESH_SEARCH_RADIUS);
+        secondPetBackupPos = FindValidPositionOnNavMesh(secondPetBackupPos, NAVMESH_SEARCH_RADIUS);
         
         // 병렬로 뒤로 이동
         StartCoroutine(MoveBackward(firstPet, firstPetBackupPos, backupDuration));
@@ -531,7 +595,7 @@ public class HeadbuttInteraction : BasePetInteraction
         float elapsedTime = 0f;
         
         // 애니메이션 컨트롤러 가져오기
-        var animController = pet.GetComponent<PetAnimationController>();
+        var animController = GetCachedAnimController(pet);
         
         // NavMeshAgent 임시 비활성화 전에 상태 저장
         bool wasAgentEnabled = pet.agent.enabled;
@@ -553,8 +617,8 @@ public class HeadbuttInteraction : BasePetInteraction
             // PlayAnimationWithCustomDuration을 사용하여 애니메이션 재생
             // loop=true로 설정하여 계속 재생되도록 함
             StartCoroutine(animController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Walk, 
-                duration + 0.5f,  // 이동 시간보다 약간 길게 설정
+                PetAnimationController.PetAnimationType.Walk,
+                duration + ANIMATION_BUFFER_TIME,  // 이동 시간보다 약간 길게 설정
                 true,  // loop
                 false  // stopPrevious
             ));
@@ -582,7 +646,7 @@ public class HeadbuttInteraction : BasePetInteraction
         {
             if (!pet.agent.isOnNavMesh)
             {
-                if (NavMesh.SamplePosition(pet.transform.position, out NavMeshHit hit, 1f, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(pet.transform.position, out NavMeshHit hit, NAVMESH_SAMPLE_DISTANCE, NavMesh.AllAreas))
                 {
                     pet.transform.position = hit.position;
                 }
@@ -600,8 +664,8 @@ public class HeadbuttInteraction : BasePetInteraction
         PetOriginalState firstPetState, PetOriginalState secondPetState)
     {
         // 달리기 애니메이션
-        firstPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        secondPet.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        GetCachedAnimController(firstPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        GetCachedAnimController(secondPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
         
         // 속도 설정
         float speedMult, accelMult;
@@ -626,7 +690,7 @@ public class HeadbuttInteraction : BasePetInteraction
         
         // 충돌 지점 계산
         Vector3 midPoint = (firstPet.transform.position + secondPet.transform.position) / 2;
-        midPoint = FindValidPositionOnNavMesh(midPoint, 5f);
+        midPoint = FindValidPositionOnNavMesh(midPoint, NAVMESH_SEARCH_RADIUS_SMALL);
         
         // 각 펫이 향하는 방향 계산
         Vector3 firstToSecond = (secondPet.transform.position - firstPet.transform.position).normalized;
@@ -642,8 +706,8 @@ public class HeadbuttInteraction : BasePetInteraction
         Vector3 firstPetTarget = midPoint + secondToFirst * (collisionDist * offsetRatio);
         Vector3 secondPetTarget = midPoint + firstToSecond * (collisionDist * offsetRatio);
         
-        firstPetTarget = FindValidPositionOnNavMesh(firstPetTarget, 2f);
-        secondPetTarget = FindValidPositionOnNavMesh(secondPetTarget, 2f);
+        firstPetTarget = FindValidPositionOnNavMesh(firstPetTarget, NAVMESH_SEARCH_RADIUS_SMALL / 2);
+        secondPetTarget = FindValidPositionOnNavMesh(secondPetTarget, NAVMESH_SEARCH_RADIUS_SMALL / 2);
         
         // 이동 시작
         firstPet.agent.isStopped = false;
@@ -714,8 +778,8 @@ public class HeadbuttInteraction : BasePetInteraction
         Vector3 firstPetKnockbackPos = firstPet.transform.position - firstPet.transform.forward * knockDistance;
         Vector3 secondPetKnockbackPos = secondPet.transform.position - secondPet.transform.forward * knockDistance;
         
-        firstPetKnockbackPos = FindValidPositionOnNavMesh(firstPetKnockbackPos, 5f);
-        secondPetKnockbackPos = FindValidPositionOnNavMesh(secondPetKnockbackPos, 5f);
+        firstPetKnockbackPos = FindValidPositionOnNavMesh(firstPetKnockbackPos, NAVMESH_SEARCH_RADIUS_SMALL);
+        secondPetKnockbackPos = FindValidPositionOnNavMesh(secondPetKnockbackPos, NAVMESH_SEARCH_RADIUS_SMALL);
         
         // 원래 회전 저장
         Quaternion firstPetRot = firstPet.transform.rotation;
