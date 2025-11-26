@@ -84,9 +84,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Range(0f, 1f)]
     public float sprintChance = 0.05f;
 
-    [Tooltip("순간 가속 지속 시간")]
-    public float sprintDuration = 0.8f;
-
     [Header("새로운 재미 요소")]
     [Tooltip("180도 회전 페이크 확률")]
     [Range(0f, 1f)]
@@ -106,9 +103,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Tooltip("지구력 감소 속도")]
     public float staminaDecreaseRate = 0.05f;
 
-    [Tooltip("지구력 회복 속도")]
-    public float staminaRecoveryRate = 0.1f;
-
     [Tooltip("최소 속도 배율 (지쳤을 때)")]
     public float minSpeedMultiplier = 0.5f;
 
@@ -125,12 +119,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
     [Header("End Chase Settings")]
     [Tooltip("추격 종료 후 쫓는 펫이 쉬는 시간")]
     public float chaserRestDuration = 3f;
-
-    [Tooltip("추격 종료 후 도망가는 펫이 안전거리")]
-    public float safeDistance = 10f;
-
-    [Tooltip("추격 종료 후 최대 도망 시간")]
-    public float maxEscapeTime = 5f;
 
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
@@ -172,7 +160,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
         this.normalUpdateInterval = template.normalUpdateInterval;
         this.closeUpdateInterval = template.closeUpdateInterval;
         this.sprintChance = template.sprintChance;
-        this.sprintDuration = template.sprintDuration;
 
         // 새로운 재미 요소
         this.uturnChance = template.uturnChance;
@@ -180,7 +167,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
         this.predictShotChance = template.predictShotChance;
         this.catchDistance = template.catchDistance;
         this.staminaDecreaseRate = template.staminaDecreaseRate;
-        this.staminaRecoveryRate = template.staminaRecoveryRate;
         this.minSpeedMultiplier = template.minSpeedMultiplier;
 
         // Visual Effects
@@ -190,8 +176,6 @@ public class ChaseAndRunInteraction : BasePetInteraction
 
         // End Chase Settings
         this.chaserRestDuration = template.chaserRestDuration;
-        this.safeDistance = template.safeDistance;
-        this.maxEscapeTime = template.maxEscapeTime;
 
         // Safety Settings
         this.agentSafetyTimeout = template.agentSafetyTimeout;
@@ -752,7 +736,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
  yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Idle, chaserRestDuration, true, false));
         yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Rest, chaserRestDuration, false, false));
+            PetAnimationController.PetAnimationType.Eat, chaserRestDuration, false, false));
 
         // 도망자 승리 포즈
         runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
