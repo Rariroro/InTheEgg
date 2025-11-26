@@ -823,14 +823,22 @@ public class ChaseAndRunInteraction : BasePetInteraction
         // 추격자를 보며 승리 포즈
         yield return StartCoroutine(SmoothlyLookAtEachOther(runner, chaser, 0.7f));
 
-        // 승리 점프
+        // 승리 점프 (1.5배 속도로 적당히 빠르게)
+        if (runner.animator != null)
+        {
+            runner.animator.speed = 1f;  // 1.5배 속도로 재생
+        }
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
+            PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
 
-        // 도발하는 듯한 동작
+        
+        // Idle 전환 후 짧은 대기 (returnToIdle=true로 이미 Idle 상태)
+        yield return new WaitForSeconds(0.2f);
+
+        // 도발하는 듯한 동작 (빠르게)
         runner.ShowEmotion(EmotionType.Joke, EMOTION_DURATION_MEDIUM);
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Attack, 1f, true, false));
+            PetAnimationController.PetAnimationType.Attack, 0.5f, true, false));
 
         yield return new WaitForSeconds(1f);
 
