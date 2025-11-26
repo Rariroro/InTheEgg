@@ -113,10 +113,10 @@ public class ChaseAndRunInteraction : BasePetInteraction
     public float minSpeedMultiplier = 0.5f;
 
     [Header("Visual Effects")]
-    [Tooltip("먼지 파티클 프리팹")]
+    [Tooltip("먼지 파티클 프리팹 - Inspector에서 DustDirtyPoof 프리팹 연결")]
     public GameObject dustParticlePrefab;
 
-    [Tooltip("잡기 성공 파티클 프리팹")]
+    [Tooltip("잡기 성공 파티클 프리팹 - Inspector에서 연결")]
     public GameObject catchParticlePrefab;
 
     [Tooltip("주변 펫 놀람 반경")]
@@ -276,15 +276,15 @@ public class ChaseAndRunInteraction : BasePetInteraction
         {
             Debug.Log("[ChaseAndRun] 상호작용 정리 시작.");
 
-            // 파티클 정리 - Object Pool로 반환
+            // 파티클 정리 - Destroy로 제거
             if (chaserDustParticles != null)
             {
-                StartCoroutine(ReturnToPoolAfter(chaserDustParticles, "DustEffect", 0.1f));
+                Destroy(chaserDustParticles, 0.1f);
                 chaserDustParticles = null;
             }
             if (runnerDustParticles != null)
             {
-                StartCoroutine(ReturnToPoolAfter(runnerDustParticles, "DustEffect", 0.1f));
+                Destroy(runnerDustParticles, 0.1f);
                 runnerDustParticles = null;
             }
 
@@ -609,71 +609,44 @@ public class ChaseAndRunInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 먼지 파티클 생성 - Object Pool 사용 (풀이 없어도 안전하게 처리)
+    /// 먼지 파티클 생성 - Instantiate 방식 (다른 상호작용과 동일)
     /// </summary>
     private void CreateDustParticles(PetController chaser, PetController runner)
     {
-        if (EffectPool.Instance == null)
+        if (dustParticlePrefab == null)
         {
-            Debug.LogWarning("[ChaseAndRun] EffectPool이 초기화되지 않았습니다. 파티클을 생성하지 않습니다.");
+            Debug.LogWarning("[ChaseAndRun] 먼지 파티클 프리팹이 설정되지 않았습니다. Inspector에서 설정해주세요.");
             return;
         }
 
-        // DustEffect 풀이 없을 경우 안전하게 처리
-        if (!EffectPool.Instance.HasPool("DustEffect"))
-        {
-            Debug.LogWarning("[ChaseAndRun] DustEffect 풀이 없습니다. 먼지 효과를 건너뜁니다.");
-            Debug.Log("[ChaseAndRun] Unity Editor에서 EffectPool에 DustEffect를 추가하려면:");
-            Debug.Log("1. Hierarchy에 빈 GameObject 생성 후 이름을 'EffectPool'로 변경");
-            Debug.Log("2. EffectPool 스크립트를 컴포넌트로 추가");
-            Debug.Log("3. Inspector에서 Pool Items 리스트 크기를 1로 설정");
-            Debug.Log("4. Pool Item 0에 다음 설정:");
-            Debug.Log("   - Name: DustEffect");
-            Debug.Log("   - Prefab: Assets/03_Prefabs/Particle/DustDirtyPoof.prefab 드래그");
-            Debug.Log("   - Pool Size: 10");
-            Debug.Log("   - Auto Expand: 체크");
-            return;
-        }
+        // 추격자 먼지 생성
+        chaserDustParticles = CreateDustForPet(chaser, "추격자");
 
-        // 추격자와 도망자에게 먼지 효과 추가
-        chaserDustParticles = AttachDustParticle(chaser, "추격자");
-        runnerDustParticles = AttachDustParticle(runner, "도망자");
+        // 도망자 먼지 생성
+        runnerDustParticles = CreateDustForPet(runner, "도망자");
     }
 
     /// <summary>
-    /// 펫에게 먼지 파티클을 부착하는 헬퍼 메서드
+    /// 개별 펫에게 먼지 파티클을 생성하는 헬퍼 메서드
     /// </summary>
-    private GameObject AttachDustParticle(PetController pet, string petRole)
+    private GameObject CreateDustForPet(PetController pet, string petRole)
     {
-        GameObject dustParticle = EffectPool.Instance.Get("DustEffect");
-        if (dustParticle != null)
-        {
-            dustParticle.transform.SetParent(pet.transform);
-            dustParticle.transform.localPosition = new Vector3(0, DUST_PARTICLE_HEIGHT, DUST_PARTICLE_OFFSET);
+        if (pet == null || dustParticlePrefab == null) return null;
 
-            var ps = dustParticle.GetComponent<ParticleSystem>();
-            if (ps != null) ps.Play();
-        }
-        else
+        GameObject dustParticle = Instantiate(dustParticlePrefab);
+        dustParticle.transform.SetParent(pet.transform);
+        dustParticle.transform.localPosition = new Vector3(0, DUST_PARTICLE_HEIGHT, DUST_PARTICLE_OFFSET);
+
+        var ps = dustParticle.GetComponent<ParticleSystem>();
+        if (ps != null)
         {
-            Debug.LogWarning($"[ChaseAndRun] {petRole} 먼지 효과를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
+            ps.Play();
         }
+
+        Debug.Log($"[ChaseAndRun] {petRole} 먼지 효과 생성됨");
         return dustParticle;
     }
 
-    /// <summary>
-    /// 지연 후 풀로 반환하는 코루틴
-    /// </summary>
-    private IEnumerator ReturnToPoolAfter(GameObject obj, string poolName, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        if (obj != null && EffectPool.Instance != null)
-        {
-            obj.transform.SetParent(null);
-            EffectPool.Instance.Return(obj, poolName);
-        }
-    }
 
     /// <summary>
     /// 주변 펫들을 놀라게 함
@@ -712,39 +685,28 @@ public class ChaseAndRunInteraction : BasePetInteraction
         chaser.agent.isStopped = true;
         runner.agent.isStopped = true;
         
-        // 파티클 효과 - Object Pool 사용 (안전 처리)
-        if (EffectPool.Instance != null)
+        // 파티클 효과 - Instantiate 방식
+        if (catchParticlePrefab != null)
         {
-            if (!EffectPool.Instance.HasPool("CatchEffect"))
-            {
-                Debug.LogWarning("[ChaseAndRun] CatchEffect 풀이 없습니다. 잡기 효과를 건너뜁니다.");
-                Debug.Log("[ChaseAndRun] CatchEffect를 추가하려면 EffectPool의 Pool Items에 추가하세요.");
-            }
-            else
-            {
-                Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
-                GameObject catchEffect = EffectPool.Instance.Get("CatchEffect");
-                if (catchEffect != null)
-                {
-                    catchEffect.transform.position = midPoint;
-                    catchEffect.transform.rotation = Quaternion.identity;
+            Vector3 midPoint = (chaser.transform.position + runner.transform.position) / 2f;
+            GameObject catchEffect = Instantiate(catchParticlePrefab, midPoint, Quaternion.identity);
 
-                    var ps = catchEffect.GetComponent<ParticleSystem>();
-                    if (ps != null) ps.Play();
+            var ps = catchEffect.GetComponent<ParticleSystem>();
+            if (ps != null) ps.Play();
 
-                    // 3초 후 풀로 반환
-                    StartCoroutine(ReturnToPoolAfter(catchEffect, "CatchEffect", 3f));
-                }
-                else
-                {
-                    Debug.LogWarning("[ChaseAndRun] CatchEffect를 가져올 수 없습니다. Pool이 비어있을 수 있습니다.");
-                }
-            }
+            // 3초 후 제거
+            Destroy(catchEffect, 3f);
+
+            Debug.Log("[ChaseAndRun] 잡기 효과 생성됨");
+        }
+        else
+        {
+            Debug.LogWarning("[ChaseAndRun] 잡기 효과 프리팹이 설정되지 않았습니다. Inspector에서 설정해주세요.");
         }
         
         // 감정 표현
-        chaser.ShowEmotion(EmotionType.Victory, 5f);
-        runner.ShowEmotion(EmotionType.Defeat, 5f);
+        chaser.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_MEDIUM);
+        runner.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_MEDIUM);
         
         // 함께 구르며 장난치기
         var chaserAnim = chaser.GetComponent<PetAnimationController>();
@@ -768,8 +730,8 @@ public class ChaseAndRunInteraction : BasePetInteraction
         }
         
         // 마지막 즐거운 감정
-        chaser.ShowEmotion(EmotionType.Happy, 5f);
-        runner.ShowEmotion(EmotionType.Happy, 5f);
+        chaser.ShowEmotion(EmotionType.Happy, EMOTION_DURATION_MEDIUM);
+        runner.ShowEmotion(EmotionType.Happy, EMOTION_DURATION_MEDIUM);
         
         yield return new WaitForSeconds(2f);
     }
@@ -783,17 +745,17 @@ public class ChaseAndRunInteraction : BasePetInteraction
         
         // 쫓던 펫 멈춤
         chaser.agent.isStopped = true;
-        chaser.ShowEmotion(EmotionType.Defeat, 10f);
-        
+        chaser.ShowEmotion(EmotionType.Defeat, EMOTION_DURATION_LONG);
+
         var chaserAnim = chaser.GetComponent<PetAnimationController>();
                 var runnerAnim = runner.GetComponent<PetAnimationController>();
  yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Idle, chaserRestDuration, true, false));
         yield return StartCoroutine(chaserAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, chaserRestDuration, false, false));
-         
+
         // 도망자 승리 포즈
-        runner.ShowEmotion(EmotionType.Victory, 10f);
+        runner.ShowEmotion(EmotionType.Victory, EMOTION_DURATION_LONG);
         runner.agent.isStopped = true;
         
         
@@ -809,7 +771,7 @@ public class ChaseAndRunInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
         
         // 도발하는 듯한 동작
-        runner.ShowEmotion(EmotionType.Joke, 5f);
+        runner.ShowEmotion(EmotionType.Joke, EMOTION_DURATION_MEDIUM);
         yield return StartCoroutine(runnerAnim.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Attack, 1f, true, false));
         
