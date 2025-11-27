@@ -869,8 +869,9 @@ public class HeadbuttInteraction : BasePetInteraction
         firstPet.agent.isStopped = true;
         secondPet.agent.isStopped = true;
 
-        // 충돌 애니메이션 시간 계산 (파티클 4번 반복 시간)
-        float totalAnimationDuration = effectRepeatInterval * effectRepeatCount;
+        // 충돌 애니메이션 시간 계산 (파티클 생성 간격 × (횟수-1))
+        // 예: 5개 파티클 = 4번의 간격 = 0.7초 × 4 = 2.8초
+        float totalAnimationDuration = effectRepeatInterval * (effectRepeatCount - 1);
 
         // Attack 애니메이션 직접 설정 (PlayAnimationWithCustomDuration 대신 직접 제어)
         if (GetCachedAnimController(firstPet) != null && firstPet.animator != null)
