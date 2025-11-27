@@ -31,6 +31,7 @@ public class HeadbuttInteraction : BasePetInteraction
     private const float SMOOTH_ROTATION_DURATION = 1.0f;  // 0.5초 → 1.0초 (더 부드러운 회전)
     private const float QUICK_ROTATION_DURATION = 0.5f;   // 0.3초 → 0.5초
     private const float WINNER_CELEBRATION_DELAY = 2.0f;
+    private const float POSITION_MOVE_TIMEOUT = 10f;      // 위치 이동 최대 대기 시간
 
     // 애니메이션 관련 상수
     private const float HEAD_HEIGHT_RATIO = 0.8f;
@@ -54,23 +55,23 @@ public class HeadbuttInteraction : BasePetInteraction
     [Tooltip("큰 동물들이 뒤로 물러나는 거리입니다.")]
     public float largeAnimalBackupDistance = 5.0f;
     
-    [Tooltip("박치기 충돌로 뒤로 밀려나는 거리입니다.")]
+    [Tooltip("박치기 충돌로 뒤로 밀려나는 거리입니다. (현재 미사용 - KnockbackAfterCollision 비활성화됨)")]
     public float knockbackDistance = 1.5f;
-    
-    [Tooltip("큰 동물들이 뒤로 밀려나는 거리입니다.")]
+
+    [Tooltip("큰 동물들이 뒤로 밀려나는 거리입니다. (현재 미사용 - KnockbackAfterCollision 비활성화됨)")]
     public float largeAnimalKnockbackDistance = 2.5f;
     
     [Header("Animation Settings")]
     [Tooltip("뒤로 물러나는 데 걸리는 시간입니다.")]
     public float backupDuration = 1.0f;
     
-    [Tooltip("충돌 후 뒤로 밀려나는 시간입니다.")]
+    [Tooltip("충돌 후 뒤로 밀려나는 시간입니다. (현재 미사용 - KnockbackAfterCollision 비활성화됨)")]
     public float knockbackDuration = 0.5f;
     
-    [Tooltip("박치기 충돌 감지 거리입니다.")]
+    [Tooltip("박치기 충돌 감지 거리입니다. (충돌 지점 오프셋 계산에 사용됨)")]
     public float collisionDetectionDistance = 1.5f;
-    
-    [Tooltip("큰 동물들의 충돌 감지 거리입니다.")]
+
+    [Tooltip("큰 동물들의 충돌 감지 거리입니다. (충돌 지점 오프셋 계산에 사용됨)")]
     public float largeAnimalCollisionDistance = 2.5f;
     
     [Tooltip("염소-양의 충돌 지점 거리 비율입니다. (1.0 = 충돌 감지 거리의 100%)")]
@@ -155,6 +156,10 @@ public class HeadbuttInteraction : BasePetInteraction
     // ★★★ 추가: 인스턴스별 이펙트 관리 - 동시 실행 격리 ★★★
     private List<GameObject> myHeadbuttEffects = new List<GameObject>();
     private List<Coroutine> activeCoroutines = new List<Coroutine>();
+
+    // 컴포넌트 캐싱 (성능 최적화)
+    private readonly Dictionary<PetController, PetAnimationController> animControllerCache = new();
+    private readonly Dictionary<PetController, Collider> colliderCache = new();
     
     /// <summary>
     /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
@@ -338,7 +343,7 @@ public class HeadbuttInteraction : BasePetInteraction
         secondPetPos = FindValidPositionOnNavMesh(secondPetPos, NAVMESH_SEARCH_RADIUS);
 
         // 위치 이동
-        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, 10f));
+        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, POSITION_MOVE_TIMEOUT));
 
         // 서로 마주보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, SMOOTH_ROTATION_DURATION));
@@ -413,21 +418,39 @@ public class HeadbuttInteraction : BasePetInteraction
     #region Helper Methods
 
     /// <summary>
-    /// AnimationController를 가져옵니다.
+    /// AnimationController를 가져옵니다 (캐싱됨).
     /// </summary>
     private PetAnimationController GetCachedAnimController(PetController pet)
     {
-        // 캐싱 제거 - 각 인스턴스가 독립적으로 동작하도록 직접 GetComponent 호출
-        return pet.GetComponent<PetAnimationController>();
+        if (pet == null) return null;
+
+        if (!animControllerCache.TryGetValue(pet, out var controller))
+        {
+            controller = pet.GetComponent<PetAnimationController>();
+            if (controller != null)
+            {
+                animControllerCache[pet] = controller;
+            }
+        }
+        return controller;
     }
 
     /// <summary>
-    /// Collider를 가져옵니다.
+    /// Collider를 가져옵니다 (캐싱됨).
     /// </summary>
     private Collider GetCachedCollider(PetController pet)
     {
-        // 캐싱 제거 - 각 인스턴스가 독립적으로 동작하도록 직접 GetComponent 호출
-        return pet.GetComponent<Collider>();
+        if (pet == null) return null;
+
+        if (!colliderCache.TryGetValue(pet, out var collider))
+        {
+            collider = pet.GetComponent<Collider>();
+            if (collider != null)
+            {
+                colliderCache[pet] = collider;
+            }
+        }
+        return collider;
     }
 
     /// <summary>
@@ -681,8 +704,13 @@ public class HeadbuttInteraction : BasePetInteraction
         
         // 병렬로 뒤로 이동
         Coroutine firstBackupCoroutine = StartCoroutine(MoveBackward(firstPet, firstPetBackupPos, backupDuration));
+        Coroutine secondBackupCoroutine = StartCoroutine(MoveBackward(secondPet, secondPetBackupPos, backupDuration));
         activeCoroutines.Add(firstBackupCoroutine);
-        yield return StartCoroutine(MoveBackward(secondPet, secondPetBackupPos, backupDuration));
+        activeCoroutines.Add(secondBackupCoroutine);
+
+        // 두 펫 모두 이동 완료 대기
+        yield return firstBackupCoroutine;
+        yield return secondBackupCoroutine;
     }
     
     /// <summary>
@@ -740,8 +768,8 @@ public class HeadbuttInteraction : BasePetInteraction
         }
         
         pet.transform.position = targetPos;
-        
-        // NavMeshAgent가 활성화되어 있었다면 위치 동기화
+
+        // NavMeshAgent가 활성화되어 있었다면 위치 동기화 및 상태 복원
         if (wasAgentEnabled)
         {
             if (!pet.agent.isOnNavMesh)
@@ -751,9 +779,10 @@ public class HeadbuttInteraction : BasePetInteraction
                     pet.transform.position = hit.position;
                 }
             }
-            
-            // agent 상태는 아직 복원하지 않음 (다음 동작까지 대기)
-            // 이렇게 하면 애니메이션이 idle로 바뀌지 않음
+
+            // agent 상태 복원 (다른 Activity에 영향을 주지 않도록)
+            pet.agent.isStopped = wasAgentStopped;
+            pet.agent.updateRotation = true;
         }
     }
     
@@ -919,7 +948,7 @@ public class HeadbuttInteraction : BasePetInteraction
     #endregion
 
     /// <summary>
-    /// 컴포넌트가 파괴될 때 남아있는 이펙트 정리
+    /// 컴포넌트가 파괴될 때 남아있는 리소스 정리
     /// </summary>
     private void OnDestroy()
     {
@@ -936,5 +965,9 @@ public class HeadbuttInteraction : BasePetInteraction
             if (coroutine != null) StopCoroutine(coroutine);
         }
         activeCoroutines.Clear();
+
+        // 캐시 정리 (메모리 누수 방지)
+        animControllerCache.Clear();
+        colliderCache.Clear();
     }
 }
