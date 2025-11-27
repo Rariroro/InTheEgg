@@ -265,7 +265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb6176dd45af94e558d6ea145c5222b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionStartDistance: 5
+  interactionStartDistance: 20
   chaseDuration: 20
   chaserBaseSpeedMultiplier: 1.7
   chaserSprintSpeedMultiplier: 2.8
@@ -277,20 +277,17 @@ MonoBehaviour:
   normalUpdateInterval: 0.3
   closeUpdateInterval: 0.1
   sprintChance: 0.05
-  sprintDuration: 0.8
   uturnChance: 0.1
   stopFakeChance: 0.15
   predictShotChance: 0.2
   catchDistance: 1.5
   staminaDecreaseRate: 0.05
-  staminaRecoveryRate: 0.1
   minSpeedMultiplier: 0.5
   dustParticlePrefab: {fileID: 187952, guid: 85bd1ea5abc8f4446b3bb5d8c0fc53f1, type: 3}
   catchParticlePrefab: {fileID: 0}
   scareRadius: 5
   chaserRestDuration: 3
-  safeDistance: 15
-  maxEscapeTime: 5
+  escapeVictoryDistance: 15
   agentSafetyTimeout: 3
 --- !u!114 &1106663833353148349
 MonoBehaviour:
