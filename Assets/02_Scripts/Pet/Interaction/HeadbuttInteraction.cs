@@ -868,11 +868,16 @@ public class HeadbuttInteraction : BasePetInteraction
         // 충돌 처리
         firstPet.agent.isStopped = true;
         secondPet.agent.isStopped = true;
-        
-        // 충돌 효과 생성
+
+        // 충돌 애니메이션 먼저 시작 (반복 재생)
+        float totalAnimationDuration = effectRepeatInterval * effectRepeatCount;
+        GetCachedAnimController(firstPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Attack);
+        GetCachedAnimController(secondPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Attack);
+
+        // 충돌 효과 생성 (애니메이션과 동시에)
         if (collisionEffectPrefab != null)
         {
-            // ★★★ 수정: 반복 효과 코루틴을 시작하고 리스트에 추가 ★★★
+            // 반복 효과 코루틴을 시작하고 리스트에 추가
             Coroutine effectCoroutine = StartCoroutine(CreateRepeatingCollisionEffect(firstPet, secondPet, pairType));
             activeCoroutines.Add(effectCoroutine);
 
@@ -887,14 +892,9 @@ public class HeadbuttInteraction : BasePetInteraction
         {
             Debug.LogError($"[{InteractionName}] collisionEffectPrefab이 설정되지 않았습니다!");
         }
-        
-        // 충돌 애니메이션
-        yield return StartCoroutine(PlaySimultaneousAnimations(
-            firstPet, secondPet, 
-            PetAnimationController.PetAnimationType.Attack, 
-            PetAnimationController.PetAnimationType.Attack, 
-            1.0f
-        ));
+
+        // 파티클 효과가 모두 끝날 때까지 대기
+        yield return new WaitForSeconds(totalAnimationDuration);
     }
     
     /// <summary>
