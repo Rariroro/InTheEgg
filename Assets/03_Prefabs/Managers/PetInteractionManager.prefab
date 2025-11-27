@@ -98,7 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a20d8eb55422a4998b9f6bccc69030e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionStartDistance: 5
+  interactionStartDistance: 15
   baseHeadbuttDistance: 8
   largeAnimalHeadbuttDistance: 12
   backupDistance: 3
@@ -109,13 +109,13 @@ MonoBehaviour:
   knockbackDuration: 0.5
   collisionDetectionDistance: 1.5
   largeAnimalCollisionDistance: 2.5
-  smallAnimalOffsetRatio: 1.05
-  mediumAnimalOffsetRatio: 1.55
-  largeAnimalOffsetRatio: 2.12
-  minHeadbuttCount: 3
+  smallAnimalOffsetRatio: 1.382
+  mediumAnimalOffsetRatio: 1.4
+  largeAnimalOffsetRatio: 1.8
+  minHeadbuttCount: 4
   maxHeadbuttCount: 6
-  largeAnimalMinCount: 2
-  largeAnimalMaxCount: 4
+  largeAnimalMinCount: 3
+  largeAnimalMaxCount: 5
   chargeSpeedMultiplier: 2.5
   largeAnimalSpeedMultiplier: 2
   accelerationMultiplier: 2
@@ -127,7 +127,7 @@ MonoBehaviour:
   effectScale: 1
   largeAnimalEffectScale: 1.5
   effectDuration: 3
-  effectRepeatCount: 4
+  effectRepeatCount: 5
   effectRepeatInterval: 0.65
   bullWinProbability: 0.55
   rhinoWinProbability: 0.6

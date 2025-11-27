@@ -299,8 +299,8 @@ public class HeadbuttInteraction : BasePetInteraction
             firstPetState.Restore(firstPet);
             secondPetState.Restore(secondPet);
 
-            // 상호작용 종료
-            EndInteraction(firstPet, secondPet);
+            // EndInteraction 제거 - BasePetInteraction에서 자동으로 처리됨
+            // EndInteraction(firstPet, secondPet);
             Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
