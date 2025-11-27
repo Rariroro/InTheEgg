@@ -21,12 +21,10 @@ public class HeadbuttInteraction : BasePetInteraction
 
     // NavMesh 관련 상수
     private const float NAVMESH_SEARCH_RADIUS = 10f;
-    private const float NAVMESH_SEARCH_RADIUS_LARGE = 15f;
     private const float NAVMESH_SEARCH_RADIUS_SMALL = 5f;
     private const float NAVMESH_SAMPLE_DISTANCE = 1f;
 
     // 타이밍 관련 상수
-    private const float POSITION_MOVE_TIMEOUT = 10f;
     private const float TENSION_WAIT_TIME = 1.0f;
     private const float NEXT_HEADBUTT_DELAY = 0.7f;
     private const float CHARGE_PREPARATION_DELAY = 0.5f;
@@ -40,8 +38,9 @@ public class HeadbuttInteraction : BasePetInteraction
 
     #endregion
 
-    // 캐싱 Dictionary 제거 - 각 인스턴스가 독립적으로 동작하도록 함
-    
+    // BasePetInteraction의 자동 이동을 비활성화하고 PreparePhase에서 직접 거리 조정
+    public override bool ShouldPerformInitialMovement => false;
+
     [Header("Headbutt Settings")]
     [Tooltip("박치기를 위해 떨어지는 기본 거리입니다.")]
     public float baseHeadbuttDistance = 8f;
@@ -304,34 +303,42 @@ public class HeadbuttInteraction : BasePetInteraction
     #region Phase Methods
     
     /// <summary>
-    /// 박치기 준비 단계 - 위치 조정 및 감정 표현
+    /// 박치기 준비 단계 - 위치 조정, 감정 표현, 마주보기
     /// </summary>
     private IEnumerator PreparePhase(PetController firstPet, PetController secondPet, HeadbuttPair pairType)
     {
         Debug.Log($"[{InteractionName}] 1단계: 박치기 준비");
 
-        // 감정 표현 - EmotionConstants 사용
+        // 감정 표현
         firstPet.ShowEmotion(EmotionType.Angry, EmotionConstants.DURATION_PERSISTENT);
         secondPet.ShowEmotion(EmotionType.Angry, EmotionConstants.DURATION_PERSISTENT);
 
-        // 박치기 위치 계산
-        Vector3 headbuttSpot = (firstPet.transform.position + secondPet.transform.position) / 2;
-        headbuttSpot = FindValidPositionOnNavMesh(headbuttSpot, NAVMESH_SEARCH_RADIUS);
+        // 거리 계산: 동물 종류별 기본 거리 + 펫 크기 배율
+        float baseDistance = GetHeadbuttDistance(pairType); // 8f or 12f
+        float multiplier1 = firstPet.Profile.GetInteractionDistanceMultiplier();
+        float multiplier2 = secondPet.Profile.GetInteractionDistanceMultiplier();
+        float averageMultiplier = (multiplier1 + multiplier2) / 2f;
+        float adjustedDistance = baseDistance * averageMultiplier;
 
-        // 서로 마주보는 위치로 이동
+        Debug.Log($"[{InteractionName}] 거리 계산: 기본={baseDistance}m, 크기배율={averageMultiplier:F2}, 최종={adjustedDistance:F2}m");
+
+        // 중간 지점 계산
+        Vector3 midpoint = (firstPet.transform.position + secondPet.transform.position) / 2f;
+        midpoint = FindValidPositionOnNavMesh(midpoint, NAVMESH_SEARCH_RADIUS);
+
+        // 방향 벡터 계산
         Vector3 direction = (secondPet.transform.position - firstPet.transform.position).normalized;
         if (direction == Vector3.zero) direction = firstPet.transform.forward;
 
-        float distance = GetHeadbuttDistance(pairType);
+        // 중간 지점에서 양쪽으로 거리의 절반씩 떨어진 위치 계산
+        Vector3 firstPetPos = midpoint - direction * (adjustedDistance / 2f);
+        Vector3 secondPetPos = midpoint + direction * (adjustedDistance / 2f);
 
-        Vector3 firstPetPos = headbuttSpot - direction * (distance / 2);
-        Vector3 secondPetPos = headbuttSpot + direction * (distance / 2);
-
-        firstPetPos = FindValidPositionOnNavMesh(firstPetPos, NAVMESH_SEARCH_RADIUS_LARGE);
-        secondPetPos = FindValidPositionOnNavMesh(secondPetPos, NAVMESH_SEARCH_RADIUS_LARGE);
+        firstPetPos = FindValidPositionOnNavMesh(firstPetPos, NAVMESH_SEARCH_RADIUS);
+        secondPetPos = FindValidPositionOnNavMesh(secondPetPos, NAVMESH_SEARCH_RADIUS);
 
         // 위치 이동
-        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, POSITION_MOVE_TIMEOUT));
+        yield return StartCoroutine(MoveToPositions(firstPet, secondPet, firstPetPos, secondPetPos, 10f));
 
         // 서로 마주보기
         yield return StartCoroutine(SmoothlyLookAtEachOther(firstPet, secondPet, SMOOTH_ROTATION_DURATION));
