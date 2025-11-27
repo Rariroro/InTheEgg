@@ -40,13 +40,7 @@ public class HeadbuttInteraction : BasePetInteraction
 
     #endregion
 
-    #region Cached Components
-
-    // 컴포넌트 캐싱용 Dictionary
-    private readonly Dictionary<PetController, PetAnimationController> animControllerCache = new Dictionary<PetController, PetAnimationController>();
-    private readonly Dictionary<PetController, Collider> colliderCache = new Dictionary<PetController, Collider>();
-
-    #endregion
+    // 캐싱 Dictionary 제거 - 각 인스턴스가 독립적으로 동작하도록 함
     
     [Header("Headbutt Settings")]
     [Tooltip("박치기를 위해 떨어지는 기본 거리입니다.")]
@@ -158,12 +152,70 @@ public class HeadbuttInteraction : BasePetInteraction
     
     // 박치기 동물 쌍 타입
     private enum HeadbuttPair { GoatSheep, BullBuffalo, RhinoBison, Other }
+
+    // ★★★ 추가: 인스턴스별 이펙트 관리 - 동시 실행 격리 ★★★
+    private List<GameObject> myHeadbuttEffects = new List<GameObject>();
+    private List<Coroutine> activeCoroutines = new List<Coroutine>();
     
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(HeadbuttInteraction template)
+    {
+        if (template == null) return;
+
+        // Headbutt Settings
+        this.baseHeadbuttDistance = template.baseHeadbuttDistance;
+        this.largeAnimalHeadbuttDistance = template.largeAnimalHeadbuttDistance;
+        this.backupDistance = template.backupDistance;
+        this.largeAnimalBackupDistance = template.largeAnimalBackupDistance;
+        this.knockbackDistance = template.knockbackDistance;
+        this.largeAnimalKnockbackDistance = template.largeAnimalKnockbackDistance;
+
+        // Animation Settings
+        this.backupDuration = template.backupDuration;
+        this.knockbackDuration = template.knockbackDuration;
+        this.collisionDetectionDistance = template.collisionDetectionDistance;
+        this.largeAnimalCollisionDistance = template.largeAnimalCollisionDistance;
+        this.smallAnimalOffsetRatio = template.smallAnimalOffsetRatio;
+        this.mediumAnimalOffsetRatio = template.mediumAnimalOffsetRatio;
+        this.largeAnimalOffsetRatio = template.largeAnimalOffsetRatio;
+
+        // Headbutt Count
+        this.minHeadbuttCount = template.minHeadbuttCount;
+        this.maxHeadbuttCount = template.maxHeadbuttCount;
+        this.largeAnimalMinCount = template.largeAnimalMinCount;
+        this.largeAnimalMaxCount = template.largeAnimalMaxCount;
+
+        // Speed Settings
+        this.chargeSpeedMultiplier = template.chargeSpeedMultiplier;
+        this.largeAnimalSpeedMultiplier = template.largeAnimalSpeedMultiplier;
+        this.accelerationMultiplier = template.accelerationMultiplier;
+        this.largeAnimalAccelerationMultiplier = template.largeAnimalAccelerationMultiplier;
+
+        // Safety Settings
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+        this.chargeTimeout = template.chargeTimeout;
+        this.collisionAvoidanceRadius = template.collisionAvoidanceRadius;
+
+        // Visual Effects
+        this.collisionEffectPrefab = template.collisionEffectPrefab;
+        this.effectScale = template.effectScale;
+        this.largeAnimalEffectScale = template.largeAnimalEffectScale;
+        this.effectDuration = template.effectDuration;
+        this.effectRepeatCount = template.effectRepeatCount;
+        this.effectRepeatInterval = template.effectRepeatInterval;
+
+        // Win Probability
+        this.bullWinProbability = template.bullWinProbability;
+        this.rhinoWinProbability = template.rhinoWinProbability;
+    }
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.Fight;
     }
-    
+
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
         return IsPetPair(pet1, pet2, PetType.Goat, PetType.Sheep) ||
@@ -173,9 +225,23 @@ public class HeadbuttInteraction : BasePetInteraction
     
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
+        // ★★★ 수정: 이 인스턴스의 이펙트만 정리 ★★★
+        foreach (var effect in myHeadbuttEffects)
+        {
+            if (effect != null) Destroy(effect);
+        }
+        myHeadbuttEffects.Clear();
+
+        // ★★★ 수정: 활성 코루틴 정리 ★★★
+        foreach (var coroutine in activeCoroutines)
+        {
+            if (coroutine != null) StopCoroutine(coroutine);
+        }
+        activeCoroutines.Clear();
+
         HeadbuttPair pairType = GetPairType(pet1, pet2);
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}의 박치기 상호작용 시작! (타입: {pairType})");
-        
+
         // 역할 식별
         PetController firstPet, secondPet;
         IdentifyPets(pet1, pet2, pairType, out firstPet, out secondPet);
@@ -205,15 +271,30 @@ public class HeadbuttInteraction : BasePetInteraction
         finally
         {
             Debug.Log($"[{InteractionName}] 상호작용 정리 시작.");
-            
+
+            // ★★★ 수정: 이 인스턴스의 이펙트와 코루틴만 정리 ★★★
+            // 이펙트 정리
+            foreach (var effect in myHeadbuttEffects)
+            {
+                if (effect != null) Destroy(effect);
+            }
+            myHeadbuttEffects.Clear();
+
+            // 활성 코루틴 정리
+            foreach (var coroutine in activeCoroutines)
+            {
+                if (coroutine != null) StopCoroutine(coroutine);
+            }
+            activeCoroutines.Clear();
+
             // 감정 숨기기
-            firstPet.HideEmotion();
-            secondPet.HideEmotion();
-            
+            if (firstPet != null) firstPet.HideEmotion();
+            if (secondPet != null) secondPet.HideEmotion();
+
             // 상태 복원
             firstPetState.Restore(firstPet);
             secondPetState.Restore(secondPet);
-            
+
             // 상호작용 종료
             EndInteraction(firstPet, secondPet);
             Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
@@ -325,27 +406,21 @@ public class HeadbuttInteraction : BasePetInteraction
     #region Helper Methods
 
     /// <summary>
-    /// 캐싱된 AnimationController를 가져옵니다.
+    /// AnimationController를 가져옵니다.
     /// </summary>
     private PetAnimationController GetCachedAnimController(PetController pet)
     {
-        if (!animControllerCache.ContainsKey(pet))
-        {
-            animControllerCache[pet] = pet.GetComponent<PetAnimationController>();
-        }
-        return animControllerCache[pet];
+        // 캐싱 제거 - 각 인스턴스가 독립적으로 동작하도록 직접 GetComponent 호출
+        return pet.GetComponent<PetAnimationController>();
     }
 
     /// <summary>
-    /// 캐싱된 Collider를 가져옵니다.
+    /// Collider를 가져옵니다.
     /// </summary>
     private Collider GetCachedCollider(PetController pet)
     {
-        if (!colliderCache.ContainsKey(pet))
-        {
-            colliderCache[pet] = pet.GetComponent<Collider>();
-        }
-        return colliderCache[pet];
+        // 캐싱 제거 - 각 인스턴스가 독립적으로 동작하도록 직접 GetComponent 호출
+        return pet.GetComponent<Collider>();
     }
 
     /// <summary>
@@ -542,24 +617,40 @@ public class HeadbuttInteraction : BasePetInteraction
     private IEnumerator CreateRepeatingCollisionEffect(PetController firstPet, PetController secondPet, HeadbuttPair pairType)
     {
         float scale = GetEffectScale(pairType);
-        
+
         for (int i = 0; i < effectRepeatCount; i++)
         {
             // 현재 위치에서 효과 생성
             Vector3 effectPosition = GetCollisionEffectPosition(firstPet, secondPet);
             GameObject effect = Instantiate(collisionEffectPrefab, effectPosition, Quaternion.identity);
             effect.transform.localScale = Vector3.one * scale;
-            
-            // 설정된 시간 후 제거
-            Destroy(effect, effectDuration);
-            
+
+            // ★★★ 추가: 이펙트를 인스턴스별 리스트에 추가 ★★★
+            myHeadbuttEffects.Add(effect);
+
+            // 설정된 시간 후 제거 (리스트에서도 제거)
+            StartCoroutine(DestroyEffectAfterDelay(effect, effectDuration));
+
             Debug.Log($"[{InteractionName}] 충돌 효과 {i + 1}/{effectRepeatCount} 생성!");
-            
+
             // 마지막 효과가 아니면 대기
             if (i < effectRepeatCount - 1)
             {
                 yield return new WaitForSeconds(effectRepeatInterval);
             }
+        }
+    }
+
+    /// <summary>
+    /// 지연 시간 후 이펙트를 파괴하고 리스트에서 제거하는 코루틴
+    /// </summary>
+    private IEnumerator DestroyEffectAfterDelay(GameObject effect, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (effect != null)
+        {
+            myHeadbuttEffects.Remove(effect);
+            Destroy(effect);
         }
     }
     
@@ -582,7 +673,8 @@ public class HeadbuttInteraction : BasePetInteraction
         secondPetBackupPos = FindValidPositionOnNavMesh(secondPetBackupPos, NAVMESH_SEARCH_RADIUS);
         
         // 병렬로 뒤로 이동
-        StartCoroutine(MoveBackward(firstPet, firstPetBackupPos, backupDuration));
+        Coroutine firstBackupCoroutine = StartCoroutine(MoveBackward(firstPet, firstPetBackupPos, backupDuration));
+        activeCoroutines.Add(firstBackupCoroutine);
         yield return StartCoroutine(MoveBackward(secondPet, secondPetBackupPos, backupDuration));
     }
     
@@ -616,12 +708,13 @@ public class HeadbuttInteraction : BasePetInteraction
         {
             // PlayAnimationWithCustomDuration을 사용하여 애니메이션 재생
             // loop=true로 설정하여 계속 재생되도록 함
-            StartCoroutine(animController.PlayAnimationWithCustomDuration(
+            Coroutine animCoroutine = StartCoroutine(animController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Walk,
                 duration + ANIMATION_BUFFER_TIME,  // 이동 시간보다 약간 길게 설정
                 true,  // loop
                 false  // stopPrevious
             ));
+            activeCoroutines.Add(animCoroutine);
             Debug.Log($"[{InteractionName}] {pet.petName} 뒤로 걷기 애니메이션 시작");
         }
         
@@ -743,9 +836,10 @@ public class HeadbuttInteraction : BasePetInteraction
         // 충돌 효과 생성
         if (collisionEffectPrefab != null)
         {
-            // 반복 효과 코루틴 시작
-            StartCoroutine(CreateRepeatingCollisionEffect(firstPet, secondPet, pairType));
-            
+            // ★★★ 수정: 반복 효과 코루틴을 시작하고 리스트에 추가 ★★★
+            Coroutine effectCoroutine = StartCoroutine(CreateRepeatingCollisionEffect(firstPet, secondPet, pairType));
+            activeCoroutines.Add(effectCoroutine);
+
             if (!collision)
             {
                 Debug.LogWarning($"[{InteractionName}] 충돌이 감지되지 않았지만 효과는 생성됩니다.");
@@ -814,6 +908,26 @@ public class HeadbuttInteraction : BasePetInteraction
         firstPet.transform.position = firstPetKnockbackPos;
         secondPet.transform.position = secondPetKnockbackPos;
     }
-    
+
     #endregion
+
+    /// <summary>
+    /// 컴포넌트가 파괴될 때 남아있는 이펙트 정리
+    /// </summary>
+    private void OnDestroy()
+    {
+        // ★★★ 추가: 컴포넌트 파괴 시 남은 이펙트 정리 ★★★
+        foreach (var effect in myHeadbuttEffects)
+        {
+            if (effect != null) Destroy(effect);
+        }
+        myHeadbuttEffects.Clear();
+
+        // 활성 코루틴 정리
+        foreach (var coroutine in activeCoroutines)
+        {
+            if (coroutine != null) StopCoroutine(coroutine);
+        }
+        activeCoroutines.Clear();
+    }
 }
