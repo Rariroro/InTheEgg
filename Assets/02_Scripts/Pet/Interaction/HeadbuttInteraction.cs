@@ -136,7 +136,7 @@ public class HeadbuttInteraction : BasePetInteraction
     public float effectDuration = 3f;
     
     [Tooltip("충돌 애니메이션 동안 파티클이 반복되는 횟수입니다.")]
-    public int effectRepeatCount = 4;
+    public int effectRepeatCount = 5;
     
     [Tooltip("파티클 반복 간격입니다.")]
     public float effectRepeatInterval = 0.7f;
@@ -869,12 +869,22 @@ public class HeadbuttInteraction : BasePetInteraction
         firstPet.agent.isStopped = true;
         secondPet.agent.isStopped = true;
 
-        // 충돌 애니메이션 먼저 시작 (반복 재생)
+        // 충돌 애니메이션 시간 계산 (파티클 4번 반복 시간)
         float totalAnimationDuration = effectRepeatInterval * effectRepeatCount;
-        GetCachedAnimController(firstPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Attack);
-        GetCachedAnimController(secondPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Attack);
 
-        // 충돌 효과 생성 (애니메이션과 동시에)
+        // Attack 애니메이션 직접 설정 (PlayAnimationWithCustomDuration 대신 직접 제어)
+        if (GetCachedAnimController(firstPet) != null && firstPet.animator != null)
+        {
+            firstPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Attack);
+            Debug.Log($"[{InteractionName}] {firstPet.petName} Attack 애니메이션 시작");
+        }
+        if (GetCachedAnimController(secondPet) != null && secondPet.animator != null)
+        {
+            secondPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Attack);
+            Debug.Log($"[{InteractionName}] {secondPet.petName} Attack 애니메이션 시작");
+        }
+
+        // 충돌 효과 생성
         if (collisionEffectPrefab != null)
         {
             // 반복 효과 코루틴을 시작하고 리스트에 추가
@@ -893,8 +903,20 @@ public class HeadbuttInteraction : BasePetInteraction
             Debug.LogError($"[{InteractionName}] collisionEffectPrefab이 설정되지 않았습니다!");
         }
 
-        // 파티클 효과가 모두 끝날 때까지 대기
+        // 파티클 효과와 동일한 시간 대기
         yield return new WaitForSeconds(totalAnimationDuration);
+
+        // Attack 애니메이션을 Idle로 전환
+        if (firstPet.animator != null)
+        {
+            firstPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
+            Debug.Log($"[{InteractionName}] {firstPet.petName} Idle로 전환");
+        }
+        if (secondPet.animator != null)
+        {
+            secondPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Idle);
+            Debug.Log($"[{InteractionName}] {secondPet.petName} Idle로 전환");
+        }
     }
     
     /// <summary>
