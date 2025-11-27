@@ -28,8 +28,8 @@ public class HeadbuttInteraction : BasePetInteraction
     private const float TENSION_WAIT_TIME = 1.0f;
     private const float NEXT_HEADBUTT_DELAY = 0.7f;
     private const float CHARGE_PREPARATION_DELAY = 0.5f;
-    private const float SMOOTH_ROTATION_DURATION = 0.5f;
-    private const float QUICK_ROTATION_DURATION = 0.3f;
+    private const float SMOOTH_ROTATION_DURATION = 1.0f;  // 0.5초 → 1.0초 (더 부드러운 회전)
+    private const float QUICK_ROTATION_DURATION = 0.5f;   // 0.3초 → 0.5초
     private const float WINNER_CELEBRATION_DELAY = 2.0f;
 
     // 애니메이션 관련 상수

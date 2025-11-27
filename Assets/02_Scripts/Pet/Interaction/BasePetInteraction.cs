@@ -542,7 +542,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
     }
 
-    // 한 펫이 다른 펫을 바라보게 하는 함수
+    // 한 펫이 다른 펫을 바라보게 하는 함수 (즉시 회전)
     protected void LookAtOther(PetController looker, PetController target)
     {
         Vector3 direction = target.transform.position - looker.transform.position;
@@ -554,6 +554,53 @@ public abstract class BasePetInteraction : MonoBehaviour
             {
                 looker.petModelTransform.rotation = looker.transform.rotation;
             }
+        }
+    }
+
+    /// <summary>
+    /// 한 펫이 다른 펫을 부드럽게 바라보도록 회전시킵니다.
+    /// </summary>
+    protected IEnumerator SmoothlyLookAtOther(PetController looker, PetController target, float duration = 0.3f)
+    {
+        if (looker == null || target == null) yield break;
+
+        Vector3 direction = target.transform.position - looker.transform.position;
+        direction.y = 0; // Y축 무시
+
+        if (direction.sqrMagnitude < 0.01f) yield break;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Quaternion startRotation = looker.transform.rotation;
+
+        // NavMeshAgent 회전 업데이트 임시 비활성화
+        bool wasUpdateRotation = false;
+        if (looker.agent != null && looker.agent.enabled)
+        {
+            wasUpdateRotation = looker.agent.updateRotation;
+            looker.agent.updateRotation = false;
+        }
+
+        float elapsedTime = 0f;
+        while (elapsedTime < duration)
+        {
+            float t = elapsedTime / duration;
+            looker.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+            if (looker.petModelTransform != null)
+                looker.petModelTransform.rotation = looker.transform.rotation;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 최종 회전값 정확히 설정
+        looker.transform.rotation = targetRotation;
+        if (looker.petModelTransform != null)
+            looker.petModelTransform.rotation = targetRotation;
+
+        // NavMeshAgent 회전 업데이트 복원
+        if (looker.agent != null && looker.agent.enabled)
+        {
+            looker.agent.updateRotation = wasUpdateRotation;
         }
     }
 
@@ -671,17 +718,17 @@ public abstract class BasePetInteraction : MonoBehaviour
             if (!pet2Arrived) pet2.HandleRotation();
             // ▲▲▲ [여기까지 수정] ▲▲▲
 
-            // 먼저 도착한 펫은 상대를 기다림
+            // 먼저 도착한 펫은 상대를 기다림 (부드러운 회전)
             if (pet1Arrived && !pet2Arrived)
             {
                 pet1.agent.isStopped = true;
-                LookAtOther(pet1, pet2);
+                StartCoroutine(SmoothlyLookAtOther(pet1, pet2, 0.3f));
                 pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
             }
             if (pet2Arrived && !pet1Arrived)
             {
                 pet2.agent.isStopped = true;
-                LookAtOther(pet2, pet1);
+                StartCoroutine(SmoothlyLookAtOther(pet2, pet1, 0.3f));
                 pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
             }
 
@@ -715,13 +762,34 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         if (pet1 == null || pet2 == null) yield break;
 
-        // 목표 회전값 계산
-        Quaternion pet1TargetRotation = Quaternion.LookRotation(pet2.transform.position - pet1.transform.position);
-        Quaternion pet2TargetRotation = Quaternion.LookRotation(pet1.transform.position - pet2.transform.position);
+        // 목표 회전값 계산 (Y축 제거하여 수평 회전만)
+        Vector3 direction1 = pet2.transform.position - pet1.transform.position;
+        direction1.y = 0; // Y축 무시
+        Vector3 direction2 = pet1.transform.position - pet2.transform.position;
+        direction2.y = 0; // Y축 무시
+
+        if (direction1.sqrMagnitude < 0.01f || direction2.sqrMagnitude < 0.01f) yield break;
+
+        Quaternion pet1TargetRotation = Quaternion.LookRotation(direction1);
+        Quaternion pet2TargetRotation = Quaternion.LookRotation(direction2);
 
         // 현재 회전값 저장
         Quaternion pet1StartRotation = pet1.transform.rotation;
         Quaternion pet2StartRotation = pet2.transform.rotation;
+
+        // NavMeshAgent 회전 업데이트 임시 비활성화
+        bool wasUpdateRotation1 = false;
+        bool wasUpdateRotation2 = false;
+        if (pet1.agent != null && pet1.agent.enabled)
+        {
+            wasUpdateRotation1 = pet1.agent.updateRotation;
+            pet1.agent.updateRotation = false;
+        }
+        if (pet2.agent != null && pet2.agent.enabled)
+        {
+            wasUpdateRotation2 = pet2.agent.updateRotation;
+            pet2.agent.updateRotation = false;
+        }
         
         // 회전 각도가 충분히 큰 경우에만 걷기 애니메이션 재생
         float pet1Angle = Quaternion.Angle(pet1StartRotation, pet1TargetRotation);
@@ -763,6 +831,16 @@ public abstract class BasePetInteraction : MonoBehaviour
         if (pet1.petModelTransform != null) pet1.petModelTransform.rotation = pet1.transform.rotation;
         if (pet2.petModelTransform != null) pet2.petModelTransform.rotation = pet2.transform.rotation;
         
+        // NavMeshAgent 회전 업데이트 복원
+        if (pet1.agent != null && pet1.agent.enabled)
+        {
+            pet1.agent.updateRotation = wasUpdateRotation1;
+        }
+        if (pet2.agent != null && pet2.agent.enabled)
+        {
+            pet2.agent.updateRotation = wasUpdateRotation2;
+        }
+
         // 회전이 끝난 후 걷기 애니메이션 중지 (필요한 경우만)
         if (pet1NeedsWalkAnim)
         {
