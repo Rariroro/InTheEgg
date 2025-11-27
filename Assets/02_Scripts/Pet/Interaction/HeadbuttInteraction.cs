@@ -407,7 +407,7 @@ public class HeadbuttInteraction : BasePetInteraction
         yield return StartCoroutine(PlayWinnerLoserAnimations(
             winner, loser,
             PetAnimationController.PetAnimationType.Jump,
-            PetAnimationController.PetAnimationType.Damage
+            PetAnimationController.PetAnimationType.Eat
         ));
 
         yield return new WaitForSeconds(WINNER_CELEBRATION_DELAY);
@@ -792,10 +792,24 @@ public class HeadbuttInteraction : BasePetInteraction
     private IEnumerator ChargeAndCollide(PetController firstPet, PetController secondPet, HeadbuttPair pairType,
         PetOriginalState firstPetState, PetOriginalState secondPetState)
     {
-        // 달리기 애니메이션
-        GetCachedAnimController(firstPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        GetCachedAnimController(secondPet).SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        
+        // 달리기 애니메이션 설정 (SetContinuousAnimation 대신 직접 설정으로 더 안정적)
+        if (GetCachedAnimController(firstPet) != null)
+        {
+            GetCachedAnimController(firstPet).StopContinuousAnimation(); // 기존 상태 정리
+            if (firstPet.animator != null)
+            {
+                firstPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
+            }
+        }
+        if (GetCachedAnimController(secondPet) != null)
+        {
+            GetCachedAnimController(secondPet).StopContinuousAnimation(); // 기존 상태 정리
+            if (secondPet.animator != null)
+            {
+                secondPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
+            }
+        }
+
         // 속도 설정
         float speedMult, accelMult;
         GetSpeedSettings(pairType, out speedMult, out accelMult);
@@ -853,15 +867,27 @@ public class HeadbuttInteraction : BasePetInteraction
         
         while (Time.time - startTime < chargeTimeout && !collision)
         {
+            // Run 애니메이션 강제 유지 (UpdateMovementAnimation의 간섭 방지)
+            if (firstPet.animator != null && firstPet.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Run)
+            {
+                firstPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
+                Debug.Log($"[{InteractionName}] {firstPet.petName} Run 애니메이션 재설정");
+            }
+            if (secondPet.animator != null && secondPet.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Run)
+            {
+                secondPet.animator.SetInteger("animation", (int)PetAnimationController.PetAnimationType.Run);
+                Debug.Log($"[{InteractionName}] {secondPet.petName} Run 애니메이션 재설정");
+            }
+
             float petDistance = Vector3.Distance(firstPet.transform.position, secondPet.transform.position);
-            
+
             // 두 펫이 충분히 가까워졌을 때 충돌로 판정
             if (petDistance <= targetDistance)
             {
                 collision = true;
                 Debug.Log($"[{InteractionName}] 충돌 발생! 펫 간 거리: {petDistance:F2}");
             }
-            
+
             yield return null;
         }
         
