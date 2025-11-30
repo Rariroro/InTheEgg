@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: -8314337667573088611}
   - component: {fileID: -4962863032343489133}
   - component: {fileID: 3010470296301870323}
+  - component: {fileID: 7164216739854847001}
   m_Layer: 0
   m_Name: PetInteractionManager
   m_TagString: Untagged
@@ -196,8 +197,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e18ea835d86434bd0ae5ad635efb5887, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  interactionStartDistance: 5
-  fightDistance: 5
+  interactionStartDistance: 10
+  smallSmallDistance: 4
+  smallMediumDistance: 5
+  smallLargeDistance: 6
+  mediumMediumDistance: 7
+  mediumLargeDistance: 8
+  largeLargeDistance: 9
   preFightDelay: 1
   moveTimeout: 10
   attackAnimationDuration: 2
@@ -210,7 +216,6 @@ MonoBehaviour:
   emotionDuration: 30
   postFightEmotionDuration: 5
   hitParticlePrefab: {fileID: 1269060166065924, guid: 198e2a67507bd4f27a91a43fe8971ba5, type: 3}
-  hitParticleOffset: {x: 0, y: 2, z: -1}
   particleDuration: 1
   fightStartDustPrefab: {fileID: 187952, guid: 85bd1ea5abc8f4446b3bb5d8c0fc53f1, type: 3}
   attackSwingPrefab: {fileID: 0}
@@ -468,5 +473,35 @@ MonoBehaviour:
   skunkSprayParticlePrefab: {fileID: 130900, guid: 4d6ad3696a0aa43bdaf5c129f8999508, type: 3}
   particleOffset: {x: 0, y: 0.5, z: -1}
   particleDuration: 3
+  emotionDuration: 30
+  agentSafetyTimeout: 3
+--- !u!114 &7164216739854847001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7108309724432713129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46c5d5b964aa048d98e27c4150522eca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  interactionDistance: 3
+  approacherSpeedMultiplier: 1.2
+  approachTimeout: 8
+  quillTurnDuration: 0.5
+  quillDefenseAnimationDuration: 2
+  approacherRetreatDistance: 10
+  approacherRetreatSpeedMultiplier: 2
+  porcupineEscapeDistance: 15
+  porcupineEscapeSpeedMultiplier: 1.5
+  escapeTimeout: 6
+  quillLaunchEffectPrefab: {fileID: 1001714703486846, guid: 605ed462399eb4b949cbcecfcef50f5a, type: 3}
+  effectOffset: {x: 0, y: 0.5, z: -0.8}
+  effectDuration: 2
+  stuckQuillCount: 5
+  stuckQuillDuration: 10
   emotionDuration: 30
   agentSafetyTimeout: 3
