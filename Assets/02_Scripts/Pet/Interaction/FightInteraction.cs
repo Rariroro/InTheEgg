@@ -233,8 +233,7 @@ public class FightInteraction : BasePetInteraction
             pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
             pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
 
-            // 공통 종료 처리
-            EndInteraction(pet1, pet2);
+            // EndInteraction 제거 - BasePetInteraction에서 자동으로 처리됨
             Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
