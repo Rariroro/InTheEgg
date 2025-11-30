@@ -74,9 +74,6 @@ public class FightInteraction : BasePetInteraction
     [Tooltip("타격 파티클 프리팹")]
     public GameObject hitParticlePrefab;
 
-    [Tooltip("파티클 생성 위치 오프셋")]
-    public Vector3 hitParticleOffset = new Vector3(0, 1f, 0);
-
     [Tooltip("파티클 지속 시간")]
     public float particleDuration = 1f;
 
@@ -135,7 +132,6 @@ public class FightInteraction : BasePetInteraction
 
         // 시각 효과
         this.hitParticlePrefab = template.hitParticlePrefab;
-        this.hitParticleOffset = template.hitParticleOffset;
         this.particleDuration = template.particleDuration;
         this.fightStartDustPrefab = template.fightStartDustPrefab;
         this.attackSwingPrefab = template.attackSwingPrefab;
@@ -348,7 +344,7 @@ public class FightInteraction : BasePetInteraction
 // 타격 파티클 효과
         if (hitParticlePrefab != null)
         {
-            Vector3 hitPos = defender.transform.position + hitParticleOffset;
+            Vector3 hitPos = GetEmotionOriginPosition(defender);
             GameObject particle = Instantiate(hitParticlePrefab, hitPos, Quaternion.identity);
             Destroy(particle, particleDuration);
         }
@@ -481,5 +477,20 @@ public class FightInteraction : BasePetInteraction
             return mediumLargeDistance;
         }
         return largeLargeDistance;
+    }
+
+    /// <summary>
+    /// 펫의 감정 파티클 위치(EmotionOrigin)를 반환합니다.
+    /// EmotionOrigin이 없으면 기본 오프셋을 적용한 위치를 반환합니다.
+    /// </summary>
+    private Vector3 GetEmotionOriginPosition(PetController pet)
+    {
+        var emotionController = pet.GetComponent<PetEmotionController>();
+        if (emotionController != null && emotionController.GetEmotionOrigin() != null)
+        {
+            return emotionController.GetEmotionOrigin().position;
+        }
+        // fallback: 기본 높이 오프셋
+        return pet.transform.position + Vector3.up * 1.5f;
     }
 }
