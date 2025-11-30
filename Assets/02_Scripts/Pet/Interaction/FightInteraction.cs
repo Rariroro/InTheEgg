@@ -10,6 +10,9 @@ public class FightInteraction : BasePetInteraction
     // 우선순위: 55 (10순위)
     public override int Priority => 55;
 
+    // BasePetInteraction의 자동 이동을 비활성화하고 PrepareFightPhase에서 직접 처리
+    public override bool ShouldPerformInitialMovement => false;
+
     [Header("싸움 설정")]
     [Tooltip("싸움을 위한 적절한 거리")]
     public float fightDistance = 5f;
@@ -224,17 +227,22 @@ public class FightInteraction : BasePetInteraction
     {
         Debug.Log($"[{InteractionName}] 1단계: 싸움 준비");
 
-        // 싸움 위치 계산
-        Vector3 fightSpot = FindInteractionSpot(pet1, pet2);
-        Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
-        direction.y = 0;
-
         // 펫 크기에 따른 싸움 거리 계산
         float adjustedFightDistance = CalculateDistanceBySize(pet1, pet2);
 
-        // 각 펫의 목표 위치 계산
-        Vector3 pet1Target = fightSpot - direction * (adjustedFightDistance / 2);
-        Vector3 pet2Target = fightSpot + direction * (adjustedFightDistance / 2);
+        // 중간 지점 기반 위치 계산 (HeadbuttInteraction 패턴)
+        Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
+        midpoint = FindValidPositionOnNavMesh(midpoint, 10f);
+
+        // 방향 벡터 계산 (HeadbuttInteraction 패턴 - y축 처리 없이 사용)
+        Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
+        if (direction == Vector3.zero) direction = pet1.transform.forward;
+
+        Debug.Log($"[{InteractionName}] 거리 계산: 최종={adjustedFightDistance:F2}m, 중간점={midpoint}");
+
+        // 중간 지점에서 양쪽으로 거리의 절반씩 떨어진 위치 계산
+        Vector3 pet1Target = midpoint - direction * (adjustedFightDistance / 2f);
+        Vector3 pet2Target = midpoint + direction * (adjustedFightDistance / 2f);
 
         pet1Target = FindValidPositionOnNavMesh(pet1Target, fightDistance);
         pet2Target = FindValidPositionOnNavMesh(pet2Target, fightDistance);
@@ -242,8 +250,16 @@ public class FightInteraction : BasePetInteraction
         // 위치로 이동
         yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1Target, pet2Target, moveTimeout));
 
-        // 서로 마주보기
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
+        // 서로 마주보기 (HeadbuttInteraction과 동일하게 1.0초 사용)
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1.0f));
+
+        // fallback: SmoothlyLookAtEachOther가 스킵된 경우를 대비해 즉시 마주보기
+        LookAtEachOther(pet1, pet2);
+
+        // 마주보기 완료 후 싸움 중 회전 고정 (SmoothlyLookAtEachOther가 복원한 후에 설정)
+        // (PetOriginalState가 상호작용 종료 시 복원함)
+        if (pet1.agent != null) pet1.agent.updateRotation = false;
+        if (pet2.agent != null) pet2.agent.updateRotation = false;
 
         // 싸움 시작 먼지 효과
         if (fightStartDustPrefab != null)
