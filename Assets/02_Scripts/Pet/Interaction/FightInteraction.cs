@@ -253,14 +253,6 @@ public class FightInteraction : BasePetInteraction
         // 서로 마주보기 (HeadbuttInteraction과 동일하게 1.0초 사용)
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1.0f));
 
-        // fallback: SmoothlyLookAtEachOther가 스킵된 경우를 대비해 즉시 마주보기
-        LookAtEachOther(pet1, pet2);
-
-        // 마주보기 완료 후 싸움 중 회전 고정 (SmoothlyLookAtEachOther가 복원한 후에 설정)
-        // (PetOriginalState가 상호작용 종료 시 복원함)
-        if (pet1.agent != null) pet1.agent.updateRotation = false;
-        if (pet2.agent != null) pet2.agent.updateRotation = false;
-
         // 싸움 시작 먼지 효과
         if (fightStartDustPrefab != null)
         {
@@ -311,6 +303,9 @@ public class FightInteraction : BasePetInteraction
     private IEnumerator PerformAttack(PetController attacker, PetController defender,
         PetAnimationController attackerAnim, PetAnimationController defenderAnim)
     {
+        // 공격 전 서로 마주보기 (방향 보정)
+        yield return StartCoroutine(SmoothlyLookAtEachOther(attacker, defender, 0.3f));
+
         // 공격 휘두르기 효과
         if (attackSwingPrefab != null)
         {
