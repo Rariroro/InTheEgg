@@ -13,10 +13,26 @@ public class FightInteraction : BasePetInteraction
     // BasePetInteraction의 자동 이동을 비활성화하고 PrepareFightPhase에서 직접 처리
     public override bool ShouldPerformInitialMovement => false;
 
-    [Header("싸움 설정")]
-    [Tooltip("싸움을 위한 적절한 거리")]
-    public float fightDistance = 5f;
+    [Header("크기 조합별 싸움 거리")]
+    [Tooltip("소형-소형 펫 싸움 거리")]
+    public float smallSmallDistance = 3f;
 
+    [Tooltip("소형-중형 펫 싸움 거리")]
+    public float smallMediumDistance = 4f;
+
+    [Tooltip("소형-대형 펫 싸움 거리")]
+    public float smallLargeDistance = 5f;
+
+    [Tooltip("중형-중형 펫 싸움 거리")]
+    public float mediumMediumDistance = 5f;
+
+    [Tooltip("중형-대형 펫 싸움 거리")]
+    public float mediumLargeDistance = 6f;
+
+    [Tooltip("대형-대형 펫 싸움 거리")]
+    public float largeLargeDistance = 7f;
+
+    [Header("싸움 설정")]
     [Tooltip("싸움 시작 전 대기 시간")]
     public float preFightDelay = 1.0f;
 
@@ -90,8 +106,15 @@ public class FightInteraction : BasePetInteraction
     {
         if (template == null) return;
 
+        // 크기 조합별 싸움 거리
+        this.smallSmallDistance = template.smallSmallDistance;
+        this.smallMediumDistance = template.smallMediumDistance;
+        this.smallLargeDistance = template.smallLargeDistance;
+        this.mediumMediumDistance = template.mediumMediumDistance;
+        this.mediumLargeDistance = template.mediumLargeDistance;
+        this.largeLargeDistance = template.largeLargeDistance;
+
         // 싸움 설정
-        this.fightDistance = template.fightDistance;
         this.preFightDelay = template.preFightDelay;
         this.moveTimeout = template.moveTimeout;
 
@@ -244,8 +267,8 @@ public class FightInteraction : BasePetInteraction
         Vector3 pet1Target = midpoint - direction * (adjustedFightDistance / 2f);
         Vector3 pet2Target = midpoint + direction * (adjustedFightDistance / 2f);
 
-        pet1Target = FindValidPositionOnNavMesh(pet1Target, fightDistance);
-        pet2Target = FindValidPositionOnNavMesh(pet2Target, fightDistance);
+        pet1Target = FindValidPositionOnNavMesh(pet1Target, adjustedFightDistance);
+        pet2Target = FindValidPositionOnNavMesh(pet2Target, adjustedFightDistance);
 
         // 위치로 이동
         yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1Target, pet2Target, moveTimeout));
@@ -425,18 +448,38 @@ public class FightInteraction : BasePetInteraction
     /// </summary>
     private float CalculateDistanceBySize(PetController pet1, PetController pet2)
     {
-        // 각 펫의 크기 배율 가져오기
-        float pet1Multiplier = pet1.Profile.GetInteractionDistanceMultiplier();
-        float pet2Multiplier = pet2.Profile.GetInteractionDistanceMultiplier();
-        
-        // 두 펫의 평균 배율 계산
-        float averageMultiplier = (pet1Multiplier + pet2Multiplier) / 2f;
-        
-        // 기본 거리에 평균 배율 적용
-        float adjustedDistance = fightDistance * averageMultiplier;
-        
-        Debug.Log($"[{InteractionName}] {pet1.petName}(크기 배율: {pet1Multiplier}) & {pet2.petName}(크기 배율: {pet2Multiplier}) => 싸움 거리: {adjustedDistance:F2}");
-        
-        return adjustedDistance;
+        var size1 = pet1.Profile.size;
+        var size2 = pet2.Profile.size;
+
+        // 크기 순서 정렬 (Small < Medium < Large)
+        if (size1 > size2) (size1, size2) = (size2, size1);
+
+        float distance = GetDistanceBySizePair(size1, size2);
+
+        Debug.Log($"[{InteractionName}] {pet1.petName}({pet1.Profile.size}) & {pet2.petName}({pet2.Profile.size}) => 싸움 거리: {distance:F2}");
+
+        return distance;
+    }
+
+    /// <summary>
+    /// 크기 조합에 따른 거리 반환
+    /// </summary>
+    /// <param name="size1">작은 쪽 크기 (size1 <= size2 보장됨)</param>
+    /// <param name="size2">큰 쪽 크기</param>
+    private float GetDistanceBySizePair(PetTraits.Size size1, PetTraits.Size size2)
+    {
+        // size1 <= size2 보장됨
+        if (size1 == PetTraits.Size.Small)
+        {
+            if (size2 == PetTraits.Size.Small) return smallSmallDistance;
+            if (size2 == PetTraits.Size.Medium) return smallMediumDistance;
+            return smallLargeDistance;
+        }
+        if (size1 == PetTraits.Size.Medium)
+        {
+            if (size2 == PetTraits.Size.Medium) return mediumMediumDistance;
+            return mediumLargeDistance;
+        }
+        return largeLargeDistance;
     }
 }
