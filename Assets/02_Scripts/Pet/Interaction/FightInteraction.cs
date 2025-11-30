@@ -80,6 +80,47 @@ public class FightInteraction : BasePetInteraction
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
 
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(FightInteraction template)
+    {
+        if (template == null) return;
+
+        // 싸움 설정
+        this.fightDistance = template.fightDistance;
+        this.preFightDelay = template.preFightDelay;
+        this.moveTimeout = template.moveTimeout;
+
+        // 애니메이션 설정
+        this.attackAnimationDuration = template.attackAnimationDuration;
+        this.damageAnimationDuration = template.damageAnimationDuration;
+        this.fightRounds = template.fightRounds;
+        this.roundInterval = template.roundInterval;
+
+        // 승부 설정
+        this.winProbability = template.winProbability;
+        this.victoryAnimationDuration = template.victoryAnimationDuration;
+        this.defeatAnimationDuration = template.defeatAnimationDuration;
+
+        // 감정 표현
+        this.emotionDuration = template.emotionDuration;
+        this.postFightEmotionDuration = template.postFightEmotionDuration;
+
+        // 시각 효과
+        this.hitParticlePrefab = template.hitParticlePrefab;
+        this.hitParticleOffset = template.hitParticleOffset;
+        this.particleDuration = template.particleDuration;
+        this.fightStartDustPrefab = template.fightStartDustPrefab;
+        this.attackSwingPrefab = template.attackSwingPrefab;
+        this.victoryParticlePrefab = template.victoryParticlePrefab;
+        this.defeatStarsPrefab = template.defeatStarsPrefab;
+        this.dustParticleCount = template.dustParticleCount;
+
+        // 안전 설정
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+    }
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.Fight;
