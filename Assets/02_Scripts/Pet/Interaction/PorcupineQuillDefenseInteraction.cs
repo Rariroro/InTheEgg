@@ -405,6 +405,12 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
         }
     }
 
+    // 다리 본 이름 목록 (가시 부착용)
+    private static readonly string[] legBoneNames = new string[]
+    {
+        "Hip_R1", "Hip_L1", "Knee_L1", "Knee_R1", "Foot_L1", "Foot_R1", "Toes_R1", "Toes_L1"
+    };
+
     /// <summary>
     /// 접근자 몸에 가시 부착
     /// </summary>
@@ -419,67 +425,136 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
 
         Bounds bounds = col.bounds;
 
-        // 머리 위치 찾기 (head_end 오브젝트)
+        // 머리 본 찾기 (head_end 우선, 없으면 head)
         Transform headBone = FindDeepChild(approacher.transform, "head_end");
-        Vector3 headPos = headBone != null
-            ? headBone.position
-            : bounds.center + new Vector3(0, bounds.extents.y, bounds.extents.z);
-
-        Debug.Log($"[{InteractionName}] {approacher.petName}에게 {stuckQuillCount}개의 가시 부착 시작 (head_end: {(headBone != null ? "찾음" : "못찾음")})");
-
-        for (int i = 0; i < stuckQuillCount; i++)
+        if (headBone == null)
         {
-            Vector3 attachPos;
-            Transform parentBone = null;
-
-            if (i < 2)
-            {
-                // 머리 쪽 (2개) - head_end 주변에 랜덤 오프셋 (인스펙터에서 조절 가능)
-                attachPos = headPos + headQuillOffset + new Vector3(
-                    Random.Range(-headQuillRandomRange.x, headQuillRandomRange.x),
-                    Random.Range(-headQuillRandomRange.y, headQuillRandomRange.y),
-                    Random.Range(-headQuillRandomRange.z, headQuillRandomRange.z)
-                );
-                parentBone = headBone;
-            }
-            else
-            {
-                // 몸통 쪽 (3개) - Collider bounds 기반 랜덤 위치
-                attachPos = bounds.center + new Vector3(
-                    Random.Range(-bounds.extents.x * 0.8f, bounds.extents.x * 0.8f),
-                    Random.Range(0, bounds.extents.y * 0.7f),
-                    Random.Range(-bounds.extents.z * 0.5f, bounds.extents.z * 0.5f)
-                );
-            }
-
-            // 가시 생성
-            GameObject quill = StuckQuill.CreateQuillObject();
-            quill.transform.position = attachPos;
-
-            // 크기 조절
-            quill.transform.localScale = Vector3.one * stuckQuillScale;
-
-            // 부모 설정 (머리는 head_end에, 몸통은 approacher에)
-            quill.transform.SetParent(parentBone != null ? parentBone : approacher.transform);
-
-            // 가시가 몸 안쪽을 향하도록 회전 (뾰족한 끝이 몸에 박힌 모양)
-            Vector3 inwardDir = (bounds.center - attachPos).normalized;
-            if (inwardDir.sqrMagnitude > 0.001f)
-            {
-                quill.transform.rotation = Quaternion.LookRotation(inwardDir);
-            }
-
-            // 약간의 랜덤 회전 추가
-            quill.transform.Rotate(Random.Range(-15f, 15f), Random.Range(-15f, 15f), Random.Range(-15f, 15f));
-
-            // 컴포넌트 추가
-            quill.AddComponent<StuckQuill>().Initialize(stuckQuillDuration);
-
-            // 인스턴스별 추적 리스트에 추가
-            myStuckQuills.Add(quill);
+            headBone = FindDeepChild(approacher.transform, "head");
         }
 
-        Debug.Log($"[{InteractionName}] 가시 {stuckQuillCount}개 부착 완료!");
+        // 다리 본들 찾기 (랜덤 3개 선택)
+        List<Transform> availableLegBones = new List<Transform>();
+        foreach (string boneName in legBoneNames)
+        {
+            Transform bone = FindDeepChild(approacher.transform, boneName);
+            if (bone != null)
+            {
+                availableLegBones.Add(bone);
+            }
+        }
+
+        // 랜덤하게 섞기
+        for (int i = availableLegBones.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            Transform temp = availableLegBones[i];
+            availableLegBones[i] = availableLegBones[j];
+            availableLegBones[j] = temp;
+        }
+
+        Debug.Log($"[{InteractionName}] {approacher.petName}에게 가시 부착 시작 (head: {(headBone != null ? headBone.name : "못찾음")}, 다리본: {availableLegBones.Count}개)");
+
+        // 머리에 5개 부착
+        for (int i = 0; i < 5; i++)
+        {
+            if (headBone != null)
+            {
+                AttachQuillToHead(headBone, bounds);
+            }
+        }
+
+        // 모든 다리 본에 각각 2~3개씩 부착
+        foreach (Transform legBone in availableLegBones)
+        {
+            int quillsPerLeg = Random.Range(2, 4); // 2~3개
+            for (int i = 0; i < quillsPerLeg; i++)
+            {
+                AttachQuillToLeg(legBone, bounds);
+            }
+        }
+
+        Debug.Log($"[{InteractionName}] 가시 {myStuckQuills.Count}개 부착 완료!");
+    }
+
+    /// <summary>
+    /// 머리 본에 가시 부착 (인스펙터 오프셋 사용)
+    /// </summary>
+    private void AttachQuillToHead(Transform headBone, Bounds bounds)
+    {
+        GameObject quill = StuckQuill.CreateQuillObject();
+
+        // 인스펙터 오프셋 + 랜덤 범위를 본의 로컬 방향으로 변환
+        Vector3 localOffset = headQuillOffset + new Vector3(
+            Random.Range(-headQuillRandomRange.x, headQuillRandomRange.x),
+            Random.Range(-headQuillRandomRange.y, headQuillRandomRange.y),
+            Random.Range(-headQuillRandomRange.z, headQuillRandomRange.z)
+        );
+        // 본의 로컬 방향으로 변환하여 월드 좌표로 적용
+        Vector3 worldOffset = headBone.TransformDirection(localOffset);
+        quill.transform.position = headBone.position + worldOffset;
+
+        // 크기 조절
+        quill.transform.localScale = Vector3.one * stuckQuillScale;
+
+        // 부모 설정
+        quill.transform.SetParent(headBone);
+
+        // 가시가 몸 안쪽을 향하도록 회전 (뾰족한 끝이 몸에 박힌 모양)
+        Vector3 inwardDir = (bounds.center - quill.transform.position).normalized;
+        if (inwardDir.sqrMagnitude > 0.001f)
+        {
+            quill.transform.rotation = Quaternion.LookRotation(inwardDir);
+        }
+
+        // 약간의 랜덤 회전 추가
+        quill.transform.Rotate(Random.Range(-15f, 15f), Random.Range(-15f, 15f), Random.Range(-15f, 15f));
+
+        // 컴포넌트 추가
+        quill.AddComponent<StuckQuill>().Initialize(stuckQuillDuration);
+
+        // 인스턴스별 추적 리스트에 추가
+        myStuckQuills.Add(quill);
+
+        Debug.Log($"[{InteractionName}] 머리 가시 부착: offset={localOffset}, worldOffset={worldOffset}");
+    }
+
+    /// <summary>
+    /// 다리 본에 가시 부착
+    /// </summary>
+    private void AttachQuillToLeg(Transform legBone, Bounds bounds)
+    {
+        GameObject quill = StuckQuill.CreateQuillObject();
+
+        // 다리 본 바깥쪽에 위치 (끝만 박히게 더 바깥으로)
+        Vector3 localOffset = new Vector3(
+            Random.Range(-0.05f, 0.05f),
+            Random.Range(0.15f, 0.25f),  // 위쪽으로 더 띄움
+            Random.Range(0.2f, 0.3f)     // 바깥쪽으로 더 띄움 (끝만 박히게)
+        );
+        Vector3 worldOffset = legBone.TransformDirection(localOffset);
+        quill.transform.position = legBone.position + worldOffset;
+
+        // 크기 조절
+        quill.transform.localScale = Vector3.one * stuckQuillScale;
+
+        // 부모 설정
+        quill.transform.SetParent(legBone);
+
+        // 가시가 몸 안쪽을 향하도록 회전 (머리 가시와 동일한 방식)
+        Vector3 inwardDir = (bounds.center - quill.transform.position).normalized;
+        if (inwardDir.sqrMagnitude > 0.001f)
+        {
+            quill.transform.rotation = Quaternion.LookRotation(inwardDir);
+        }
+
+        // 약간의 랜덤 회전 추가
+        quill.transform.Rotate(Random.Range(-15f, 15f), Random.Range(-15f, 15f), Random.Range(-15f, 15f));
+
+        // 컴포넌트 추가
+        quill.AddComponent<StuckQuill>().Initialize(stuckQuillDuration);
+
+        // 인스턴스별 추적 리스트에 추가
+        myStuckQuills.Add(quill);
     }
 
     /// <summary>
