@@ -92,7 +92,7 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
 
     [Header("감정 표현 설정")]
     [Tooltip("기본 감정 표현 지속 시간")]
-    public float emotionDuration = 30f;
+    public float emotionDuration = 3f;
 
     [Header("안전 설정")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
@@ -172,7 +172,7 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
             yield return StartCoroutine(PreparePositionAndFacing(approacher, porcupine));
 
             // 감정 표현
-            approacher.ShowEmotion(EmotionType.Happy, emotionDuration);
+            approacher.ShowEmotion(EmotionType.Hungry, emotionDuration);
             porcupine.ShowEmotion(EmotionType.Surprised, emotionDuration);
 
             // 짧은 대기 (감정 표현이 보이도록)
@@ -230,21 +230,14 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
 
         Debug.Log($"[{InteractionName}] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-        // 2. 고슴도치가 먼저 접근자를 바라보도록 설정
-        Vector3 directionToApproacher = (approacher.transform.position - porcupine.transform.position).normalized;
-        directionToApproacher.y = 0;
-        if (directionToApproacher != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(directionToApproacher);
-            porcupine.transform.rotation = targetRotation;
-            if (porcupine.petModelTransform != null)
-            {
-                porcupine.petModelTransform.rotation = porcupine.transform.rotation;
-            }
-        }
+        // 2. 양쪽 모두 정지 후 부드럽게 서로 마주보기
+        porcupine.agent.isStopped = true;
+        approacher.agent.isStopped = true;
+
+        // 서로 부드럽게 마주보기 (1초)
+        yield return StartCoroutine(SmoothlyLookAtEachOther(approacher, porcupine, 1f));
 
         // 고슴도치는 제자리에서 경계
-        porcupine.agent.isStopped = true;
         porcupine.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
 
         // 3. 거리 조정 필요 여부 확인
@@ -287,7 +280,7 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
             while (timer < approachTimeout)
             {
                 // 고슴도치가 접근자를 부드럽게 계속 바라봄
-                directionToApproacher = (approacher.transform.position - porcupine.transform.position).normalized;
+                Vector3 directionToApproacher = (approacher.transform.position - porcupine.transform.position).normalized;
                 directionToApproacher.y = 0;
                 if (directionToApproacher.sqrMagnitude > 0.001f)
                 {
@@ -338,14 +331,17 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 1단계: {approacher.petName}이(가) 고슴도치에게 다가갑니다.");
 
         // 접근자 감정 변경 - 호기심
-        approacher.ShowEmotion(EmotionType.Happy, 3f);
+        // approacher.ShowEmotion(EmotionType.Happy, 3f);
 
-        // 접근 애니메이션 (한 번만 재생)
-        var approacherAnim = approacher.GetComponent<PetAnimationController>();
-        yield return StartCoroutine(approacherAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
+       
 
         // 고슴도치 놀람 반응
-        porcupine.ShowEmotion(EmotionType.Scared, 3f);
+        // porcupine.ShowEmotion(EmotionType.Scared, 3f);
+                yield return new WaitForSeconds(1f);
+
+         // 접근 애니메이션 (한 번만 재생)
+        var approacherAnim = approacher.GetComponent<PetAnimationController>();
+        yield return StartCoroutine(approacherAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
     }
 
     /// <summary>
@@ -355,8 +351,9 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
     {
         Debug.Log($"[{InteractionName}] 2단계: {porcupine.petName}이(가) 가시를 발사합니다!");
 
-        // 고슴도치 감정 변경
-        // porcupine.ShowEmotion(EmotionType.Angry, 5f);
+        // 고슴도치 감정 변경 - 화남 표현 후 대기
+        porcupine.ShowEmotion(EmotionType.Angry, 2f);
+        yield return new WaitForSeconds(2f);
 
         var porcupineAnim = porcupine.GetComponent<PetAnimationController>();
 
@@ -381,7 +378,10 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
             yield return null;
         }
 
-        // 가시 발사 이펙트 생성
+        // 가시 발사 애니메이션
+        yield return StartCoroutine(porcupineAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
+
+        // 가시 발사 이펙트 생성 + 가시 부착 (동시에)
         if (quillLaunchEffectPrefab != null)
         {
             Vector3 effectPos = porcupine.transform.position + porcupine.transform.TransformDirection(effectOffset);
@@ -391,9 +391,6 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
             effect.transform.localScale = Vector3.one * effectScale;
             Destroy(effect, effectDuration);
         }
-
-        // 가시 발사 애니메이션
-        yield return StartCoroutine(porcupineAnim.PlaySpecialAnimation(PetAnimationController.PetAnimationType.Attack));
 
         // 접근자에게 가시 부착
         AttachQuillsToApproacher(approacher);

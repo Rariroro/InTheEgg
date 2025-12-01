@@ -344,7 +344,7 @@ MonoBehaviour:
   spectatorSearchRadius: 50
   boredomTimePhase1: 8
   boredomTimePhase2: 20
-  markerDisappearDistance: 10
+  markerDisappearDistance: 5
 --- !u!114 &8352962793379818008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  interactionDistance: 3
+  interactionDistance: 8
   approacherSpeedMultiplier: 1.2
   approachTimeout: 8
   quillTurnDuration: 0.5
@@ -499,9 +499,17 @@ MonoBehaviour:
   porcupineEscapeSpeedMultiplier: 1.5
   escapeTimeout: 6
   quillLaunchEffectPrefab: {fileID: 1001714703486846, guid: 605ed462399eb4b949cbcecfcef50f5a, type: 3}
-  effectOffset: {x: 0, y: 0.5, z: -0.8}
+  effectOffset: {x: 0, y: 3, z: -1.5}
   effectDuration: 2
   stuckQuillCount: 5
   stuckQuillDuration: 10
-  emotionDuration: 30
+  stuckQuillScale: 1
+  effectScale: 3
+  headQuillOffset: {x: 0, y: 0, z: 0.2}
+  headQuillRandomRange: {x: 0.4, y: 0.3, z: 0}
+  crocodileQuillsPerJaw: 5
+  crocodileQuillOffset: {x: 0, y: 0, z: 0.4}
+  crocodileQuillRandomRange: {x: 0.3, y: 0.2, z: 0.1}
+  crocodileQuillScale: 1
+  emotionDuration: 3
   agentSafetyTimeout: 3

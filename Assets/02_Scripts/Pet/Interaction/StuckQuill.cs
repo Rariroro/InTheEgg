@@ -66,7 +66,7 @@ public class StuckQuill : MonoBehaviour
         mesh.name = "QuillMesh";
 
         // 가시 파라미터
-        float length = 0.4f;        // 가시 길이
+        float length = 0.8f;        // 가시 길이 (더 길게)
         float baseRadius = 0.025f;  // 밑면 반지름
         int segments = 8;           // 원뿔 세그먼트 수
 
