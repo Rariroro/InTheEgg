@@ -77,6 +77,19 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
     [Tooltip("머리 가시 위치 랜덤 범위")]
     public Vector3 headQuillRandomRange = new Vector3(0.3f, 0.25f, 0.1f);
 
+    [Header("크로커다일 전용 가시 설정")]
+    [Tooltip("크로커다일 턱당 가시 개수")]
+    public int crocodileQuillsPerJaw = 5;
+
+    [Tooltip("크로커다일 가시 위치 오프셋 (턱 본 기준)")]
+    public Vector3 crocodileQuillOffset = new Vector3(0f, 0f, 0.2f);
+
+    [Tooltip("크로커다일 가시 위치 랜덤 범위")]
+    public Vector3 crocodileQuillRandomRange = new Vector3(0.3f, 0.25f, 0.1f);
+
+    [Tooltip("크로커다일 가시 크기 배율")]
+    public float crocodileQuillScale = 1f;
+
     [Header("감정 표현 설정")]
     [Tooltip("기본 감정 표현 지속 시간")]
     public float emotionDuration = 30f;
@@ -343,7 +356,7 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
         Debug.Log($"[{InteractionName}] 2단계: {porcupine.petName}이(가) 가시를 발사합니다!");
 
         // 고슴도치 감정 변경
-        porcupine.ShowEmotion(EmotionType.Angry, 5f);
+        // porcupine.ShowEmotion(EmotionType.Angry, 5f);
 
         var porcupineAnim = porcupine.GetComponent<PetAnimationController>();
 
@@ -454,7 +467,38 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
 
         Debug.Log($"[{InteractionName}] {approacher.petName}에게 가시 부착 시작 (head: {(headBone != null ? headBone.name : "못찾음")}, 다리본: {availableLegBones.Count}개)");
 
-        // 머리에 5개 부착
+        // 크로커다일 전용 처리: upper_jaw_02, lower_jaw_02에 각각 crocodileQuillsPerJaw개씩
+        bool isCrocodile = approacher.petName.Contains("Crocodile") || approacher.petName.Contains("_CrocodileA");
+        if (isCrocodile)
+        {
+            Transform upperJaw = FindDeepChild(approacher.transform, "upper_jaw_02");
+            Transform lowerJaw = FindDeepChild(approacher.transform, "lower_jaw_02");
+
+            Debug.Log($"[{InteractionName}] 크로커다일 감지! upperJaw: {(upperJaw != null ? "찾음" : "못찾음")}, lowerJaw: {(lowerJaw != null ? "찾음" : "못찾음")}");
+
+            // 윗턱에 crocodileQuillsPerJaw개
+            if (upperJaw != null)
+            {
+                for (int i = 0; i < crocodileQuillsPerJaw; i++)
+                {
+                    AttachQuillToCrocodileJaw(upperJaw, bounds);
+                }
+            }
+
+            // 아랫턱에 crocodileQuillsPerJaw개
+            if (lowerJaw != null)
+            {
+                for (int i = 0; i < crocodileQuillsPerJaw; i++)
+                {
+                    AttachQuillToCrocodileJaw(lowerJaw, bounds);
+                }
+            }
+
+            Debug.Log($"[{InteractionName}] 크로커다일 가시 {myStuckQuills.Count}개 부착 완료!");
+            return;
+        }
+
+        // 일반 동물: 머리에 5개 부착
         for (int i = 0; i < 5; i++)
         {
             if (headBone != null)
@@ -516,6 +560,48 @@ public class PorcupineQuillDefenseInteraction : BasePetInteraction
         myStuckQuills.Add(quill);
 
         Debug.Log($"[{InteractionName}] 머리 가시 부착: offset={localOffset}, worldOffset={worldOffset}");
+    }
+
+    /// <summary>
+    /// 크로커다일 턱에 가시 부착 (크로커다일 전용 설정 사용)
+    /// </summary>
+    private void AttachQuillToCrocodileJaw(Transform jawBone, Bounds bounds)
+    {
+        GameObject quill = StuckQuill.CreateQuillObject();
+
+        // 크로커다일 전용 오프셋 + 랜덤 범위를 본의 로컬 방향으로 변환
+        Vector3 localOffset = crocodileQuillOffset + new Vector3(
+            Random.Range(-crocodileQuillRandomRange.x, crocodileQuillRandomRange.x),
+            Random.Range(-crocodileQuillRandomRange.y, crocodileQuillRandomRange.y),
+            Random.Range(-crocodileQuillRandomRange.z, crocodileQuillRandomRange.z)
+        );
+        // 본의 로컬 방향으로 변환하여 월드 좌표로 적용
+        Vector3 worldOffset = jawBone.TransformDirection(localOffset);
+        quill.transform.position = jawBone.position + worldOffset;
+
+        // 크로커다일 전용 크기 조절
+        quill.transform.localScale = Vector3.one * crocodileQuillScale;
+
+        // 부모 설정
+        quill.transform.SetParent(jawBone);
+
+        // 가시가 몸 안쪽을 향하도록 회전 (뾰족한 끝이 몸에 박힌 모양)
+        Vector3 inwardDir = (bounds.center - quill.transform.position).normalized;
+        if (inwardDir.sqrMagnitude > 0.001f)
+        {
+            quill.transform.rotation = Quaternion.LookRotation(inwardDir);
+        }
+
+        // 약간의 랜덤 회전 추가
+        quill.transform.Rotate(Random.Range(-15f, 15f), Random.Range(-15f, 15f), Random.Range(-15f, 15f));
+
+        // 컴포넌트 추가
+        quill.AddComponent<StuckQuill>().Initialize(stuckQuillDuration);
+
+        // 인스턴스별 추적 리스트에 추가
+        myStuckQuills.Add(quill);
+
+        Debug.Log($"[{InteractionName}] 크로커다일 턱 가시 부착: offset={localOffset}, worldOffset={worldOffset}");
     }
 
     /// <summary>
