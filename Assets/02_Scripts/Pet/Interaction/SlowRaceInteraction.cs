@@ -8,6 +8,7 @@ public class SlowRaceInteraction : BasePetInteraction
 {
     public override string InteractionName => "SlowRace";
 
+
     // 우선순위: 90 (3순위)
     public override int Priority => 90;
 
@@ -51,11 +52,18 @@ public class SlowRaceInteraction : BasePetInteraction
     [Tooltip("관중이 3차로 완전히 잠드는 시간(초)입니다.")]
     public float boredomTimePhase3 = 40f;
 
-// ▼▼▼ [추가] 이 변수를 클래스 상단에 추가합니다. ▼▼▼
     [Header("Marker Disappearance")]
     [Tooltip("선두 주자가 이 거리 안으로 들어오면 결승선 마커가 사라지기 시작합니다.")]
     public float markerDisappearDistance = 10f;
-    // ▲▲▲ [여기까지 추가] ▲▲▲
+
+    // 관중 리스트를 클래스 필드로 관리 (강제 종료 시 정리를 위해)
+    private List<PetController> activeSpectators = new List<PetController>();
+    private List<PetOriginalState> activeSpectatorStates = new List<PetOriginalState>();
+
+    // 마커 관련 필드 (강제 종료 시 정리를 위해 클래스 필드로 관리)
+    private Coroutine markerBobbingCoroutine = null;
+    private GameObject finishMarkerInstance = null;
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.SlowRace;
@@ -89,14 +97,15 @@ public class SlowRaceInteraction : BasePetInteraction
 
         PetOriginalState racer1State = new PetOriginalState(racer1);
         PetOriginalState racer2State = new PetOriginalState(racer2);
-        GameObject finishMarkerInstance = null;
-   // ▼▼▼ [추가] 마커 애니메이션 코루틴과 상태를 관리할 변수를 추가합니다. ▼▼▼
-        Coroutine markerBobbingCoroutine = null;
-        bool isMarkerDisappearing = false;
-        // ▲▲▲ [여기까지 추가] ▲▲▲
 
-        List<PetController> spectators = new List<PetController>();
-        List<PetOriginalState> spectatorStates = new List<PetOriginalState>();
+        // 클래스 필드 초기화 (이전 경주에서 남은 값 정리)
+        finishMarkerInstance = null;
+        markerBobbingCoroutine = null;
+        bool isMarkerDisappearing = false;
+
+        // 클래스 필드로 관리되는 관중 리스트 초기화
+        activeSpectators.Clear();
+        activeSpectatorStates.Clear();
 
         try
         {
@@ -125,6 +134,9 @@ public class SlowRaceInteraction : BasePetInteraction
             if (dirToFinish == Vector3.zero)
             {
                 Debug.LogWarning("[SlowRace] 적절한 결승선을 찾지 못해 경주를 취소합니다.");
+                // 상태 복원 후 종료 (try 블록 내부이므로 finally가 실행되지만 명시적으로 처리)
+                racer1.HideEmotion();
+                racer2.HideEmotion();
                 yield break;
             }
 
@@ -141,7 +153,7 @@ public class SlowRaceInteraction : BasePetInteraction
             }
             
             // 관중 찾기
-            FindSpectators(racer1, racer2, startPosition, spectators, spectatorStates);
+            FindSpectators(racer1, racer2, startPosition, activeSpectators, activeSpectatorStates);
 
             // 출발선으로 이동
             Vector3 racer1StartPos, racer2StartPos;
@@ -153,15 +165,15 @@ public class SlowRaceInteraction : BasePetInteraction
             yield return StartCoroutine(SmoothRotateToDirection(racer1, racer2, Quaternion.LookRotation(dirToFinish)));
 
             // ★★★ 수정: 관중을 순간이동 시키는 대신, 자연스럽게 달려가도록 코루틴을 실행합니다.
-            if (spectators.Count > 0)
+            if (activeSpectators.Count > 0)
             {
-                yield return StartCoroutine(MoveAndPositionSpectatorsCoroutine(spectators, startPosition, finishLine));
+                yield return StartCoroutine(MoveAndPositionSpectatorsCoroutine(activeSpectators, startPosition, finishLine));
             }
 
 
             // 관중 응원 시작
             yield return new WaitForSeconds(1.0f);
-            foreach (var spectator in spectators)
+            foreach (var spectator in activeSpectators)
             {
                 spectator.ShowEmotion(EmotionType.Cheer, raceTimeoutSeconds);
                 StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
@@ -190,8 +202,28 @@ public class SlowRaceInteraction : BasePetInteraction
 
             while (!raceFinished)
             {
+                // ★ racer 홀드 상태 체크 - 잡히면 경주 즉시 종료
+                if ((racer1 != null && (racer1.State.IsHolding || racer1.State.IsSelected)) ||
+                    (racer2 != null && (racer2.State.IsHolding || racer2.State.IsSelected)))
+                {
+                    Debug.Log("[SlowRace] 경주 중인 펫이 잡혀서 경주를 종료합니다.");
+                    break; // 루프 종료 → finally 실행됨
+                }
 
-                 // ▼▼▼ [추가] 선두 주자가 결승선에 가까워졌는지 체크하는 로직 ▼▼▼
+                // 관중 홀드 상태 체크 - 잡힌 관중은 경주에서 빠짐
+                for (int i = activeSpectators.Count - 1; i >= 0; i--)
+                {
+                    var spec = activeSpectators[i];
+                    if (spec != null && (spec.State.IsHolding || spec.State.IsSelected))
+                    {
+                        Debug.Log($"[SlowRace] 관중 {spec.petName}이(가) 잡혀서 경주에서 빠집니다.");
+                        RestoreSingleSpectator(spec, activeSpectatorStates[i]);
+                        activeSpectators.RemoveAt(i);
+                        activeSpectatorStates.RemoveAt(i);
+                    }
+                }
+
+                // 선두 주자가 결승선에 가까워졌는지 체크하는 로직
                 if (!isMarkerDisappearing && finishMarkerInstance != null)
                 {
                     // 각 주자와 결승선 사이의 거리를 계산
@@ -217,11 +249,17 @@ public class SlowRaceInteraction : BasePetInteraction
                 // ▲▲▲ [여기까지 추가] ▲▲▲
                 spectatorBoredomTimer += Time.deltaTime;
 
+                // 디버그: 타이머 값 확인 (5초마다 출력)
+                // if (Mathf.FloorToInt(spectatorBoredomTimer) % 5 == 0 && Mathf.FloorToInt(spectatorBoredomTimer) != Mathf.FloorToInt(spectatorBoredomTimer - Time.deltaTime))
+                // {
+                //     Debug.Log($"[SlowRace] 타이머: {spectatorBoredomTimer:F1}초, Phase1목표: {boredomTimePhase1}, Phase2목표: {boredomTimePhase2}");
+                // }
+
                 if (!boredomPhase1Triggered && spectatorBoredomTimer > boredomTimePhase1)
                 {
                     boredomPhase1Triggered = true;
                     Debug.Log("[SlowRace] 관중들이 지루해하기 시작합니다...");
-                    foreach (var spec in spectators)
+                    foreach (var spec in activeSpectators)
                     {
                         spec.ShowEmotion(EmotionType.Confused, raceTimeoutSeconds);
                         StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Idle, 99f, true, false));
@@ -232,7 +270,7 @@ public class SlowRaceInteraction : BasePetInteraction
                 {
                     boredomPhase2Triggered = true;
                     Debug.Log("[SlowRace] 관중들이 졸려하기 시작합니다...");
-                    foreach (var spec in spectators)
+                    foreach (var spec in activeSpectators)
                     {
                         spec.ShowEmotion(EmotionType.Sleepy, raceTimeoutSeconds);
                         StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 99f, true, false));
@@ -243,7 +281,7 @@ public class SlowRaceInteraction : BasePetInteraction
                 {
                     boredomPhase3Triggered = true;
                     Debug.Log("[SlowRace] 관중들이 완전히 잠들어버립니다...");
-                    foreach (var spec in spectators)
+                    foreach (var spec in activeSpectators)
                     {
                         spec.ShowEmotion(EmotionType.Sleep, raceTimeoutSeconds);
                         StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Rest, 99f, true, false));
@@ -290,7 +328,7 @@ public class SlowRaceInteraction : BasePetInteraction
 
             if (!boredomPhase1Triggered)
             {
-                foreach (var spec in spectators)
+                foreach (var spec in activeSpectators)
                 {
                     StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, true, false));
                 }
@@ -301,13 +339,29 @@ public class SlowRaceInteraction : BasePetInteraction
         finally
         {
             Debug.Log("[SlowRace] 상호작용 정리 시작.");
+
+            // ★ 마커 애니메이션 코루틴 먼저 중지
+            if (markerBobbingCoroutine != null)
+            {
+                StopCoroutine(markerBobbingCoroutine);
+                markerBobbingCoroutine = null;
+            }
+
+            // 마커 오브젝트 파괴
             if (finishMarkerInstance != null)
             {
                 Destroy(finishMarkerInstance);
+                finishMarkerInstance = null;
             }
+
+            // NavMeshAgent 상태 복원
             racer1State.Restore(racer1);
             racer2State.Restore(racer2);
-            RestoreSpectators(spectators, spectatorStates);
+
+            // 모든 관중 상태 복원 (클래스 필드 사용)
+            RestoreAllActiveSpectators();
+
+            // 상호작용 종료 (SafeResumePet 호출됨)
             EndInteraction(racer1, racer2);
             Debug.Log("[SlowRace] 상호작용 정리 완료.");
         }
@@ -526,52 +580,77 @@ public class SlowRaceInteraction : BasePetInteraction
         }
     }
     
-    // ★★★ 수정된 부분 ★★★: pet1, pet2 변수 참조 오류 해결
-    private void PositionSpectators(List<PetController> spectators, Vector3 startPos, Vector3 finishLine)
+    /// <summary>
+    /// 개별 관중의 상태를 복원합니다. (SafeResumePet 수준으로 강화)
+    /// </summary>
+    private void RestoreSingleSpectator(PetController spec, PetOriginalState state)
     {
-        if (spectators.Count == 0) return;
-        Vector3 raceDirection = (finishLine - startPos).normalized;
-        Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
-        Vector3 midPoint = (startPos + finishLine) / 2;
+        if (spec == null) return;
 
-        for (int i = 0; i < spectators.Count; i++)
+        Debug.Log($"[SlowRace] 관중 {spec.petName}의 상태 복원 시작");
+
+        // 1. 상호작용 상태 종료
+        spec.State.EndInteraction();
+        spec.State.SetInteractionLogic(null);
+
+        // 2. 감정 숨기기
+        spec.HideEmotion();
+
+        // 3. 애니메이션 상태 초기화
+        var animController = spec.GetComponent<PetAnimationController>();
+        if (animController != null)
         {
-            float sideOffset = Random.Range(5f, 10f);
-            float forwardOffset = Random.Range(-5f, 5f);
-            Vector3 spectatorPos = midPoint + (sideDirection * sideOffset * ((i % 2 == 0) ? 1 : -1)) + (raceDirection * forwardOffset);
-            
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(spectatorPos, out hit, 10f, NavMesh.AllAreas))
+            animController.StopAllCoroutines();
+            animController.StopContinuousAnimation();
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+
+        // 4. NavMeshAgent 상태 복원 (잡히지 않은 경우에만)
+        if (spec.agent != null && !spec.State.IsHolding)
+        {
+            state?.Restore(spec);
+
+            if (spec.agent.enabled && spec.agent.isOnNavMesh)
             {
-                spectators[i].agent.Warp(hit.position);
-                // 경주 트랙의 중앙을 바라보도록 수정
-                Vector3 lookTarget = midPoint + raceDirection * forwardOffset;
-                Vector3 directionToTrack = (lookTarget - spectators[i].transform.position).normalized;
-                if (directionToTrack != Vector3.zero)
-                {
-                    spectators[i].transform.rotation = Quaternion.LookRotation(directionToTrack);
-                }
+                spec.agent.isStopped = false;
+                spec.agent.ResetPath();
+                spec.agent.speed = spec.baseSpeed;
+                spec.agent.acceleration = spec.baseAcceleration;
             }
         }
+
+        // 5. AI 재평가 (잡히지 않은 경우에만)
+        if (spec.AI != null && !spec.State.IsHolding)
+        {
+            spec.AI.InterruptAndResetAI();
+        }
+
+        // 6. 이동 재개 (잡히지 않은 경우에만)
+        var movementController = spec.GetComponent<PetMovementController>();
+        if (movementController != null && !spec.State.IsHolding)
+        {
+            movementController.DecideNextBehavior();
+        }
+
+        Debug.Log($"[SlowRace] 관중 {spec.petName}의 상태 복원 완료");
     }
-    
-    private void RestoreSpectators(List<PetController> spectators, List<PetOriginalState> spectatorStates)
+
+    /// <summary>
+    /// 모든 활성 관중들의 상태를 복원하고 리스트를 정리합니다.
+    /// </summary>
+    private void RestoreAllActiveSpectators()
     {
-        for (int i = 0; i < spectators.Count; i++)
+        for (int i = 0; i < activeSpectators.Count; i++)
         {
-            PetController spec = spectators[i];
-            if (spec != null)
+            if (i < activeSpectatorStates.Count)
             {
-                spec.HideEmotion();
-                spectatorStates[i].Restore(spec);
-                // ★ [Phase 4] PetState를 통한 상태 업데이트
-                spec.State.EndInteraction();
-                spec.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
-                spec.GetComponent<PetMovementController>()?.DecideNextBehavior();
-                Debug.Log($"[SlowRace] 관중 {spec.petName}의 상태를 복원했습니다.");
+                RestoreSingleSpectator(activeSpectators[i], activeSpectatorStates[i]);
             }
         }
+        activeSpectators.Clear();
+        activeSpectatorStates.Clear();
     }
+
     /// <summary>
 /// 결승선 마커를 자연스럽게 작아지며 사라지게 하는 코루틴입니다.
 /// </summary>
