@@ -672,6 +672,14 @@ public class SlowRaceInteraction : BasePetInteraction
             animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
         }
 
+        // ★★★ 수정: 속도/가속도는 항상 복원 (잡혀있어도) ★★★
+        // 관중이 빠른 속도로 달리다가 잡히면, 놓은 후에도 빠른 속도가 유지되는 버그 방지
+        if (spec.agent != null)
+        {
+            spec.agent.speed = spec.baseSpeed;
+            spec.agent.acceleration = spec.baseAcceleration;
+        }
+
         // 4. NavMeshAgent 상태 복원 (잡히지 않은 경우에만)
         if (spec.agent != null && !spec.State.IsHolding)
         {
@@ -681,8 +689,6 @@ public class SlowRaceInteraction : BasePetInteraction
             {
                 spec.agent.isStopped = false;
                 spec.agent.ResetPath();
-                spec.agent.speed = spec.baseSpeed;
-                spec.agent.acceleration = spec.baseAcceleration;
             }
         }
 
