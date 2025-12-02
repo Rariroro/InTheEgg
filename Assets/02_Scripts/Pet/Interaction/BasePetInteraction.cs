@@ -446,10 +446,14 @@ public abstract class BasePetInteraction : MonoBehaviour
         if (pet == null) return;
 
         Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 시작");
-        
+
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.EndInteraction();
         pet.State.SetInteractionLogic(null);
+
+        // ★★★ 홀딩/선택 상태 해제 (상호작용 강제 종료 후 재시작 문제 수정) ★★★
+        pet.State.UpdateHoldingState(false);
+        pet.State.UpdateSelectedState(false);
 
         // 감정 말풍선 숨기기
         pet.HideEmotion();
