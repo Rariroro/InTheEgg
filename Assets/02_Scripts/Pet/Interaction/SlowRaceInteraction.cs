@@ -388,8 +388,8 @@ public class SlowRaceInteraction : BasePetInteraction
             // 모든 관중 상태 복원 (클래스 필드 사용)
             RestoreAllActiveSpectators();
 
-            // 상호작용 종료 (SafeResumePet 호출됨)
-            EndInteraction(racer1, racer2);
+            // 주의: EndInteraction은 BasePetInteraction.InteractionLifecycle에서 자동 호출됨
+            // 여기서 직접 호출하면 중복 호출 발생
             Debug.Log("[SlowRace] 상호작용 정리 완료.");
         }
     }
