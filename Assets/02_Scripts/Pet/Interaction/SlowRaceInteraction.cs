@@ -470,13 +470,20 @@ public class SlowRaceInteraction : BasePetInteraction
                 if (arrivedSpectators[i]) continue;
 
                 var spec = spectators[i];
-                // ▼▼▼ [수정됨] 에이전트가 비활성화 되었을 경우를 대비한 안전장치 추가 ▼▼▼
+
+                // 관중이 잡혔으면 건너뛰기 (경주 루프에서 상태 복원됨)
+                if (spec == null || spec.State.IsHolding || spec.State.IsSelected)
+                {
+                    arrivedSpectators[i] = true;
+                    continue;
+                }
+
+                // 에이전트가 비활성화 되었을 경우를 대비한 안전장치
                 if (!IsAgentSafelyReady(spec))
                 {
                     arrivedSpectators[i] = true;
                     continue;
                 }
-                // ▲▲▲ [여기까지 수정] ▲▲▲
 
                 if (!spec.agent.pathPending && spec.agent.remainingDistance < 1.0f)
                 {
