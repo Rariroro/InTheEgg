@@ -451,13 +451,23 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet.State.EndInteraction();
         pet.State.SetInteractionLogic(null);
 
-        // ★★★ 홀딩/선택 상태 해제 (상호작용 강제 종료 후 재시작 문제 수정) ★★★
-        pet.State.UpdateHoldingState(false);
-        pet.State.UpdateSelectedState(false);
+        // ★★★ 수정: 홀딩/선택 상태는 강제 해제하지 않음 ★★★
+        // 펫을 실제로 잡고 있는 경우 이 상태를 강제로 해제하면
+        // 입력 처리와 충돌하여 터치에 반응하지 않는 버그가 발생함
+        // PetInputController가 펫을 놓을 때 자연스럽게 해제됨
 
         // 감정 말풍선 숨기기
         pet.HideEmotion();
-        
+
+        // ★★★ 핵심 수정: 펫이 현재 잡혀있는 상태라면 여기서 종료 ★★★
+        // 잡혀있는 펫은 PetInputController.StopHolding()에서 자연스럽게 처리됨
+        // NavMeshAgent 재활성화나 AI 재평가를 여기서 하면 충돌이 발생함
+        if (pet.State.IsHolding || pet.State.IsSelected)
+        {
+            Debug.Log($"[SafeResumePet] {pet.petName}: 플레이어 컨트롤 상태 - PetInputController에서 처리 예정");
+            return;
+        }
+
         // 애니메이션 상태 초기화 (agent 체크 전에 수행)
         var animController = pet.GetComponent<PetAnimationController>();
         if (animController != null)
@@ -499,23 +509,23 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet.agent.angularSpeed = 120f; // 기본 회전 속도
         pet.agent.updateRotation = true;
         pet.agent.updatePosition = true;
-        
+
         // 4. 이동 재개
         pet.ResumeMovement();
-        
+
         // 5. AI를 즉시 재평가하여 다음 행동 결정
         if (pet.AI != null)
         {
-        Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
+            Debug.Log($"[SafeResumePet] {pet.petName}: AI 즉시 재평가");
             pet.AI.InterruptAndResetAI();  // 현재 활동 중단하고 새로 평가
-            
+
             // 0.1초 후 AI 활동 보장
             pet.StartCoroutine(EnsureAIActivity(pet, 0.1f));
         }
-        
+
         // 추가 안전장치: 약간의 지연 후에도 다시 확인
         pet.StartCoroutine(DelayedBehaviorDecision(pet));
-        
+
         Debug.Log($"[SafeResumePet] {pet.petName}: 상태 복구 완료");
     }
     

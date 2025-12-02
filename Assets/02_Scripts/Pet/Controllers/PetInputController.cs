@@ -1129,16 +1129,24 @@ public class PetInputController : PetControllerBase
     private void CleanupPetAfterInteraction(PetController pet)
     {
         if (pet == null) return;
-        
+
         // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 시작");
-        
+
         // 1. 상태 초기화
         pet.State.EndInteraction();
         pet.State.SetInteractionLogic(null);
-        
+
         // 2. 감정 말풍선 숨기기
         pet.HideEmotion();
-        
+
+        // ★★★ 핵심 수정: 펫이 현재 잡혀있거나 선택된 상태라면 여기서 종료 ★★★
+        // 잡혀있는 펫은 StopHolding()에서, 선택된 펫은 Deselect()에서 처리됨
+        if (pet.State.IsHolding || pet.State.IsSelected)
+        {
+            // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 플레이어 컨트롤 상태 - 추가 처리 생략");
+            return;
+        }
+
         // 3. 애니메이션 초기화
         var animController = pet.GetComponent<PetAnimationController>();
         if (animController != null)
@@ -1148,7 +1156,7 @@ public class PetInputController : PetControllerBase
             // Idle 애니메이션으로 강제 전환
             animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
         }
-        
+
         // 4. NavMeshAgent 초기화
         if (pet.agent != null && pet.agent.enabled)
         {
@@ -1161,20 +1169,20 @@ public class PetInputController : PetControllerBase
                 pet.agent.updateRotation = true;
             }
         }
-        
+
         // 5. 이동 재개
         pet.ResumeMovement();
-        
+
         // 6. AI 강제 재시작 (즉시)
         if (pet.AI != null)
         {
-        // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: AI 강제 재시작");
+            // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: AI 강제 재시작");
             pet.AI.InterruptAndResetAI();
-            
+
             // 0.2초 후에도 AI가 활동이 없으면 Wander 강제 시작
             pet.StartCoroutine(EnsureActivityAfterDelay(pet, 0.2f));
         }
-        
+
         // Debug.Log($"[CleanupPetAfterInteraction] {pet.petName}: 상태 정리 완료");
     }
     
