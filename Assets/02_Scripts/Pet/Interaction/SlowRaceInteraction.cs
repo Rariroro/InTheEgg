@@ -198,14 +198,15 @@ public class SlowRaceInteraction : BasePetInteraction
             }
 
 
-            // 관중 응원 시작
-            yield return new WaitForSeconds(1.0f);
+            // 관중 응원 시작 (1초 대기하면서 홀드 체크)
+            yield return StartCoroutine(WaitWithSpectatorHoldCheck(1.0f));
             foreach (var spectator in activeSpectators)
             {
                 spectator.ShowEmotion(EmotionType.Cheer, raceTimeoutSeconds);
                 StartCoroutine(spectator.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, 1.5f, false, false));
             }
-            yield return new WaitForSeconds(2.0f);
+            // 2초 대기하면서 홀드 체크
+            yield return StartCoroutine(WaitWithSpectatorHoldCheck(2.0f));
 
             // ... 이하 경주 진행 로직은 기존과 동일 ...
             Debug.Log("[SlowRace] 경주 시작!");
@@ -238,17 +239,7 @@ public class SlowRaceInteraction : BasePetInteraction
                 }
 
                 // 관중 홀드 상태 체크 - 잡힌 관중은 경주에서 빠짐
-                for (int i = activeSpectators.Count - 1; i >= 0; i--)
-                {
-                    var spec = activeSpectators[i];
-                    if (spec != null && (spec.State.IsHolding || spec.State.IsSelected))
-                    {
-                        Debug.Log($"[SlowRace] 관중 {spec.petName}이(가) 잡혀서 경주에서 빠집니다.");
-                        RestoreSingleSpectator(spec, activeSpectatorStates[i]);
-                        activeSpectators.RemoveAt(i);
-                        activeSpectatorStates.RemoveAt(i);
-                    }
-                }
+                CheckAndRemoveHeldSpectators();
 
                 // 선두 주자가 결승선에 가까워졌는지 체크하는 로직
                 if (!isMarkerDisappearing && finishMarkerInstance != null)
@@ -465,14 +456,23 @@ public class SlowRaceInteraction : BasePetInteraction
         float timer = 0f;
         while (arrivedSpectators.Contains(false) && timer < timeout)
         {
+            // 매 프레임 잡힌 관중 체크 - 잡자마자 즉시 제외
+            CheckAndRemoveHeldSpectators();
+
+            // spectators 리스트가 변경되었을 수 있으므로 arrivedSpectators도 동기화
+            while (arrivedSpectators.Count > spectators.Count)
+            {
+                arrivedSpectators.RemoveAt(arrivedSpectators.Count - 1);
+            }
+
             for (int i = 0; i < spectators.Count; i++)
             {
                 if (arrivedSpectators[i]) continue;
 
                 var spec = spectators[i];
 
-                // 관중이 잡혔으면 건너뛰기 (경주 루프에서 상태 복원됨)
-                if (spec == null || spec.State.IsHolding || spec.State.IsSelected)
+                // null 체크 (이미 CheckAndRemoveHeldSpectators에서 처리되었을 수 있음)
+                if (spec == null)
                 {
                     arrivedSpectators[i] = true;
                     continue;
@@ -544,6 +544,39 @@ public class SlowRaceInteraction : BasePetInteraction
         }
     }
     // --- 헬퍼 메서드들 ---
+
+    /// <summary>
+    /// 지정된 시간 동안 대기하면서 매 프레임 관중 홀드 상태를 체크합니다.
+    /// 잡힌 관중은 즉시 경주에서 제외됩니다.
+    /// </summary>
+    private IEnumerator WaitWithSpectatorHoldCheck(float waitTime)
+    {
+        float elapsed = 0f;
+        while (elapsed < waitTime)
+        {
+            CheckAndRemoveHeldSpectators();
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    /// <summary>
+    /// 잡힌 관중을 체크하고 경주에서 제외합니다.
+    /// </summary>
+    private void CheckAndRemoveHeldSpectators()
+    {
+        for (int i = activeSpectators.Count - 1; i >= 0; i--)
+        {
+            var spec = activeSpectators[i];
+            if (spec != null && (spec.State.IsHolding || spec.State.IsSelected))
+            {
+                Debug.Log($"[SlowRace] 관중 {spec.petName}이(가) 잡혀서 경주에서 빠집니다.");
+                RestoreSingleSpectator(spec, activeSpectatorStates[i]);
+                activeSpectators.RemoveAt(i);
+                activeSpectatorStates.RemoveAt(i);
+            }
+        }
+    }
 
     // ★★★ 수정된 부분 ★★★: 컴파일 오류 해결을 위해 IsAgentSafelyReady 메서드 추가
     private bool IsAgentSafelyReady(PetController pet)
