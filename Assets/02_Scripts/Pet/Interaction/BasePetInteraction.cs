@@ -197,12 +197,34 @@ public abstract class BasePetInteraction : MonoBehaviour
     }
 
     /// <summary>
+    /// 외부에서 상호작용을 강제 종료할 때 호출합니다.
+    /// PetInputController.ForceStopInteraction()에서 StopAllCoroutines() 전에 호출됩니다.
+    /// </summary>
+    public void ForceCleanup()
+    {
+        Debug.Log($"[{InteractionName}] ForceCleanup 호출됨");
+        OnForceCleanup();
+    }
+
+    /// <summary>
+    /// 자식 클래스에서 강제 종료 시 고유 리소스를 정리하기 위해 오버라이드합니다.
+    /// ForceCleanupInteraction()에서 activePet들을 정리하기 전에 호출됩니다.
+    /// </summary>
+    protected virtual void OnForceCleanup()
+    {
+        // 기본 구현은 비어있음 - 자식 클래스에서 필요시 오버라이드
+    }
+
+    /// <summary>
     /// 상호작용 강제 정리 (OnDisable/OnDestroy용)
     /// </summary>
     private void ForceCleanupInteraction()
     {
         if (activePet1 != null || activePet2 != null)
         {
+            // ★ 자식 클래스의 고유 리소스 정리 먼저 호출
+            OnForceCleanup();
+
             // EndInteraction 호출하지 않고 직접 정리
             if (activePet1 != null && activePet1.State.IsInteracting)
             {
@@ -244,28 +266,40 @@ public abstract class BasePetInteraction : MonoBehaviour
     {
         // 기존 PerformInteraction을 호출하면서 매 프레임 터치 체크
         IEnumerator interaction = PerformInteraction(pet1, pet2);
-        
-        while (interaction.MoveNext())
+
+        try
         {
-            // 둘 중 하나라도 터치/홀드되면 즉시 중단
-            if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) || 
-                (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
+            while (interaction.MoveNext())
             {
-                Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
-                yield break;
+                // 둘 중 하나라도 터치/홀드되면 즉시 중단
+                if ((pet1 != null && (pet1.State.IsHolding || pet1.State.IsSelected)) ||
+                    (pet2 != null && (pet2.State.IsHolding || pet2.State.IsSelected)))
+                {
+                    Debug.Log($"[{InteractionName}] 터치로 인해 상호작용이 중단됨");
+                    yield break;
+                }
+
+                // 둘 중 하나라도 모이기 명령을 받으면 즉시 중단
+                if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress ||
+                                      pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
+                    (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress ||
+                                      pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+                {
+                    Debug.Log($"[{InteractionName}] 모이기 명령으로 인해 상호작용이 중단됨");
+                    yield break;
+                }
+
+                yield return interaction.Current;
             }
-            
-            // 둘 중 하나라도 모이기 명령을 받으면 즉시 중단
-            if ((pet1 != null && (pet1.State.CurrentStatus == PetStatus.GatheringInProgress || 
-                                  pet1.State.CurrentStatus == PetStatus.GatheredWaiting)) ||
-                (pet2 != null && (pet2.State.CurrentStatus == PetStatus.GatheringInProgress || 
-                                  pet2.State.CurrentStatus == PetStatus.GatheredWaiting)))
+        }
+        finally
+        {
+            // ★ 핵심: 내부 Iterator의 Dispose를 호출하여 내부 finally 블록 실행 보장
+            // 이렇게 하면 SlowRaceInteraction 등의 PerformInteraction 내부 finally가 실행됨
+            if (interaction is System.IDisposable disposable)
             {
-                Debug.Log($"[{InteractionName}] 모이기 명령으로 인해 상호작용이 중단됨");
-                yield break;
+                disposable.Dispose();
             }
-            
-            yield return interaction.Current;
         }
     }
 

@@ -1075,20 +1075,12 @@ public class PetInputController : PetControllerBase
             // 상호작용 로직의 모든 코루틴 중단
             var interactionLogic = petController.State.InteractionLogic;
 
-            // ChameleonCamouflageInteraction 특별 처리 - 머티리얼 복원
-            var chameleonInteraction = interactionLogic as ChameleonCamouflageInteraction;
-            if (chameleonInteraction != null)
+            // ★ 모든 BasePetInteraction 자식 클래스의 고유 리소스 정리
+            // (ChameleonCamouflage, PredatorMole, SlowRace 등 모든 상호작용에 대해 동작)
+            var baseInteraction = interactionLogic as BasePetInteraction;
+            if (baseInteraction != null)
             {
-                Debug.Log($"[ForceStopInteraction] ChameleonCamouflageInteraction 감지 - 강제 정리 실행");
-                chameleonInteraction.ForceCleanup();
-            }
-
-            // PredatorMoleInteraction 특별 처리 - 두더지 복원
-            var predatorMoleInteraction = interactionLogic as PredatorMoleInteraction;
-            if (predatorMoleInteraction != null)
-            {
-                Debug.Log($"[ForceStopInteraction] PredatorMoleInteraction 감지 - 강제 정리 실행");
-                predatorMoleInteraction.ForceCleanup();
+                baseInteraction.ForceCleanup();
             }
 
             interactionLogic.StopAllCoroutines();
@@ -1101,20 +1093,11 @@ public class PetInputController : PetControllerBase
                 // 상대 펫의 상호작용 코루틴도 중단
                 if (partner.State.InteractionLogic != null)
                 {
-                    // 상대 펫도 ChameleonCamouflageInteraction에 참여 중일 수 있으므로 동일하게 처리
-                    var partnerChameleonInteraction = partner.State.InteractionLogic as ChameleonCamouflageInteraction;
-                    if (partnerChameleonInteraction != null)
+                    // 상대 펫도 동일하게 ForceCleanup 호출
+                    var partnerBaseInteraction = partner.State.InteractionLogic as BasePetInteraction;
+                    if (partnerBaseInteraction != null)
                     {
-                        Debug.Log($"[ForceStopInteraction] 상대 펫도 ChameleonCamouflageInteraction 중 - 강제 정리 실행");
-                        partnerChameleonInteraction.ForceCleanup();
-                    }
-
-                    // 상대 펫도 PredatorMoleInteraction에 참여 중일 수 있으므로 동일하게 처리
-                    var partnerPredatorMoleInteraction = partner.State.InteractionLogic as PredatorMoleInteraction;
-                    if (partnerPredatorMoleInteraction != null)
-                    {
-                        Debug.Log($"[ForceStopInteraction] 상대 펫도 PredatorMoleInteraction 중 - 강제 정리 실행");
-                        partnerPredatorMoleInteraction.ForceCleanup();
+                        partnerBaseInteraction.ForceCleanup();
                     }
 
                     partner.State.InteractionLogic.StopAllCoroutines();
@@ -1129,7 +1112,7 @@ public class PetInputController : PetControllerBase
                 {
                     PetInteractionManager.Instance.NotifyInteractionEnded(petController, partner);
                 }
-                
+
         // Debug.Log($"[ForceStopInteraction] {petController.petName} & {partner.petName}: 상호작용 강제 중단 완료");
             }
             else

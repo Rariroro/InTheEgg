@@ -69,6 +69,33 @@ public class SlowRaceInteraction : BasePetInteraction
         return InteractionType.SlowRace;
     }
 
+    /// <summary>
+    /// 강제 종료 시 SlowRace 고유 리소스(마커, 관중)를 정리합니다.
+    /// </summary>
+    protected override void OnForceCleanup()
+    {
+        Debug.Log("[SlowRace] OnForceCleanup 호출됨 - 고유 리소스 정리 시작");
+
+        // 1. 마커 코루틴 중지
+        if (markerBobbingCoroutine != null)
+        {
+            StopCoroutine(markerBobbingCoroutine);
+            markerBobbingCoroutine = null;
+        }
+
+        // 2. 마커 오브젝트 파괴
+        if (finishMarkerInstance != null)
+        {
+            Destroy(finishMarkerInstance);
+            finishMarkerInstance = null;
+        }
+
+        // 3. 모든 관중 상태 복원
+        RestoreAllActiveSpectators();
+
+        Debug.Log("[SlowRace] OnForceCleanup 완료 - 고유 리소스 정리됨");
+    }
+
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
         // 나무늘보, 코알라, 거북이 중 서로 다른 2마리면 경주 가능
