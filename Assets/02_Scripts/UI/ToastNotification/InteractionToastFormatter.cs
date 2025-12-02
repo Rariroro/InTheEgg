@@ -21,7 +21,7 @@ public static class InteractionToastFormatter
         { InteractionType.TurtleRabbitRace, "토끼와 거북이 경주" },
         { InteractionType.ChaseAndRun, "추격전" },
         { InteractionType.RideAndWalk, "태우고 걷기" },
-        { InteractionType.SlothKoalaRace, "느림보 경주" },
+        { InteractionType.SlowRace, "느림보 경주" },
         { InteractionType.PredatorMoleHunt, "두더지 사냥" },
         { InteractionType.PredatorPossumPrank, "주머니쥐 장난" },
         { InteractionType.ChameleonCamouflage, "위장 놀이" },

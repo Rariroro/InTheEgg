@@ -41,10 +41,10 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<RideAndWalkInteraction>("RideAndWalk");
     }
     
-    [MenuItem("Tools/Pet System/Add SlothKoalaRace Interaction")]
-    private static void AddSlothKoalaRaceInteraction()
+    [MenuItem("Tools/Pet System/Add SlowRace Interaction")]
+    private static void AddSlowRaceInteraction()
     {
-        AddInteractionComponent<SlothKoalaRaceInteraction>("SlothKoalaRace");
+        AddInteractionComponent<SlowRaceInteraction>("SlowRace");
     }
     
     [MenuItem("Tools/Pet System/Add CamelAlpacaSpitFight Interaction")]
@@ -92,7 +92,7 @@ public class PetInteractionManagerEditor : Editor
         AddRaceInteraction();
         AddChaseAndRunInteraction();
         AddRideAndWalkInteraction();
-        AddSlothKoalaRaceInteraction();
+        AddSlowRaceInteraction();
         AddCamelAlpacaSpitFightInteraction();
         AddHeadbuttInteraction();
         AddPredatorPossumPrankInteraction();

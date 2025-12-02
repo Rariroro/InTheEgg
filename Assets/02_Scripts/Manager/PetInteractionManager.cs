@@ -26,7 +26,7 @@ public enum InteractionType
     TurtleRabbitRace,       // 토끼와 거북이 경주
     ChaseAndRun,            // 쫓고 쫓기기
     RideAndWalk,            // 타고 걷기
-    SlothKoalaRace,         // 나무늘보-코알라 달리기
+    SlowRace,               // 느린 펫 경주 (나무늘보, 코알라, 거북이)
     PredatorMoleHunt,       // 두더지 사냥
     PredatorPossumPrank,    // 주머니쥐 장난
     ChameleonCamouflage,    // 카멜레온 위장

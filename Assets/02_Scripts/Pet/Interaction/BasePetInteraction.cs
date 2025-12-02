@@ -1118,7 +1118,7 @@ public abstract class BasePetInteraction : MonoBehaviour
             case "Chase": return InteractionType.ChaseAndRun;
             case "ChaseAndRun": return InteractionType.ChaseAndRun;
             case "RideAndWalk": return InteractionType.RideAndWalk;
-            case "SlothKoalaRace": return InteractionType.SlothKoalaRace;
+            case "SlowRace": return InteractionType.SlowRace;
             case "PredatorMoleHunt": return InteractionType.PredatorMoleHunt;
             case "PredatorPossumPrank": return InteractionType.PredatorPossumPrank;
             case "ChameleonCamouflage": return InteractionType.ChameleonCamouflage;

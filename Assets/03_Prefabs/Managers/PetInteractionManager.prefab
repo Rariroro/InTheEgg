@@ -18,13 +18,13 @@ GameObject:
   - component: {fileID: 7743638605199200644}
   - component: {fileID: 4223720624493054833}
   - component: {fileID: 1106663833353148349}
-  - component: {fileID: 1608003550366215983}
   - component: {fileID: 8352962793379818008}
   - component: {fileID: 648644708604864693}
   - component: {fileID: -8314337667573088611}
   - component: {fileID: -4962863032343489133}
   - component: {fileID: 3010470296301870323}
   - component: {fileID: 7164216739854847001}
+  - component: {fileID: 6067050713968488098}
   m_Layer: 0
   m_Name: PetInteractionManager
   m_TagString: Untagged
@@ -317,34 +317,6 @@ MonoBehaviour:
   autoHeightMultiplier: 0.85
   autoDepthMultiplier: 0.2
   agentSafetyTimeout: 3
---- !u!114 &1608003550366215983
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7108309724432713129}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07e5f97a3080549c7ba891eb112e88b6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactionStartDistance: 5
-  finishLinePrefab: {fileID: 1168235394157182659, guid: 627040b6b0e8b4f408e054e5bf31bb3b, type: 3}
-  markerHeightOffset: 5
-  markerBobSpeed: 2
-  markerBobAmount: 0.5
-  raceDistance: 60
-  minRaceDistance: 50
-  raceTimeoutSeconds: 120
-  finishLineSpread: 2
-  slothSpeedMultiplier: 0.45
-  koalaSpeedMultiplier: 0.45
-  maxSpectators: 2
-  spectatorSearchRadius: 50
-  boredomTimePhase1: 8
-  boredomTimePhase2: 20
-  markerDisappearDistance: 5
 --- !u!114 &8352962793379818008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -513,3 +485,33 @@ MonoBehaviour:
   crocodileQuillScale: 1
   emotionDuration: 3
   agentSafetyTimeout: 3
+--- !u!114 &6067050713968488098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7108309724432713129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f02dae69cd544701898cc00d4196ace, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactionStartDistance: 5
+  finishLinePrefab: {fileID: 1168235394157182659, guid: 627040b6b0e8b4f408e054e5bf31bb3b, type: 3}
+  markerHeightOffset: 1
+  markerBobSpeed: 2
+  markerBobAmount: 0.5
+  raceDistance: 40
+  minRaceDistance: 20
+  raceTimeoutSeconds: 120
+  finishLineSpread: 2
+  slothSpeedMultiplier: 0.5
+  koalaSpeedMultiplier: 0.45
+  turtleSpeedMultiplier: 0.4
+  maxSpectators: 2
+  spectatorSearchRadius: 25
+  boredomTimePhase1: 8
+  boredomTimePhase2: 20
+  boredomTimePhase3: 40
+  markerDisappearDistance: 10
