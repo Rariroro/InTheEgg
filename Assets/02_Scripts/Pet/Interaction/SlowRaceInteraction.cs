@@ -224,7 +224,7 @@ public class SlowRaceInteraction : BasePetInteraction
                     foreach (var spec in spectators)
                     {
                         spec.ShowEmotion(EmotionType.Confused, raceTimeoutSeconds);
-                        StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 5.0f, false, false));
+                        StartCoroutine(spec.GetComponent<PetAnimationController>().PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Idle, 99f, true, false));
                     }
                 }
 
