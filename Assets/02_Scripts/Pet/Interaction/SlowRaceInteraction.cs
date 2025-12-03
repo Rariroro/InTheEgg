@@ -182,14 +182,30 @@ public class SlowRaceInteraction : BasePetInteraction
             // 관중 찾기
             FindSpectators(racer1, racer2, startPosition, activeSpectators, activeSpectatorStates);
 
-            // 출발선으로 이동
+            // --- 출발점으로 이동 및 정렬 (TurtleRabbitRace 방식) ---
+
+            // 자동 회전 비활성화
+            racer1.agent.updateRotation = false;
+            racer2.agent.updateRotation = false;
+
+            // 최적의 출발점 계산 (결승선에서 raceDistance만큼 뒤로)
+            Vector3 optimalStartPosition = CalculateOptimalStartPosition(racer1, racer2, finishLine, dirToFinish);
             Vector3 racer1StartPos, racer2StartPos;
-            CalculateStartPositions(racer1, racer2, out racer1StartPos, out racer2StartPos, 3f);
+            CalculateAlignedStartPositions(optimalStartPosition, dirToFinish, out racer1StartPos, out racer2StartPos, 3f);
+
+            // 1단계: 출발선 근처로 이동
             yield return StartCoroutine(MoveToPositions(racer1, racer2, racer1StartPos, racer2StartPos, 15f));
 
-            // 출발 방향으로 정렬
-            LookAtEachOther(racer1, racer2);
-            yield return StartCoroutine(SmoothRotateToDirection(racer1, racer2, Quaternion.LookRotation(dirToFinish)));
+            // 2단계: 미세 조정 - 정확한 위치로 부드럽게 이동 + 회전
+            yield return StartCoroutine(FineTunePositions(racer1, racer2, racer1StartPos, racer2StartPos, dirToFinish));
+
+            // 3단계: 출발 대기
+            racer1.agent.isStopped = true;
+            racer2.agent.isStopped = true;
+            racer1.agent.velocity = Vector3.zero;
+            racer2.agent.velocity = Vector3.zero;
+
+            Debug.Log("[SlowRace] 출발선에서 대기 중...");
 
             // ★★★ 수정: 관중을 순간이동 시키는 대신, 자연스럽게 달려가도록 코루틴을 실행합니다.
             if (activeSpectators.Count > 0)
@@ -208,8 +224,10 @@ public class SlowRaceInteraction : BasePetInteraction
             // 2초 대기하면서 홀드 체크
             yield return StartCoroutine(WaitWithSpectatorHoldCheck(2.0f));
 
-            // ... 이하 경주 진행 로직은 기존과 동일 ...
+            // --- 경주 시작 ---
             Debug.Log("[SlowRace] 경주 시작!");
+            racer1.agent.updateRotation = true;
+            racer2.agent.updateRotation = true;
             racer1.agent.speed = racer1.baseSpeed * GetSpeedMultiplier(racer1.PetType);
             racer2.agent.speed = racer2.baseSpeed * GetSpeedMultiplier(racer2.PetType);
             racer1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -596,27 +614,6 @@ public class SlowRaceInteraction : BasePetInteraction
         }
     }
 
-    private IEnumerator SmoothRotateToDirection(PetController pet1, PetController pet2, Quaternion targetRotation)
-    {
-        float duration = 1.0f;
-        float elapsed = 0f;
-        Quaternion startRot1 = pet1.transform.rotation;
-        Quaternion startRot2 = pet2.transform.rotation;
-
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-            pet1.transform.rotation = Quaternion.Slerp(startRot1, targetRotation, t);
-            pet2.transform.rotation = Quaternion.Slerp(startRot2, targetRotation, t);
-            if(pet1.petModelTransform != null) pet1.petModelTransform.rotation = pet1.transform.rotation;
-            if(pet2.petModelTransform != null) pet2.petModelTransform.rotation = pet2.transform.rotation;
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        pet1.transform.rotation = targetRotation;
-        pet2.transform.rotation = targetRotation;
-    }
-    
     private void CreateSeparateFinishDestinations(Vector3 finishLine, Vector3 raceDirection, out Vector3 dest1, out Vector3 dest2)
     {
         Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
@@ -760,5 +757,140 @@ private IEnumerator DisappearFinishMarker(GameObject marker)
             PetType.Turtle => turtleSpeedMultiplier,
             _ => 0.5f
         };
+    }
+
+    /// <summary>
+    /// 결승선과 방향을 고려해서 최적의 출발 지점을 계산합니다.
+    /// </summary>
+    private Vector3 CalculateOptimalStartPosition(PetController pet1, PetController pet2, Vector3 finishLine, Vector3 raceDirection)
+    {
+        // 현재 두 펫의 중간 지점
+        Vector3 currentCenter = (pet1.transform.position + pet2.transform.position) / 2;
+
+        // 결승선에서 경주 거리만큼 뒤로 온 지점을 이상적인 출발점으로 설정
+        Vector3 idealStartPosition = finishLine - raceDirection * raceDistance;
+
+        // 이상적인 출발점 근처의 NavMesh 위 유효한 위치를 찾음
+        if (NavMesh.SamplePosition(idealStartPosition, out NavMeshHit hit, 20f, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+
+        // 못찾았다면 현재 중간 지점을 그대로 반환
+        return currentCenter;
+    }
+
+    /// <summary>
+    /// 출발 중심점에서 경주 방향에 수직으로 두 펫의 출발 위치를 계산합니다.
+    /// </summary>
+    private void CalculateAlignedStartPositions(Vector3 startCenter, Vector3 raceDirection,
+        out Vector3 pet1Pos, out Vector3 pet2Pos, float spacing = 3f)
+    {
+        // 경주 진행 방향에 수직인 옆 방향을 계산
+        Vector3 sideDirection = Vector3.Cross(Vector3.up, raceDirection).normalized;
+
+        // 중앙점에서 정확히 spacing/2 만큼 떨어진 위치
+        Vector3 leftPos = startCenter - sideDirection * (spacing / 2);
+        Vector3 rightPos = startCenter + sideDirection * (spacing / 2);
+
+        // NavMesh 위의 가장 가까운 유효한 위치 찾기
+        if (NavMesh.SamplePosition(leftPos, out NavMeshHit leftHit, 2f, NavMesh.AllAreas))
+        {
+            pet1Pos = leftHit.position;
+        }
+        else
+        {
+            pet1Pos = leftPos;
+        }
+
+        if (NavMesh.SamplePosition(rightPos, out NavMeshHit rightHit, 2f, NavMesh.AllAreas))
+        {
+            pet2Pos = rightHit.position;
+        }
+        else
+        {
+            pet2Pos = rightPos;
+        }
+
+        // Y 좌표를 동일하게 맞춤 (지형 높이 차이 보정)
+        float avgY = (pet1Pos.y + pet2Pos.y) / 2f;
+        pet1Pos.y = avgY;
+        pet2Pos.y = avgY;
+
+        Debug.Log($"[SlowRace] 정렬된 출발점: 간격={Vector3.Distance(pet1Pos, pet2Pos):F2}m");
+    }
+
+    /// <summary>
+    /// 펫들을 정확한 출발 위치로 부드럽게 미세 조정하는 코루틴
+    /// </summary>
+    private IEnumerator FineTunePositions(PetController pet1, PetController pet2,
+        Vector3 pet1Target, Vector3 pet2Target, Vector3 raceDirection)
+    {
+        float adjustmentTime = 2f;
+        float elapsedTime = 0f;
+
+        // 현재 위치 저장
+        Vector3 pet1StartPos = pet1.transform.position;
+        Vector3 pet2StartPos = pet2.transform.position;
+
+        // 목표 회전 계산
+        Quaternion targetRotation = Quaternion.LookRotation(raceDirection);
+        Quaternion pet1StartRot = pet1.transform.rotation;
+        Quaternion pet2StartRot = pet2.transform.rotation;
+
+        // 애니메이션을 Idle로 설정
+        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
+        // NavMeshAgent 일시 정지
+        pet1.agent.isStopped = true;
+        pet2.agent.isStopped = true;
+
+        while (elapsedTime < adjustmentTime)
+        {
+            float t = elapsedTime / adjustmentTime;
+            // Smooth step 함수로 더 부드러운 움직임
+            float smoothT = t * t * (3f - 2f * t);
+
+            // 위치 보간
+            pet1.transform.position = Vector3.Lerp(pet1StartPos, pet1Target, smoothT);
+            pet2.transform.position = Vector3.Lerp(pet2StartPos, pet2Target, smoothT);
+
+            // 회전 보간
+            pet1.transform.rotation = Quaternion.Slerp(pet1StartRot, targetRotation, smoothT);
+            pet2.transform.rotation = Quaternion.Slerp(pet2StartRot, targetRotation, smoothT);
+
+            // 펫 모델도 함께 회전
+            if (pet1.petModelTransform != null)
+                pet1.petModelTransform.rotation = pet1.transform.rotation;
+            if (pet2.petModelTransform != null)
+                pet2.petModelTransform.rotation = pet2.transform.rotation;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 최종 위치와 회전 확정
+        pet1.transform.position = pet1Target;
+        pet2.transform.position = pet2Target;
+        pet1.transform.rotation = targetRotation;
+        pet2.transform.rotation = targetRotation;
+
+        if (pet1.petModelTransform != null)
+            pet1.petModelTransform.rotation = targetRotation;
+        if (pet2.petModelTransform != null)
+            pet2.petModelTransform.rotation = targetRotation;
+
+        // NavMeshAgent 위치 동기화
+        if (IsAgentSafelyReady(pet1))
+        {
+            pet1.agent.nextPosition = pet1Target;
+        }
+        if (IsAgentSafelyReady(pet2))
+        {
+            pet2.agent.nextPosition = pet2Target;
+        }
+
+        Debug.Log($"[SlowRace] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(pet1.transform.position, pet2.transform.position):F2}m");
     }
 }
