@@ -39,6 +39,8 @@ public class SlowRaceInteraction : BasePetInteraction
     public float koalaSpeedMultiplier = 0.45f;
     [Tooltip("거북이의 경주 시 속도 배율입니다.")]
     public float turtleSpeedMultiplier = 0.4f;
+    [Tooltip("카멜레온의 경주 시 속도 배율입니다.")]
+    public float chameleonSpeedMultiplier = 0.45f;
 
     [Header("Spectator Settings")]
     [Tooltip("경주를 관람할 최대 관중 수입니다.")]
@@ -115,9 +117,9 @@ public class SlowRaceInteraction : BasePetInteraction
 
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        // 나무늘보, 코알라, 거북이 중 서로 다른 2마리면 경주 가능
-        bool isPet1SlowRacer = pet1.PetType == PetType.Sloth || pet1.PetType == PetType.Koala || pet1.PetType == PetType.Turtle;
-        bool isPet2SlowRacer = pet2.PetType == PetType.Sloth || pet2.PetType == PetType.Koala || pet2.PetType == PetType.Turtle;
+        // 나무늘보, 코알라, 거북이, 카멜레온 중 서로 다른 2마리면 경주 가능
+        bool isPet1SlowRacer = pet1.PetType == PetType.Sloth || pet1.PetType == PetType.Koala || pet1.PetType == PetType.Turtle || pet1.PetType == PetType.Chameleon;
+        bool isPet2SlowRacer = pet2.PetType == PetType.Sloth || pet2.PetType == PetType.Koala || pet2.PetType == PetType.Turtle || pet2.PetType == PetType.Chameleon;
         return isPet1SlowRacer && isPet2SlowRacer && pet1.PetType != pet2.PetType;
     }
 
@@ -790,6 +792,7 @@ private IEnumerator DisappearFinishMarker(GameObject marker)
             PetType.Sloth => slothSpeedMultiplier,
             PetType.Koala => koalaSpeedMultiplier,
             PetType.Turtle => turtleSpeedMultiplier,
+            PetType.Chameleon => chameleonSpeedMultiplier,
             _ => 0.5f
         };
     }
