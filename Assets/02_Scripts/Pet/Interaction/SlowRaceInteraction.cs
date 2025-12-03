@@ -56,6 +56,18 @@ public class SlowRaceInteraction : BasePetInteraction
     [Tooltip("선두 주자가 이 거리 안으로 들어오면 결승선 마커가 사라지기 시작합니다.")]
     public float markerDisappearDistance = 10f;
 
+    [Header("Speed Variation Settings")]
+    [Tooltip("속도 변경 간격 최소값 (초)")]
+    public float speedChangeIntervalMin = 3f;
+    [Tooltip("속도 변경 간격 최대값 (초)")]
+    public float speedChangeIntervalMax = 6f;
+    [Tooltip("속도 변경 시 최소 배율 (기본 배율 대비)")]
+    public float speedVariationMin = 0.5f;
+    [Tooltip("속도 변경 시 최대 배율 (기본 배율 대비)")]
+    public float speedVariationMax = 1.5f;
+    [Tooltip("속도 전환에 걸리는 시간 (초)")]
+    public float speedTransitionDuration = 0.5f;
+
     // 관중 리스트를 클래스 필드로 관리 (강제 종료 시 정리를 위해)
     private List<PetController> activeSpectators = new List<PetController>();
     private List<PetOriginalState> activeSpectatorStates = new List<PetOriginalState>();
@@ -63,6 +75,11 @@ public class SlowRaceInteraction : BasePetInteraction
     // 마커 관련 필드 (강제 종료 시 정리를 위해 클래스 필드로 관리)
     private Coroutine markerBobbingCoroutine = null;
     private GameObject finishMarkerInstance = null;
+
+    // 속도 변동 관련 필드
+    private Coroutine racer1SpeedCoroutine = null;
+    private Coroutine racer2SpeedCoroutine = null;
+    private bool raceInProgress = false;
 
     protected override InteractionType DetermineInteractionType()
     {
@@ -233,6 +250,11 @@ public class SlowRaceInteraction : BasePetInteraction
             racer1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
             racer2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
+            // 속도 변동 코루틴 시작
+            raceInProgress = true;
+            racer1SpeedCoroutine = StartCoroutine(RandomSpeedVariation(racer1, GetSpeedMultiplier(racer1.PetType)));
+            racer2SpeedCoroutine = StartCoroutine(RandomSpeedVariation(racer2, GetSpeedMultiplier(racer2.PetType)));
+
             Vector3 racer1FinishDest, racer2FinishDest;
             CreateSeparateFinishDestinations(finishLine, dirToFinish, out racer1FinishDest, out racer2FinishDest);
 
@@ -375,6 +397,19 @@ public class SlowRaceInteraction : BasePetInteraction
         finally
         {
             Debug.Log("[SlowRace] 상호작용 정리 시작.");
+
+            // 속도 변동 코루틴 정리
+            raceInProgress = false;
+            if (racer1SpeedCoroutine != null)
+            {
+                StopCoroutine(racer1SpeedCoroutine);
+                racer1SpeedCoroutine = null;
+            }
+            if (racer2SpeedCoroutine != null)
+            {
+                StopCoroutine(racer2SpeedCoroutine);
+                racer2SpeedCoroutine = null;
+            }
 
             // ★ 마커 애니메이션 코루틴 먼저 중지
             if (markerBobbingCoroutine != null)
@@ -892,5 +927,50 @@ private IEnumerator DisappearFinishMarker(GameObject marker)
         }
 
         Debug.Log($"[SlowRace] 출발 위치 미세 조정 완료. 간격: {Vector3.Distance(pet1.transform.position, pet2.transform.position):F2}m");
+    }
+
+    /// <summary>
+    /// 경주 중 펫의 속도를 랜덤하게 변동시키는 코루틴
+    /// </summary>
+    private IEnumerator RandomSpeedVariation(PetController racer, float baseMultiplier)
+    {
+        while (raceInProgress)
+        {
+            // 랜덤 간격으로 대기
+            yield return new WaitForSeconds(Random.Range(speedChangeIntervalMin, speedChangeIntervalMax));
+
+            if (!raceInProgress || !IsAgentSafelyReady(racer)) break;
+
+            // 새 속도 계산 (기본 배율 * 랜덤 변동)
+            float newMultiplier = baseMultiplier * Random.Range(speedVariationMin, speedVariationMax);
+            float targetSpeed = racer.baseSpeed * newMultiplier;
+
+            // 부드러운 속도 전환
+            yield return StartCoroutine(SmoothSpeedTransition(racer, targetSpeed));
+        }
+    }
+
+    /// <summary>
+    /// 펫의 속도를 부드럽게 전환하는 코루틴
+    /// </summary>
+    private IEnumerator SmoothSpeedTransition(PetController racer, float targetSpeed)
+    {
+        if (!IsAgentSafelyReady(racer)) yield break;
+
+        float startSpeed = racer.agent.speed;
+        float elapsed = 0f;
+
+        while (elapsed < speedTransitionDuration)
+        {
+            if (!raceInProgress || !IsAgentSafelyReady(racer)) yield break;
+
+            elapsed += Time.deltaTime;
+            float t = elapsed / speedTransitionDuration;
+            racer.agent.speed = Mathf.Lerp(startSpeed, targetSpeed, t);
+            yield return null;
+        }
+
+        if (IsAgentSafelyReady(racer))
+            racer.agent.speed = targetSpeed;
     }
 }
