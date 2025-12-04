@@ -15,8 +15,27 @@ public class WalkTogetherInteraction : BasePetInteraction
     [Tooltip("함께 걷는 총 시간")]
     public float walkDuration = 15f;
 
-    [Tooltip("펫들 사이의 간격")]
+    [Tooltip("펫들 사이의 기본 간격 (크기별 설정이 없을 때 사용)")]
     public float petSpacing = 2.5f;
+
+    [Header("크기별 간격 설정")]
+    [Tooltip("Small + Small 펫 간격")]
+    public float smallSmallSpacing = 1.5f;
+
+    [Tooltip("Small + Medium 펫 간격")]
+    public float smallMediumSpacing = 2.0f;
+
+    [Tooltip("Small + Large 펫 간격")]
+    public float smallLargeSpacing = 2.5f;
+
+    [Tooltip("Medium + Medium 펫 간격")]
+    public float mediumMediumSpacing = 2.5f;
+
+    [Tooltip("Medium + Large 펫 간격")]
+    public float mediumLargeSpacing = 3.0f;
+
+    [Tooltip("Large + Large 펫 간격")]
+    public float largeLargeSpacing = 4.0f;
 
     [Tooltip("걷기 속도 배율")]
     [Range(0.5f, 1f)]
@@ -81,6 +100,9 @@ public class WalkTogetherInteraction : BasePetInteraction
     // 이벤트 진행 중 플래그
     private bool isEventInProgress = false;
 
+    // 현재 상호작용의 계산된 간격 (펫 크기 기반)
+    private float currentSpacing;
+
     // 유효한 펫 조합 (HashSet으로 O(1) 룩업)
     private static readonly HashSet<(PetType, PetType)> ValidPairs = new()
     {
@@ -130,6 +152,10 @@ public class WalkTogetherInteraction : BasePetInteraction
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 함께 걷기 시작했습니다!");
+
+        // 크기에 따른 간격 계산
+        currentSpacing = CalculateSpacingBySize(pet1, pet2);
+        Debug.Log($"[{InteractionName}] 크기별 간격: {currentSpacing:F2} ({pet1.Profile.size} + {pet2.Profile.size})");
 
         // NavMeshAgent 준비 확인 (재시도 로직 포함)
         bool pet1Ready = false;
@@ -240,7 +266,7 @@ public class WalkTogetherInteraction : BasePetInteraction
 
         // 시작 위치 계산 (나란히 서기)
         Vector3 pet1Position, pet2Position;
-        CalculateStartPositions(pet1, pet2, out pet1Position, out pet2Position, petSpacing);
+        CalculateStartPositions(pet1, pet2, out pet1Position, out pet2Position, currentSpacing);
 
         // 걷기 전 시작 위치로 이동
         yield return StartCoroutine(MoveToPositions(pet1, pet2, pet1Position, pet2Position, moveToStartTimeout));
@@ -364,8 +390,8 @@ public class WalkTogetherInteraction : BasePetInteraction
             Vector3 centerTarget = midPoint + walkDirection * targetDistance;
 
             // 각 펫의 목적지 계산 (나란히 걷도록)
-            Vector3 pet1Target = centerTarget - sideDirection * (petSpacing / 2f);
-            Vector3 pet2Target = centerTarget + sideDirection * (petSpacing / 2f);
+            Vector3 pet1Target = centerTarget - sideDirection * (currentSpacing / 2f);
+            Vector3 pet2Target = centerTarget + sideDirection * (currentSpacing / 2f);
 
             // NavMesh 보정
             pet1Target = FindValidPositionOnNavMesh(pet1Target, navMeshSearchRadius);
@@ -492,11 +518,7 @@ public class WalkTogetherInteraction : BasePetInteraction
                 
                 pet1Anim.StopContinuousAnimation();
                 pet2Anim.StopContinuousAnimation();
-                
-                // 주변을 둘러보는 동작
-                pet1.ShowEmotion(EmotionType.Surprised, 2f);
-                pet2.ShowEmotion(EmotionType.Surprised, 2f);
-                
+
                 yield return new WaitForSeconds(2f);
                 
                 // 다시 걷기 시작
@@ -531,14 +553,14 @@ public class WalkTogetherInteraction : BasePetInteraction
 
                 // 펫 사이 거리 확보
                 float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
-                if (currentDistance < petSpacing)
+                if (currentDistance < currentSpacing)
                 {
                     Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
                     Vector3 dir1 = (pet1.transform.position - midPoint).normalized;
                     Vector3 dir2 = (pet2.transform.position - midPoint).normalized;
 
-                    Vector3 newPos1 = midPoint + dir1 * (petSpacing / 2f);
-                    Vector3 newPos2 = midPoint + dir2 * (petSpacing / 2f);
+                    Vector3 newPos1 = midPoint + dir1 * (currentSpacing / 2f);
+                    Vector3 newPos2 = midPoint + dir2 * (currentSpacing / 2f);
 
                     newPos1 = FindValidPositionOnNavMesh(newPos1, 3f);
                     newPos2 = FindValidPositionOnNavMesh(newPos2, 3f);
@@ -572,7 +594,6 @@ public class WalkTogetherInteraction : BasePetInteraction
                 
                 leadPet.agent.speed = leadSpeed * 1.3f;
                 leadPet.ShowEmotion(EmotionType.Happy, 3f);
-                followPet.ShowEmotion(EmotionType.Surprised, 3f);
                 
                 yield return new WaitForSeconds(2f);
                 
@@ -616,8 +637,8 @@ public class WalkTogetherInteraction : BasePetInteraction
                 Vector3 pet2Dest = pet2.agent.destination;
                 
                 // 서로의 위치 근처로 이동
-                Vector3 crossPoint1 = pet2.transform.position + pet2.transform.right * petSpacing;
-                Vector3 crossPoint2 = pet1.transform.position - pet1.transform.right * petSpacing;
+                Vector3 crossPoint1 = pet2.transform.position + pet2.transform.right * currentSpacing;
+                Vector3 crossPoint2 = pet1.transform.position - pet1.transform.right * currentSpacing;
                 
                 // NavMesh 검증
                 crossPoint1 = FindValidPositionOnNavMesh(crossPoint1, 5f);
@@ -647,6 +668,42 @@ public class WalkTogetherInteraction : BasePetInteraction
     }
 
     /// <summary>
+    /// 펫 크기에 따른 간격 계산
+    /// </summary>
+    private float CalculateSpacingBySize(PetController pet1, PetController pet2)
+    {
+        var size1 = pet1.Profile.size;
+        var size2 = pet2.Profile.size;
+
+        // 크기 순서 정렬 (Small < Medium < Large)
+        if (size1 > size2) (size1, size2) = (size2, size1);
+
+        return GetSpacingBySizePair(size1, size2);
+    }
+
+    /// <summary>
+    /// 크기 조합에 따른 간격 반환
+    /// </summary>
+    /// <param name="size1">작은 쪽 크기 (size1 <= size2 보장됨)</param>
+    /// <param name="size2">큰 쪽 크기</param>
+    private float GetSpacingBySizePair(PetTraits.Size size1, PetTraits.Size size2)
+    {
+        // size1 <= size2 보장됨
+        if (size1 == PetTraits.Size.Small)
+        {
+            if (size2 == PetTraits.Size.Small) return smallSmallSpacing;
+            if (size2 == PetTraits.Size.Medium) return smallMediumSpacing;
+            return smallLargeSpacing;
+        }
+        if (size1 == PetTraits.Size.Medium)
+        {
+            if (size2 == PetTraits.Size.Medium) return mediumMediumSpacing;
+            return mediumLargeSpacing;
+        }
+        return largeLargeSpacing;
+    }
+
+    /// <summary>
     /// NavMeshAgent가 안전하게 준비되었는지 확인
     /// </summary>
     private bool IsAgentSafelyReady(PetController pet)
@@ -665,6 +722,14 @@ public class WalkTogetherInteraction : BasePetInteraction
         this.walkDuration = template.walkDuration;
         this.petSpacing = template.petSpacing;
         this.walkSpeedMultiplier = template.walkSpeedMultiplier;
+
+        // 크기별 간격 설정
+        this.smallSmallSpacing = template.smallSmallSpacing;
+        this.smallMediumSpacing = template.smallMediumSpacing;
+        this.smallLargeSpacing = template.smallLargeSpacing;
+        this.mediumMediumSpacing = template.mediumMediumSpacing;
+        this.mediumLargeSpacing = template.mediumLargeSpacing;
+        this.largeLargeSpacing = template.largeLargeSpacing;
 
         // 경로 설정
         this.minWalkDistance = template.minWalkDistance;
