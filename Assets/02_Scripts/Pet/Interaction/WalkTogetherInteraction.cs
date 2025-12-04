@@ -1,5 +1,6 @@
 // WalkTogetherInteraction.cs (최적화된 버전)
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -72,6 +73,41 @@ public class WalkTogetherInteraction : BasePetInteraction
     // 이벤트 진행 중 플래그
     private bool isEventInProgress = false;
 
+    // 유효한 펫 조합 (HashSet으로 O(1) 룩업)
+    private static readonly HashSet<(PetType, PetType)> ValidPairs = new()
+    {
+        (PetType.Monkey, PetType.Gorilla), (PetType.Gorilla, PetType.Monkey),
+        (PetType.Anteater, PetType.Malayan), (PetType.Malayan, PetType.Anteater),
+        (PetType.Pangolin, PetType.Armadillo), (PetType.Armadillo, PetType.Pangolin),
+        (PetType.Elephant, PetType.Giraffe), (PetType.Giraffe, PetType.Elephant),
+        (PetType.Elk, PetType.Deer), (PetType.Deer, PetType.Elk)
+    };
+
+    /// <summary>
+    /// 강제 종료 시 WalkTogether 고유 리소스를 정리합니다.
+    /// </summary>
+    protected override void OnForceCleanup()
+    {
+        Debug.Log("[WalkTogether] OnForceCleanup 호출됨 - 고유 리소스 정리 시작");
+
+        // 이벤트 플래그 초기화
+        isEventInProgress = false;
+
+        // 애니메이션 컨트롤러 정리
+        if (pet1Anim != null)
+        {
+            pet1Anim.StopContinuousAnimation();
+            pet1Anim = null;
+        }
+        if (pet2Anim != null)
+        {
+            pet2Anim.StopContinuousAnimation();
+            pet2Anim = null;
+        }
+
+        Debug.Log("[WalkTogether] OnForceCleanup 완료 - 고유 리소스 정리됨");
+    }
+
     protected override InteractionType DetermineInteractionType()
     {
         return InteractionType.WalkTogether;
@@ -79,33 +115,58 @@ public class WalkTogetherInteraction : BasePetInteraction
 
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
-        PetType type1 = pet1.PetType;
-        PetType type2 = pet2.PetType;
-
-        return (type1 == PetType.Monkey && type2 == PetType.Gorilla) ||
-               (type1 == PetType.Gorilla && type2 == PetType.Monkey) ||
-               (type1 == PetType.Anteater && type2 == PetType.Malayan) ||
-               (type1 == PetType.Malayan && type2 == PetType.Anteater) ||
-               (type1 == PetType.Pangolin && type2 == PetType.Armadillo) ||
-               (type1 == PetType.Armadillo && type2 == PetType.Pangolin) ||
-               (type1 == PetType.Elephant && type2 == PetType.Giraffe) ||
-               (type1 == PetType.Giraffe && type2 == PetType.Elephant) ||
-               (type1 == PetType.Elk && type2 == PetType.Deer) ||
-               (type1 == PetType.Deer && type2 == PetType.Elk);
+        // HashSet을 사용한 O(1) 룩업으로 최적화
+        return ValidPairs.Contains((pet1.PetType, pet2.PetType));
     }
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[{InteractionName}] {pet1.petName}와(과) {pet2.petName}가 함께 걷기 시작했습니다!");
 
-        // NavMeshAgent 준비 확인
+        // NavMeshAgent 준비 확인 (재시도 로직 포함)
+        bool pet1Ready = false;
+        bool pet2Ready = false;
+
+        // 첫 번째 시도
         yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
         yield return StartCoroutine(WaitUntilAgentIsReady(pet2, agentSafetyTimeout));
 
-        if (!IsAgentSafelyReady(pet1) || !IsAgentSafelyReady(pet2))
+        pet1Ready = IsAgentSafelyReady(pet1);
+        pet2Ready = IsAgentSafelyReady(pet2);
+
+        // 첫 번째 시도 실패 시 agent 재활성화 후 재시도
+        if (!pet1Ready || !pet2Ready)
         {
-            Debug.LogError($"[{InteractionName}] NavMeshAgent 준비 실패로 상호작용을 중단합니다.");
-            EndInteraction(pet1, pet2);
+            Debug.LogWarning($"[{InteractionName}] NavMeshAgent 준비 실패. 재시도합니다. (pet1: {pet1Ready}, pet2: {pet2Ready})");
+
+            // Agent 재활성화 시도
+            if (!pet1Ready && pet1.agent != null)
+            {
+                pet1.agent.enabled = false;
+                yield return new WaitForSeconds(0.2f);
+                pet1.agent.enabled = true;
+                pet1.agent.Warp(pet1.transform.position);
+            }
+
+            if (!pet2Ready && pet2.agent != null)
+            {
+                pet2.agent.enabled = false;
+                yield return new WaitForSeconds(0.2f);
+                pet2.agent.enabled = true;
+                pet2.agent.Warp(pet2.transform.position);
+            }
+
+            // 두 번째 시도
+            yield return StartCoroutine(WaitUntilAgentIsReady(pet1, agentSafetyTimeout));
+            yield return StartCoroutine(WaitUntilAgentIsReady(pet2, agentSafetyTimeout));
+
+            pet1Ready = IsAgentSafelyReady(pet1);
+            pet2Ready = IsAgentSafelyReady(pet2);
+        }
+
+        if (!pet1Ready || !pet2Ready)
+        {
+            Debug.LogError($"[{InteractionName}] NavMeshAgent 준비 실패로 상호작용을 중단합니다. (pet1: {pet1.petName} ready: {pet1Ready}, pet2: {pet2.petName} ready: {pet2Ready})");
             yield break;
         }
 
@@ -156,9 +217,9 @@ public class WalkTogetherInteraction : BasePetInteraction
             // 이벤트 플래그 초기화
             isEventInProgress = false;
 
-            // 공통 종료 처리
-            EndInteraction(pet1, pet2);
-            Debug.Log($"[{InteractionName}] 상호작용 정리 완룼.");
+            // 주의: EndInteraction은 BasePetInteraction.InteractionLifecycle에서 자동 호출됨
+            // 여기서 직접 호출하면 중복 호출 발생
+            Debug.Log($"[{InteractionName}] 상호작용 정리 완료.");
         }
     }
 
@@ -506,5 +567,36 @@ public class WalkTogetherInteraction : BasePetInteraction
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+    }
+
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(WalkTogetherInteraction template)
+    {
+        if (template == null) return;
+
+        // 걷기 설정
+        this.walkDuration = template.walkDuration;
+        this.petSpacing = template.petSpacing;
+        this.walkSpeedMultiplier = template.walkSpeedMultiplier;
+
+        // 경로 설정
+        this.minWalkDistance = template.minWalkDistance;
+        this.maxWalkDistance = template.maxWalkDistance;
+        this.arrivalDistance = template.arrivalDistance;
+        this.pathUpdateInterval = template.pathUpdateInterval;
+        this.maxDirectionChangeAngle = template.maxDirectionChangeAngle;
+
+        // 이벤트 설정
+        this.specialEventChance = template.specialEventChance;
+        this.eventMinInterval = template.eventMinInterval;
+        this.eventMaxInterval = template.eventMaxInterval;
+
+        // 안전 설정
+        this.moveToStartTimeout = template.moveToStartTimeout;
+        this.agentSafetyTimeout = template.agentSafetyTimeout;
+        this.navMeshSearchRadius = template.navMeshSearchRadius;
+        this.pathfindingRetries = template.pathfindingRetries;
     }
 }

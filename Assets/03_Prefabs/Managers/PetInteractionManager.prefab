@@ -499,19 +499,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
   finishLinePrefab: {fileID: 1168235394157182659, guid: 627040b6b0e8b4f408e054e5bf31bb3b, type: 3}
-  markerHeightOffset: 1
+  markerHeightOffset: 5
   markerBobSpeed: 2
-  markerBobAmount: 0.5
-  raceDistance: 40
-  minRaceDistance: 20
-  raceTimeoutSeconds: 120
+  markerBobAmount: 1
+  raceDistance: 80
+  minRaceDistance: 75
+  raceTimeoutSeconds: 200
   finishLineSpread: 2
-  slothSpeedMultiplier: 0.5
+  slothSpeedMultiplier: 0.45
   koalaSpeedMultiplier: 0.45
-  turtleSpeedMultiplier: 0.4
+  turtleSpeedMultiplier: 0.45
+  chameleonSpeedMultiplier: 0.45
   maxSpectators: 2
   spectatorSearchRadius: 25
   boredomTimePhase1: 8
-  boredomTimePhase2: 20
-  boredomTimePhase3: 40
-  markerDisappearDistance: 10
+  boredomTimePhase2: 16
+  boredomTimePhase3: 24
+  markerDisappearDistance: 5
+  speedChangeIntervalMin: 3
+  speedChangeIntervalMax: 6
+  speedVariationMin: 0.5
+  speedVariationMax: 1.5
+  speedTransitionDuration: 0.5
