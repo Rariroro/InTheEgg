@@ -378,17 +378,19 @@ public class WalkTogetherInteraction : BasePetInteraction
             if (pet1.agent.CalculatePath(pet1Target, path1) && path1.status == NavMeshPathStatus.PathComplete &&
                 pet2.agent.CalculatePath(pet2Target, path2) && path2.status == NavMeshPathStatus.PathComplete)
             {
-                // 곡선 경로가 활성화된 경우
+                pet1.agent.isStopped = false;
+                pet2.agent.isStopped = false;
+
+                // 곡선 경로가 활성화된 경우: 중간 지점을 거쳐 최종 목적지로 이동
                 if (pathCurvature > 0.01f)
                 {
                     // 곡선 경로의 중간 웨이포인트 생성 (같은 방향으로 곡선)
                     List<Vector3> pet1Waypoints = GenerateCurvedPath(pet1.transform.position, pet1Target, curveDirection);
                     List<Vector3> pet2Waypoints = GenerateCurvedPath(pet2.transform.position, pet2Target, curveDirection);
 
-                    // 첫 번째 웨이포인트 (곡선 중간점)로 이동
+                    // 중간 지점으로 먼저 이동 후 최종 목적지로
                     if (pet1Waypoints.Count > 1 && pet2Waypoints.Count > 1)
                     {
-                        // 중간 지점으로 먼저 이동 (곡선 효과)
                         Vector3 pet1Mid = pet1Waypoints[0];
                         Vector3 pet2Mid = pet2Waypoints[0];
 
@@ -399,20 +401,35 @@ public class WalkTogetherInteraction : BasePetInteraction
                         if (pet1.agent.CalculatePath(pet1Mid, midPath1) && midPath1.status == NavMeshPathStatus.PathComplete &&
                             pet2.agent.CalculatePath(pet2Mid, midPath2) && midPath2.status == NavMeshPathStatus.PathComplete)
                         {
-                            pet1.agent.isStopped = false;
-                            pet2.agent.isStopped = false;
+                            // 중간 지점으로 이동
                             pet1.agent.SetDestination(pet1Mid);
                             pet2.agent.SetDestination(pet2Mid);
 
-                            Debug.Log($"[{InteractionName}] 곡선 경로 중간 지점 설정 성공");
+                            // 중간 지점 도착 대기
+                            float waitTime = 0f;
+                            float maxWaitTime = 5f;
+                            while (waitTime < maxWaitTime)
+                            {
+                                bool pet1Arrived = !pet1.agent.pathPending && pet1.agent.remainingDistance < arrivalDistance;
+                                bool pet2Arrived = !pet2.agent.pathPending && pet2.agent.remainingDistance < arrivalDistance;
+
+                                if (pet1Arrived && pet2Arrived) break;
+
+                                waitTime += Time.deltaTime;
+                                yield return null;
+                            }
+
+                            // 최종 목적지로 이동
+                            pet1.agent.SetDestination(pet1Target);
+                            pet2.agent.SetDestination(pet2Target);
+
+                            Debug.Log($"[{InteractionName}] 곡선 경로 설정 성공");
                             yield break;
                         }
                     }
                 }
 
                 // 곡선 실패 또는 비활성화 시 직선 경로
-                pet1.agent.isStopped = false;
-                pet2.agent.isStopped = false;
                 pet1.agent.SetDestination(pet1Target);
                 pet2.agent.SetDestination(pet2Target);
 
@@ -513,14 +530,14 @@ public class WalkTogetherInteraction : BasePetInteraction
                 Debug.Log($"[{InteractionName}] 서로를 바라보며 교감합니다.");
                 pet1.agent.isStopped = true;
                 pet2.agent.isStopped = true;
-                
+
                 yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
-                
-                pet1.ShowEmotion(EmotionType.Love, 3f);
-                pet2.ShowEmotion(EmotionType.Love, 3f);
-                
+
+                pet1.ShowEmotion(EmotionType.Happy, 3f);
+                pet2.ShowEmotion(EmotionType.Happy, 3f);
+
                 yield return new WaitForSeconds(2f);
-                
+
                 pet1.agent.isStopped = false;
                 pet2.agent.isStopped = false;
                 break;
