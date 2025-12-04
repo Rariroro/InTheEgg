@@ -77,6 +77,7 @@ public class SlowRaceInteraction : BasePetInteraction
     // 마커 관련 필드 (강제 종료 시 정리를 위해 클래스 필드로 관리)
     private Coroutine markerBobbingCoroutine = null;
     private GameObject finishMarkerInstance = null;
+    private List<GameObject> myRaceMarkers = new List<GameObject>();
 
     // 속도 변동 관련 필드
     private Coroutine racer1SpeedCoroutine = null;
@@ -106,6 +107,7 @@ public class SlowRaceInteraction : BasePetInteraction
         if (finishMarkerInstance != null)
         {
             Destroy(finishMarkerInstance);
+            myRaceMarkers.Remove(finishMarkerInstance);
             finishMarkerInstance = null;
         }
 
@@ -193,6 +195,7 @@ public class SlowRaceInteraction : BasePetInteraction
                 // 결승선이 달려오는 선수들을 바라보도록 회전 값을 설정합니다.
             Quaternion arrowRotation = Quaternion.Euler(0, 0, 180);
                 finishMarkerInstance = Instantiate(finishLinePrefab, markerPos, arrowRotation);
+                myRaceMarkers.Add(finishMarkerInstance);
                 // ▼▼▼ [수정] 코루틴을 변수에 저장하여 나중에 중지할 수 있도록 합니다. ▼▼▼
                 markerBobbingCoroutine = StartCoroutine(AnimateFinishMarker(finishMarkerInstance));
                 // ▲▲▲ [여기까지 수정] ▲▲▲
@@ -424,6 +427,7 @@ public class SlowRaceInteraction : BasePetInteraction
             if (finishMarkerInstance != null)
             {
                 Destroy(finishMarkerInstance);
+                myRaceMarkers.Remove(finishMarkerInstance);
                 finishMarkerInstance = null;
             }
 
@@ -780,6 +784,7 @@ private IEnumerator DisappearFinishMarker(GameObject marker)
 
     // 애니메이션이 끝난 후 오브젝트를 파괴합니다.
     Destroy(marker);
+    myRaceMarkers.Remove(marker);
 }
 
     /// <summary>
@@ -975,5 +980,60 @@ private IEnumerator DisappearFinishMarker(GameObject marker)
 
         if (IsAgentSafelyReady(racer))
             racer.agent.speed = targetSpeed;
+    }
+
+    /// <summary>
+    /// 컴포넌트가 파괴될 때 남아있는 마커 정리
+    /// </summary>
+    private void OnDestroy()
+    {
+        if (finishMarkerInstance != null)
+        {
+            Destroy(finishMarkerInstance);
+            myRaceMarkers.Remove(finishMarkerInstance);
+        }
+    }
+
+    /// <summary>
+    /// 템플릿에서 이 인스턴스로 설정값을 복사합니다 (동시 실행 격리)
+    /// </summary>
+    public void CopySettingsFrom(SlowRaceInteraction template)
+    {
+        if (template == null) return;
+
+        // Finish Line Visuals
+        this.finishLinePrefab = template.finishLinePrefab;
+        this.markerHeightOffset = template.markerHeightOffset;
+        this.markerBobSpeed = template.markerBobSpeed;
+        this.markerBobAmount = template.markerBobAmount;
+
+        // Race Settings
+        this.raceDistance = template.raceDistance;
+        this.minRaceDistance = template.minRaceDistance;
+        this.raceTimeoutSeconds = template.raceTimeoutSeconds;
+        this.finishLineSpread = template.finishLineSpread;
+
+        // Racer Settings
+        this.slothSpeedMultiplier = template.slothSpeedMultiplier;
+        this.koalaSpeedMultiplier = template.koalaSpeedMultiplier;
+        this.turtleSpeedMultiplier = template.turtleSpeedMultiplier;
+        this.chameleonSpeedMultiplier = template.chameleonSpeedMultiplier;
+
+        // Spectator Settings
+        this.maxSpectators = template.maxSpectators;
+        this.spectatorSearchRadius = template.spectatorSearchRadius;
+        this.boredomTimePhase1 = template.boredomTimePhase1;
+        this.boredomTimePhase2 = template.boredomTimePhase2;
+        this.boredomTimePhase3 = template.boredomTimePhase3;
+
+        // Marker Disappearance
+        this.markerDisappearDistance = template.markerDisappearDistance;
+
+        // Speed Variation Settings
+        this.speedChangeIntervalMin = template.speedChangeIntervalMin;
+        this.speedChangeIntervalMax = template.speedChangeIntervalMax;
+        this.speedVariationMin = template.speedVariationMin;
+        this.speedVariationMax = template.speedVariationMax;
+        this.speedTransitionDuration = template.speedTransitionDuration;
     }
 }

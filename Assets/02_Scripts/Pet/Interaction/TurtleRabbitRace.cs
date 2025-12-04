@@ -34,6 +34,7 @@ public class TurtleRabbitRace : BasePetInteraction
     public float arrowBobAmount = 1f;
     // ▲▲▲ [여기까지 수정] ▲▲▲
 
+
     // ★★★ 여기까지 추가 ★★★
     // ★★★ 추가: 경주 설정을 인스펙터에서 조절하기 위한 변수들 ★★★
     [Header("Race Settings")] // 유니티 인스펙터에서 섹션을 구분하기 위한 헤더입니다.

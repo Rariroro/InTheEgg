@@ -363,6 +363,13 @@ public class PetInteractionManager : MonoBehaviour
             newComp.CopySettingsFrom(original);
             newInstance = newComp;
         }
+        else if (template is SlowRaceInteraction)
+        {
+            var original = template as SlowRaceInteraction;
+            var newComp = interactionObj.AddComponent<SlowRaceInteraction>();
+            newComp.CopySettingsFrom(original);
+            newInstance = newComp;
+        }
         else
         {
             // 다른 상호작용은 기존 방식 사용 (템플릿 그대로)
