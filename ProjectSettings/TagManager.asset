@@ -15,6 +15,7 @@ TagManager:
   - DivingSpot
   - Water
   - ButterflyParticle
+  - Flower
   layers:
   - Default
   - TransparentFX

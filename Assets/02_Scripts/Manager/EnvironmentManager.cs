@@ -838,6 +838,14 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 스폰된 환경 오브젝트 목록 반환 (WalkTogetherInteraction 등에서 사용)
+    /// </summary>
+    public List<GameObject> GetSpawnedEnvironments()
+    {
+        return spawnedEnvironments;
+    }
+
+    /// <summary>
     /// FlowersEnvironment의 모든 나비 파티클 오브젝트 반환
     /// 스폰 시 저장된 참조를 반환하므로 검색 불필요 (성능 최적화)
     /// </summary>

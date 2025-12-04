@@ -62,6 +62,14 @@ public class WalkTogetherInteraction : BasePetInteraction
     [Tooltip("경로 찾기 재시도 횟수")]
     public int pathfindingRetries = 3;
 
+    [Header("곡선 경로 설정")]
+    [Tooltip("경로 곡률 (0=직선, 1=최대 곡선)")]
+    [Range(0f, 1f)]
+    public float pathCurvature = 0.3f;
+
+    [Tooltip("경로 변동성 (곡선 폭)")]
+    public float pathVariation = 5f;
+
     // 애니메이션 컨트롤러 캐싱
     private PetAnimationController pet1Anim;
     private PetAnimationController pet2Anim;
@@ -330,14 +338,14 @@ public class WalkTogetherInteraction : BasePetInteraction
     }
 
     /// <summary>
-    /// 경로 업데이트
+    /// 경로 업데이트 (곡선 경로 지원)
     /// </summary>
     private IEnumerator UpdateWalkPath(PetController pet1, PetController pet2)
     {
         // 새로운 걷기 방향 설정
         Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
         float randomAngle = Random.Range(-maxDirectionChangeAngle, maxDirectionChangeAngle);
-        Vector3 walkDirection = Quaternion.Euler(0, randomAngle, 0) * 
+        Vector3 walkDirection = Quaternion.Euler(0, randomAngle, 0) *
                               (pet1.transform.forward + pet2.transform.forward).normalized;
 
         // 측면 벡터 계산
@@ -345,6 +353,9 @@ public class WalkTogetherInteraction : BasePetInteraction
 
         // 목적지 거리
         float targetDistance = Random.Range(minWalkDistance, maxWalkDistance);
+
+        // 곡선 방향 결정 (랜덤하게 좌우 변경)
+        int curveDirection = Random.value > 0.5f ? 1 : -1;
 
         // 경로 찾기 재시도
         for (int retry = 0; retry < pathfindingRetries; retry++)
@@ -367,7 +378,39 @@ public class WalkTogetherInteraction : BasePetInteraction
             if (pet1.agent.CalculatePath(pet1Target, path1) && path1.status == NavMeshPathStatus.PathComplete &&
                 pet2.agent.CalculatePath(pet2Target, path2) && path2.status == NavMeshPathStatus.PathComplete)
             {
-                // 두 펫을 움직이게 설정
+                // 곡선 경로가 활성화된 경우
+                if (pathCurvature > 0.01f)
+                {
+                    // 곡선 경로의 중간 웨이포인트 생성 (같은 방향으로 곡선)
+                    List<Vector3> pet1Waypoints = GenerateCurvedPath(pet1.transform.position, pet1Target, curveDirection);
+                    List<Vector3> pet2Waypoints = GenerateCurvedPath(pet2.transform.position, pet2Target, curveDirection);
+
+                    // 첫 번째 웨이포인트 (곡선 중간점)로 이동
+                    if (pet1Waypoints.Count > 1 && pet2Waypoints.Count > 1)
+                    {
+                        // 중간 지점으로 먼저 이동 (곡선 효과)
+                        Vector3 pet1Mid = pet1Waypoints[0];
+                        Vector3 pet2Mid = pet2Waypoints[0];
+
+                        // 중간 지점 유효성 검사
+                        NavMeshPath midPath1 = new NavMeshPath();
+                        NavMeshPath midPath2 = new NavMeshPath();
+
+                        if (pet1.agent.CalculatePath(pet1Mid, midPath1) && midPath1.status == NavMeshPathStatus.PathComplete &&
+                            pet2.agent.CalculatePath(pet2Mid, midPath2) && midPath2.status == NavMeshPathStatus.PathComplete)
+                        {
+                            pet1.agent.isStopped = false;
+                            pet2.agent.isStopped = false;
+                            pet1.agent.SetDestination(pet1Mid);
+                            pet2.agent.SetDestination(pet2Mid);
+
+                            Debug.Log($"[{InteractionName}] 곡선 경로 중간 지점 설정 성공");
+                            yield break;
+                        }
+                    }
+                }
+
+                // 곡선 실패 또는 비활성화 시 직선 경로
                 pet1.agent.isStopped = false;
                 pet2.agent.isStopped = false;
                 pet1.agent.SetDestination(pet1Target);
@@ -598,5 +641,66 @@ public class WalkTogetherInteraction : BasePetInteraction
         this.agentSafetyTimeout = template.agentSafetyTimeout;
         this.navMeshSearchRadius = template.navMeshSearchRadius;
         this.pathfindingRetries = template.pathfindingRetries;
+
+        // 곡선 경로 설정
+        this.pathCurvature = template.pathCurvature;
+        this.pathVariation = template.pathVariation;
     }
+
+    #region 곡선 경로
+
+    /// <summary>
+    /// 2차 베지어 곡선의 점을 계산합니다
+    /// </summary>
+    /// <param name="t">0~1 사이의 진행도</param>
+    /// <param name="p0">시작점</param>
+    /// <param name="p1">제어점</param>
+    /// <param name="p2">끝점</param>
+    private Vector3 CalculateQuadraticBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2)
+    {
+        float u = 1 - t;
+        return u * u * p0 + 2 * u * t * p1 + t * t * p2;
+    }
+
+    /// <summary>
+    /// 곡선 경로의 웨이포인트를 생성합니다
+    /// </summary>
+    /// <param name="start">시작 위치</param>
+    /// <param name="end">목표 위치</param>
+    /// <param name="curveDirection">곡선 방향 (1 또는 -1)</param>
+    private List<Vector3> GenerateCurvedPath(Vector3 start, Vector3 end, int curveDirection)
+    {
+        List<Vector3> waypoints = new List<Vector3>();
+
+        // 직선일 경우 그냥 목표만 반환
+        if (pathCurvature <= 0.01f)
+        {
+            waypoints.Add(end);
+            return waypoints;
+        }
+
+        // 제어점 계산
+        Vector3 midPoint = (start + end) / 2f;
+        Vector3 direction = (end - start).normalized;
+        Vector3 perpendicular = Vector3.Cross(Vector3.up, direction).normalized;
+
+        // 곡률과 변동성을 기반으로 제어점 오프셋 계산
+        float curveOffset = pathVariation * pathCurvature * curveDirection;
+        Vector3 controlPoint = midPoint + perpendicular * curveOffset;
+
+        // y 좌표는 지형 높이로 유지 (나중에 NavMesh로 보정)
+        controlPoint.y = (start.y + end.y) / 2f;
+
+        // 베지어 곡선에서 3개의 웨이포인트 추출 (0.33, 0.66, 1.0)
+        for (float t = 0.33f; t <= 1f; t += 0.33f)
+        {
+            Vector3 point = CalculateQuadraticBezierPoint(t, start, controlPoint, end);
+            Vector3 validPoint = FindValidPositionOnNavMesh(point, navMeshSearchRadius);
+            waypoints.Add(validPoint);
+        }
+
+        return waypoints;
+    }
+
+    #endregion
 }
