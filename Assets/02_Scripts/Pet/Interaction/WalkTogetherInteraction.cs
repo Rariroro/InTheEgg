@@ -528,6 +528,27 @@ public class WalkTogetherInteraction : BasePetInteraction
 
             case 2: // 서로 바라보며 교감
                 Debug.Log($"[{InteractionName}] 서로를 바라보며 교감합니다.");
+
+                // 펫 사이 거리 확보
+                float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
+                if (currentDistance < petSpacing)
+                {
+                    Vector3 midPoint = (pet1.transform.position + pet2.transform.position) / 2f;
+                    Vector3 dir1 = (pet1.transform.position - midPoint).normalized;
+                    Vector3 dir2 = (pet2.transform.position - midPoint).normalized;
+
+                    Vector3 newPos1 = midPoint + dir1 * (petSpacing / 2f);
+                    Vector3 newPos2 = midPoint + dir2 * (petSpacing / 2f);
+
+                    newPos1 = FindValidPositionOnNavMesh(newPos1, 3f);
+                    newPos2 = FindValidPositionOnNavMesh(newPos2, 3f);
+
+                    pet1.agent.SetDestination(newPos1);
+                    pet2.agent.SetDestination(newPos2);
+
+                    yield return new WaitForSeconds(0.5f);
+                }
+
                 pet1.agent.isStopped = true;
                 pet2.agent.isStopped = true;
 
@@ -615,6 +636,10 @@ public class WalkTogetherInteraction : BasePetInteraction
                 pet2.ShowEmotion(EmotionType.Happy, 2f);
                 break;
         }
+
+        // 이벤트 후 항상 걷기 애니메이션 보장
+        pet1Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        pet2Anim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         // 속도가 변경되었을 수 있으므로 원래 속도로 복원
         pet1.agent.speed = eventSpeed1;
