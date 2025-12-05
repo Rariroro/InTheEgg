@@ -470,14 +470,20 @@ public class RideAndWalkInteraction : BasePetInteraction
                 break;
             }
 
-            // 일정 주기마다 새로운 목적지로 갱신
-            if (Time.time - lastPathUpdateTime > pathUpdateInterval)
+            // 도착 여부 체크
+            bool hasArrived = !mount.agent.pathPending &&
+                              mount.agent.remainingDistance < 1.5f;
+
+            // 일정 주기 또는 도착 시 새로운 목적지로 갱신
+            if (Time.time - lastPathUpdateTime > pathUpdateInterval || hasArrived)
             {
                 lastPathUpdateTime = Time.time;
-                Vector3 randomDirection = Random.insideUnitSphere * 25f;
-                randomDirection.y = 0;
+
+                // 균일한 거리 분포로 목적지 선택 (15~25m 범위)
+                float distance = Random.Range(15f, 25f);
+                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+                Vector3 randomDirection = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * distance;
                 Vector3 newDestination = mount.transform.position + randomDirection;
-                mount.agent.updateRotation = true;
 
                 mount.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, 30f));
                 mount.agent.isStopped = false;
