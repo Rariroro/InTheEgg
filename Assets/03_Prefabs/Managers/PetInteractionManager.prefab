@@ -172,6 +172,12 @@ MonoBehaviour:
   interactionStartDistance: 5
   walkDuration: 50
   petSpacing: 2.5
+  smallSmallSpacing: 1.5
+  smallMediumSpacing: 2
+  smallLargeSpacing: 3
+  mediumMediumSpacing: 5
+  mediumLargeSpacing: 7
+  largeLargeSpacing: 10
   walkSpeedMultiplier: 0.8
   minWalkDistance: 8
   maxWalkDistance: 50
@@ -185,6 +191,8 @@ MonoBehaviour:
   agentSafetyTimeout: 3
   navMeshSearchRadius: 55
   pathfindingRetries: 3
+  pathCurvature: 0.3
+  pathVariation: 5
 --- !u!114 &6139375440592564944
 MonoBehaviour:
   m_ObjectHideFlags: 0
