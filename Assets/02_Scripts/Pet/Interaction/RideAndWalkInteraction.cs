@@ -12,10 +12,26 @@ public class RideAndWalkInteraction : BasePetInteraction
     // 우선순위: 95 (2순위)
     public override int Priority => 95;
 
-    [Header("Ride & Walk Settings")]
-    [Tooltip("상호작용 시작 시 펫들이 만나는 거리입니다.")]
-    public float meetingDistance = 5f;
+    [Header("크기별 만남 거리 설정")]
+    [Tooltip("Small + Small 펫 간격")]
+    public float smallSmallSpacing = 2.0f;
 
+    [Tooltip("Small + Medium 펫 간격")]
+    public float smallMediumSpacing = 2.5f;
+
+    [Tooltip("Small + Large 펫 간격")]
+    public float smallLargeSpacing = 3.0f;
+
+    [Tooltip("Medium + Medium 펫 간격")]
+    public float mediumMediumSpacing = 3.0f;
+
+    [Tooltip("Medium + Large 펫 간격")]
+    public float mediumLargeSpacing = 3.5f;
+
+    [Tooltip("Large + Large 펫 간격")]
+    public float largeLargeSpacing = 4.5f;
+
+    [Header("Ride & Walk Settings")]
     [Tooltip("기본 탑승 위치 오프셋 (폴백용)")]
     public Vector3 defaultRideOffset = new Vector3(0, 1.7f, 0.2f);
 
@@ -165,7 +181,14 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         if (template == null) return;
 
-        this.meetingDistance = template.meetingDistance;
+        // 크기별 간격 설정
+        this.smallSmallSpacing = template.smallSmallSpacing;
+        this.smallMediumSpacing = template.smallMediumSpacing;
+        this.smallLargeSpacing = template.smallLargeSpacing;
+        this.mediumMediumSpacing = template.mediumMediumSpacing;
+        this.mediumLargeSpacing = template.mediumLargeSpacing;
+        this.largeLargeSpacing = template.largeLargeSpacing;
+
         this.defaultRideOffset = template.defaultRideOffset;
         this.mountDuration = template.mountDuration;
         this.walkTogetherDuration = template.walkTogetherDuration;
@@ -364,11 +387,30 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         Debug.Log("[RideAndWalk] 1단계: 만나서 놀기");
 
-        // BasePetInteraction이 이미 위치를 정렬했으므로 중복 이동 제거
-        // 펫들이 이미 적절한 거리에서 마주보고 있는 상태
-
         // 안정성을 위해 잠시 대기
         yield return Wait02;
+
+        // 펫 크기에 따른 만남 거리 계산 및 재조정
+        float targetDistance = CalculateMeetingDistance(rider, mount);
+        float currentDistance = Vector3.Distance(rider.transform.position, mount.transform.position);
+
+        // 거리 차이가 1m 이상이면 재조정
+        if (Mathf.Abs(currentDistance - targetDistance) > 1f)
+        {
+            Debug.Log($"[RideAndWalk] 거리 재조정: 현재 {currentDistance:F1}m → 목표 {targetDistance:F1}m");
+
+            Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
+            if (direction == Vector3.zero) direction = rider.transform.forward;
+            Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
+
+            Vector3 riderTarget = FindValidPositionOnNavMesh(midpoint - direction * (targetDistance / 2f));
+            Vector3 mountTarget = FindValidPositionOnNavMesh(midpoint + direction * (targetDistance / 2f));
+
+            yield return StartCoroutine(MoveToPositions(rider, mount, riderTarget, mountTarget, 5f));
+        }
+
+        // 서로 마주보기 (다른 상호작용과 동일한 패턴)
+        yield return StartCoroutine(SmoothlyLookAtEachOther(rider, mount, 0.5f));
 
         // 서로 즐겁게 노는 애니메이션
         yield return StartCoroutine(PlaySimultaneousAnimations(
@@ -649,6 +691,32 @@ public class RideAndWalkInteraction : BasePetInteraction
     private bool IsAgentSafelyReady(PetController pet)
     {
         return pet != null && pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh;
+    }
+
+    /// <summary>
+    /// 펫 크기에 따른 만남 거리 계산
+    /// </summary>
+    private float CalculateMeetingDistance(PetController pet1, PetController pet2)
+    {
+        var size1 = pet1.Profile.size;
+        var size2 = pet2.Profile.size;
+
+        // 크기 순서 정렬 (Small < Medium < Large)
+        if (size1 > size2) (size1, size2) = (size2, size1);
+
+        // size1 <= size2 보장됨
+        if (size1 == PetTraits.Size.Small)
+        {
+            if (size2 == PetTraits.Size.Small) return smallSmallSpacing;
+            if (size2 == PetTraits.Size.Medium) return smallMediumSpacing;
+            return smallLargeSpacing;
+        }
+        if (size1 == PetTraits.Size.Medium)
+        {
+            if (size2 == PetTraits.Size.Medium) return mediumMediumSpacing;
+            return mediumLargeSpacing;
+        }
+        return largeLargeSpacing;
     }
 
     /// <summary>
