@@ -91,6 +91,10 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet1.StopMovement();
         pet2.StopMovement();
 
+        // ★ 기존 Activity 중단 (환경 상호작용 등과의 간섭 방지)
+        if (pet1.AI != null) pet1.AI.ForceStopCurrentActivity();
+        if (pet2.AI != null) pet2.AI.ForceStopCurrentActivity();
+
         // (선택사항) 펫이 NavMesh 위에 있는지 최종 확인
         yield return StartCoroutine(EnsurePetsOnNavMesh(pet1, pet2));
 
