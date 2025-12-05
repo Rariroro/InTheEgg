@@ -396,12 +396,20 @@ public class RideAndWalkInteraction : BasePetInteraction
         float targetDistance = CalculateMeetingDistance(rider, mount);
         Debug.Log($"[RideAndWalk] 크기별 만남 거리: {targetDistance:F1}m ({rider.Profile.size} + {mount.Profile.size})");
 
+        // 중간 지점 기반 위치 계산 (FightInteraction 패턴)
+        Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
+        midpoint = FindValidPositionOnNavMesh(midpoint, 10f);
+
+        // 방향 벡터 계산
         Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
         if (direction == Vector3.zero) direction = rider.transform.forward;
-        Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
 
-        Vector3 riderTarget = FindValidPositionOnNavMesh(midpoint - direction * (targetDistance / 2f), 5f);
-        Vector3 mountTarget = FindValidPositionOnNavMesh(midpoint + direction * (targetDistance / 2f), 5f);
+        // 중간 지점에서 양쪽으로 거리의 절반씩 떨어진 위치 계산
+        Vector3 riderTarget = midpoint - direction * (targetDistance / 2f);
+        Vector3 mountTarget = midpoint + direction * (targetDistance / 2f);
+
+        riderTarget = FindValidPositionOnNavMesh(riderTarget, targetDistance);
+        mountTarget = FindValidPositionOnNavMesh(mountTarget, targetDistance);
 
         // ★ 수정: MoveToPositions 전에 Agent 회전 비활성화하여
         // MoveToPositions 내부의 SmoothlyLookAtOther가 마지막 방향에 영향주지 않도록 함
