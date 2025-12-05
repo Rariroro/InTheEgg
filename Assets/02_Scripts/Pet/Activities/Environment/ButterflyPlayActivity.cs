@@ -81,6 +81,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (pet.personality != PetAIProperties.Personality.Playful)
             return false;
 
+        // 상호작용 중에는 나비 놀이 불가
+        if (state.IsInteracting)
+            return false;
+
         // 플레이어가 제어 중이거나 다른 중요한 활동 중이면 불가능
         if (state.IsHolding || state.IsSelected || state.IsExhausted)
             return false;

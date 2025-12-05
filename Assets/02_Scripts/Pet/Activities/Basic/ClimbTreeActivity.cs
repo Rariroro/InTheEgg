@@ -26,7 +26,11 @@ public class ClimbTreeActivity : PetActivityAdapter
         // 터치/홀드 상태에서는 나무 오르기 중단
         if (pet.State.IsHolding || (pet.State.IsSelected && !pet.State.IsClimbingTree))
             return false;
-            
+
+        // 상호작용 중에는 나무 오르기 불가
+        if (state.IsInteracting)
+            return false;
+
         // 이미 나무에 오르기 시작했거나, 나무 위에 있다면 계속
         if (pet.State.IsClimbingTree || climbingController.IsSearchingForTree())
             return true;

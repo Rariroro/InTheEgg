@@ -26,7 +26,11 @@ public class SleepActivity : PetActivityAdapter
         // 기본 상태 체크
         if (state.CurrentStatus != PetStatus.Idle)
             return false;
-            
+
+        // 상호작용 중에는 수면 불가
+        if (state.IsInteracting)
+            return false;
+
         // 터치/홀드 상태에서는 잠자기 중단
         if (pet.State.IsHolding || pet.State.IsSelected)
             return false;
