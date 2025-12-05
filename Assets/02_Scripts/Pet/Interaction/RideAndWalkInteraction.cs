@@ -390,14 +390,12 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         Debug.Log("[RideAndWalk] 1단계: 만나서 놀기");
 
-        // 안정성을 위해 잠시 대기
         yield return Wait02;
 
-        // 펫 크기에 따른 만남 거리 계산
+        // 펫 크기에 따른 만남 거리 계산 및 위치 이동
         float targetDistance = CalculateMeetingDistance(rider, mount);
         Debug.Log($"[RideAndWalk] 크기별 만남 거리: {targetDistance:F1}m ({rider.Profile.size} + {mount.Profile.size})");
 
-        // 항상 정확한 위치로 이동 (BasePetInteraction 자동 이동 비활성화했으므로)
         Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
         if (direction == Vector3.zero) direction = rider.transform.forward;
         Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
@@ -405,33 +403,35 @@ public class RideAndWalkInteraction : BasePetInteraction
         Vector3 riderTarget = FindValidPositionOnNavMesh(midpoint - direction * (targetDistance / 2f), 5f);
         Vector3 mountTarget = FindValidPositionOnNavMesh(midpoint + direction * (targetDistance / 2f), 5f);
 
+        // ★ 수정: MoveToPositions 전에 Agent 회전 비활성화하여
+        // MoveToPositions 내부의 SmoothlyLookAtOther가 마지막 방향에 영향주지 않도록 함
+        if (IsAgentSafelyReady(rider)) rider.agent.updateRotation = false;
+        if (IsAgentSafelyReady(mount)) mount.agent.updateRotation = false;
+
         yield return StartCoroutine(MoveToPositions(rider, mount, riderTarget, mountTarget, 5f));
 
-        // MoveToPositions 내부 회전 코루틴 완료 대기 (fire-and-forget 충돌 방지)
-        yield return Wait02;
-
-        // 이동 완료 후 agent 정지 및 회전 간섭 방지
+        // ★ 수정: Agent를 즉시 정지시키고 velocity도 0으로 설정
         if (IsAgentSafelyReady(rider))
         {
             rider.agent.isStopped = true;
             rider.agent.velocity = Vector3.zero;
-            rider.agent.updateRotation = false;
         }
         if (IsAgentSafelyReady(mount))
         {
             mount.agent.isStopped = true;
             mount.agent.velocity = Vector3.zero;
-            mount.agent.updateRotation = false;
         }
 
-        // 서로 마주보기
+        // ★ 수정: 한 프레임 대기하여 Agent 상태가 안정화되도록 함
+        yield return null;
+
+        // ★ 수정: 최종 정지 위치를 기준으로 서로 마주보기 (방향 재계산)
         yield return StartCoroutine(SmoothlyLookAtEachOther(rider, mount, 0.5f));
 
-        // 마주보기 완료 후 agent 회전 복원
         if (IsAgentSafelyReady(rider)) rider.agent.updateRotation = true;
         if (IsAgentSafelyReady(mount)) mount.agent.updateRotation = true;
 
-        // 애니메이션 시작 전 속도 정상화 (이전 이동 속도 영향 제거)
+        // 애니메이션 속도 정상화
         if (rider.animator != null) rider.animator.speed = 1.0f;
         if (mount.animator != null) mount.animator.speed = 1.0f;
 
@@ -442,7 +442,6 @@ public class RideAndWalkInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Idle,
             1.5f));
 
-        // mount의 Attack 애니메이션 전에도 속도 보장
         if (mount.animator != null) mount.animator.speed = 1.0f;
 
         yield return StartCoroutine(PlaySimultaneousAnimations(
