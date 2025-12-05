@@ -79,6 +79,11 @@ public class RideAndWalkInteraction : BasePetInteraction
     private PetAnimationController riderAnim;
     private PetAnimationController mountAnim;
 
+    // WaitForSeconds 캐싱 (성능 최적화)
+    private static readonly WaitForSeconds Wait02 = new WaitForSeconds(0.2f);
+    private static readonly WaitForSeconds Wait05 = new WaitForSeconds(0.5f);
+    private static readonly WaitForSeconds Wait10 = new WaitForSeconds(1.0f);
+
     // 캐시 초기화 (씬 로드/재로드 시 이전 잘못된 값 제거)
     private void OnEnable()
     {
@@ -92,7 +97,11 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         Debug.Log("[RideAndWalk] OnForceCleanup 호출됨 - 고유 리소스 정리 시작");
 
-        // 1. 라이더의 부모 관계 및 스케일 복원
+        // 1. 감정 숨기기
+        if (activeRider != null) activeRider.HideEmotion();
+        if (activeMount != null) activeMount.HideEmotion();
+
+        // 2. 라이더의 부모 관계 및 스케일 복원
         if (activeRider != null)
         {
             // 부모 관계 복원
@@ -124,7 +133,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             }
         }
 
-        // 2. 애니메이션 컨트롤러 정리
+        // 3. 애니메이션 컨트롤러 정리
         if (riderAnim != null)
         {
             riderAnim.StopContinuousAnimation();
@@ -136,7 +145,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             mountAnim = null;
         }
 
-        // 3. 상태 초기화
+        // 4. 상태 초기화
         activeRider = null;
         activeMount = null;
         originalRiderParent = null;
@@ -300,6 +309,10 @@ public class RideAndWalkInteraction : BasePetInteraction
         {
             Debug.Log("[RideAndWalk] 상호작용 정리 시작.");
 
+            // 감정 숨기기
+            rider.HideEmotion();
+            mount.HideEmotion();
+
             // 부모 관계 복원
             if (rider.transform.parent == mount.transform)
             {
@@ -355,7 +368,7 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 펫들이 이미 적절한 거리에서 마주보고 있는 상태
 
         // 안정성을 위해 잠시 대기
-        yield return new WaitForSeconds(0.2f);
+        yield return Wait02;
 
         // 서로 즐겁게 노는 애니메이션
         yield return StartCoroutine(PlaySimultaneousAnimations(
@@ -391,12 +404,15 @@ public class RideAndWalkInteraction : BasePetInteraction
             mount.agent.isStopped = true;
         }
 
-        yield return StartCoroutine(mount.GetComponent<PetAnimationController>()
-            .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
+        // 캐싱된 애니메이션 컨트롤러 사용
+        if (mountAnim != null)
+            yield return StartCoroutine(mountAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Eat, 2.0f, false, false));
 
         // 라이더가 점프해서 올라타는 애니메이션
-        yield return StartCoroutine(rider.GetComponent<PetAnimationController>()
-            .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, mountDuration, false, false));
+        if (riderAnim != null)
+            yield return StartCoroutine(riderAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, mountDuration, false, false));
 
         // 라이더의 NavMeshAgent를 비활성화
         if (rider.agent != null && rider.agent.enabled)
@@ -440,6 +456,14 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         while (Time.time - walkStartTime < walkTogetherDuration)
         {
+            // 펫이 잡히면 상호작용 종료
+            if (rider.State.IsHolding || rider.State.IsSelected ||
+                mount.State.IsHolding || mount.State.IsSelected)
+            {
+                Debug.Log("[RideAndWalk] 펫이 잡혀서 산책을 종료합니다.");
+                break;
+            }
+
             if (!IsAgentSafelyReady(mount))
             {
                 Debug.LogWarning("[RideAndWalk] 산책 중 마운트의 NavMeshAgent 문제 발생");
@@ -542,8 +566,10 @@ public class RideAndWalkInteraction : BasePetInteraction
             mount.agent.velocity = Vector3.zero;
         }
 
-        yield return StartCoroutine(mount.GetComponent<PetAnimationController>()
-            .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
+        // 캐싱된 애니메이션 컨트롤러 사용
+        if (mountAnim != null)
+            yield return StartCoroutine(mountAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
 
         // 라이더가 내릴 위치를 마운트의 약간 '앞쪽 대각선'으로 설정
         rider.transform.SetParent(null, true);
@@ -553,9 +579,10 @@ public class RideAndWalkInteraction : BasePetInteraction
         Vector3 dismountLandPos = mount.transform.position + dismountDirection * farewellDistance;
         dismountLandPos = FindValidPositionOnNavMesh(dismountLandPos, farewellDistance + 1f);
 
-        // 점프 애니메이션과 함께 내리기
-        StartCoroutine(rider.GetComponent<PetAnimationController>()
-            .PlayAnimationWithCustomDuration(PetAnimationController.PetAnimationType.Jump, mountDuration, true, false));
+        // 점프 애니메이션과 함께 내리기 (캐싱된 애니메이션 컨트롤러 사용)
+        if (riderAnim != null)
+            StartCoroutine(riderAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, mountDuration, true, false));
 
         // 부드러운 착지
         yield return StartCoroutine(SmoothDismountTransition(rider, dismountLandPos, mountDuration));
@@ -566,7 +593,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             rider.agent.enabled = true;
 
             // 다른 상호작용(WalkTogetherInteraction)과 동일하게 안정성을 위해 대기
-            yield return new WaitForSeconds(0.2f);
+            yield return Wait02;
 
             if (rider.agent.enabled && rider.agent.isOnNavMesh)
             {
@@ -593,7 +620,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             Debug.LogWarning("[RideAndWalk] 작별인사 시 펫의 NavMeshAgent가 준비되지 않았습니다.");
         }
 
-        yield return new WaitForSeconds(0.5f);
+        yield return Wait05;
 
         // 서로 즐거웠다는 듯한 애니메이션
         rider.ShowEmotion(EmotionType.Happy, 5f);
@@ -605,7 +632,7 @@ public class RideAndWalkInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Attack,
             2.0f));
 
-        yield return new WaitForSeconds(1.0f);
+        yield return Wait10;
     }
 
     // ===== 헬퍼 메서드들 =====
