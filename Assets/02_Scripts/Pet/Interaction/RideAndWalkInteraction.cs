@@ -396,20 +396,29 @@ public class RideAndWalkInteraction : BasePetInteraction
         float targetDistance = CalculateMeetingDistance(rider, mount);
         Debug.Log($"[RideAndWalk] 크기별 만남 거리: {targetDistance:F1}m ({rider.Profile.size} + {mount.Profile.size})");
 
-        // 중간 지점 기반 위치 계산 (FightInteraction 패턴)
-        Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
-        midpoint = FindValidPositionOnNavMesh(midpoint, 10f);
+        // 현재 두 펫 사이의 거리 확인
+        float currentDistance = Vector3.Distance(rider.transform.position, mount.transform.position);
+        Debug.Log($"[RideAndWalk] 현재 거리: {currentDistance:F1}m, 목표 거리: {targetDistance:F1}m");
 
-        // 방향 벡터 계산
+        // 중간 지점 기반 위치 계산
+        Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
+        Vector3 validMidpoint = FindValidPositionOnNavMesh(midpoint, 10f);
+
+        // 방향 벡터 계산 - 원래 펫 위치 기준
         Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
         if (direction == Vector3.zero) direction = rider.transform.forward;
 
-        // 중간 지점에서 양쪽으로 거리의 절반씩 떨어진 위치 계산
-        Vector3 riderTarget = midpoint - direction * (targetDistance / 2f);
-        Vector3 mountTarget = midpoint + direction * (targetDistance / 2f);
+        // 목표 위치 계산 - validMidpoint에서 targetDistance/2 만큼 떨어진 위치
+        Vector3 riderTarget = validMidpoint - direction * (targetDistance / 2f);
+        Vector3 mountTarget = validMidpoint + direction * (targetDistance / 2f);
 
-        riderTarget = FindValidPositionOnNavMesh(riderTarget, targetDistance);
-        mountTarget = FindValidPositionOnNavMesh(mountTarget, targetDistance);
+        // NavMesh 보정 시 검색 반경을 작게 하여 거리가 크게 벌어지지 않도록 함
+        riderTarget = FindValidPositionOnNavMesh(riderTarget, 3f);
+        mountTarget = FindValidPositionOnNavMesh(mountTarget, 3f);
+
+        // 보정 후 실제 거리 확인
+        float finalDistance = Vector3.Distance(riderTarget, mountTarget);
+        Debug.Log($"[RideAndWalk] 보정 후 목표 거리: {finalDistance:F1}m");
 
         // ★ 수정: MoveToPositions 전에 Agent 회전 비활성화하여
         // MoveToPositions 내부의 SmoothlyLookAtOther가 마지막 방향에 영향주지 않도록 함
