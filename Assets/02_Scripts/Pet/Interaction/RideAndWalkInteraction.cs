@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using InTheEgg.Constants;
 
 public class RideAndWalkInteraction : BasePetInteraction
 {
@@ -14,6 +15,16 @@ public class RideAndWalkInteraction : BasePetInteraction
 
     // BasePetInteraction의 자동 이동 비활성화 (MeetAndPlay에서 직접 처리)
     public override bool ShouldPerformInitialMovement => false;
+
+    #region Constants
+    // 거리 관련
+    private const float NAVMESH_SEARCH_RADIUS_LARGE = 10f;
+    private const float NAVMESH_SEARCH_RADIUS_SMALL = 3f;
+    private const float ARRIVAL_THRESHOLD = 1.5f;
+
+    // NavMeshAgent 설정
+    private const int RIDER_AVOIDANCE_PRIORITY = 99;
+    #endregion
 
     [Header("크기별 만남 거리 설정")]
     [Tooltip("Small + Small 펫 간격")]
@@ -65,6 +76,17 @@ public class RideAndWalkInteraction : BasePetInteraction
     [Header("Safety Settings")]
     [Tooltip("NavMeshAgent 안전 체크 최대 대기 시간")]
     public float agentSafetyTimeout = 3f;
+
+    [Header("Walk Behavior Settings")]
+    [Tooltip("산책 중 최소 이동 거리")]
+    public float walkMinDistance = 15f;
+
+    [Tooltip("산책 중 최대 이동 거리")]
+    public float walkMaxDistance = 25f;
+
+    [Tooltip("라이더가 등 위에서 행동할 확률 (0-1)")]
+    [Range(0f, 0.1f)]
+    public float riderActionChance = 0.02f;
 
     // 탈 수 있는 펫 조합 정의 (rider, mount) - 10개 조합
     private readonly HashSet<(PetType rider, PetType mount)> validRideCombinations = new()
@@ -201,6 +223,11 @@ public class RideAndWalkInteraction : BasePetInteraction
         this.autoHeightMultiplier = template.autoHeightMultiplier;
         this.autoDepthMultiplier = template.autoDepthMultiplier;
         this.agentSafetyTimeout = template.agentSafetyTimeout;
+
+        // Walk Behavior 설정
+        this.walkMinDistance = template.walkMinDistance;
+        this.walkMaxDistance = template.walkMaxDistance;
+        this.riderActionChance = template.riderActionChance;
     }
 
     public override bool CanInteract(PetController pet1, PetController pet2)
@@ -312,9 +339,9 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         try
         {
-            // 감정 표현 시작
-            rider.ShowEmotion(EmotionType.Love, walkTogetherDuration + 15f);
-            mount.ShowEmotion(EmotionType.Love, walkTogetherDuration + 15f);
+            // 감정 표현 시작 (상호작용 동안 지속)
+            rider.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_PERSISTENT);
+            mount.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_PERSISTENT);
 
             // 1. 만나서 노는 단계
             yield return StartCoroutine(MeetAndPlay(rider, mount));
@@ -402,7 +429,7 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         // 중간 지점 기반 위치 계산
         Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
-        Vector3 validMidpoint = FindValidPositionOnNavMesh(midpoint, 10f);
+        Vector3 validMidpoint = FindValidPositionOnNavMesh(midpoint, NAVMESH_SEARCH_RADIUS_LARGE);
 
         // 방향 벡터 계산 - 원래 펫 위치 기준
         Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
@@ -413,8 +440,8 @@ public class RideAndWalkInteraction : BasePetInteraction
         Vector3 mountTarget = validMidpoint + direction * (targetDistance / 2f);
 
         // NavMesh 보정 시 검색 반경을 작게 하여 거리가 크게 벌어지지 않도록 함
-        riderTarget = FindValidPositionOnNavMesh(riderTarget, 3f);
-        mountTarget = FindValidPositionOnNavMesh(mountTarget, 3f);
+        riderTarget = FindValidPositionOnNavMesh(riderTarget, NAVMESH_SEARCH_RADIUS_SMALL);
+        mountTarget = FindValidPositionOnNavMesh(mountTarget, NAVMESH_SEARCH_RADIUS_SMALL);
 
         // 보정 후 실제 거리 확인
         float finalDistance = Vector3.Distance(riderTarget, mountTarget);
@@ -479,7 +506,7 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 라이더의 회피 우선순위를 낮춰서 마운트를 가로막지 않도록
         if (IsAgentSafelyReady(rider))
         {
-            rider.agent.avoidancePriority = 99;
+            rider.agent.avoidancePriority = RIDER_AVOIDANCE_PRIORITY;
         }
 
         // 마운트가 앉아서 기다려주는 애니메이션
@@ -556,49 +583,48 @@ public class RideAndWalkInteraction : BasePetInteraction
 
             // 도착 여부 체크
             bool hasArrived = !mount.agent.pathPending &&
-                              mount.agent.remainingDistance < 1.5f;
+                              mount.agent.remainingDistance < ARRIVAL_THRESHOLD;
 
             // 일정 주기 또는 도착 시 새로운 목적지로 갱신
             if (Time.time - lastPathUpdateTime > pathUpdateInterval || hasArrived)
             {
                 lastPathUpdateTime = Time.time;
 
-                // 균일한 거리 분포로 목적지 선택 (15~25m 범위)
-                float distance = Random.Range(15f, 25f);
+                // 균일한 거리 분포로 목적지 선택
+                float distance = Random.Range(walkMinDistance, walkMaxDistance);
                 float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
                 Vector3 randomDirection = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * distance;
                 Vector3 newDestination = mount.transform.position + randomDirection;
 
-                mount.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, 30f));
+                mount.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, walkMaxDistance + 5f));
                 mount.agent.isStopped = false;
                 Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {mount.agent.destination}");
             }
 
             // 라이더가 등 위에서 다양한 행동을 하도록 로직
-            // 행동 빈도 2%, 현재 다른 특별 행동 중이 아닐 때만 실행
-            if (Random.value < 0.02f && !IsPetPlayingRidingAnimation(rider))
+            if (Random.value < riderActionChance && !IsPetPlayingRidingAnimation(rider))
             {
                 int randomAction = Random.Range(0, 4);
 
                 switch (randomAction)
                 {
                     case 0: // 점프하며 즐거워하기
-                        rider.ShowEmotion(EmotionType.Happy, 2f);
+                        rider.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_SHORT);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Jump, 1.0f));
                         break;
 
                     case 1: // 주변을 두리번거리며 경계하기 (Idle 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Surprised, 2f);
+                        rider.ShowEmotion(EmotionType.Surprised, EmotionConstants.DURATION_SHORT);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Idle, 1.5f));
                         break;
 
                     case 2: // 신나게 소리치기 (Attack 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Love, 2f);
+                        rider.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_SHORT);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Attack, 1.2f));
                         break;
 
                     case 3: // 잠시 편하게 눕기 (Rest 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Sleepy, 3f);
+                        rider.ShowEmotion(EmotionType.Sleepy, EmotionConstants.DURATION_SHORT);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Rest, 2.0f));
                         break;
                 }
@@ -713,8 +739,8 @@ public class RideAndWalkInteraction : BasePetInteraction
         yield return Wait05;
 
         // 서로 즐거웠다는 듯한 애니메이션
-        rider.ShowEmotion(EmotionType.Happy, 5f);
-        mount.ShowEmotion(EmotionType.Happy, 5f);
+        rider.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_MEDIUM);
+        mount.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_MEDIUM);
 
         yield return StartCoroutine(PlaySimultaneousAnimations(
             rider, mount,

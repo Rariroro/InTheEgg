@@ -703,6 +703,10 @@ public abstract class BasePetInteraction : MonoBehaviour
             yield break;
         }
 
+        // 애니메이션 컨트롤러 캐싱 (성능 최적화)
+        var anim1 = pet1.GetComponent<PetAnimationController>();
+        var anim2 = pet2.GetComponent<PetAnimationController>();
+
         // ★★★ 수정: 더 정밀한 도착 판정을 위해 stoppingDistance 임시 조정 ★★★
         float originalStop1 = pet1.agent.stoppingDistance;
         float originalStop2 = pet2.agent.stoppingDistance;
@@ -716,8 +720,8 @@ public abstract class BasePetInteraction : MonoBehaviour
         pet2.agent.SetDestination(pos2);
 
         // 걷기 애니메이션
-        pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        if (anim1 != null) anim1.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        if (anim2 != null) anim2.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         float startTime = Time.time;
         while (Time.time - startTime < timeout)
@@ -728,8 +732,8 @@ public abstract class BasePetInteraction : MonoBehaviour
             {
                 Debug.Log($"[{InteractionName}] 이동 중 터치로 인해 상호작용 중단");
                 // 애니메이션 정지
-                pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
-                pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                if (anim1 != null) anim1.StopContinuousAnimation();
+                if (anim2 != null) anim2.StopContinuousAnimation();
                 yield break;
             }
             
@@ -741,8 +745,8 @@ public abstract class BasePetInteraction : MonoBehaviour
             {
                 Debug.Log($"[{InteractionName}] 이동 중 모이기 명령으로 인해 상호작용 중단");
                 // 애니메이션 정지
-                pet1.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
-                pet2.GetComponent<PetAnimationController>()?.StopContinuousAnimation();
+                if (anim1 != null) anim1.StopContinuousAnimation();
+                if (anim2 != null) anim2.StopContinuousAnimation();
                 yield break;
             }
             
@@ -775,13 +779,13 @@ public abstract class BasePetInteraction : MonoBehaviour
             {
                 pet1.agent.isStopped = true;
                 StartCoroutine(SmoothlyLookAtOther(pet1, pet2, 0.3f));
-                pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+                if (anim1 != null) anim1.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
             }
             if (pet2Arrived && !pet1Arrived)
             {
                 pet2.agent.isStopped = true;
                 StartCoroutine(SmoothlyLookAtOther(pet2, pet1, 0.3f));
-                pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+                if (anim2 != null) anim2.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
             }
 
             yield return null;
@@ -798,8 +802,8 @@ public abstract class BasePetInteraction : MonoBehaviour
             pet2.agent.isStopped = true;
 
         // 애니메이션 정지
-        pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
-        pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
+        if (anim1 != null) anim1.StopContinuousAnimation();
+        if (anim2 != null) anim2.StopContinuousAnimation();
     }
     // ▼▼▼ [추가] 두 펫이 서로를 부드럽게 바라보게 하는 새로운 헬퍼 메서드 추가 ▼▼▼
    // BasePetInteraction.cs 클래스 내부에 아래 코루틴을 새로 추가합니다.
@@ -843,21 +847,25 @@ public abstract class BasePetInteraction : MonoBehaviour
             pet2.agent.updateRotation = false;
         }
         
+        // 애니메이션 컨트롤러 캐싱 (성능 최적화)
+        var anim1 = pet1.GetComponent<PetAnimationController>();
+        var anim2 = pet2.GetComponent<PetAnimationController>();
+
         // 회전 각도가 충분히 큰 경우에만 걷기 애니메이션 재생
         float pet1Angle = Quaternion.Angle(pet1StartRotation, pet1TargetRotation);
         float pet2Angle = Quaternion.Angle(pet2StartRotation, pet2TargetRotation);
-        
+
         // 회전 각도가 30도 이상인 경우 걷기 애니메이션 시작
         bool pet1NeedsWalkAnim = pet1Angle > 30f;
         bool pet2NeedsWalkAnim = pet2Angle > 30f;
-        
-        if (pet1NeedsWalkAnim)
+
+        if (pet1NeedsWalkAnim && anim1 != null)
         {
-            pet1.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            anim1.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         }
-        if (pet2NeedsWalkAnim)
+        if (pet2NeedsWalkAnim && anim2 != null)
         {
-            pet2.GetComponent<PetAnimationController>().SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+            anim2.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         }
 
         float elapsedTime = 0f;
@@ -894,13 +902,13 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
 
         // 회전이 끝난 후 걷기 애니메이션 중지 (필요한 경우만)
-        if (pet1NeedsWalkAnim)
+        if (pet1NeedsWalkAnim && anim1 != null)
         {
-            pet1.GetComponent<PetAnimationController>().StopContinuousAnimation();
+            anim1.StopContinuousAnimation();
         }
-        if (pet2NeedsWalkAnim)
+        if (pet2NeedsWalkAnim && anim2 != null)
         {
-            pet2.GetComponent<PetAnimationController>().StopContinuousAnimation();
+            anim2.StopContinuousAnimation();
         }
     }
     // ▲▲▲ [여기까지 추가] ▲▲▲
