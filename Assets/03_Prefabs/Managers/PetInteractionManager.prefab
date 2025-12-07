@@ -20,7 +20,6 @@ GameObject:
   - component: {fileID: 1106663833353148349}
   - component: {fileID: 8352962793379818008}
   - component: {fileID: 648644708604864693}
-  - component: {fileID: -8314337667573088611}
   - component: {fileID: -4962863032343489133}
   - component: {fileID: 3010470296301870323}
   - component: {fileID: 7164216739854847001}
@@ -396,35 +395,6 @@ MonoBehaviour:
   shortEmotionDuration: 2
   mediumEmotionDuration: 5
   veryShortWaitTime: 1
-  agentSafetyTimeout: 3
---- !u!114 &-8314337667573088611
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7108309724432713129}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe88e1f0bf5f449adaa702dd71f8d138, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  interactionStartDistance: 10
-  isSleepMode: 0
-  interactionDuration: 15
-  moveTimeout: 10
-  defaultDistance: 7
-  largeAnimalDistance: 10
-  smallAnimalDistance: 5
-  restAnimationDuration: 3
-  prepAnimationDuration: 1.5
-  wakeUpAnimationDuration: 1.5
-  eventMinInterval: 2.5
-  eventMaxInterval: 5
-  eventChance: 0.3
-  emotionDuration: 30
-  firstWakeProbability: 0.5
-  sleepPositionOffset: 0.3
   agentSafetyTimeout: 3
 --- !u!114 &-4962863032343489133
 MonoBehaviour:
