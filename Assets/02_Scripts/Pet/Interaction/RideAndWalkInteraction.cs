@@ -84,9 +84,60 @@ public class RideAndWalkInteraction : BasePetInteraction
     [Tooltip("산책 중 최대 이동 거리")]
     public float walkMaxDistance = 25f;
 
-    [Tooltip("라이더가 등 위에서 행동할 확률 (0-1)")]
-    [Range(0f, 0.1f)]
-    public float riderActionChance = 0.02f;
+    [Tooltip("U턴 방지: 이전 방향에서 허용되는 최대 각도 차이")]
+    [Range(60f, 150f)]
+    public float maxTurnAngle = 120f;
+
+    [Tooltip("멈춰서 둘러보기 확률 (목적지 도착 시)")]
+    [Range(0f, 0.5f)]
+    public float lookAroundChance = 0.3f;
+
+    [Tooltip("멈춰서 둘러보는 시간")]
+    public float lookAroundDuration = 2f;
+
+    [Tooltip("살짝 달리기 확률 (새 목적지 설정 시)")]
+    [Range(0f, 0.4f)]
+    public float lightRunChance = 0.25f;
+
+    [Tooltip("달리기 속도 배율")]
+    public float runSpeedMultiplier = 1.4f;
+
+    [Tooltip("달리기 지속 시간")]
+    public float runDuration = 3f;
+
+    [Header("Rider Action Settings")]
+    [Tooltip("라이더 행동 간격 (초)")]
+    public float riderActionInterval = 5f;
+
+    [Tooltip("라이더 행동 간격 랜덤 범위")]
+    public float riderActionIntervalVariance = 2f;
+
+    [Tooltip("라이더 행동 지속 시간")]
+    public float riderActionDuration = 2.5f;
+
+    [Header("Deceleration Settings")]
+    [Tooltip("감속 시작 거리")]
+    public float decelerationDistance = 3f;
+
+    [Tooltip("최소 속도 배율 (감속 시)")]
+    public float minSpeedMultiplier = 0.4f;
+
+    [Header("Dismount Effects")]
+    [Tooltip("착지 파티클 프리팹")]
+    public GameObject landingParticlePrefab;
+
+    [Tooltip("마운트가 숙이는 각도")]
+    public float mountBowAngle = 15f;
+
+    [Tooltip("마운트 숙이기 지속 시간")]
+    public float mountBowDuration = 0.8f;
+
+    [Header("Farewell Settings")]
+    [Tooltip("작별 후 걸어가는 거리")]
+    public float farewellWalkDistance = 8f;
+
+    [Tooltip("작별 후 걸어가는 시간")]
+    public float farewellWalkDuration = 3f;
 
     // 탈 수 있는 펫 조합 정의 (rider, mount) - 10개 조합
     private readonly HashSet<(PetType rider, PetType mount)> validRideCombinations = new()
@@ -227,7 +278,30 @@ public class RideAndWalkInteraction : BasePetInteraction
         // Walk Behavior 설정
         this.walkMinDistance = template.walkMinDistance;
         this.walkMaxDistance = template.walkMaxDistance;
-        this.riderActionChance = template.riderActionChance;
+        this.maxTurnAngle = template.maxTurnAngle;
+        this.lookAroundChance = template.lookAroundChance;
+        this.lookAroundDuration = template.lookAroundDuration;
+        this.lightRunChance = template.lightRunChance;
+        this.runSpeedMultiplier = template.runSpeedMultiplier;
+        this.runDuration = template.runDuration;
+
+        // Rider Action 설정
+        this.riderActionInterval = template.riderActionInterval;
+        this.riderActionIntervalVariance = template.riderActionIntervalVariance;
+        this.riderActionDuration = template.riderActionDuration;
+
+        // Deceleration 설정
+        this.decelerationDistance = template.decelerationDistance;
+        this.minSpeedMultiplier = template.minSpeedMultiplier;
+
+        // Dismount Effects 설정
+        this.landingParticlePrefab = template.landingParticlePrefab;
+        this.mountBowAngle = template.mountBowAngle;
+        this.mountBowDuration = template.mountBowDuration;
+
+        // Farewell 설정
+        this.farewellWalkDistance = template.farewellWalkDistance;
+        this.farewellWalkDuration = template.farewellWalkDuration;
     }
 
     public override bool CanInteract(PetController pet1, PetController pet2)
@@ -553,7 +627,8 @@ public class RideAndWalkInteraction : BasePetInteraction
         }
 
         // 마운트 설정 (캐싱된 애니메이션 컨트롤러 사용)
-        mount.agent.speed = mount.baseSpeed * walkingSpeedMultiplier;
+        float baseWalkSpeed = mount.baseSpeed * walkingSpeedMultiplier;
+        mount.agent.speed = baseWalkSpeed;
         mount.agent.updateRotation = true;
         if (mountAnim != null)
             mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
@@ -564,6 +639,11 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         float walkStartTime = Time.time;
         float lastPathUpdateTime = 0f;
+        Vector3 lastMoveDirection = mount.transform.forward; // U턴 방지용 이전 방향
+        float nextRiderActionTime = Time.time + riderActionInterval + Random.Range(-riderActionIntervalVariance, riderActionIntervalVariance);
+        bool isRunning = false;
+        float runEndTime = 0f;
+        bool isLookingAround = false;
 
         while (Time.time - walkStartTime < walkTogetherDuration)
         {
@@ -581,57 +661,140 @@ public class RideAndWalkInteraction : BasePetInteraction
                 break;
             }
 
+            // 달리기 종료 체크
+            if (isRunning && Time.time >= runEndTime)
+            {
+                isRunning = false;
+                mount.agent.speed = baseWalkSpeed;
+                if (mountAnim != null)
+                    mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                Debug.Log("[RideAndWalk] 달리기 종료, 걷기로 전환");
+            }
+
+            // 도착 직전 감속 처리
+            if (!mount.agent.pathPending && mount.agent.remainingDistance <= decelerationDistance && mount.agent.remainingDistance > ARRIVAL_THRESHOLD)
+            {
+                float speedRatio = Mathf.Lerp(minSpeedMultiplier, 1f, mount.agent.remainingDistance / decelerationDistance);
+                float targetSpeed = isRunning ? baseWalkSpeed * runSpeedMultiplier : baseWalkSpeed;
+                mount.agent.speed = targetSpeed * speedRatio;
+            }
+
             // 도착 여부 체크
             bool hasArrived = !mount.agent.pathPending &&
                               mount.agent.remainingDistance < ARRIVAL_THRESHOLD;
 
-            // 일정 주기 또는 도착 시 새로운 목적지로 갱신
-            if (Time.time - lastPathUpdateTime > pathUpdateInterval || hasArrived)
+            // 도착 시 또는 일정 주기마다 새로운 목적지 설정
+            // 동적 경로 업데이트: 남은 거리가 가까우면 더 빨리 갱신
+            float dynamicInterval = pathUpdateInterval;
+            if (mount.agent.remainingDistance < walkMinDistance * 0.5f)
             {
+                dynamicInterval = pathUpdateInterval * 0.5f;
+            }
+
+            if (Time.time - lastPathUpdateTime > dynamicInterval || hasArrived)
+            {
+                // 도착 시 멈춰서 둘러보기 (확률적)
+                if (hasArrived && !isLookingAround && Random.value < lookAroundChance)
+                {
+                    isLookingAround = true;
+                    mount.agent.isStopped = true;
+                    if (mountAnim != null)
+                        mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
+                    Debug.Log("[RideAndWalk] 멈춰서 주변 둘러보기");
+                    yield return new WaitForSeconds(lookAroundDuration);
+
+                    isLookingAround = false;
+                    if (mountAnim != null)
+                        mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+                }
+
                 lastPathUpdateTime = Time.time;
 
-                // 균일한 거리 분포로 목적지 선택
+                // U턴 방지: 이전 방향 기준으로 제한된 각도 내에서 새 방향 선택
+                Vector3 newDirection = GetNonUTurnDirection(lastMoveDirection, maxTurnAngle);
                 float distance = Random.Range(walkMinDistance, walkMaxDistance);
-                float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
-                Vector3 randomDirection = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * distance;
-                Vector3 newDestination = mount.transform.position + randomDirection;
+                Vector3 newDestination = mount.transform.position + newDirection * distance;
+                newDestination = FindValidPositionOnNavMesh(newDestination, walkMaxDistance + 5f);
 
-                mount.agent.SetDestination(FindValidPositionOnNavMesh(newDestination, walkMaxDistance + 5f));
+                // 이전 방향 업데이트
+                lastMoveDirection = (newDestination - mount.transform.position).normalized;
+                if (lastMoveDirection == Vector3.zero) lastMoveDirection = mount.transform.forward;
+
+                mount.agent.SetDestination(newDestination);
                 mount.agent.isStopped = false;
+
+                // 살짝 달리기 (확률적)
+                if (!isRunning && Random.value < lightRunChance)
+                {
+                    isRunning = true;
+                    runEndTime = Time.time + runDuration;
+                    mount.agent.speed = baseWalkSpeed * runSpeedMultiplier;
+                    if (mountAnim != null)
+                        mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+                    Debug.Log("[RideAndWalk] 살짝 달리기 시작!");
+                }
+                else if (!isRunning)
+                {
+                    mount.agent.speed = baseWalkSpeed;
+                }
+
                 Debug.Log($"[RideAndWalk] 새로운 목적지로 이동: {mount.agent.destination}");
             }
 
-            // 라이더가 등 위에서 다양한 행동을 하도록 로직
-            if (Random.value < riderActionChance && !IsPetPlayingRidingAnimation(rider))
+            // 시간 기반 라이더 행동 (빈도 감소, 지속 시간 증가)
+            if (Time.time >= nextRiderActionTime && !IsPetPlayingRidingAnimation(rider))
             {
-                int randomAction = Random.Range(0, 4);
+                // 다음 행동 시간 설정
+                nextRiderActionTime = Time.time + riderActionInterval + Random.Range(-riderActionIntervalVariance, riderActionIntervalVariance);
 
+                int randomAction = Random.Range(0, 4);
                 switch (randomAction)
                 {
                     case 0: // 점프하며 즐거워하기
-                        rider.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_SHORT);
-                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Jump, 1.0f));
+                        rider.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_MEDIUM);
+                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Jump, riderActionDuration));
                         break;
 
-                    case 1: // 주변을 두리번거리며 경계하기 (Idle 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Surprised, EmotionConstants.DURATION_SHORT);
-                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Idle, 1.5f));
+                    case 1: // 주변을 두리번거리며 경계하기
+                        rider.ShowEmotion(EmotionType.Surprised, EmotionConstants.DURATION_MEDIUM);
+                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Idle, riderActionDuration));
                         break;
 
-                    case 2: // 신나게 소리치기 (Attack 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_SHORT);
-                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Attack, 1.2f));
+                    case 2: // 신나게 소리치기
+                        rider.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_MEDIUM);
+                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Attack, riderActionDuration));
                         break;
 
-                    case 3: // 잠시 편하게 눕기 (Rest 애니메이션 활용)
-                        rider.ShowEmotion(EmotionType.Sleepy, EmotionConstants.DURATION_SHORT);
-                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Rest, 2.0f));
+                    case 3: // 잠시 편하게 눕기
+                        rider.ShowEmotion(EmotionType.Sleepy, EmotionConstants.DURATION_MEDIUM);
+                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Rest, riderActionDuration * 1.2f));
                         break;
                 }
+                Debug.Log($"[RideAndWalk] 라이더 행동 발생! 다음 행동까지 {nextRiderActionTime - Time.time:F1}초");
             }
 
             yield return null;
         }
+
+        // 산책 종료 시 속도 복원
+        mount.agent.speed = mount.baseSpeed;
+    }
+
+    /// <summary>
+    /// U턴을 방지하는 새로운 방향을 계산합니다.
+    /// </summary>
+    private Vector3 GetNonUTurnDirection(Vector3 lastDirection, float maxAngle)
+    {
+        // 이전 방향 기준으로 -maxAngle ~ +maxAngle 범위 내에서 랜덤 각도 선택
+        float halfAngle = maxAngle / 2f;
+        float randomAngle = Random.Range(-halfAngle, halfAngle);
+
+        // Y축 기준 회전
+        Quaternion rotation = Quaternion.Euler(0f, randomAngle, 0f);
+        Vector3 newDirection = rotation * lastDirection;
+        newDirection.y = 0f;
+        return newDirection.normalized;
     }
     /// <summary>
     /// 마운트 등 위에서 라이더의 짧은 행동을 재생하고 기본 자세로 돌리는 헬퍼 메서드
@@ -682,10 +845,8 @@ public class RideAndWalkInteraction : BasePetInteraction
             mount.agent.velocity = Vector3.zero;
         }
 
-        // 캐싱된 애니메이션 컨트롤러 사용
-        if (mountAnim != null)
-            yield return StartCoroutine(mountAnim.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
+        // 마운트가 살짝 숙여서 라이더가 내리기 쉽게 해줌
+        yield return StartCoroutine(MountBowDown(mount));
 
         // 라이더가 내릴 위치를 마운트의 약간 '앞쪽 대각선'으로 설정
         rider.transform.SetParent(null, true);
@@ -703,6 +864,12 @@ public class RideAndWalkInteraction : BasePetInteraction
         // 부드러운 착지
         yield return StartCoroutine(SmoothDismountTransition(rider, dismountLandPos, mountDuration));
 
+        // 착지 파티클 생성
+        SpawnLandingParticle(dismountLandPos);
+
+        // 마운트가 다시 일어남
+        yield return StartCoroutine(MountStandUp(mount));
+
         // NavMeshAgent 재활성화 및 안정성 대기
         if (rider.agent != null)
         {
@@ -719,16 +886,99 @@ public class RideAndWalkInteraction : BasePetInteraction
     }
 
     /// <summary>
+    /// 마운트가 살짝 숙이는 동작
+    /// </summary>
+    private IEnumerator MountBowDown(PetController mount)
+    {
+        if (mount == null || mount.petModelTransform == null) yield break;
+
+        Quaternion startRotation = mount.petModelTransform.localRotation;
+        Quaternion targetRotation = startRotation * Quaternion.Euler(mountBowAngle, 0f, 0f);
+
+        float elapsedTime = 0f;
+        while (elapsedTime < mountBowDuration)
+        {
+            float t = elapsedTime / mountBowDuration;
+            float smoothT = t * t * (3f - 2f * t); // Smooth step
+            mount.petModelTransform.localRotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        mount.petModelTransform.localRotation = targetRotation;
+
+        Debug.Log("[RideAndWalk] 마운트가 숙임");
+    }
+
+    /// <summary>
+    /// 마운트가 다시 일어나는 동작
+    /// </summary>
+    private IEnumerator MountStandUp(PetController mount)
+    {
+        if (mount == null || mount.petModelTransform == null) yield break;
+
+        Quaternion startRotation = mount.petModelTransform.localRotation;
+        Quaternion targetRotation = Quaternion.identity;
+
+        float elapsedTime = 0f;
+        while (elapsedTime < mountBowDuration)
+        {
+            float t = elapsedTime / mountBowDuration;
+            float smoothT = t * t * (3f - 2f * t); // Smooth step
+            mount.petModelTransform.localRotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        mount.petModelTransform.localRotation = targetRotation;
+
+        Debug.Log("[RideAndWalk] 마운트가 다시 일어남");
+    }
+
+    /// <summary>
+    /// 착지 파티클을 생성합니다.
+    /// </summary>
+    private void SpawnLandingParticle(Vector3 position)
+    {
+        if (landingParticlePrefab == null)
+        {
+            Debug.Log("[RideAndWalk] 착지 파티클 프리팹이 설정되지 않음 - 스킵");
+            return;
+        }
+
+        GameObject particle = Instantiate(landingParticlePrefab, position, Quaternion.identity);
+        Destroy(particle, 3f); // 3초 후 자동 삭제
+
+        Debug.Log("[RideAndWalk] 착지 파티클 생성됨");
+    }
+
+    /// <summary>
     /// 두 펫이 작별 인사를 나누는 단계를 처리합니다.
     /// </summary>
     private IEnumerator SayFarewell(PetController rider, PetController mount)
     {
         Debug.Log("[RideAndWalk] 5단계: 작별 인사하기");
 
-        // Dismount 단계에서 거리를 확보했으므로, 여기서는 서로 부드럽게 마주보기만 하면 됩니다.
         if (IsAgentSafelyReady(rider) && IsAgentSafelyReady(mount))
         {
-            // 부드러운 회전
+            // 펫 크기에 따른 적정 거리 계산
+            float targetDistance = CalculateMeetingDistance(rider, mount);
+            Debug.Log($"[RideAndWalk] 작별 인사 적정 거리: {targetDistance:F1}m");
+
+            // 현재 두 펫 사이의 중간점 계산
+            Vector3 midpoint = (rider.transform.position + mount.transform.position) / 2f;
+            Vector3 direction = (mount.transform.position - rider.transform.position).normalized;
+            if (direction == Vector3.zero) direction = rider.transform.forward;
+
+            // 적정 거리로 위치 계산
+            Vector3 riderTarget = midpoint - direction * (targetDistance / 2f);
+            Vector3 mountTarget = midpoint + direction * (targetDistance / 2f);
+
+            riderTarget = FindValidPositionOnNavMesh(riderTarget, NAVMESH_SEARCH_RADIUS_SMALL);
+            mountTarget = FindValidPositionOnNavMesh(mountTarget, NAVMESH_SEARCH_RADIUS_SMALL);
+
+            // 적정 거리로 이동
+            yield return StartCoroutine(MoveToPositions(rider, mount, riderTarget, mountTarget, 5f));
+
+            // 이동 후 서로 부드럽게 마주보기
             yield return StartCoroutine(SmoothlyLookAtEachOther(rider, mount, 0.7f));
         }
         else
@@ -748,7 +998,88 @@ public class RideAndWalkInteraction : BasePetInteraction
             PetAnimationController.PetAnimationType.Attack,
             2.0f));
 
-        yield return Wait10;
+        yield return Wait05;
+
+        // 각자 다른 방향으로 걸어가며 마무리
+        yield return StartCoroutine(WalkAwaySeparately(rider, mount));
+    }
+
+    /// <summary>
+    /// 두 펫이 각자 다른 방향으로 걸어가며 작별합니다.
+    /// </summary>
+    private IEnumerator WalkAwaySeparately(PetController rider, PetController mount)
+    {
+        Debug.Log("[RideAndWalk] 각자 다른 방향으로 걸어가기");
+
+        if (!IsAgentSafelyReady(rider) || !IsAgentSafelyReady(mount))
+        {
+            Debug.LogWarning("[RideAndWalk] 펫의 NavMeshAgent가 준비되지 않아 걸어가기를 건너뜁니다.");
+            yield break;
+        }
+
+        // 두 펫의 중간점 계산
+        Vector3 midPoint = (rider.transform.position + mount.transform.position) / 2f;
+
+        // 라이더: 마운트 반대 방향으로 이동
+        Vector3 riderDirection = (rider.transform.position - midPoint).normalized;
+        if (riderDirection == Vector3.zero) riderDirection = rider.transform.forward;
+        Vector3 riderDestination = rider.transform.position + riderDirection * farewellWalkDistance;
+        riderDestination = FindValidPositionOnNavMesh(riderDestination, farewellWalkDistance + 2f);
+
+        // 마운트: 라이더 반대 방향으로 이동
+        Vector3 mountDirection = (mount.transform.position - midPoint).normalized;
+        if (mountDirection == Vector3.zero) mountDirection = mount.transform.forward;
+        Vector3 mountDestination = mount.transform.position + mountDirection * farewellWalkDistance;
+        mountDestination = FindValidPositionOnNavMesh(mountDestination, farewellWalkDistance + 2f);
+
+        // 이동 시작
+        rider.agent.isStopped = false;
+        mount.agent.isStopped = false;
+        rider.agent.SetDestination(riderDestination);
+        mount.agent.SetDestination(mountDestination);
+
+        // 걷기 애니메이션
+        if (riderAnim != null)
+            riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        if (mountAnim != null)
+            mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        Debug.Log($"[RideAndWalk] 라이더 목적지: {riderDestination}, 마운트 목적지: {mountDestination}");
+
+        // 일정 시간 동안 걸어가기
+        float walkStartTime = Time.time;
+        while (Time.time - walkStartTime < farewellWalkDuration)
+        {
+            // 펫이 잡히면 중단
+            if (rider.State.IsHolding || rider.State.IsSelected ||
+                mount.State.IsHolding || mount.State.IsSelected)
+            {
+                Debug.Log("[RideAndWalk] 펫이 잡혀서 작별 걷기를 종료합니다.");
+                break;
+            }
+
+            // 둘 다 도착했으면 종료
+            bool riderArrived = !rider.agent.pathPending && rider.agent.remainingDistance < ARRIVAL_THRESHOLD;
+            bool mountArrived = !mount.agent.pathPending && mount.agent.remainingDistance < ARRIVAL_THRESHOLD;
+
+            if (riderArrived && mountArrived)
+            {
+                Debug.Log("[RideAndWalk] 두 펫이 목적지에 도착");
+                break;
+            }
+
+            yield return null;
+        }
+
+        // 애니메이션 정리
+        if (riderAnim != null) riderAnim.StopContinuousAnimation();
+        if (mountAnim != null) mountAnim.StopContinuousAnimation();
+
+        // 이동 중지
+        if (IsAgentSafelyReady(rider)) rider.agent.isStopped = true;
+        if (IsAgentSafelyReady(mount)) mount.agent.isStopped = true;
+
+        Debug.Log("[RideAndWalk] 작별 걷기 완료");
     }
 
     // ===== 헬퍼 메서드들 =====

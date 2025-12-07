@@ -315,7 +315,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionStartDistance: 5
-  meetingDistance: 5
+  smallSmallSpacing: 5
+  smallMediumSpacing: 5
+  smallLargeSpacing: 10
+  mediumMediumSpacing: 8
+  mediumLargeSpacing: 10
+  largeLargeSpacing: 10
   defaultRideOffset: {x: 0, y: 1.7, z: 0.2}
   mountDuration: 1
   walkTogetherDuration: 40
@@ -325,6 +330,24 @@ MonoBehaviour:
   autoHeightMultiplier: 0.85
   autoDepthMultiplier: 0.2
   agentSafetyTimeout: 3
+  walkMinDistance: 15
+  walkMaxDistance: 25
+  maxTurnAngle: 120
+  lookAroundChance: 0.3
+  lookAroundDuration: 2
+  lightRunChance: 0.25
+  runSpeedMultiplier: 1.4
+  runDuration: 3
+  riderActionInterval: 5
+  riderActionIntervalVariance: 2
+  riderActionDuration: 2.5
+  decelerationDistance: 3
+  minSpeedMultiplier: 0.4
+  landingParticlePrefab: {fileID: 0}
+  mountBowAngle: 15
+  mountBowDuration: 0.8
+  farewellWalkDistance: 8
+  farewellWalkDuration: 3
 --- !u!114 &8352962793379818008
 MonoBehaviour:
   m_ObjectHideFlags: 0
