@@ -107,7 +107,7 @@ public class RideAndWalkInteraction : BasePetInteraction
 
     [Header("Rider Action Settings")]
     [Tooltip("라이더 행동 간격 (초)")]
-    public float riderActionInterval = 5f;
+    public float riderActionInterval = 8f;
 
     [Tooltip("라이더 행동 간격 랜덤 범위")]
     public float riderActionIntervalVariance = 2f;
@@ -125,12 +125,6 @@ public class RideAndWalkInteraction : BasePetInteraction
     [Header("Dismount Effects")]
     [Tooltip("착지 파티클 프리팹")]
     public GameObject landingParticlePrefab;
-
-    [Tooltip("마운트가 숙이는 각도")]
-    public float mountBowAngle = 15f;
-
-    [Tooltip("마운트 숙이기 지속 시간")]
-    public float mountBowDuration = 0.8f;
 
     [Header("Farewell Settings")]
     [Tooltip("작별 후 걸어가는 거리")]
@@ -296,8 +290,6 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         // Dismount Effects 설정
         this.landingParticlePrefab = template.landingParticlePrefab;
-        this.mountBowAngle = template.mountBowAngle;
-        this.mountBowDuration = template.mountBowDuration;
 
         // Farewell 설정
         this.farewellWalkDistance = template.farewellWalkDistance;
@@ -633,9 +625,9 @@ public class RideAndWalkInteraction : BasePetInteraction
         if (mountAnim != null)
             mountAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
-        // 라이더의 기본 자세를 Eat(앉기)으로 설정 (캐싱된 애니메이션 컨트롤러 사용)
+        // 라이더의 기본 자세를 Idle로 설정 (캐싱된 애니메이션 컨트롤러 사용)
         if (riderAnim != null)
-            riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
+            riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
 
         float walkStartTime = Time.time;
         float lastPathUpdateTime = 0f;
@@ -748,30 +740,37 @@ public class RideAndWalkInteraction : BasePetInteraction
                 // 다음 행동 시간 설정
                 nextRiderActionTime = Time.time + riderActionInterval + Random.Range(-riderActionIntervalVariance, riderActionIntervalVariance);
 
-                int randomAction = Random.Range(0, 4);
+                int randomAction = Random.Range(0, 6);
                 switch (randomAction)
                 {
                     case 0: // 점프하며 즐거워하기
                         rider.ShowEmotion(EmotionType.Happy, EmotionConstants.DURATION_MEDIUM);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Jump, riderActionDuration));
+                        Debug.Log("[RideAndWalk] 라이더: 점프!");
                         break;
 
-                    case 1: // 주변을 두리번거리며 경계하기
-                        rider.ShowEmotion(EmotionType.Surprised, EmotionConstants.DURATION_MEDIUM);
-                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Idle, riderActionDuration));
+                    case 1: // 주변을 두리번거리기 (감정 없이, 좌우 회전)
+                        StartCoroutine(PlayLookAroundAnimation(rider, riderActionDuration));
+                        Debug.Log("[RideAndWalk] 라이더: 두리번");
                         break;
 
                     case 2: // 신나게 소리치기
                         rider.ShowEmotion(EmotionType.Love, EmotionConstants.DURATION_MEDIUM);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Attack, riderActionDuration));
+                        Debug.Log("[RideAndWalk] 라이더: 소리치기");
                         break;
 
                     case 3: // 잠시 편하게 눕기
                         rider.ShowEmotion(EmotionType.Sleepy, EmotionConstants.DURATION_MEDIUM);
                         StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Rest, riderActionDuration * 1.2f));
+                        Debug.Log("[RideAndWalk] 라이더: 눕기");
+                        break;
+
+                    default: // case 4, 5: 가만히 앉아있기 (Idle)
+                        StartCoroutine(PlayRidingAnimation(rider, PetAnimationController.PetAnimationType.Idle, riderActionDuration));
+                        Debug.Log("[RideAndWalk] 라이더: 가만히 앉아있기");
                         break;
                 }
-                Debug.Log($"[RideAndWalk] 라이더 행동 발생! 다음 행동까지 {nextRiderActionTime - Time.time:F1}초");
             }
 
             yield return null;
@@ -797,6 +796,61 @@ public class RideAndWalkInteraction : BasePetInteraction
         return newDirection.normalized;
     }
     /// <summary>
+    /// 라이더가 좌우로 두리번거리는 애니메이션을 재생합니다.
+    /// </summary>
+    private IEnumerator PlayLookAroundAnimation(PetController rider, float duration)
+    {
+        if (riderAnim == null) yield break;
+
+        // Idle 애니메이션 시작
+        riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+
+        Transform riderModel = rider.petModelTransform;
+        if (riderModel == null)
+        {
+            yield return new WaitForSeconds(duration);
+            riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+            yield break;
+        }
+
+        Quaternion originalRotation = riderModel.localRotation;
+        float lookAngle = 35f; // 좌우 회전 각도
+        float lookSpeed = 2f;  // 회전 속도
+        float returnDuration = 0.3f; // 복귀에 걸리는 시간
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            // 사인 함수로 좌우 왕복 회전
+            float angle = Mathf.Sin(elapsed * lookSpeed) * lookAngle;
+            riderModel.localRotation = originalRotation * Quaternion.Euler(0f, angle, 0f);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // 부드럽게 원래 회전으로 복귀
+        Quaternion currentRotation = riderModel.localRotation;
+        float returnElapsed = 0f;
+        while (returnElapsed < returnDuration)
+        {
+            returnElapsed += Time.deltaTime;
+            float t = returnElapsed / returnDuration;
+            float smoothT = t * t * (3f - 2f * t); // SmoothStep
+            riderModel.localRotation = Quaternion.Slerp(currentRotation, originalRotation, smoothT);
+            yield return null;
+        }
+
+        riderModel.localRotation = originalRotation;
+
+        // 기본 탑승 애니메이션으로 복귀
+        if (riderAnim != null)
+        {
+            riderAnim.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
+        }
+    }
+
+    /// <summary>
     /// 마운트 등 위에서 라이더의 짧은 행동을 재생하고 기본 자세로 돌리는 헬퍼 메서드
     /// </summary>
     private IEnumerator PlayRidingAnimation(PetController rider, PetAnimationController.PetAnimationType animType, float duration)
@@ -809,11 +863,11 @@ public class RideAndWalkInteraction : BasePetInteraction
         animController.SetContinuousAnimation(animType);
         yield return new WaitForSeconds(duration);
 
-        // 2. 다시 기본 탑승 애니메이션(Eat)으로 복귀
+        // 2. 다시 기본 탑승 애니메이션(Idle)으로 복귀
         // 단, 코루틴 실행 중에 다른 애니메이션으로 바뀌지 않았을 경우에만 복귀
         if (animController != null && IsPetPlayingAnimation(rider, animType))
         {
-            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Eat);
+            animController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
         }
     }
 
@@ -827,8 +881,8 @@ public class RideAndWalkInteraction : BasePetInteraction
     {
         if (rider.animator == null) return true; // 애니메이터 없으면 실행 방지
 
-        // 기본 자세(Eat)가 아닐 경우, 다른 행동 중인 것으로 간주
-        return rider.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Eat;
+        // 기본 자세(Idle)가 아닐 경우, 다른 행동 중인 것으로 간주
+        return rider.animator.GetInteger("animation") != (int)PetAnimationController.PetAnimationType.Idle;
     }
 
     /// <summary>
@@ -845,16 +899,20 @@ public class RideAndWalkInteraction : BasePetInteraction
             mount.agent.velocity = Vector3.zero;
         }
 
-        // 마운트가 살짝 숙여서 라이더가 내리기 쉽게 해줌
-        yield return StartCoroutine(MountBowDown(mount));
-
         // 라이더가 내릴 위치를 마운트의 약간 '앞쪽 대각선'으로 설정
-        rider.transform.SetParent(null, true);
-
-        // 마운트의 오른쪽 앞 대각선 방향을 계산합니다.
         Vector3 dismountDirection = (mount.transform.forward + mount.transform.right).normalized;
         Vector3 dismountLandPos = mount.transform.position + dismountDirection * farewellDistance;
         dismountLandPos = FindValidPositionOnNavMesh(dismountLandPos, farewellDistance + 1f);
+
+        // 1. 마운트가 먼저 앉기 애니메이션 (라이더가 내리기 쉽게)
+        if (mountAnim != null)
+        {
+            yield return StartCoroutine(mountAnim.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
+        }
+
+        // 2. 라이더 부모 해제 후 점프해서 내리기
+        rider.transform.SetParent(null, true);
 
         // 점프 애니메이션과 함께 내리기 (캐싱된 애니메이션 컨트롤러 사용)
         if (riderAnim != null)
@@ -866,9 +924,6 @@ public class RideAndWalkInteraction : BasePetInteraction
 
         // 착지 파티클 생성
         SpawnLandingParticle(dismountLandPos);
-
-        // 마운트가 다시 일어남
-        yield return StartCoroutine(MountStandUp(mount));
 
         // NavMeshAgent 재활성화 및 안정성 대기
         if (rider.agent != null)
@@ -883,54 +938,6 @@ public class RideAndWalkInteraction : BasePetInteraction
                 rider.agent.Warp(dismountLandPos);
             }
         }
-    }
-
-    /// <summary>
-    /// 마운트가 살짝 숙이는 동작
-    /// </summary>
-    private IEnumerator MountBowDown(PetController mount)
-    {
-        if (mount == null || mount.petModelTransform == null) yield break;
-
-        Quaternion startRotation = mount.petModelTransform.localRotation;
-        Quaternion targetRotation = startRotation * Quaternion.Euler(mountBowAngle, 0f, 0f);
-
-        float elapsedTime = 0f;
-        while (elapsedTime < mountBowDuration)
-        {
-            float t = elapsedTime / mountBowDuration;
-            float smoothT = t * t * (3f - 2f * t); // Smooth step
-            mount.petModelTransform.localRotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-        mount.petModelTransform.localRotation = targetRotation;
-
-        Debug.Log("[RideAndWalk] 마운트가 숙임");
-    }
-
-    /// <summary>
-    /// 마운트가 다시 일어나는 동작
-    /// </summary>
-    private IEnumerator MountStandUp(PetController mount)
-    {
-        if (mount == null || mount.petModelTransform == null) yield break;
-
-        Quaternion startRotation = mount.petModelTransform.localRotation;
-        Quaternion targetRotation = Quaternion.identity;
-
-        float elapsedTime = 0f;
-        while (elapsedTime < mountBowDuration)
-        {
-            float t = elapsedTime / mountBowDuration;
-            float smoothT = t * t * (3f - 2f * t); // Smooth step
-            mount.petModelTransform.localRotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-        mount.petModelTransform.localRotation = targetRotation;
-
-        Debug.Log("[RideAndWalk] 마운트가 다시 일어남");
     }
 
     /// <summary>
