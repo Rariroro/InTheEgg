@@ -207,17 +207,22 @@ public class PetInteractionManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 우선순위 상호작용 시작 (5개 제한 무시)
+    /// 우선순위 상호작용 시작 (5개 제한 무시) - 새 인스턴스 생성
     /// </summary>
     private void StartPriorityInteraction(InteractionInfo interactionInfo)
     {
         // Debug.Log($"[PetInteractionManager] 우선순위 상호작용 시작: {interactionInfo.pet1.petName} & {interactionInfo.pet2.petName} ({interactionInfo.interaction.InteractionName})");
 
+        // ★★★ 수정: 템플릿에서 새로운 인스턴스 생성 (동시 실행 격리) ★★★
+        var templateInteraction = interactionInfo.interaction;
+        var newInteraction = CreateInteractionInstance(templateInteraction);
+        interactionInfo.interaction = newInteraction;
+
         // 우선순위 상호작용 목록에 추가
         priorityInteractions.Add(interactionInfo);
 
         // 상호작용 실행
-        interactionInfo.interaction.StartInteraction(interactionInfo.pet1, interactionInfo.pet2);
+        newInteraction.StartInteraction(interactionInfo.pet1, interactionInfo.pet2);
 
         // 상호작용 중인 펫 쌍 기록
         interactingPets[interactionInfo.pet1] = interactionInfo.pet2;
@@ -377,6 +382,13 @@ public class PetInteractionManager : MonoBehaviour
             newComp.CopySettingsFrom(original);
             newInstance = newComp;
         }
+        else if (template is PersonalityReactionInteraction)
+        {
+            var original = template as PersonalityReactionInteraction;
+            var newComp = interactionObj.AddComponent<PersonalityReactionInteraction>();
+            newComp.CopySettingsFrom(original);
+            newInstance = newComp;
+        }
         else
         {
             // 다른 상호작용은 기존 방식 사용 (템플릿 그대로)
@@ -440,6 +452,12 @@ public class PetInteractionManager : MonoBehaviour
             if (endedInteraction != null)
             {
                 priorityInteractions.Remove(endedInteraction);
+
+                // ★★★ 추가: 생성된 인스턴스 파괴 (메모리 정리) ★★★
+                if (endedInteraction.interaction != null && endedInteraction.interaction.gameObject != this.gameObject)
+                {
+                    Destroy(endedInteraction.interaction.gameObject);
+                }
                 // Debug.Log($"[PetInteractionManager] 우선순위 상호작용 종료: {endedInteraction.interaction.InteractionName}");
             }
         }

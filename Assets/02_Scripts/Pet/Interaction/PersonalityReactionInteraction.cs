@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using InTheEgg.Constants;
 
 /// <summary>
 /// 성격 조합별 가벼운 반응 패턴을 구현하는 상호작용
@@ -310,16 +311,16 @@ public class PersonalityReactionInteraction : BasePetInteraction
     }
 
     // ===== 1. Lazy + Lazy: 둘 다 게으른 펫들의 반응 =====
-    // 특징: 서로 천천히 접근하다가 함께 누워서 쉬는 패턴
+    // 특징: 서로 천천히 접근하다가 함께 누워서 쉬는 패턴 (RestAndSleepTogether 스타일)
     private IEnumerator LazyLazyReaction(PetController pet1, PetController pet2)
     {
         Debug.Log($"[LazyLazy] Lazy: {pet1.petName}, Lazy: {pet2.petName}");
 
-        // 거리 설정 (인스펙터 값 사용)
+        // 거리 설정
         float targetDistance = CalculateApproachDistance(pet1, pet2);
-        float restDuration = 3f;
-        float separateDistance = targetDistance + 3f;  // 헤어질 때 거리
-        
+        float restDuration = Random.Range(5f, 8f);  // 함께 휴식 시간 (5-8초)
+        float separateDistance = targetDistance + 3f;
+
         // 현재 거리 체크
         float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
         Debug.Log($"[LazyLazy] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
@@ -327,12 +328,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 0단계: 목표 거리로 정밀하게 이동
         Debug.Log($"[LazyLazy] 단계0: 목표 거리 {targetDistance:F1}m로 이동");
 
-        // 중간점 기반 위치 계산
         Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
         Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
         if (direction == Vector3.zero) direction = pet1.transform.forward;
 
-        // 목표 위치 설정
         Vector3 targetPosition1 = midpoint - direction * (targetDistance / 2f);
         Vector3 targetPosition2 = midpoint + direction * (targetDistance / 2f);
         targetPosition1 = FindValidPositionOnNavMesh(targetPosition1, 10f);
@@ -341,69 +340,110 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 정밀하게 이동 (게으르게 천천히)
         float originalSpeed1 = pet1.agent.speed;
         float originalSpeed2 = pet2.agent.speed;
-        pet1.agent.speed = pet1.baseSpeed * 0.3f;  // 매우 느리게
+        pet1.agent.speed = pet1.baseSpeed * 0.3f;
         pet2.agent.speed = pet2.baseSpeed * 0.3f;
 
         yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, 10f));
 
-        // 속도 복원
         pet1.agent.speed = originalSpeed1;
         pet2.agent.speed = originalSpeed2;
-        
+
         // 1단계: 멈춰서 서로 마주보기
         Debug.Log($"[LazyLazy] 단계1: 멈춰서 서로 마주보기");
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
         pet1.animationController.StopContinuousAnimation();
         pet2.animationController.StopContinuousAnimation();
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1.5f));
-        yield return new WaitForSeconds(1f);
-        
-        // 2단계: Pet1이 먼저 누움
-        Debug.Log($"[LazyLazy] 단계2: {pet1.petName}이 먼저 누움");
-        yield return StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 1f));
+
+        // 2단계: Sleep 감정 표시 후 동시에 누움
+        Debug.Log($"[LazyLazy] 단계2: Sleep 감정 표시 및 동시에 누움");
+        pet1.ShowEmotion(EmotionType.Sleep, EmotionConstants.DURATION_PERSISTENT);
+        pet2.ShowEmotion(EmotionType.Sleep, EmotionConstants.DURATION_PERSISTENT);
+        yield return new WaitForSeconds(0.5f);
+
+        // 동시에 누움
+        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, restDuration, false, false));
-        
-        // 3단계: Pet2도 누움
-        Debug.Log($"[LazyLazy] 단계3: {pet2.petName}도 따라서 누움");
         yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Rest, restDuration, false, false));
-        
-        // 4단계: 잠시 쉬고 동시에 일어남
-        Debug.Log($"[LazyLazy] 단계4: 잠시 쉬다가 동시에 일어남");
-        yield return new WaitForSeconds(1f);
-        
-        // 동시에 일어나는 애니메이션 (Idle로 자동 전환)
-        // Rest 애니메이션이 끝나면 자동으로 Idle로 전환됨
-        
-        SkipToSeparate:
-        // 5단계: 천천히 각자의 길로 헤어짐
-        Debug.Log($"[LazyLazy] 단계5: 천천히 각자의 길로 헤어짐");
-        
-        // 서로 반대 방향으로 천천히 이동
+
+        // 3단계: 함께 휴식 (자세 변경 이벤트 포함)
+        Debug.Log($"[LazyLazy] 단계3: 함께 휴식 ({restDuration:F1}초)");
+        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+
+        float elapsedTime = 0f;
+        float eventTime = restDuration * 0.5f;  // 중간쯤에 이벤트 체크
+        bool eventTriggered = false;
+
+        while (elapsedTime < restDuration)
+        {
+            // 30% 확률로 자세 변경 이벤트
+            if (!eventTriggered && elapsedTime >= eventTime && Random.value < 0.3f)
+            {
+                eventTriggered = true;
+                PetController activePet = Random.value < 0.5f ? pet1 : pet2;
+                Debug.Log($"[LazyLazy] {activePet.petName}이 자세를 바꿈");
+
+                // 앉았다가 다시 눕기
+                yield return StartCoroutine(activePet.animationController.PlayAnimationWithCustomDuration(
+                    PetAnimationController.PetAnimationType.Eat, 1.5f, false, false));
+                activePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+            }
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        // 4단계: 순차적으로 일어남
+        Debug.Log($"[LazyLazy] 단계4: 순차적으로 일어남");
+        pet1.animationController.StopContinuousAnimation();
+        pet2.animationController.StopContinuousAnimation();
+
+        // Pet1 먼저 일어남
+        yield return StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Eat, 1f, false, false));
+        pet1.HideEmotion();
+
+        yield return new WaitForSeconds(0.5f);
+
+        // Pet2도 일어남
+        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Eat, 1f, false, false));
+        pet2.HideEmotion();
+
+        // 5단계: 서로 마주보기
+        Debug.Log($"[LazyLazy] 단계5: 서로 마주보기");
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
+        yield return new WaitForSeconds(0.5f);
+
+        // 6단계: 천천히 각자의 길로 헤어짐
+        Debug.Log($"[LazyLazy] 단계6: 천천히 각자의 길로 헤어짐");
+
         Vector3 pet1Direction = (pet1.transform.position - pet2.transform.position).normalized;
         Vector3 pet2Direction = (pet2.transform.position - pet1.transform.position).normalized;
-        
+
         Vector3 pet1Destination = pet1.transform.position + pet1Direction * separateDistance;
         Vector3 pet2Destination = pet2.transform.position + pet2Direction * separateDistance;
-        
+
         pet1Destination = FindValidPositionOnNavMesh(pet1Destination, 10f);
         pet2Destination = FindValidPositionOnNavMesh(pet2Destination, 10f);
-        
+
         pet1.agent.isStopped = false;
         pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 0.4f;  // 천천히 헤어짐
+        pet1.agent.speed = pet1.baseSpeed * 0.4f;
         pet2.agent.speed = pet2.baseSpeed * 0.4f;
         pet1.agent.SetDestination(pet1Destination);
         pet2.agent.SetDestination(pet2Destination);
         pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        
+
         yield return new WaitForSeconds(2f);
-        
+
         pet1.animationController.StopContinuousAnimation();
         pet2.animationController.StopContinuousAnimation();
-        
+
         Debug.Log($"<color=blue>[LazyLazy] 반응 완료</color>");
     }
 

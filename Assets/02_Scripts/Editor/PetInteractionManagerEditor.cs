@@ -17,12 +17,6 @@ public class PetInteractionManagerEditor : Editor
         AddInteractionComponent<FightInteraction>("Fight");
     }
     
-    [MenuItem("Tools/Pet System/Add RestAndSleepTogether Interaction")]
-    private static void AddRestAndSleepTogetherInteraction()
-    {
-        AddInteractionComponent<RestAndSleepTogetherInteraction>("RestAndSleepTogether");
-    }
-    
     [MenuItem("Tools/Pet System/Add TurtleRabbitRace Interaction")]
     private static void AddRaceInteraction()
     {
@@ -88,7 +82,6 @@ public class PetInteractionManagerEditor : Editor
     {
         AddWalkTogetherInteraction();
         AddFightInteraction();
-        AddRestAndSleepTogetherInteraction();
         AddRaceInteraction();
         AddChaseAndRunInteraction();
         AddRideAndWalkInteraction();
