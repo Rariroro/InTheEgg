@@ -643,11 +643,15 @@ public class PersonalityReactionInteraction : BasePetInteraction
             yield return new WaitForSeconds(Random.Range(0.2f, 0.45f));  // 랜덤 간격
         }
 
-        // 공통 단계: Playful이 Lazy 주위를 빙빙 돔
+        // 4단계: Playful이 Lazy 주위를 빙빙 돔 (중간에 방향 전환)
         Debug.Log($"[LazyPlayful] 단계4: {playfulPet.petName}이 주위를 돌며 놀자고 함");
         float circleRadius = CalculateCircleRadius(playfulPet, lazyPet);
-        float circleDuration = CalculateCircleDuration(circleRadius, playfulPet.baseSpeed);
-        yield return StartCoroutine(CircleAroundTarget(playfulPet, lazyPet, circleRadius, circleDuration));
+        float halfDuration = CalculateCircleDuration(circleRadius, playfulPet.baseSpeed) / 2f;
+
+        // 반바퀴 시계방향
+        yield return StartCoroutine(CircleAroundTarget(playfulPet, lazyPet, circleRadius, halfDuration, true));
+        // 반바퀴 반시계방향
+        yield return StartCoroutine(CircleAroundTarget(playfulPet, lazyPet, circleRadius, halfDuration, false));
 
         // 5단계: Lazy는 계속 무시
         Debug.Log($"[LazyPlayful] 단계5: {lazyPet.petName}은 계속 무시");
@@ -1354,7 +1358,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
     /// <summary>
     /// 타겟 주위를 도는 동작
     /// </summary>
-    private IEnumerator CircleAroundTarget(PetController circler, PetController target, float radius, float duration)
+    /// <param name="clockwise">true면 시계방향, false면 반시계방향</param>
+    private IEnumerator CircleAroundTarget(PetController circler, PetController target, float radius, float duration, bool clockwise = true)
     {
         // NavMeshAgent 체크
         if (circler.agent == null || !circler.agent.enabled || !circler.agent.isOnNavMesh)
@@ -1363,7 +1368,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
             yield break;
         }
 
-        Debug.Log($"[CircleAroundTarget] {circler.petName}이(가) {target.petName} 주위를 {duration}초 동안 돌기 시작");
+        string directionText = clockwise ? "시계방향" : "반시계방향";
+        Debug.Log($"[CircleAroundTarget] {circler.petName}이(가) {target.petName} 주위를 {duration}초 동안 {directionText}으로 돌기 시작");
 
         // 원래 속도 저장
         float originalSpeed = circler.agent.speed;
@@ -1388,7 +1394,8 @@ public class PersonalityReactionInteraction : BasePetInteraction
         {
             // 진행도 계산 (0.0 ~ 1.0)
             float progress = elapsed / duration;
-            float angle = progress * 360f;  // 0도 ~ 360도
+            // 시계방향이면 양수, 반시계방향이면 음수
+            float angle = clockwise ? (progress * 360f) : (-progress * 360f);
 
             // 원 위의 위치 계산
             Vector3 offset = Quaternion.Euler(0, angle, 0) * startDirection * radius;
