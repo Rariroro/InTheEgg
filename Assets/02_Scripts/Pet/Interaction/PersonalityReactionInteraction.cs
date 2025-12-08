@@ -471,9 +471,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float targetDistance = CalculateApproachDistance(lazyPet, shyPet);
         float retreatDistance = targetDistance + 2f;
 
-        // 0단계: 적절한 거리로 조정 (멀면 Lazy 접근, 가까우면 Shy 후퇴)
+        // 0단계: 적절한 거리로 조정 (Shy만 움직임, Lazy는 안 움직임)
         Debug.Log($"[LazyShy] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(lazyPet, shyPet, targetDistance, 0.4f, 1.5f, 5f));
+        yield return StartCoroutine(AdjustDistanceOneSided(lazyPet, shyPet, targetDistance, 1.0f, 5f));
 
         // 1단계: Lazy가 피곤해서 누움
         Debug.Log($"[LazyShy] 단계1: {lazyPet.petName}이 피곤해서 누움");
@@ -498,48 +498,48 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, lazyPet, 0.3f));
 
-        // 5단계: Shy가 조심스럽게 다시 접근
+        // 5단계: Shy가 조심스럽게 다시 접근 (Shy→Lazy 방향으로 계산)
         Debug.Log($"[LazyShy] 단계5: {shyPet.petName}이 조심스럽게 다시 접근");
-        Vector3 sniffPoint = lazyPet.transform.position + lazyPet.transform.forward * 2f;
+        Vector3 dirToLazy = (lazyPet.transform.position - shyPet.transform.position).normalized;
+        Vector3 sniffPoint = lazyPet.transform.position - dirToLazy * 0.8f;
         sniffPoint = FindValidPositionOnNavMesh(sniffPoint, 5f);
 
         if (SafeSetNavMeshAgent(shyPet, false, shyPet.baseSpeed * 0.3f, sniffPoint)) {
             shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-            yield return new WaitForSeconds(2f);
+
+            // 도착까지 대기 (최대 3초 타임아웃)
+            float startTime = Time.time;
+            while (Time.time - startTime < 3f)
+            {
+                if (shyPet.agent != null && shyPet.agent.enabled && shyPet.agent.isOnNavMesh)
+                {
+                    if (!shyPet.agent.pathPending && shyPet.agent.remainingDistance <= 0.5f)
+                        break;
+                }
+                yield return null;
+            }
             SafeSetNavMeshAgent(shyPet, true);
-        } else {
-            yield return new WaitForSeconds(2f);
         }
         shyPet.animationController.StopContinuousAnimation();
-        
+
         // 6단계: 냄새 맡기 동작
         Debug.Log($"[LazyShy] 단계6: {shyPet.petName}이 냄새를 맡음");
         yield return StartCoroutine(shyPet.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Eat, 1f, false, false));
 
-        // 7단계: 각자의 길로 헤어짐
-        Debug.Log($"[LazyShy] 단계7: 각자의 길로 헤어짐");
-        Vector3 lazyDirection = (lazyPet.transform.position - shyPet.transform.position).normalized;
-        if (lazyDirection == Vector3.zero) lazyDirection = lazyPet.transform.forward;
-        Vector3 shyDirection = -lazyDirection;
-
-        Vector3 lazyDest = lazyPet.transform.position + lazyDirection * 4f;
+        // 7단계: Shy만 떠남 (Lazy는 누워있음)
+        Debug.Log($"[LazyShy] 단계7: {shyPet.petName}이 떠남, {lazyPet.petName}은 계속 누워있음");
+        Vector3 shyDirection = (shyPet.transform.position - lazyPet.transform.position).normalized;
+        if (shyDirection == Vector3.zero) shyDirection = shyPet.transform.forward;
         Vector3 shyDest = shyPet.transform.position + shyDirection * 4f;
-        lazyDest = FindValidPositionOnNavMesh(lazyDest, 10f);
         shyDest = FindValidPositionOnNavMesh(shyDest, 10f);
 
-        // Lazy는 천천히, Shy는 조심스럽게
-        lazyPet.agent.isStopped = false;
         shyPet.agent.isStopped = false;
-        lazyPet.agent.speed = lazyPet.baseSpeed * 0.4f;
         shyPet.agent.speed = shyPet.baseSpeed * 0.6f;
-        lazyPet.agent.SetDestination(lazyDest);
         shyPet.agent.SetDestination(shyDest);
-        lazyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
         shyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         yield return new WaitForSeconds(1.5f);
-        lazyPet.animationController.StopContinuousAnimation();
         shyPet.animationController.StopContinuousAnimation();
 
         Debug.Log($"<color=blue>[LazyShy] 반응 완료</color>");
@@ -557,9 +557,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float targetDistance = CalculateApproachDistance(lazyPet, bravePet);
         float circleRadius = CalculateCircleRadius(bravePet, lazyPet);
 
-        // 0단계: 적절한 거리로 조정 (멀면 Brave 접근, 가까우면 Lazy 후퇴)
+        // 0단계: 적절한 거리로 조정 (Brave만 움직임, Lazy는 안 움직임)
         Debug.Log($"[LazyBrave] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, lazyPet, targetDistance, 1.2f, 1.2f, 4f));
+        yield return StartCoroutine(AdjustDistanceOneSided(lazyPet, bravePet, targetDistance, 1.2f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
@@ -617,9 +617,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정
         float targetDistance = CalculateApproachDistance(lazyPet, playfulPet);
 
-        // 0단계: 적절한 거리로 조정 (멀면 Playful 접근, 가까우면 Lazy 후퇴)
+        // 0단계: 적절한 거리로 조정 (Playful만 움직임, Lazy는 안 움직임)
         Debug.Log($"[LazyPlayful] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, lazyPet, targetDistance, 1.5f, 1.2f, 4f));
+        yield return StartCoroutine(AdjustDistanceOneSided(lazyPet, playfulPet, targetDistance, 1.5f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
@@ -1972,6 +1972,85 @@ public class PersonalityReactionInteraction : BasePetInteraction
         mover.agent.isStopped = true;
         mover.agent.speed = originalSpeed;
         mover.animationController.StopContinuousAnimation();
+    }
+
+    /// <summary>
+    /// 한쪽 펫만 움직여서 거리 조절 (Lazy 조합용)
+    /// staticPet은 움직이지 않고, moverPet만 접근/후퇴
+    /// </summary>
+    private IEnumerator AdjustDistanceOneSided(
+        PetController staticPet,
+        PetController moverPet,
+        float targetDistance,
+        float speedMult,
+        float timeout)
+    {
+        float currentDistance = Vector3.Distance(staticPet.transform.position, moverPet.transform.position);
+        Debug.Log($"[AdjustDistanceOneSided] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
+
+        // 이미 적절한 거리면 스킵
+        if (Mathf.Abs(currentDistance - targetDistance) <= preciseThreshold)
+        {
+            Debug.Log($"[AdjustDistanceOneSided] 이미 적절한 거리 - 스킵");
+            yield break;
+        }
+
+        Vector3 direction = (moverPet.transform.position - staticPet.transform.position).normalized;
+        Vector3 targetPosition;
+        bool isRetreating = false;
+
+        if (currentDistance > targetDistance)
+        {
+            // 멀면: moverPet이 staticPet에게 접근
+            targetPosition = staticPet.transform.position + direction * targetDistance;
+            Debug.Log($"[AdjustDistanceOneSided] {moverPet.petName}이 접근");
+        }
+        else
+        {
+            // 가까우면: moverPet이 깜짝 놀라서 후퇴
+            isRetreating = true;
+            targetPosition = staticPet.transform.position + direction * targetDistance;
+            Debug.Log($"[AdjustDistanceOneSided] {moverPet.petName}이 깜짝 놀라서 후퇴");
+        }
+
+        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+
+        // 후퇴 시 깜짝 놀라는 점프 애니메이션
+        if (isRetreating)
+        {
+            yield return StartCoroutine(moverPet.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+        }
+
+        // 속도 설정
+        float originalSpeed = moverPet.agent.speed;
+        moverPet.agent.speed = moverPet.baseSpeed * speedMult;
+
+        // 이동 (후퇴 시 항상 Run 애니메이션)
+        moverPet.agent.isStopped = false;
+        moverPet.agent.stoppingDistance = 0.1f;
+        moverPet.agent.SetDestination(targetPosition);
+        moverPet.animationController.SetContinuousAnimation(
+            (speedMult > 1f || isRetreating) ? PetAnimationController.PetAnimationType.Run : PetAnimationController.PetAnimationType.Walk);
+
+        float startTime = Time.time;
+        while (Time.time - startTime < timeout)
+        {
+            if (moverPet.agent != null && moverPet.agent.enabled && moverPet.agent.isOnNavMesh)
+            {
+                if (!moverPet.agent.pathPending && moverPet.agent.remainingDistance <= preciseThreshold)
+                {
+                    Debug.Log($"[AdjustDistanceOneSided] {moverPet.petName} 도착");
+                    break;
+                }
+            }
+            yield return null;
+        }
+
+        // 정리
+        moverPet.agent.isStopped = true;
+        moverPet.agent.speed = originalSpeed;
+        moverPet.animationController.StopContinuousAnimation();
     }
 
     /// <summary>
