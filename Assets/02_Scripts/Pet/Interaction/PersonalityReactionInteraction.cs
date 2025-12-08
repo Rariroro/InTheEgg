@@ -473,7 +473,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 0단계: 적절한 거리로 조정 (멀면 Lazy 접근, 가까우면 Shy 후퇴)
         Debug.Log($"[LazyShy] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(lazyPet, shyPet, targetDistance, 0.4f, 0.5f, 5f));
+        yield return StartCoroutine(AdjustDistanceAsymmetric(lazyPet, shyPet, targetDistance, 0.4f, 1.5f, 5f));
 
         // 1단계: Lazy가 피곤해서 누움
         Debug.Log($"[LazyShy] 단계1: {lazyPet.petName}이 피곤해서 누움");
@@ -559,7 +559,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 0단계: 적절한 거리로 조정 (멀면 Brave 접근, 가까우면 Lazy 후퇴)
         Debug.Log($"[LazyBrave] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, lazyPet, targetDistance, 1.2f, 0.4f, 4f));
+        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, lazyPet, targetDistance, 1.2f, 1.2f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
@@ -619,7 +619,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 0단계: 적절한 거리로 조정 (멀면 Playful 접근, 가까우면 Lazy 후퇴)
         Debug.Log($"[LazyPlayful] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, lazyPet, targetDistance, 1.5f, 0.4f, 4f));
+        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, lazyPet, targetDistance, 1.5f, 1.2f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
@@ -784,7 +784,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 0단계: 적절한 거리로 조정 (멀면 Brave 접근, 가까우면 Shy 후퇴)
         Debug.Log($"[ShyBrave] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, shyPet, targetDistance, 1.0f, 0.5f, 4f));
+        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, shyPet, targetDistance, 1.0f, 1.5f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[ShyBrave] 단계1: 서로 마주보기");
@@ -865,7 +865,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         // 0단계: 적절한 거리로 조정 (멀면 Playful 접근, 가까우면 Shy 후퇴)
         Debug.Log($"[ShyPlayful] 단계0: 적절한 거리로 조정");
-        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, shyPet, targetDistance, 1.2f, 0.5f, 4f));
+        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, shyPet, targetDistance, 1.2f, 1.5f, 4f));
 
         // 1단계: 서로 마주보기
         Debug.Log($"[ShyPlayful] 단계1: 서로 마주보기");
@@ -1912,6 +1912,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         PetController mover;
         Vector3 targetPosition;
         float speedMult;
+        bool isRetreating = false;
 
         if (currentDistance > targetDistance)
         {
@@ -1924,26 +1925,34 @@ public class PersonalityReactionInteraction : BasePetInteraction
         }
         else
         {
-            // 가까우면: retreater가 후퇴
+            // 가까우면: retreater가 깜짝 놀라서 후퇴
             mover = retreater;
             speedMult = retreatSpeedMult;
+            isRetreating = true;
             Vector3 direction = (retreater.transform.position - approacher.transform.position).normalized;
             targetPosition = approacher.transform.position + direction * targetDistance;
-            Debug.Log($"[AdjustDistanceAsymmetric] {retreater.petName}이 후퇴");
+            Debug.Log($"[AdjustDistanceAsymmetric] {retreater.petName}이 깜짝 놀라서 후퇴");
         }
 
         targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+
+        // 후퇴 시 깜짝 놀라는 점프 애니메이션
+        if (isRetreating)
+        {
+            yield return StartCoroutine(mover.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+        }
 
         // 속도 설정
         float originalSpeed = mover.agent.speed;
         mover.agent.speed = mover.baseSpeed * speedMult;
 
-        // 이동
+        // 이동 (후퇴 시 항상 Run 애니메이션)
         mover.agent.isStopped = false;
         mover.agent.stoppingDistance = 0.1f;
         mover.agent.SetDestination(targetPosition);
         mover.animationController.SetContinuousAnimation(
-            speedMult > 1f ? PetAnimationController.PetAnimationType.Run : PetAnimationController.PetAnimationType.Walk);
+            (speedMult > 1f || isRetreating) ? PetAnimationController.PetAnimationType.Run : PetAnimationController.PetAnimationType.Walk);
 
         float startTime = Time.time;
         while (Time.time - startTime < timeout)
