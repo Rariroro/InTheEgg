@@ -207,6 +207,7 @@ public abstract class BasePetInteraction : MonoBehaviour
     public void ForceCleanup()
     {
         Debug.Log($"[{InteractionName}] ForceCleanup 호출됨");
+        isInteractionActive = false;  // OnDisable 경고 방지
         OnForceCleanup();
     }
 

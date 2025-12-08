@@ -41,7 +41,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
     public float approachDistance = 3f;  // 펫들이 서로 접근할 기본 거리
 
     [Tooltip("정밀한 도착 판정 거리 (이동 완료 오차 범위)")]
-    public float preciseThreshold = 0.3f;  // 목표 위치 도착 판정 거리
+    public float preciseThreshold = 0.6f;  // 목표 위치 도착 판정 거리
 
     [Tooltip("도망 거리")]
     public float fleeDistance = 10f;  // 수줍은 펫이 도망갈 거리
@@ -326,13 +326,13 @@ public class PersonalityReactionInteraction : BasePetInteraction
         targetPosition1 = FindValidPositionOnNavMesh(targetPosition1, 10f);
         targetPosition2 = FindValidPositionOnNavMesh(targetPosition2, 10f);
 
-        // 정밀하게 이동 (게으르게 천천히)
+        // 정밀하게 이동 (게으르게 천천히, 하지만 너무 느리지 않게)
         float originalSpeed1 = pet1.agent.speed;
         float originalSpeed2 = pet2.agent.speed;
-        pet1.agent.speed = pet1.baseSpeed * 0.3f;
-        pet2.agent.speed = pet2.baseSpeed * 0.3f;
+        pet1.agent.speed = pet1.baseSpeed * 0.5f;
+        pet2.agent.speed = pet2.baseSpeed * 0.5f;
 
-        yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, 10f));
+        yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, 5f));
 
         pet1.agent.speed = originalSpeed1;
         pet2.agent.speed = originalSpeed2;
@@ -470,36 +470,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정 (인스펙터 값 사용)
         float targetDistance = CalculateApproachDistance(lazyPet, shyPet);
         float retreatDistance = targetDistance + 2f;
-        
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(lazyPet.transform.position, shyPet.transform.position);
-        Debug.Log($"[LazyShy] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
 
-        // 0단계: Lazy만 목표 거리로 이동 (Shy는 제자리)
-        Debug.Log($"[LazyShy] 단계0: Lazy가 천천히 접근 (목표: {targetDistance:F1}m)");
-
-        Vector3 direction = (shyPet.transform.position - lazyPet.transform.position).normalized;
-        Vector3 targetPosition = shyPet.transform.position - direction * targetDistance;
-        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-
-        // 게으르게 천천히 이동
-        float originalSpeed = lazyPet.agent.speed;
-        lazyPet.agent.speed = lazyPet.baseSpeed * 0.4f;
-
-        lazyPet.agent.isStopped = false;
-        lazyPet.agent.SetDestination(targetPosition);
-        lazyPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-
-        // 도착 대기
-        yield return new WaitUntil(() =>
-            !lazyPet.agent.pathPending &&
-            lazyPet.agent.remainingDistance <= this.preciseThreshold);
-
-        lazyPet.agent.isStopped = true;
-        lazyPet.animationController.StopContinuousAnimation();
-        lazyPet.agent.speed = originalSpeed;
-
-        Debug.Log($"[LazyShy] Lazy 도착!");
+        // 0단계: 적절한 거리로 조정 (멀면 Lazy 접근, 가까우면 Shy 후퇴)
+        Debug.Log($"[LazyShy] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceAsymmetric(lazyPet, shyPet, targetDistance, 0.4f, 0.5f, 5f));
 
         // 1단계: Lazy가 피곤해서 누움
         Debug.Log($"[LazyShy] 단계1: {lazyPet.petName}이 피곤해서 누움");
@@ -580,68 +554,25 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[LazyBrave] Lazy: {lazyPet.petName}, Brave: {bravePet.petName}");
 
         // 거리 설정 (인스펙터 값 사용)
+        float targetDistance = CalculateApproachDistance(lazyPet, bravePet);
         float circleRadius = CalculateCircleRadius(bravePet, lazyPet);
-        float skipApproachThreshold = 5f;
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(lazyPet.transform.position, bravePet.transform.position);
-        Debug.Log($"[LazyBrave] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (멀면 Brave 접근, 가까우면 Lazy 후퇴)
+        Debug.Log($"[LazyBrave] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, lazyPet, targetDistance, 1.2f, 0.4f, 4f));
 
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 Lazy는 바로 누워버리고 Brave가 당황
-            Debug.Log($"[LazyBrave] 이미 가까이 있음 - Lazy는 즉시 누워버림!");
+        // 1단계: 서로 마주보기
+        Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
+        bravePet.agent.isStopped = true;
+        lazyPet.agent.isStopped = true;
+        bravePet.animationController.StopContinuousAnimation();
+        lazyPet.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
 
-            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
-
-            Debug.Log($"[LazyBrave] {lazyPet.petName}은 귀찮아서 즉시 누움");
-            lazyPet.agent.isStopped = true;
-            StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Rest, 4f, false, false));
-
-            Debug.Log($"[LazyBrave] {bravePet.petName}은 당황해서 점프");
-            yield return StartCoroutine(bravePet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
-        }
-        else
-        {
-            // 0단계: Brave가 빠르게 접근
-            Debug.Log($"[LazyBrave] 단계0: Brave가 당당하게 빠르게 접근");
-
-            float targetDistance = CalculateApproachDistance(lazyPet, bravePet);
-            Vector3 direction = (lazyPet.transform.position - bravePet.transform.position).normalized;
-            Vector3 targetPosition = lazyPet.transform.position - direction * targetDistance;
-            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-
-            yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
-
-            // 2단계: Lazy는 무반응으로 누움
-            Debug.Log($"[LazyBrave] 단계2: {lazyPet.petName}은 귀찮아서 누움");
-            lazyPet.agent.isStopped = true;
-            yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Rest, 4f, false, false));
-
-            // Brave 도착 대기
-            float waitTime = 0f;
-            float maxWaitTime = 2f;
-            while (waitTime < maxWaitTime)
-            {
-                if (!bravePet.agent.pathPending && bravePet.agent.remainingDistance < 0.5f)
-                {
-                    Debug.Log($"[LazyBrave] Brave가 도착");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-
-            bravePet.agent.isStopped = true;
-            bravePet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-
-            // 1단계: 서로 마주보기
-            Debug.Log($"[LazyBrave] 단계1: 서로 마주보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, bravePet, 0.3f));
-        }
+        // 2단계: Lazy는 무반응으로 누움
+        Debug.Log($"[LazyBrave] 단계2: {lazyPet.petName}은 귀찮아서 누움");
+        yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Rest, 2f, false, false));
 
         // 공통 단계: Brave가 Lazy 주위를 돔
         Debug.Log($"[LazyBrave] 단계3: {bravePet.petName}이 주위를 돌며 살펴봄");
@@ -684,79 +615,32 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[LazyPlayful] Lazy: {lazyPet.petName}, Playful: {playfulPet.petName}");
 
         // 거리 설정
-        float skipApproachThreshold = 5f;
+        float targetDistance = CalculateApproachDistance(lazyPet, playfulPet);
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(lazyPet.transform.position, playfulPet.transform.position);
-        Debug.Log($"[LazyPlayful] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (멀면 Playful 접근, 가까우면 Lazy 후퇴)
+        Debug.Log($"[LazyPlayful] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, lazyPet, targetDistance, 1.5f, 0.4f, 4f));
 
-        if (currentDistance < skipApproachThreshold)
+        // 1단계: 서로 마주보기
+        Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
+        playfulPet.agent.isStopped = true;
+        lazyPet.agent.isStopped = true;
+        playfulPet.animationController.StopContinuousAnimation();
+        lazyPet.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.3f));
+
+        // 2단계: Lazy는 귀찮아서 누움
+        Debug.Log($"[LazyPlayful] 단계2: {lazyPet.petName}은 귀찮아서 누움");
+        yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Rest, 2f, false, false));
+
+        // 3단계: Playful이 연속 점프하며 놀자고 함
+        Debug.Log($"[LazyPlayful] 단계3: {playfulPet.petName}이 점프하며 놀자고 함 (3회)");
+        for (int i = 0; i < 3; i++)
         {
-            // 이미 가까이 있으면 Lazy는 바로 누워버리고 Playful이 신나서 점프
-            Debug.Log($"[LazyPlayful] 이미 가까이 있음 - 즉시 반응!");
-
-            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.3f));
-
-            Debug.Log($"[LazyPlayful] {lazyPet.petName}은 귀찮아서 즉시 누움");
-            lazyPet.agent.isStopped = true;
-            StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Rest, 3f, false, false));
-
-            Debug.Log($"[LazyPlayful] {playfulPet.petName}이 신나서 연속 점프!");
-            for (int i = 0; i < 2; i++)
-            {
-                yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-                yield return new WaitForSeconds(Random.Range(0.15f, 0.4f));  // 랜덤 간격
-            }
-        }
-        else
-        {
-            // 0단계: Playful이 신나게 접근
-            Debug.Log($"[LazyPlayful] 단계0: Playful이 신나게 접근");
-
-            float targetDistance = CalculateApproachDistance(lazyPet, playfulPet);
-            Vector3 direction = (lazyPet.transform.position - playfulPet.transform.position).normalized;
-            Vector3 targetPosition = lazyPet.transform.position - direction * targetDistance;
-            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-
-            yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
-
-            // 2단계: Lazy는 귀찮아서 누움
-            Debug.Log($"[LazyPlayful] 단계2: {lazyPet.petName}은 귀찮아서 누움");
-            lazyPet.agent.isStopped = true;
-            yield return StartCoroutine(lazyPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Rest, 3f, false, false));
-
-            // Playful 도착 대기
-            float waitTime = 0f;
-            float maxWaitTime = 2f;
-            while (waitTime < maxWaitTime)
-            {
-                if (!playfulPet.agent.pathPending && playfulPet.agent.remainingDistance < 0.5f)
-                {
-                    Debug.Log($"[LazyPlayful] Playful이 도착");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-
-            playfulPet.agent.isStopped = true;
-            playfulPet.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Idle);
-
-            // 1단계: 서로 마주보기
-            Debug.Log($"[LazyPlayful] 단계1: 서로 마주보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(lazyPet, playfulPet, 0.3f));
-
-            // 3단계: Playful이 연속 점프하며 놀자고 함
-            Debug.Log($"[LazyPlayful] 단계3: {playfulPet.petName}이 점프하며 놀자고 함 (3회)");
-            for (int i = 0; i < 3; i++)
-            {
-                yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-                yield return new WaitForSeconds(Random.Range(0.2f, 0.45f));  // 랜덤 간격
-            }
+            yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
+            yield return new WaitForSeconds(Random.Range(0.2f, 0.45f));  // 랜덤 간격
         }
 
         // 공통 단계: Playful이 Lazy 주위를 빙빙 돔
@@ -799,43 +683,26 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float baseDistance = CalculateApproachDistance(pet1, pet2);
         float retreatDistance = baseDistance + 2f;
         float finalFleeDistance = baseDistance + 5f;
-        float skipApproachThreshold = 5f;
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
-        Debug.Log($"[ShyShy] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (조심스럽게)
+        Debug.Log($"[ShyShy] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceSymmetric(pet1, pet2, baseDistance, 0.4f, 5f));
 
-        // 0단계: 서로 발견하고 멈춤
-        Debug.Log($"[ShyShy] 단계0: 서로 발견하고 멈춤");
+        // 1단계: 서로 발견하고 멈춤
+        Debug.Log($"[ShyShy] 단계1: 서로 발견하고 멈춤");
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
 
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 바로 놀라는 반응
-            Debug.Log($"[ShyShy] 이미 가까이 있음 - 둘 다 바로 놀람!");
-            Debug.Log($"[ShyShy] 둘 다 깜짝 놀라서 점프!");
-            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-        }
-        else
-        {
-            // 1단계: 조심스럽게 서로 쳐다보기
-            Debug.Log($"[ShyShy] 단계1: 조심스럽게 서로 쳐다보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
+        // 2단계: 조심스럽게 서로 쳐다보기
+        Debug.Log($"[ShyShy] 단계2: 조심스럽게 서로 쳐다보기");
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-            // 2단계: 긴 정적
-            Debug.Log($"[ShyShy] 단계2: 긴 정적... (불안한 기다림)");
-
-            // 3단계: 둘 다 놀라서 점프
-            Debug.Log($"[ShyShy] 단계3: 둘 다 놀라서 점프");
-            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-        }
+        // 3단계: 긴 정적 후 둘 다 놀라서 점프
+        Debug.Log($"[ShyShy] 단계3: 둘 다 놀라서 점프");
+        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
 
         // 공통 단계: 시차를 두고 뒤로 물러남
         // 4단계: 시차를 두고 뒤로 물러남
@@ -902,41 +769,18 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float targetDistance = CalculateApproachDistance(shyPet, bravePet);
         float firstRetreatDistance = 5f;
         float finalFleeDistance = 10f;
-        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
-        
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(shyPet.transform.position, bravePet.transform.position);
-        Debug.Log($"[ShyBrave] 현재 거리: {currentDistance:F2}미터");
-        
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 Shy가 바로 놀람
-        Debug.Log($"[ShyBrave] 이미 가까이 있음 - Shy가 바로 놀람!");
-            
-            // 서로 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.3f));
-        }
-        else
-        {
-            // 멀리 있으면 Brave가 접근
-        Debug.Log($"[ShyBrave] 단계0: Brave가 당당히 접근");
-            
-            Vector3 direction = (shyPet.transform.position - bravePet.transform.position).normalized;
-            Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
-            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-            
-            // 부드러운 회전 후 이동
-            yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.3f, PetAnimationController.PetAnimationType.Walk));
-            
-            // Shy가 불안해함
-            yield return new WaitForSeconds(0.5f);
-            
-            // 1단계: 서로 마주보기
+
+        // 0단계: 적절한 거리로 조정 (멀면 Brave 접근, 가까우면 Shy 후퇴)
+        Debug.Log($"[ShyBrave] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceAsymmetric(bravePet, shyPet, targetDistance, 1.0f, 0.5f, 4f));
+
+        // 1단계: 서로 마주보기
         Debug.Log($"[ShyBrave] 단계1: 서로 마주보기");
-            bravePet.agent.isStopped = true;
-            bravePet.animationController.StopContinuousAnimation();
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
-        }
+        bravePet.agent.isStopped = true;
+        shyPet.agent.isStopped = true;
+        bravePet.animationController.StopContinuousAnimation();
+        shyPet.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, bravePet, 0.5f));
         
         // 2단계: Shy가 놀라서 첫 번째 도망
         Debug.Log($"[ShyBrave] 단계2: {shyPet.petName}이 놀라서 도망");
@@ -1006,52 +850,18 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float targetDistance = CalculateApproachDistance(shyPet, playfulPet);
         float retreatDistance = 7f;   // 첫 번째 도망 거리
         float secondRetreatDistance = 10f; // 두 번째 도망 거리
-        float skipApproachThreshold = 3f;  // 3미터 이내면 접근 스킵
-        
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(shyPet.transform.position, playfulPet.transform.position);
-        Debug.Log($"[ShyPlayful] 현재 거리: {currentDistance:F2}미터");
-        
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 Shy가 바로 놀람
-        Debug.Log($"[ShyPlayful] 이미 가까이 있음 - Shy가 바로 놀람!");
-            
-            // 서로 마주보기
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.3f));
-        }
-        else
-        {
-            // 멀리 있으면 Playful이 접근
-        Debug.Log($"[ShyPlayful] 단계0: Playful이 Shy에게 접근 시작");
-            
-            // Shy의 위치 기준으로 접근 목표 설정 (정확한 거리)
-            Vector3 direction = (shyPet.transform.position - playfulPet.transform.position).normalized;
-            Vector3 targetPosition = shyPet.transform.position - direction * approachDistance;
-            targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
-            
-            // 부드러운 회전 후 이동
-            yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Walk));
-            
-            // 목표 위치 도달 대기
-            float waitTime = 0f;
-            float maxWaitTime = 5f;
-            while (waitTime < maxWaitTime)
-            {
-                // agent가 경로 계산 완료하고 남은 거리 체크
-                if (!playfulPet.agent.pathPending && playfulPet.agent.remainingDistance < 0.5f)
-                {
-        Debug.Log($"[ShyPlayful] Playful이 목표 위치에 도달!");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 1단계: 서로 마주보기
+
+        // 0단계: 적절한 거리로 조정 (멀면 Playful 접근, 가까우면 Shy 후퇴)
+        Debug.Log($"[ShyPlayful] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceAsymmetric(playfulPet, shyPet, targetDistance, 1.2f, 0.5f, 4f));
+
+        // 1단계: 서로 마주보기
         Debug.Log($"[ShyPlayful] 단계1: 서로 마주보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
-        }
+        playfulPet.agent.isStopped = true;
+        shyPet.agent.isStopped = true;
+        playfulPet.animationController.StopContinuousAnimation();
+        shyPet.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(shyPet, playfulPet, 0.5f));
 
         // 2단계: Shy가 놀라서 도망 후 돌아보기
         Debug.Log($"[ShyPlayful] 단계2: Shy가 깜짝 놀라서 도망");
@@ -1102,63 +912,31 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float meetDistance = CalculateApproachDistance(pet1, pet2);
         float circleRadius = CalculateCircleRadius(pet1, pet2);
         float raceDistance = meetDistance + 5f;
-        float skipApproachThreshold = 5f;
 
         // meetPoint를 미리 초기화
         Vector3 meetPoint = (pet1.transform.position + pet2.transform.position) / 2f;
         meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
-        Debug.Log($"[BraveBrave] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (빠르게)
+        Debug.Log($"[BraveBrave] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceSymmetric(pet1, pet2, meetDistance, 1.2f, 4f));
 
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 둘 다 경계태세로 즉시 대치
-            Debug.Log($"[BraveBrave] 이미 가까이 있음 - 즉시 경계태세!");
+        // 1단계: 정면 대치 (마주보기)
+        Debug.Log($"[BraveBrave] 단계1: 정면 대치");
+        pet1.agent.isStopped = true;
+        pet2.agent.isStopped = true;
+        pet1.animationController.StopContinuousAnimation();
+        pet2.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-            pet1.agent.isStopped = true;
-            pet2.agent.isStopped = true;
-            yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
+        // 경계하며 점프
+        Debug.Log($"[BraveBrave] 둘 다 경계하며 점프!");
+        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
+        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
 
-            Debug.Log($"[BraveBrave] 둘 다 경계하며 점프!");
-            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
-            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
-
-            yield return new WaitForSeconds(0.5f);
-        }
-        else
-        {
-            // 0단계: 빠르게 서로 접근
-            Debug.Log($"[BraveBrave] 단계0: 당당하게 빠르게 접근");
-
-            StartCoroutine(SmoothMoveToPosition(pet1, meetPoint, pet1.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
-            yield return StartCoroutine(SmoothMoveToPosition(pet2, meetPoint, pet2.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
-
-            // 접근 대기
-            float waitTime = 0f;
-            float maxWaitTime = 2f;
-            while (waitTime < maxWaitTime)
-            {
-                if (Vector3.Distance(pet1.transform.position, pet2.transform.position) < meetDistance)
-                {
-                    Debug.Log($"[BraveBrave] 충분히 가까워짐");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-
-            // 1단계: 정면 대치 (마주보기)
-            Debug.Log($"[BraveBrave] 단계1: 정면 대치");
-            pet1.agent.isStopped = true;
-            pet2.agent.isStopped = true;
-            pet1.animationController.StopContinuousAnimation();
-            pet2.animationController.StopContinuousAnimation();
-            yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
-        }
+        yield return new WaitForSeconds(0.5f);
 
         // 공통 단계: 서로 주위를 돔 (위엄 과시)
         Debug.Log($"[BraveBrave] 단계2: 서로 주위를 돌며 위엄 과시");
@@ -1237,76 +1015,33 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float meetDistance = CalculateApproachDistance(bravePet, playfulPet);
         float circleRadius = CalculateCircleRadius(bravePet, playfulPet);
         float chaseDistance = meetDistance + 3f;
-        float skipApproachThreshold = 5f;
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(bravePet.transform.position, playfulPet.transform.position);
-        Debug.Log($"[BravePlayful] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (둘 다 빠르게)
+        Debug.Log($"[BravePlayful] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceSymmetric(bravePet, playfulPet, meetDistance, 1.5f, 4f));
 
-        if (currentDistance < skipApproachThreshold)
-        {
-            // 이미 가까이 있으면 바로 흥분해서 놀기 시작
-            Debug.Log($"[BravePlayful] 이미 가까이 있음 - 바로 놀기 시작!");
+        // 1단계: 서로 마주보기
+        Debug.Log($"[BravePlayful] 단계1: 서로 마주보기");
+        bravePet.agent.isStopped = true;
+        playfulPet.agent.isStopped = true;
+        bravePet.animationController.StopContinuousAnimation();
+        playfulPet.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(bravePet, playfulPet, 0.3f));
 
-            yield return StartCoroutine(SmoothlyLookAtEachOther(bravePet, playfulPet, 0.3f));
+        // 2단계: 서로 주위를 빙빙 돔
+        Debug.Log($"[BravePlayful] 단계2: 서로 주위를 빙빙 돔");
+        float circleDuration = CalculateCircleDuration(circleRadius, (bravePet.baseSpeed + playfulPet.baseSpeed) / 2f);
+        yield return StartCoroutine(CircleAroundEachOther(bravePet, playfulPet, circleRadius, circleDuration));
 
-            Debug.Log($"[BravePlayful] {playfulPet.petName}이 신나서 점프!");
-            yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+        // 3단계: Playful이 먼저 점프
+        Debug.Log($"[BravePlayful] 단계3: {playfulPet.petName}이 신나서 점프");
+        yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
 
-            Debug.Log($"[BravePlayful] {bravePet.petName}도 즉시 반응!");
-            yield return StartCoroutine(bravePet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
-        }
-        else
-        {
-            // 0단계: 서로 마주보기
-            Debug.Log($"[BravePlayful] 단계0: 서로 마주보기");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(bravePet, playfulPet, 0.3f));
-
-            // 1단계: 둘 다 빠르게 접근
-            Debug.Log($"[BravePlayful] 단계1: 둘 다 신나게 빠르게 접근");
-
-            Vector3 meetPoint = (bravePet.transform.position + playfulPet.transform.position) / 2f;
-            meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
-
-            StartCoroutine(SmoothMoveToPosition(bravePet, meetPoint, bravePet.baseSpeed * 1.8f, PetAnimationController.PetAnimationType.Run));
-            yield return StartCoroutine(SmoothMoveToPosition(playfulPet, meetPoint, playfulPet.baseSpeed * 1.8f, PetAnimationController.PetAnimationType.Run));
-
-            // 접근 대기
-            float waitTime = 0f;
-            float maxWaitTime = 1.5f;
-            while (waitTime < maxWaitTime)
-            {
-                if (Vector3.Distance(bravePet.transform.position, playfulPet.transform.position) < meetDistance)
-                {
-                    Debug.Log($"[BravePlayful] 충분히 가까워짐");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-
-            bravePet.agent.isStopped = true;
-            playfulPet.agent.isStopped = true;
-            bravePet.animationController.StopContinuousAnimation();
-            playfulPet.animationController.StopContinuousAnimation();
-
-            // 2단계: 서로 주위를 빙빙 돔
-            Debug.Log($"[BravePlayful] 단계2: 서로 주위를 빙빙 돔");
-            float circleDuration = CalculateCircleDuration(circleRadius, (bravePet.baseSpeed + playfulPet.baseSpeed) / 2f);
-            yield return StartCoroutine(CircleAroundEachOther(bravePet, playfulPet, circleRadius, circleDuration));
-
-            // 3단계: Playful이 먼저 점프
-            Debug.Log($"[BravePlayful] 단계3: {playfulPet.petName}이 신나서 점프");
-            yield return StartCoroutine(playfulPet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
-
-            // 4단계: Brave도 따라서 점프
-            Debug.Log($"[BravePlayful] 단계4: {bravePet.petName}도 따라서 점프");
-            yield return StartCoroutine(bravePet.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
-        }
+        // 4단계: Brave도 따라서 점프
+        Debug.Log($"[BravePlayful] 단계4: {bravePet.petName}도 따라서 점프");
+        yield return StartCoroutine(bravePet.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
 
         // 공통 단계: 추격전 시작
         Debug.Log($"[BravePlayful] 단계5: 짧은 추격전 시작");
@@ -1379,77 +1114,32 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float meetDistance = CalculateApproachDistance(pet1, pet2);
         float circleRadius = CalculateCircleRadius(pet1, pet2);
         float chaseDistance = meetDistance + 4f;
-        float skipApproachThreshold = 5f;
 
-        // 현재 거리 체크
-        float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
-        Debug.Log($"[PlayfulPlayful] 현재 거리: {currentDistance:F2}미터");
+        // 0단계: 적절한 거리로 조정 (신나게)
+        Debug.Log($"[PlayfulPlayful] 단계0: 적절한 거리로 조정");
+        yield return StartCoroutine(AdjustDistanceSymmetric(pet1, pet2, meetDistance, 1.5f, 4f));
 
-        if (currentDistance < skipApproachThreshold)
+        // 1단계: 서로 마주보기
+        Debug.Log($"[PlayfulPlayful] 단계1: 서로 마주보고 흥분");
+        pet1.agent.isStopped = true;
+        pet2.agent.isStopped = true;
+        pet1.animationController.StopContinuousAnimation();
+        pet2.animationController.StopContinuousAnimation();
+        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
+
+        // 2단계: 서로 주위를 빠르게 돔
+        Debug.Log($"[PlayfulPlayful] 단계2: 서로 주위를 빠르게 돔");
+        yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, 1.5f));
+
+        // 3단계: 동시 점프 파티 (3회)
+        Debug.Log($"[PlayfulPlayful] 단계3: 신나게 점프 파티 (3회)");
+        for (int i = 0; i < 3; i++)
         {
-            // 이미 가까이 있으면 즉시 점프 파티 시작
-            Debug.Log($"[PlayfulPlayful] 이미 가까이 있음 - 즉시 점프 파티!");
-
-            yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.2f));
-
-            Debug.Log($"[PlayfulPlayful] 즉시 신나게 점프 파티 (5회)!");
-            for (int i = 0; i < 5; i++)
-            {
-                StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval * 0.8f, true, false));
-                yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval * 0.8f, true, false));
-                yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
-            }
-        }
-        else
-        {
-            // 0단계: 서로 마주보기
-            Debug.Log($"[PlayfulPlayful] 단계0: 서로 마주보고 흥분");
-            yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
-
-            // 1단계: 신나게 달려옴
-            Debug.Log($"[PlayfulPlayful] 단계1: 둘 다 신나게 달려옴");
-
-            Vector3 meetPoint = (pet1.transform.position + pet2.transform.position) / 2f;
-            meetPoint = FindValidPositionOnNavMesh(meetPoint, 10f);
-
-            StartCoroutine(SmoothMoveToPosition(pet1, meetPoint, pet1.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
-            yield return StartCoroutine(SmoothMoveToPosition(pet2, meetPoint, pet2.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
-
-            // 접근 대기
-            float waitTime = 0f;
-            float maxWaitTime = 1f;
-            while (waitTime < maxWaitTime)
-            {
-                if (Vector3.Distance(pet1.transform.position, pet2.transform.position) < meetDistance)
-                {
-                    Debug.Log($"[PlayfulPlayful] 충분히 가까워짐");
-                    break;
-                }
-                waitTime += Time.deltaTime;
-                yield return null;
-            }
-
-            pet1.agent.isStopped = true;
-            pet2.agent.isStopped = true;
-            pet1.animationController.StopContinuousAnimation();
-            pet2.animationController.StopContinuousAnimation();
-
-            // 2단계: 서로 주위를 빠르게 돔
-            Debug.Log($"[PlayfulPlayful] 단계2: 서로 주위를 빠르게 돔");
-            yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, 1.5f));
-
-            // 3단계: 동시 점프 파티 (3회)
-            Debug.Log($"[PlayfulPlayful] 단계3: 신나게 점프 파티 (3회)");
-            for (int i = 0; i < 3; i++)
-            {
-                StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-                yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
-                    PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-                yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
-            }
+            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
+            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
+            yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
         }
 
         // 공통 단계: 추격전 시작
@@ -2116,6 +1806,123 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         Debug.Log($"[CalculateCircleDuration] 반지름 {radius:F1}m, 둘레 {circumference:F1}m → {duration:F1}초");
         return duration;
+    }
+
+    /// <summary>
+    /// 대칭 조합용: 둘 다 중점으로 이동하여 목표 거리 맞춤
+    /// 가까우면 서로 멀어지고, 멀면 서로 가까워짐
+    /// </summary>
+    private IEnumerator AdjustDistanceSymmetric(
+        PetController pet1, PetController pet2,
+        float targetDistance, float speedMultiplier, float timeout)
+    {
+        float currentDistance = Vector3.Distance(pet1.transform.position, pet2.transform.position);
+        Debug.Log($"[AdjustDistanceSymmetric] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
+
+        // 이미 적절한 거리면 스킵
+        if (Mathf.Abs(currentDistance - targetDistance) <= preciseThreshold)
+        {
+            Debug.Log($"[AdjustDistanceSymmetric] 이미 적절한 거리 - 스킵");
+            yield break;
+        }
+
+        // 중점 계산
+        Vector3 midpoint = (pet1.transform.position + pet2.transform.position) / 2f;
+        Vector3 direction = (pet2.transform.position - pet1.transform.position).normalized;
+        if (direction == Vector3.zero) direction = pet1.transform.forward;
+
+        // 목표 위치 계산
+        Vector3 targetPosition1 = midpoint - direction * (targetDistance / 2f);
+        Vector3 targetPosition2 = midpoint + direction * (targetDistance / 2f);
+        targetPosition1 = FindValidPositionOnNavMesh(targetPosition1, 10f);
+        targetPosition2 = FindValidPositionOnNavMesh(targetPosition2, 10f);
+
+        // 속도 설정
+        float originalSpeed1 = pet1.agent.speed;
+        float originalSpeed2 = pet2.agent.speed;
+        pet1.agent.speed = pet1.baseSpeed * speedMultiplier;
+        pet2.agent.speed = pet2.baseSpeed * speedMultiplier;
+
+        yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, timeout));
+
+        // 속도 복원
+        pet1.agent.speed = originalSpeed1;
+        pet2.agent.speed = originalSpeed2;
+    }
+
+    /// <summary>
+    /// 비대칭 조합용: 멀면 approacher가 접근, 가까우면 retreater가 후퇴
+    /// </summary>
+    private IEnumerator AdjustDistanceAsymmetric(
+        PetController approacher, PetController retreater,
+        float targetDistance,
+        float approachSpeedMult, float retreatSpeedMult,
+        float timeout)
+    {
+        float currentDistance = Vector3.Distance(approacher.transform.position, retreater.transform.position);
+        Debug.Log($"[AdjustDistanceAsymmetric] 현재 거리: {currentDistance:F2}m, 목표 거리: {targetDistance:F2}m");
+
+        // 이미 적절한 거리면 스킵
+        if (Mathf.Abs(currentDistance - targetDistance) <= preciseThreshold)
+        {
+            Debug.Log($"[AdjustDistanceAsymmetric] 이미 적절한 거리 - 스킵");
+            yield break;
+        }
+
+        PetController mover;
+        Vector3 targetPosition;
+        float speedMult;
+
+        if (currentDistance > targetDistance)
+        {
+            // 멀면: approacher가 접근
+            mover = approacher;
+            speedMult = approachSpeedMult;
+            Vector3 direction = (retreater.transform.position - approacher.transform.position).normalized;
+            targetPosition = retreater.transform.position - direction * targetDistance;
+            Debug.Log($"[AdjustDistanceAsymmetric] {approacher.petName}이 접근");
+        }
+        else
+        {
+            // 가까우면: retreater가 후퇴
+            mover = retreater;
+            speedMult = retreatSpeedMult;
+            Vector3 direction = (retreater.transform.position - approacher.transform.position).normalized;
+            targetPosition = approacher.transform.position + direction * targetDistance;
+            Debug.Log($"[AdjustDistanceAsymmetric] {retreater.petName}이 후퇴");
+        }
+
+        targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
+
+        // 속도 설정
+        float originalSpeed = mover.agent.speed;
+        mover.agent.speed = mover.baseSpeed * speedMult;
+
+        // 이동
+        mover.agent.isStopped = false;
+        mover.agent.stoppingDistance = 0.1f;
+        mover.agent.SetDestination(targetPosition);
+        mover.animationController.SetContinuousAnimation(
+            speedMult > 1f ? PetAnimationController.PetAnimationType.Run : PetAnimationController.PetAnimationType.Walk);
+
+        float startTime = Time.time;
+        while (Time.time - startTime < timeout)
+        {
+            if (mover.agent != null && mover.agent.enabled && mover.agent.isOnNavMesh)
+            {
+                if (!mover.agent.pathPending && mover.agent.remainingDistance <= preciseThreshold)
+                {
+                    Debug.Log($"[AdjustDistanceAsymmetric] {mover.petName} 도착");
+                    break;
+                }
+            }
+            yield return null;
+        }
+
+        // 정리
+        mover.agent.isStopped = true;
+        mover.agent.speed = originalSpeed;
+        mover.animationController.StopContinuousAnimation();
     }
 
     /// <summary>
