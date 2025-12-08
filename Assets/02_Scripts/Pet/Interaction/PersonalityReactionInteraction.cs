@@ -608,8 +608,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
             // 0단계: Brave가 빠르게 접근
             Debug.Log($"[LazyBrave] 단계0: Brave가 당당하게 빠르게 접근");
 
+            float targetDistance = CalculateApproachDistance(lazyPet, bravePet);
             Vector3 direction = (lazyPet.transform.position - bravePet.transform.position).normalized;
-            Vector3 targetPosition = lazyPet.transform.position - direction * approachDistance;
+            Vector3 targetPosition = lazyPet.transform.position - direction * targetDistance;
             targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
 
             yield return StartCoroutine(SmoothMoveToPosition(bravePet, targetPosition, bravePet.baseSpeed * 1.5f, PetAnimationController.PetAnimationType.Run));
@@ -714,8 +715,9 @@ public class PersonalityReactionInteraction : BasePetInteraction
             // 0단계: Playful이 신나게 접근
             Debug.Log($"[LazyPlayful] 단계0: Playful이 신나게 접근");
 
+            float targetDistance = CalculateApproachDistance(lazyPet, playfulPet);
             Vector3 direction = (lazyPet.transform.position - playfulPet.transform.position).normalized;
-            Vector3 targetPosition = lazyPet.transform.position - direction * approachDistance;
+            Vector3 targetPosition = lazyPet.transform.position - direction * targetDistance;
             targetPosition = FindValidPositionOnNavMesh(targetPosition, 10f);
 
             yield return StartCoroutine(SmoothMoveToPosition(playfulPet, targetPosition, playfulPet.baseSpeed * 2f, PetAnimationController.PetAnimationType.Run));
@@ -793,9 +795,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
     {
         Debug.Log($"[ShyShy] Shy: {pet1.petName}, Shy: {pet2.petName}");
 
-        // 거리 설정
-        float retreatDistance = 5f;
-        float finalFleeDistance = 8f;
+        // 거리 설정 (펫 크기 고려)
+        float baseDistance = CalculateApproachDistance(pet1, pet2);
+        float retreatDistance = baseDistance + 2f;
+        float finalFleeDistance = baseDistance + 5f;
         float skipApproachThreshold = 5f;
 
         // 현재 거리 체크
@@ -1095,10 +1098,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
     {
         Debug.Log($"[BraveBrave] Brave: {pet1.petName}, Brave: {pet2.petName}");
 
-        // 거리 설정
-        float meetDistance = 4f;
+        // 거리 설정 (펫 크기 고려)
+        float meetDistance = CalculateApproachDistance(pet1, pet2);
         float circleRadius = CalculateCircleRadius(pet1, pet2);
-        float raceDistance = 8f;
+        float raceDistance = meetDistance + 5f;
         float skipApproachThreshold = 5f;
 
         // meetPoint를 미리 초기화
@@ -1230,10 +1233,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
         PetController playfulPet = pet1.personality == PetTraits.Personality.Playful ? pet1 : pet2;
         Debug.Log($"[BravePlayful] Brave: {bravePet.petName}, Playful: {playfulPet.petName}");
 
-        // 거리 설정
-        float meetDistance = 3f;
+        // 거리 설정 (펫 크기 고려)
+        float meetDistance = CalculateApproachDistance(bravePet, playfulPet);
         float circleRadius = CalculateCircleRadius(bravePet, playfulPet);
-        float chaseDistance = 6f;
+        float chaseDistance = meetDistance + 3f;
         float skipApproachThreshold = 5f;
 
         // 현재 거리 체크
@@ -1372,10 +1375,10 @@ public class PersonalityReactionInteraction : BasePetInteraction
     {
         Debug.Log($"[PlayfulPlayful] Playful: {pet1.petName}, Playful: {pet2.petName}");
 
-        // 거리 설정
-        float meetDistance = 3f;
-        float circleRadius = 4f;
-        float chaseDistance = 7f;
+        // 거리 설정 (펫 크기 고려)
+        float meetDistance = CalculateApproachDistance(pet1, pet2);
+        float circleRadius = CalculateCircleRadius(pet1, pet2);
+        float chaseDistance = meetDistance + 4f;
         float skipApproachThreshold = 5f;
 
         // 현재 거리 체크
