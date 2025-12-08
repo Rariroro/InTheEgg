@@ -1146,7 +1146,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         // 거리 설정 (펫 크기 고려)
         float meetDistance = CalculateApproachDistance(pet1, pet2);
         float circleRadius = CalculateCircleRadius(pet1, pet2);
-        float chaseDistance = meetDistance + 4f;
+        float chaseDistance = meetDistance + 8f;  // 추격 거리 증가
 
         // 0단계: 적절한 거리로 조정 (신나게)
         Debug.Log($"[PlayfulPlayful] 단계0: 적절한 거리로 조정");
@@ -1179,7 +1179,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
             yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
         }
 
-        // 4단계: 추격전 시작 (역할 랜덤)
+        // 4단계: 추격전 시작 (역할 랜덤, 실시간 추적)
         PetController runner = Random.value < 0.5f ? pet1 : pet2;
         PetController chaser = runner == pet1 ? pet2 : pet1;
         Debug.Log($"[PlayfulPlayful] 단계4: {runner.petName}이 도망가며 추격전 시작");
@@ -1196,22 +1196,38 @@ public class PersonalityReactionInteraction : BasePetInteraction
         yield return new WaitForSeconds(Random.Range(0.15f, 0.3f));  // 랜덤 시차
 
         chaser.agent.isStopped = false;
-        chaser.agent.speed = chaser.baseSpeed * 2f;
-        chaser.agent.SetDestination(runner.transform.position);
+        chaser.agent.speed = chaser.baseSpeed * 2.2f;  // 약간 빠르게 (따라잡기 위해)
         chaser.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
 
-        yield return new WaitForSeconds(1.5f);
+        // 실시간 추적 (3초간)
+        float chaseStartTime = Time.time;
+        float chaseDuration = 3f;
+        while (Time.time - chaseStartTime < chaseDuration)
+        {
+            chaser.agent.SetDestination(runner.transform.position);
+            yield return new WaitForSeconds(0.2f);  // 0.2초마다 목적지 갱신
+        }
 
-        // 5단계: 역할 바꿔서 추격
+        // 5단계: 역할 바꿔서 추격 (실시간 추적)
         Debug.Log($"[PlayfulPlayful] 단계5: 역할 바꿔서 {chaser.petName}이 도망");
         Vector3 chaseTarget2 = chaser.transform.position - randomDir * chaseDistance;
         chaseTarget2 = FindValidPositionOnNavMesh(chaseTarget2, 10f);
 
+        // 역할 교체: chaser가 runner가 되고, runner가 chaser가 됨
+        chaser.agent.speed = chaser.baseSpeed * 2f;  // 도망가는 속도
         chaser.agent.SetDestination(chaseTarget2);
-        yield return new WaitForSeconds(Random.Range(0.15f, 0.3f));  // 랜덤 시차
-        runner.agent.SetDestination(chaser.transform.position);
 
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(Random.Range(0.15f, 0.3f));  // 랜덤 시차
+
+        runner.agent.speed = runner.baseSpeed * 2.2f;  // 쫓는 속도
+
+        // 실시간 추적 (3초간)
+        chaseStartTime = Time.time;
+        while (Time.time - chaseStartTime < chaseDuration)
+        {
+            runner.agent.SetDestination(chaser.transform.position);
+            yield return new WaitForSeconds(0.2f);
+        }
         
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
