@@ -351,7 +351,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
         PetController sleepySecond = sleepyFirst == pet1 ? pet2 : pet1;
 
         sleepyFirst.ShowEmotion(EmotionType.Sleep, EmotionConstants.DURATION_PERSISTENT);
-        yield return new WaitForSeconds(Random.Range(0.2f, 0.5f));
+        yield return new WaitForSeconds(Random.Range(0.5f, 1.0f));  // 시차 증가
         sleepySecond.ShowEmotion(EmotionType.Sleep, EmotionConstants.DURATION_PERSISTENT);
         yield return new WaitForSeconds(0.3f);
 
@@ -697,23 +697,28 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyShy] 단계2: 조심스럽게 서로 쳐다보기");
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-        // 3단계: 긴 정적 후 둘 다 놀라서 점프
+        // 3단계: 긴 정적 후 둘 다 놀라서 점프 (랜덤 순서)
         Debug.Log($"[ShyShy] 단계3: 둘 다 놀라서 점프");
-        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+        PetController jumpFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController jumpSecond = jumpFirst == pet1 ? pet2 : pet1;
+
+        StartCoroutine(jumpFirst.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+        yield return new WaitForSeconds(Random.Range(0.1f, 0.3f));  // 랜덤 시차
+        yield return StartCoroutine(jumpSecond.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
 
-        // 공통 단계: 시차를 두고 뒤로 물러남
-        // 4단계: 시차를 두고 뒤로 물러남
+        // 4단계: 시차를 두고 뒤로 물러남 (랜덤 순서)
         Debug.Log($"[ShyShy] 단계4: 시차를 두고 뒤로 물러남");
         pet1.agent.isStopped = false;
         pet2.agent.isStopped = false;
 
-        // pet1이 먼저 반응, 약간의 시차 후 pet2
-        StartCoroutine(QuickRetreat(pet1, pet2.transform.position, retreatDistance, 1f));
-        yield return new WaitForSeconds(0.25f);  // 시차 추가
-        yield return StartCoroutine(QuickRetreat(pet2, pet1.transform.position, retreatDistance, 1f));
+        PetController retreatFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController retreatSecond = retreatFirst == pet1 ? pet2 : pet1;
+
+        StartCoroutine(QuickRetreat(retreatFirst, retreatSecond.transform.position, retreatDistance, 1f));
+        yield return new WaitForSeconds(Random.Range(0.2f, 0.5f));  // 랜덤 시차
+        yield return StartCoroutine(QuickRetreat(retreatSecond, retreatFirst.transform.position, retreatDistance, 1f));
         
         // 5단계: 다시 돌아봄
         Debug.Log($"[ShyShy] 단계5: 멈춰서 다시 돌아봄");
@@ -721,29 +726,36 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet2.agent.isStopped = true;
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
         
-        // 6단계: 완전히 반대 방향으로 도망
+        // 6단계: 완전히 반대 방향으로 도망 (랜덤 순서)
         Debug.Log($"[ShyShy] 단계6: 완전히 반대 방향으로 도망");
         pet1.agent.isStopped = false;
         pet2.agent.isStopped = false;
-        
+
         // 서로 정반대 방향으로 도망
         Vector3 pet1Direction = (pet1.transform.position - pet2.transform.position).normalized;
         Vector3 pet2Direction = (pet2.transform.position - pet1.transform.position).normalized;
-        
+
         Vector3 pet1Run = pet1.transform.position + pet1Direction * finalFleeDistance;
         Vector3 pet2Run = pet2.transform.position + pet2Direction * finalFleeDistance;
-        
+
         pet1Run = FindValidPositionOnNavMesh(pet1Run, 10f);
         pet2Run = FindValidPositionOnNavMesh(pet2Run, 10f);
-        
-        pet1.agent.speed = pet1.baseSpeed * 1.8f;
-        pet2.agent.speed = pet2.baseSpeed * 1.8f;
 
-        pet1.agent.SetDestination(pet1Run);
-        pet2.agent.SetDestination(pet2Run);
+        // 랜덤 순서로 도망 시작
+        PetController fleeFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController fleeSecond = fleeFirst == pet1 ? pet2 : pet1;
+        Vector3 fleeFirstDest = fleeFirst == pet1 ? pet1Run : pet2Run;
+        Vector3 fleeSecondDest = fleeFirst == pet1 ? pet2Run : pet1Run;
 
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        fleeFirst.agent.speed = fleeFirst.baseSpeed * 1.8f;
+        fleeFirst.agent.SetDestination(fleeFirstDest);
+        fleeFirst.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
+        yield return new WaitForSeconds(Random.Range(0.2f, 0.5f));  // 랜덤 시차
+
+        fleeSecond.agent.speed = fleeSecond.baseSpeed * 1.8f;
+        fleeSecond.agent.SetDestination(fleeSecondDest);
+        fleeSecond.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
 
         yield return new WaitForSeconds(2f);
 
@@ -929,11 +941,15 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet2.animationController.StopContinuousAnimation();
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-        // 경계하며 점프
+        // 경계하며 점프 (랜덤 순서)
         Debug.Log($"[BraveBrave] 둘 다 경계하며 점프!");
-        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+        PetController alertFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController alertSecond = alertFirst == pet1 ? pet2 : pet1;
+
+        StartCoroutine(alertFirst.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
-        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+        yield return new WaitForSeconds(Random.Range(0.2f, 0.4f));  // 랜덤 시차
+        yield return StartCoroutine(alertSecond.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.6f, true, false));
 
         yield return new WaitForSeconds(0.5f);
@@ -943,11 +959,15 @@ public class PersonalityReactionInteraction : BasePetInteraction
         float circleDuration = CalculateCircleDuration(circleRadius, (pet1.baseSpeed + pet2.baseSpeed) / 2f);
         yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, circleDuration));
 
-        // 3단계: 동시에 점프하며 자랑
-        Debug.Log($"[BraveBrave] 단계3: 동시에 점프하며 자랑");
-        StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+        // 3단계: 점프하며 자랑 (랜덤 순서)
+        Debug.Log($"[BraveBrave] 단계3: 점프하며 자랑");
+        PetController boastFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController boastSecond = boastFirst == pet1 ? pet2 : pet1;
+
+        StartCoroutine(boastFirst.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
-        yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+        yield return new WaitForSeconds(Random.Range(0.15f, 0.35f));  // 랜덤 시차
+        yield return StartCoroutine(boastSecond.animationController.PlayAnimationWithCustomDuration(
             PetAnimationController.PetAnimationType.Jump, 0.8f, true, false));
 
         // 4단계: 짧은 달리기 시합
@@ -976,7 +996,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-        // 6단계: 각자 당당히 떠남
+        // 6단계: 각자 당당히 떠남 (랜덤 순서)
         Debug.Log($"[BraveBrave] 단계6: 각자 당당히 떠남");
         Vector3 pet1Direction = (pet1.transform.position - pet2.transform.position).normalized;
         if (pet1Direction == Vector3.zero) pet1Direction = pet1.transform.forward;
@@ -987,14 +1007,23 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet1Dest = FindValidPositionOnNavMesh(pet1Dest, 10f);
         pet2Dest = FindValidPositionOnNavMesh(pet2Dest, 10f);
 
-        pet1.agent.isStopped = false;
-        pet2.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed;  // 당당하게 기본 속도
-        pet2.agent.speed = pet2.baseSpeed;
-        pet1.agent.SetDestination(pet1Dest);
-        pet2.agent.SetDestination(pet2Dest);
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        // 랜덤 순서로 떠남
+        PetController leaveFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController leaveSecond = leaveFirst == pet1 ? pet2 : pet1;
+        Vector3 leaveFirstDest = leaveFirst == pet1 ? pet1Dest : pet2Dest;
+        Vector3 leaveSecondDest = leaveFirst == pet1 ? pet2Dest : pet1Dest;
+
+        leaveFirst.agent.isStopped = false;
+        leaveFirst.agent.speed = leaveFirst.baseSpeed;  // 당당하게 기본 속도
+        leaveFirst.agent.SetDestination(leaveFirstDest);
+        leaveFirst.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+
+        yield return new WaitForSeconds(Random.Range(0.3f, 0.6f));  // 랜덤 시차
+
+        leaveSecond.agent.isStopped = false;
+        leaveSecond.agent.speed = leaveSecond.baseSpeed;
+        leaveSecond.agent.SetDestination(leaveSecondDest);
+        leaveSecond.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
 
         yield return new WaitForSeconds(1.5f);
         pet1.animationController.StopContinuousAnimation();
@@ -1131,46 +1160,53 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[PlayfulPlayful] 단계2: 서로 주위를 빠르게 돔");
         yield return StartCoroutine(CircleAroundEachOther(pet1, pet2, circleRadius, 1.5f));
 
-        // 3단계: 동시 점프 파티 (3회)
+        // 3단계: 점프 파티 (3회, 랜덤 순서)
         Debug.Log($"[PlayfulPlayful] 단계3: 신나게 점프 파티 (3회)");
         for (int i = 0; i < 3; i++)
         {
-            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+            PetController jumpFirst = Random.value < 0.5f ? pet1 : pet2;
+            PetController jumpSecond = jumpFirst == pet1 ? pet2 : pet1;
+
+            StartCoroutine(jumpFirst.animationController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+            yield return new WaitForSeconds(Random.Range(0.1f, 0.25f));  // 랜덤 시차
+            yield return StartCoroutine(jumpSecond.animationController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
             yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
         }
 
-        // 공통 단계: 추격전 시작
-        Debug.Log($"[PlayfulPlayful] 단계4: {pet1.petName}이 도망가며 추격전 시작");
+        // 4단계: 추격전 시작 (역할 랜덤)
+        PetController runner = Random.value < 0.5f ? pet1 : pet2;
+        PetController chaser = runner == pet1 ? pet2 : pet1;
+        Debug.Log($"[PlayfulPlayful] 단계4: {runner.petName}이 도망가며 추격전 시작");
+
         Vector3 randomDir = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        Vector3 chaseTarget1 = pet1.transform.position + randomDir * chaseDistance;
+        Vector3 chaseTarget1 = runner.transform.position + randomDir * chaseDistance;
         chaseTarget1 = FindValidPositionOnNavMesh(chaseTarget1, 10f);
-        
-        pet1.agent.isStopped = false;
-        pet1.agent.speed = pet1.baseSpeed * 2f;
-        pet1.agent.SetDestination(chaseTarget1);
-        pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        
-        yield return new WaitForSeconds(0.2f);
-        
-        pet2.agent.isStopped = false;
-        pet2.agent.speed = pet2.baseSpeed * 2f;
-        pet2.agent.SetDestination(pet1.transform.position);
-        pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        
+
+        runner.agent.isStopped = false;
+        runner.agent.speed = runner.baseSpeed * 2f;
+        runner.agent.SetDestination(chaseTarget1);
+        runner.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
+        yield return new WaitForSeconds(Random.Range(0.15f, 0.3f));  // 랜덤 시차
+
+        chaser.agent.isStopped = false;
+        chaser.agent.speed = chaser.baseSpeed * 2f;
+        chaser.agent.SetDestination(runner.transform.position);
+        chaser.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+
         yield return new WaitForSeconds(1.5f);
-        
+
         // 5단계: 역할 바꿔서 추격
-        Debug.Log($"[PlayfulPlayful] 단계5: 역할 바꿔서 {pet2.petName}이 도망");
-        Vector3 chaseTarget2 = pet2.transform.position - randomDir * chaseDistance;
+        Debug.Log($"[PlayfulPlayful] 단계5: 역할 바꿔서 {chaser.petName}이 도망");
+        Vector3 chaseTarget2 = chaser.transform.position - randomDir * chaseDistance;
         chaseTarget2 = FindValidPositionOnNavMesh(chaseTarget2, 10f);
-        
-        pet2.agent.SetDestination(chaseTarget2);
-        yield return new WaitForSeconds(0.2f);
-        pet1.agent.SetDestination(pet2.transform.position);
-        
+
+        chaser.agent.SetDestination(chaseTarget2);
+        yield return new WaitForSeconds(Random.Range(0.15f, 0.3f));  // 랜덤 시차
+        runner.agent.SetDestination(chaser.transform.position);
+
         yield return new WaitForSeconds(1.5f);
         
         pet1.agent.isStopped = true;
@@ -1178,15 +1214,19 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet1.animationController.StopContinuousAnimation();
         pet2.animationController.StopContinuousAnimation();
         
-        // 6단계: 다시 모여서 점프 파티 (2회)
+        // 6단계: 다시 모여서 점프 파티 (2회, 랜덤 순서)
         Debug.Log($"[PlayfulPlayful] 단계6: 다시 모여서 점프 파티 (2회)");
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
 
         for (int i = 0; i < 2; i++)
         {
-            StartCoroutine(pet1.animationController.PlayAnimationWithCustomDuration(
+            PetController jumpFirst = Random.value < 0.5f ? pet1 : pet2;
+            PetController jumpSecond = jumpFirst == pet1 ? pet2 : pet1;
+
+            StartCoroutine(jumpFirst.animationController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
-            yield return StartCoroutine(pet2.animationController.PlayAnimationWithCustomDuration(
+            yield return new WaitForSeconds(Random.Range(0.1f, 0.25f));  // 랜덤 시차
+            yield return StartCoroutine(jumpSecond.animationController.PlayAnimationWithCustomDuration(
                 PetAnimationController.PetAnimationType.Jump, jumpInterval, true, false));
             yield return new WaitForSeconds(Random.Range(0.1f, 0.35f));  // 랜덤 간격
         }
