@@ -32,6 +32,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
     // 현재 진행 중인 패턴 코루틴 추적 (강제 정리용)
     private Coroutine currentPatternCoroutine = null;
 
+
     [Header("반응 설정")]
     [Tooltip("반응 지속 시간")]
     public float reactionDuration = 8f;  // 전체 상호작용이 지속되는 시간
@@ -62,9 +63,7 @@ public class PersonalityReactionInteraction : BasePetInteraction
     [Tooltip("추격전 지속 시간")]
     public float chaseDuration = 3f;  // 추격전이 지속되는 시간
 
-    // 현재 상호작용 중인 펫 참조 (강제 정리용)
-    private PetController activePet1;
-    private PetController activePet2;
+    // 현재 상호작용 중인 펫 참조는 부모 클래스(BasePetInteraction)의 protected 필드 사용
 
     /// <summary>
     /// 강제 종료 시 PersonalityReaction 고유 리소스를 정리합니다.

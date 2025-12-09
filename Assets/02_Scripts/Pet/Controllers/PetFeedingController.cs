@@ -33,6 +33,12 @@ public class PetFeedingController : PetControllerBase
     private const float CHASE_UPDATE_INTERVAL = 0.25f; // 0.25초마다 목표 위치 갱신
     // ★★★ 여기까지 추가 ★★★
 
+    // FeedingArea 병목 해결을 위한 변수들
+    private Vector3 lastFeedingAreaPosition;
+    private float feedingAreaWaitTimer = 0f;
+    private const float FEEDING_AREA_WAIT_TIMEOUT = 5f; // 5초 대기 후 타겟 포기
+    private const float MOVE_AWAY_DISTANCE = 8f; // 먹은 후 이동 거리
+
     protected override void OnInitialize()
     {
         foodItemLayer = LayerMask.GetMask("FoodItem");
@@ -77,6 +83,9 @@ public class PetFeedingController : PetControllerBase
     /// </summary>
     public void UpdateMovementToFood()
     {
+        // 타임아웃 체크는 isEating 여부와 관계없이 실행 (접근 못하고 대기 중인 경우 처리)
+        CheckFeedingAreaTimeout();
+
         if (isEating || petController.agent == null || !petController.agent.enabled) return;
 
         // 목표가 '음식 아이템'일 경우에만 추적 로직을 실행합니다.
@@ -270,18 +279,48 @@ public class PetFeedingController : PetControllerBase
         else if (targetFeedingArea != null)
         {
             float actualDistance = Vector3.Distance(petController.transform.position, targetFeedingArea.transform.position);
-        
+
             if (actualDistance < feedingAreaDistance && !petController.agent.pathPending)
             {
+                feedingAreaWaitTimer = 0f; // 타이머 리셋
                 StartCoroutine(EatAtAreaCoroutine());
             }
-            // 거리 체크 제거 - 탐색 시 이미 범위 내 음식만 찾으므로 불필요
-            // 너무 멀리 있는 경우만 체크 (300m 이상)
+            // 너무 멀리 있는 경우 (300m 이상)
             else if (actualDistance > 300f)
             {
                 targetFeedingArea = null;
+                feedingAreaWaitTimer = 0f;
                 // Debug.Log($"[Feeding] {petController.petName}: 목표 피딩 에어리어가 너무 멀어서 취소 (거리: {actualDistance:F0}m)");
             }
+            // 타임아웃 로직은 CheckFeedingAreaTimeout()에서 처리
+        }
+    }
+
+    /// <summary>
+    /// FeedingArea 접근 타임아웃 체크 (다른 펫에게 막혀서 접근 못하는 경우)
+    /// </summary>
+    private void CheckFeedingAreaTimeout()
+    {
+        if (targetFeedingArea == null || isEating) return;
+        if (petController.agent == null || !petController.agent.enabled) return;
+
+        float actualDistance = Vector3.Distance(petController.transform.position, targetFeedingArea.transform.position);
+
+        // 먹기 거리(2m)와 3배(6m) 사이에서 대기 중인 경우 - 다른 펫에게 막힌 상태
+        if (actualDistance >= feedingAreaDistance && actualDistance < feedingAreaDistance * 3f)
+        {
+            feedingAreaWaitTimer += Time.deltaTime;
+            if (feedingAreaWaitTimer >= FEEDING_AREA_WAIT_TIMEOUT)
+            {
+                // 타임아웃: 현재 FeedingArea 포기
+                targetFeedingArea = null;
+                feedingAreaWaitTimer = 0f;
+                // Debug.Log($"[Feeding] {petController.petName}: FeedingArea 접근 타임아웃 - 다른 음식 탐색");
+            }
+        }
+        else
+        {
+            feedingAreaWaitTimer = 0f;
         }
     }
 
@@ -360,14 +399,18 @@ public class PetFeedingController : PetControllerBase
     {
         isEating = true;
         petController.StopMovement();
-        
+
+        // FeedingArea 위치 저장 (나중에 이동할 때 사용)
+        if (targetFeedingArea != null)
+            lastFeedingAreaPosition = targetFeedingArea.transform.position;
+
         // 터치/홀드 상태가 되면 즉시 중단
         if (petController.State.IsHolding || petController.State.IsSelected)
         {
             CancelFeeding();
             yield break;
         }
-        
+
         // 꿀 지역인지 확인하고 벌 공격 트리거
         if (targetFeedingArea != null)
         {
@@ -428,7 +471,64 @@ public class PetFeedingController : PetControllerBase
             petController.ShowEmotion(EmotionType.Happy, 3f);
         }
         targetFeedingArea = null;
-        isEating = false;
+        // isEating = false; // 이동 완료 후에 설정 (MoveAwayAndFinish에서)
+
+        // FeedingArea에서 벗어나도록 이동 (병목 방지)
+        petController.ResumeMovement();
+        yield return StartCoroutine(MoveAwayAndFinish());
+    }
+
+    /// <summary>
+    /// FeedingArea에서 벗어난 후 isEating을 false로 설정합니다.
+    /// 이동 중에 다른 Activity가 시작되지 않도록 보장합니다.
+    /// </summary>
+    private IEnumerator MoveAwayAndFinish()
+    {
+        MoveAwayFromFeedingArea();
+
+        // 이동 완료까지 대기 (최대 3초)
+        float timeout = 3f;
+        while (timeout > 0f)
+        {
+            if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+                break;
+
+            if (petController.agent.remainingDistance < 1f && !petController.agent.pathPending)
+                break;
+
+            timeout -= Time.deltaTime;
+            yield return null;
+        }
+
+        isEating = false; // 이제 Activity 전환 허용
+    }
+
+    /// <summary>
+    /// FeedingArea에서 벗어나도록 반대 방향으로 이동합니다.
+    /// 병목 현상을 방지하기 위해 먹은 후 호출됩니다.
+    /// </summary>
+    private void MoveAwayFromFeedingArea()
+    {
+        if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
+            return;
+
+        // FeedingArea 반대 방향 계산
+        Vector3 awayDirection = (petController.transform.position - lastFeedingAreaPosition).normalized;
+        if (awayDirection.sqrMagnitude < 0.01f)
+            awayDirection = Random.insideUnitSphere;
+        awayDirection.y = 0;
+        awayDirection.Normalize();
+
+        // 지정 거리만큼 떨어진 위치로 이동
+        Vector3 targetPos = petController.transform.position + awayDirection * MOVE_AWAY_DISTANCE;
+        if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit hit, 10f, UnityEngine.AI.NavMesh.AllAreas))
+        {
+            petController.agent.SetDestination(hit.position);
+        }
+        else
+        {
+            petController.SetRandomDestination();
+        }
     }
 
     private IEnumerator LookAtTarget(Transform target)

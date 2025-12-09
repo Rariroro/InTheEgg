@@ -23,8 +23,8 @@ public abstract class BasePetInteraction : MonoBehaviour
     public virtual int Priority => 50;
 
     // 상호작용 중인 펫들 추적 (정리 보장용)
-    private PetController activePet1;
-    private PetController activePet2;
+    protected PetController activePet1;
+    protected PetController activePet2;
     private bool isInteractionActive = false;
 
     // ▼▼▼ [수정] 인스펙터에서 상호작용 시작 거리를 조절할 수 있는 변수 추가 ▼▼▼
