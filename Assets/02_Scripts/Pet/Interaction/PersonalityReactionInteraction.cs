@@ -1406,6 +1406,28 @@ public class PersonalityReactionInteraction : BasePetInteraction
     }
 
     /// <summary>
+    /// 두 펫 모두 목적지에 도착할 때까지 대기
+    /// </summary>
+    private IEnumerator WaitForBothToArrive(PetController pet1, PetController pet2, float timeout)
+    {
+        float startTime = Time.time;
+        float stoppingDistance = 0.3f;
+
+        while (Time.time - startTime < timeout)
+        {
+            bool pet1Arrived = pet1.agent == null || !pet1.agent.enabled || !pet1.agent.isOnNavMesh ||
+                              (!pet1.agent.pathPending && pet1.agent.remainingDistance <= stoppingDistance);
+            bool pet2Arrived = pet2.agent == null || !pet2.agent.enabled || !pet2.agent.isOnNavMesh ||
+                              (!pet2.agent.pathPending && pet2.agent.remainingDistance <= stoppingDistance);
+
+            if (pet1Arrived && pet2Arrived)
+                break;
+
+            yield return null;
+        }
+    }
+
+    /// <summary>
     /// 기본 반응 (조합이 없을 때)
     /// </summary>
     private IEnumerator DefaultReaction(PetController pet1, PetController pet2)
@@ -1960,36 +1982,44 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
         bool isRetreating = currentDistance < targetDistance;
 
-        // 멀어져야 할 때 깜짝 놀라는 점프 애니메이션 (시차를 두고)
-        if (isRetreating)
-        {
-            // 랜덤으로 누가 먼저 놀랄지 결정
-            PetController first = Random.value < 0.5f ? pet1 : pet2;
-            PetController second = first == pet1 ? pet2 : pet1;
-
-            // 시차를 두고 점프
-            StartCoroutine(first.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
-            yield return new WaitForSeconds(Random.Range(0.15f, 0.35f));
-            yield return StartCoroutine(second.animationController.PlayAnimationWithCustomDuration(
-                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
-        }
-
-        // 속도 설정 (멀어질 때는 빠르게)
+        // 속도 저장
         float originalSpeed1 = pet1.agent.speed;
         float originalSpeed2 = pet2.agent.speed;
-        float actualSpeedMult = isRetreating ? Mathf.Max(speedMultiplier, 1.5f) : speedMultiplier;
-        pet1.agent.speed = pet1.baseSpeed * actualSpeedMult;
-        pet2.agent.speed = pet2.baseSpeed * actualSpeedMult;
 
-        // 멀어질 때는 Run 애니메이션
         if (isRetreating)
         {
-            pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-            pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
-        }
+            // 멀어질 때: 점프하면서 동시에 반대 방향으로 뛰기
+            PetController first = Random.value < 0.5f ? pet1 : pet2;
+            PetController second = first == pet1 ? pet2 : pet1;
+            Vector3 firstTarget = first == pet1 ? targetPosition1 : targetPosition2;
+            Vector3 secondTarget = first == pet1 ? targetPosition2 : targetPosition1;
 
-        yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, timeout));
+            float retreatSpeed = Mathf.Max(speedMultiplier, 1.5f);
+
+            // 첫 번째 펫: 점프하면서 이동 시작
+            first.agent.speed = first.baseSpeed * retreatSpeed;
+            first.agent.isStopped = false;
+            first.agent.SetDestination(firstTarget);
+            yield return StartCoroutine(first.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.4f, true, false));
+
+            // 두 번째 펫: 점프하면서 이동 시작
+            second.agent.speed = second.baseSpeed * retreatSpeed;
+            second.agent.isStopped = false;
+            second.agent.SetDestination(secondTarget);
+            yield return StartCoroutine(second.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.4f, true, false));
+
+            // 도착 대기
+            yield return StartCoroutine(WaitForBothToArrive(pet1, pet2, timeout));
+        }
+        else
+        {
+            // 가까워질 때: 기존 방식
+            pet1.agent.speed = pet1.baseSpeed * speedMultiplier;
+            pet2.agent.speed = pet2.baseSpeed * speedMultiplier;
+            yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, timeout));
+        }
 
         // 애니메이션 정리
         if (isRetreating)

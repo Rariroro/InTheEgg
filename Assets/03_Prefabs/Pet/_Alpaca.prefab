@@ -174,8 +174,8 @@ MonoBehaviour:
     hunger: 0
     sleepiness: 0
     affection: 50
-    hungerIncreaseRate: 0
-    sleepinessIncreaseRate: 0
+    hungerIncreaseRate: 0.5
+    sleepinessIncreaseRate: 0.3
     affectionDecreaseRateWhenHungry: 0.2
     hungerThresholdForAffectionDecrease: 80
     lowAffectionThreshold: 30
@@ -187,6 +187,7 @@ MonoBehaviour:
     hungryThreshold: 70
     sleepyThreshold: 70
   treasureHoldPoint: {fileID: 500107908196709826}
+  ridePoint: {fileID: 0}
 --- !u!195 &1791055125857311120
 NavMeshAgent:
   m_ObjectHideFlags: 0
