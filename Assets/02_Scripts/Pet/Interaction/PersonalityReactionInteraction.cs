@@ -701,34 +701,63 @@ public class PersonalityReactionInteraction : BasePetInteraction
         Debug.Log($"[ShyShy] 단계2: 조심스럽게 서로 쳐다보기");
         yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.5f));
 
-        // 3단계: 긴 정적 후 둘 다 놀라서 점프 (랜덤 순서)
-        Debug.Log($"[ShyShy] 단계3: 둘 다 놀라서 점프");
-        PetController jumpFirst = Random.value < 0.5f ? pet1 : pet2;
-        PetController jumpSecond = jumpFirst == pet1 ? pet2 : pet1;
+        // 3단계: 긴 정적 후 놀라는 반응 (다른 동작으로 차별화)
+        Debug.Log($"[ShyShy] 단계3: 놀라는 반응");
+        PetController reactFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController reactSecond = reactFirst == pet1 ? pet2 : pet1;
 
-        StartCoroutine(jumpFirst.animationController.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
-        yield return new WaitForSeconds(Random.Range(0.1f, 0.3f));  // 랜덤 시차
-        yield return StartCoroutine(jumpSecond.animationController.PlayAnimationWithCustomDuration(
-            PetAnimationController.PetAnimationType.Jump, 0.3f, true, false));
+        // 먼저 놀란 펫: 점프
+        StartCoroutine(reactFirst.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+        yield return new WaitForSeconds(Random.Range(0.2f, 0.4f));
 
-        // 4단계: 시차를 두고 뒤로 물러남 (랜덤 순서)
-        Debug.Log($"[ShyShy] 단계4: 시차를 두고 뒤로 물러남");
+        // 나중에 놀란 펫: 웅크렸다가 일어남
+        yield return StartCoroutine(reactSecond.animationController.PlayAnimationWithCustomDuration(
+            PetAnimationController.PetAnimationType.Rest, 0.4f, true, false));
+
+        // 4단계: 다른 방식으로 물러남
+        Debug.Log($"[ShyShy] 단계4: 다른 방식으로 물러남");
         pet1.agent.isStopped = false;
         pet2.agent.isStopped = false;
 
         PetController retreatFirst = Random.value < 0.5f ? pet1 : pet2;
         PetController retreatSecond = retreatFirst == pet1 ? pet2 : pet1;
 
-        StartCoroutine(QuickRetreat(retreatFirst, retreatSecond.transform.position, retreatDistance, 1f));
-        yield return new WaitForSeconds(Random.Range(0.2f, 0.5f));  // 랜덤 시차
-        yield return StartCoroutine(QuickRetreat(retreatSecond, retreatFirst.transform.position, retreatDistance, 1f));
+        // 먼저 물러나는 펫: 빠르게 뛰어서 (Run, 1.5배 속도)
+        float originalSpeed1 = retreatFirst.agent.speed;
+        retreatFirst.agent.speed = retreatFirst.baseSpeed * 1.5f;
+        retreatFirst.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        StartCoroutine(QuickRetreat(retreatFirst, retreatSecond.transform.position, retreatDistance, 0.8f));
+
+        yield return new WaitForSeconds(Random.Range(0.3f, 0.6f));  // 시차
+
+        // 나중에 물러나는 펫: 천천히 걸어서 (Walk, 0.8배 속도)
+        float originalSpeed2 = retreatSecond.agent.speed;
+        retreatSecond.agent.speed = retreatSecond.baseSpeed * 0.8f;
+        retreatSecond.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Walk);
+        yield return StartCoroutine(QuickRetreat(retreatSecond, retreatFirst.transform.position, retreatDistance, 1.2f));
+
+        // 속도 복원 및 애니메이션 정리
+        retreatFirst.agent.speed = originalSpeed1;
+        retreatSecond.agent.speed = originalSpeed2;
+        retreatFirst.animationController.StopContinuousAnimation();
+        retreatSecond.animationController.StopContinuousAnimation();
         
-        // 5단계: 다시 돌아봄
-        Debug.Log($"[ShyShy] 단계5: 멈춰서 다시 돌아봄");
+        // 5단계: 시차를 두고 돌아봄
+        Debug.Log($"[ShyShy] 단계5: 시차를 두고 돌아봄");
         pet1.agent.isStopped = true;
         pet2.agent.isStopped = true;
-        yield return StartCoroutine(SmoothlyLookAtEachOther(pet1, pet2, 0.3f));
+
+        // 랜덤으로 누가 먼저 돌아볼지 결정
+        PetController lookFirst = Random.value < 0.5f ? pet1 : pet2;
+        PetController lookSecond = lookFirst == pet1 ? pet2 : pet1;
+
+        // 먼저 돌아보는 펫 (빠르게)
+        yield return StartCoroutine(SmoothlyRotateTowards(lookFirst, lookSecond.transform.position, 0.25f));
+        yield return new WaitForSeconds(Random.Range(0.2f, 0.4f));
+
+        // 나중에 돌아보는 펫 (천천히)
+        yield return StartCoroutine(SmoothlyRotateTowards(lookSecond, lookFirst.transform.position, 0.4f));
         
         // 6단계: 완전히 반대 방향으로 도망 (랜덤 순서)
         Debug.Log($"[ShyShy] 단계6: 완전히 반대 방향으로 도망");
@@ -745,19 +774,21 @@ public class PersonalityReactionInteraction : BasePetInteraction
         pet1Run = FindValidPositionOnNavMesh(pet1Run, 10f);
         pet2Run = FindValidPositionOnNavMesh(pet2Run, 10f);
 
-        // 랜덤 순서로 도망 시작
+        // 랜덤 순서로 도망 시작 (속도 차별화)
         PetController fleeFirst = Random.value < 0.5f ? pet1 : pet2;
         PetController fleeSecond = fleeFirst == pet1 ? pet2 : pet1;
         Vector3 fleeFirstDest = fleeFirst == pet1 ? pet1Run : pet2Run;
         Vector3 fleeSecondDest = fleeFirst == pet1 ? pet2Run : pet1Run;
 
-        fleeFirst.agent.speed = fleeFirst.baseSpeed * 1.8f;
+        // 먼저 도망: 빠르게 (2.0배)
+        fleeFirst.agent.speed = fleeFirst.baseSpeed * 2.0f;
         fleeFirst.agent.SetDestination(fleeFirstDest);
         fleeFirst.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
 
-        yield return new WaitForSeconds(Random.Range(0.2f, 0.5f));  // 랜덤 시차
+        yield return new WaitForSeconds(Random.Range(0.3f, 0.6f));  // 시차
 
-        fleeSecond.agent.speed = fleeSecond.baseSpeed * 1.8f;
+        // 나중에 도망: 조금 느리게 (1.5배)
+        fleeSecond.agent.speed = fleeSecond.baseSpeed * 1.5f;
         fleeSecond.agent.SetDestination(fleeSecondDest);
         fleeSecond.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
 
@@ -1348,6 +1379,33 @@ public class PersonalityReactionInteraction : BasePetInteraction
     }
 
     /// <summary>
+    /// 한 펫만 특정 위치를 향해 부드럽게 회전
+    /// </summary>
+    private IEnumerator SmoothlyRotateTowards(PetController pet, Vector3 targetPosition, float duration = 0.3f)
+    {
+        if (pet == null) yield break;
+
+        Vector3 direction = targetPosition - pet.transform.position;
+        direction.y = 0;
+        if (direction == Vector3.zero) yield break;
+
+        Quaternion startRotation = pet.transform.rotation;
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        float elapsedTime = 0f;
+        while (elapsedTime < duration)
+        {
+            float t = elapsedTime / duration;
+            float smoothT = Mathf.SmoothStep(0, 1, t);
+            pet.transform.rotation = Quaternion.Slerp(startRotation, targetRotation, smoothT);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        pet.transform.rotation = targetRotation;
+    }
+
+    /// <summary>
     /// 기본 반응 (조합이 없을 때)
     /// </summary>
     private IEnumerator DefaultReaction(PetController pet1, PetController pet2)
@@ -1900,13 +1958,45 @@ public class PersonalityReactionInteraction : BasePetInteraction
         targetPosition1 = FindValidPositionOnNavMesh(targetPosition1, 10f);
         targetPosition2 = FindValidPositionOnNavMesh(targetPosition2, 10f);
 
-        // 속도 설정
+        bool isRetreating = currentDistance < targetDistance;
+
+        // 멀어져야 할 때 깜짝 놀라는 점프 애니메이션 (시차를 두고)
+        if (isRetreating)
+        {
+            // 랜덤으로 누가 먼저 놀랄지 결정
+            PetController first = Random.value < 0.5f ? pet1 : pet2;
+            PetController second = first == pet1 ? pet2 : pet1;
+
+            // 시차를 두고 점프
+            StartCoroutine(first.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+            yield return new WaitForSeconds(Random.Range(0.15f, 0.35f));
+            yield return StartCoroutine(second.animationController.PlayAnimationWithCustomDuration(
+                PetAnimationController.PetAnimationType.Jump, 0.5f, true, false));
+        }
+
+        // 속도 설정 (멀어질 때는 빠르게)
         float originalSpeed1 = pet1.agent.speed;
         float originalSpeed2 = pet2.agent.speed;
-        pet1.agent.speed = pet1.baseSpeed * speedMultiplier;
-        pet2.agent.speed = pet2.baseSpeed * speedMultiplier;
+        float actualSpeedMult = isRetreating ? Mathf.Max(speedMultiplier, 1.5f) : speedMultiplier;
+        pet1.agent.speed = pet1.baseSpeed * actualSpeedMult;
+        pet2.agent.speed = pet2.baseSpeed * actualSpeedMult;
+
+        // 멀어질 때는 Run 애니메이션
+        if (isRetreating)
+        {
+            pet1.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+            pet2.animationController.SetContinuousAnimation(PetAnimationController.PetAnimationType.Run);
+        }
 
         yield return StartCoroutine(MoveToPositionsPrecise(pet1, pet2, targetPosition1, targetPosition2, timeout));
+
+        // 애니메이션 정리
+        if (isRetreating)
+        {
+            pet1.animationController.StopContinuousAnimation();
+            pet2.animationController.StopContinuousAnimation();
+        }
 
         // 속도 복원
         pet1.agent.speed = originalSpeed1;
