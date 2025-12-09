@@ -206,8 +206,8 @@ MonoBehaviour:
     hunger: 0
     sleepiness: 0
     affection: 50
-    hungerIncreaseRate: 0
-    sleepinessIncreaseRate: 0
+    hungerIncreaseRate: 0.3
+    sleepinessIncreaseRate: 0.1
     affectionDecreaseRateWhenHungry: 0.2
     hungerThresholdForAffectionDecrease: 80
     lowAffectionThreshold: 30
