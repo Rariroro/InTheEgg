@@ -299,60 +299,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         }
     }
 
-    // 최적화된 레이캐스트를 사용한 영향 영역 계산
-    List<Vector3> CalculateAffectedTerrainArea(GameObject plane)
-    {
-        // 캐시 확인
-        if (cachedPlanePoints.ContainsKey(plane))
-        {
-            return new List<Vector3>(cachedPlanePoints[plane]);
-        }
 
-        List<Vector3> affectedPoints = new List<Vector3>();
-        Bounds planeWorldBounds = GetPlaneWorldBounds(plane);
-
-        // 동적 샘플링 - 작은 플레인은 적은 샘플
-        float planeArea = planeWorldBounds.size.x * planeWorldBounds.size.z;
-        int totalSamples = Mathf.Clamp(Mathf.RoundToInt(planeArea * samplesPerUnit), 20, 100);
-
-        // 배치 레이캐스트 준비 (TempJob 사용 - 4프레임 제한 해결)
-        NativeArray<RaycastCommand> commands = new NativeArray<RaycastCommand>(totalSamples, Allocator.TempJob);
-        NativeArray<RaycastHit> results = new NativeArray<RaycastHit>(totalSamples, Allocator.TempJob);
-
-        try
-        {
-            List<Vector3> samplePoints = GenerateSamplePoints(plane, totalSamples);
-
-            for (int i = 0; i < totalSamples; i++)
-            {
-                Vector3 origin = samplePoints[i] + Vector3.up * 0.5f;
-                commands[i] = new RaycastCommand(origin, Vector3.down, 1000f, LayerMask.GetMask("Terrain"));
-            }
-
-            // 배치 레이캐스트 실행 - 즉시 Complete 호출
-            JobHandle handle = RaycastCommand.ScheduleBatch(commands, results, 1);
-            handle.Complete();  // 즉시 완료 대기 - 메모리 누수 방지
-
-            for (int i = 0; i < results.Length; i++)
-            {
-                if (results[i].collider != null)
-                {
-                    affectedPoints.Add(results[i].point);
-                }
-            }
-        }
-        finally
-        {
-            // 예외 발생 시에도 반드시 메모리 해제
-            if (commands.IsCreated) commands.Dispose();
-            if (results.IsCreated) results.Dispose();
-        }
-
-        // 결과 캐싱
-        cachedPlanePoints[plane] = new List<Vector3>(affectedPoints);
-
-        return affectedPoints;
-    }
 
     // 최적화된 원본 텍스처 저장
     void SaveOriginalTextureForGroup(int groupIndex)
@@ -461,31 +408,7 @@ public class TerrainTextureSwitchManager : MonoBehaviour
         return planeRenderer.bounds;
     }
 
-    private List<Vector3> GenerateSamplePoints(GameObject plane, int numSamples)
-    {
-        List<Vector3> samplePoints = new List<Vector3>();
-        Bounds bounds = GetPlaneWorldBounds(plane);
-        int gridSize = Mathf.CeilToInt(Mathf.Sqrt(numSamples));
 
-        for (int x = 0; x < gridSize; x++)
-        {
-            for (int z = 0; z < gridSize; z++)
-            {
-                float normalizedX = (float)x / (gridSize - 1);
-                float normalizedZ = (float)z / (gridSize - 1);
-
-                Vector3 worldPos = new Vector3(
-                    Mathf.Lerp(bounds.min.x, bounds.max.x, normalizedX),
-                    bounds.center.y,
-                    Mathf.Lerp(bounds.min.z, bounds.max.z, normalizedZ)
-                );
-
-                samplePoints.Add(worldPos);
-            }
-        }
-
-        return samplePoints;
-    }
 
     private Vector2Int GetAlphamapCoord(Vector3 worldPos)
     {

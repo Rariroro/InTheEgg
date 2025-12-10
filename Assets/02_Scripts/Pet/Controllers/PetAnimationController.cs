@@ -22,6 +22,16 @@ public class PetAnimationController : PetControllerBase
     private PetAnimationType continuousAnimationType = PetAnimationType.Idle;
     private bool isDieAnimationPlaying = false; // 죽는 애니메이션 특별 처리용
 
+    // 캐싱 - JobTempAlloc 메모리 누수 방지
+    private PetAnimationType cachedCurrentAnimation = PetAnimationType.Idle;
+    private float cachedAnimatorSpeed = 1f;
+    private static readonly int AnimationHash = Animator.StringToHash("animation");
+
+    // agent.velocity 캐싱 - 매 프레임 접근 방지
+    private float velocityCacheTimer = 0f;
+    private const float VELOCITY_CACHE_INTERVAL = 0.1f;
+    private float cachedVelocityMagnitude = 0f;
+
     protected override void OnInitialize()
     {
         // 추가 초기화 로직 필요시 여기에 작성
@@ -95,24 +105,32 @@ public class PetAnimationController : PetControllerBase
 
         if (petController.animator != null && petController.agent != null)
         {
-            var currentAnimation = (PetAnimationType)petController.animator.GetInteger("animation");
+            // GetInteger 제거 - 캐시된 값 사용으로 JobTempAlloc 방지
+            float targetSpeed;
 
             // 걷기 또는 달리기 상태일 때만 이동 속도에 애니메이션 속도를 동기화
-            if (currentAnimation == PetAnimationType.Walk || currentAnimation == PetAnimationType.Run)
+            if (cachedCurrentAnimation == PetAnimationType.Walk || cachedCurrentAnimation == PetAnimationType.Run)
             {
                 if (petController.Movement.walkSpeed > 0)
                 {
-                    petController.animator.speed = petController.agent.velocity.magnitude / petController.Movement.walkSpeed;
+                    targetSpeed = petController.agent.velocity.magnitude / petController.Movement.walkSpeed;
                 }
                 else
                 {
-                    petController.animator.speed = 1f;
+                    targetSpeed = 1f;
                 }
             }
             else
             {
                 // 다른 모든 정적 애니메이션은 항상 정상 속도(1.0)로 재생
-                petController.animator.speed = 1.0f;
+                targetSpeed = 1f;
+            }
+
+            // 속도가 변경될 때만 설정 (JobTempAlloc 방지)
+            if (!Mathf.Approximately(cachedAnimatorSpeed, targetSpeed))
+            {
+                petController.animator.speed = targetSpeed;
+                cachedAnimatorSpeed = targetSpeed;
             }
         }
     }
@@ -122,52 +140,64 @@ public class PetAnimationController : PetControllerBase
     /// </summary>
     private void UpdateMovementAnimation()
     {
-        if (petController.agent != null && petController.agent.enabled && 
+        PetAnimationType targetAnimation = PetAnimationType.Idle;
+
+        if (petController.agent != null && petController.agent.enabled &&
             petController.agent.isOnNavMesh && petController.animator != null)
         {
-            float agentVelocity = petController.agent.velocity.magnitude;
+            // velocity 캐싱 - 0.1초 주기로만 접근 (JobTempAlloc 방지)
+            velocityCacheTimer += Time.deltaTime;
+            if (velocityCacheTimer >= VELOCITY_CACHE_INTERVAL)
+            {
+                velocityCacheTimer = 0f;
+                cachedVelocityMagnitude = petController.agent.velocity.magnitude;
+            }
+
             float runThreshold = petController.Movement.walkSpeed * petController.Movement.runMultiplier * 0.8f;
 
-            if (agentVelocity > 0.1f)
+            if (cachedVelocityMagnitude > 0.1f)
             {
                 if (petController.agent.speed > runThreshold)
                 {
-                    petController.animator.SetInteger("animation", (int)PetAnimationType.Run);
+                    targetAnimation = PetAnimationType.Run;
                 }
                 else
                 {
-                    petController.animator.SetInteger("animation", (int)PetAnimationType.Walk);
+                    targetAnimation = PetAnimationType.Walk;
                 }
             }
-            else
-            {
-                petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
-            }
         }
-        else if (petController.animator != null)
+
+        // 값이 변경될 때만 SetInteger 호출 (JobTempAlloc 방지)
+        SetAnimationInternal(targetAnimation);
+    }
+
+    /// <summary>
+    /// 내부 애니메이션 설정 - 캐싱으로 중복 호출 방지
+    /// </summary>
+    private void SetAnimationInternal(PetAnimationType animation)
+    {
+        if (petController.animator == null) return;
+
+        if (animation != cachedCurrentAnimation)
         {
-            petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
+            petController.animator.SetInteger(AnimationHash, (int)animation);
+            cachedCurrentAnimation = animation;
         }
     }
 
     public void SetContinuousAnimation(PetAnimationType animationType)
     {
-        if (petController.animator != null)
-        {
-            petController.animator.SetInteger("animation", (int)animationType);
-            isContinuousAnimationPlaying = true;
-            continuousAnimationType = animationType;
-        }
+        SetAnimationInternal(animationType);
+        isContinuousAnimationPlaying = true;
+        continuousAnimationType = animationType;
     }
 
     public void StopContinuousAnimation()
     {
-        if (petController.animator != null)
-        {
-            petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
-            isContinuousAnimationPlaying = false;
-            continuousAnimationType = PetAnimationType.Idle;
-        }
+        SetAnimationInternal(PetAnimationType.Idle);
+        isContinuousAnimationPlaying = false;
+        continuousAnimationType = PetAnimationType.Idle;
     }
 
     public void ForceStopAllAnimations()
@@ -177,10 +207,11 @@ public class PetAnimationController : PetControllerBase
         continuousAnimationType = PetAnimationType.Idle;
         isDieAnimationPlaying = false;
 
+        SetAnimationInternal(PetAnimationType.Idle);
         if (petController.animator != null)
         {
-            petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
             petController.animator.speed = 1.0f;
+            cachedAnimatorSpeed = 1.0f;
         }
     }
 
@@ -190,12 +221,14 @@ public class PetAnimationController : PetControllerBase
 
         if (petController.animator != null)
         {
-            petController.animator.SetInteger("animation", (int)animationType);
+            petController.animator.SetInteger(AnimationHash, (int)animationType);
+            cachedCurrentAnimation = animationType;
             yield return new WaitForSeconds(duration);
 
             if (returnToIdle)
             {
-                petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
+                petController.animator.SetInteger(AnimationHash, (int)PetAnimationType.Idle);
+                cachedCurrentAnimation = PetAnimationType.Idle;
             }
             else
             {
@@ -235,18 +268,21 @@ public class PetAnimationController : PetControllerBase
             {
                 // 애니메이션 속도를 1.0으로 고정
                 petController.animator.speed = 1.0f;
-                petController.animator.SetInteger("animation", (int)animationType);
+                cachedAnimatorSpeed = 1.0f;
+                petController.animator.SetInteger(AnimationHash, (int)animationType);
+                cachedCurrentAnimation = animationType;
                 yield return null;
                 float animationLength = petController.animator.GetCurrentAnimatorStateInfo(0).length;
-                
+
                 // Die 애니메이션은 더 길게 유지
                 if (animationType == PetAnimationType.Die)
                 {
                     // 애니메이션 재생 후 추가로 대기
                     yield return new WaitForSeconds(animationLength);
-                    
+
                     // Die 애니메이션 상태를 유지하면서 추가 대기 (총 4초)
-                    petController.animator.SetInteger("animation", (int)PetAnimationType.Die);
+                    petController.animator.SetInteger(AnimationHash, (int)PetAnimationType.Die);
+                    cachedCurrentAnimation = PetAnimationType.Die;
                     yield return new WaitForSeconds(4f - animationLength);
                 }
                 else
@@ -268,8 +304,10 @@ public class PetAnimationController : PetControllerBase
 
             if (petController.animator != null)
             {
-                petController.animator.SetInteger("animation", (int)PetAnimationType.Idle);
+                petController.animator.SetInteger(AnimationHash, (int)PetAnimationType.Idle);
+                cachedCurrentAnimation = PetAnimationType.Idle;
                 petController.animator.speed = 1.0f;
+                cachedAnimatorSpeed = 1.0f;
             }
 
             // 나무 위에 있지 않을 때만 이동 재개

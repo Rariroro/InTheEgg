@@ -35,7 +35,7 @@ public class PetWaterBehaviorController : PetControllerBase
         // NavMesh 에이전트가 활성화되어 있고 NavMesh 위에 있는 경우
         if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
         {
-            int waterArea = NavMesh.GetAreaFromName("Water");
+            int waterArea = PetMovementController.GetWaterAreaCached(); // 캐시된 값 사용 (JobTempAlloc 방지)
             if (waterArea != -1)
             {
                 // 물 영역 비용 설정

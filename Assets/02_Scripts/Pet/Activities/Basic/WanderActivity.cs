@@ -23,7 +23,16 @@ public class WanderActivity : PetActivityAdapter
     private PreferredZone[] preferredZones;
     private PreferredZone currentPreferredZone;
     private float baseNextBehaviorChange; // 원래 행동 변경 시간 저장
-    
+
+    // 펫 리스트 캐싱 - FindObjectsOfType 호출 방지 (JobTempAlloc 누수 방지)
+    private static PetController[] cachedAllPets;
+    private static float lastPetCacheTime = -1f;
+    private const float PET_CACHE_INTERVAL = 2f; // 2초마다 캐시 갱신
+
+    // agent 속성 접근 주기 제한 - JobTempAlloc 방지
+    private float movementCheckTimer = 0f;
+    private const float MOVEMENT_CHECK_INTERVAL = 0.2f;
+
     private enum BehaviorState
     {
         Idle,    // 가만히 대기
@@ -108,25 +117,28 @@ public class WanderActivity : PetActivityAdapter
         }
 
         behaviorTimer += Time.deltaTime;
-        
-        // 현재 이동 중이라면 목표 지점 도착 여부 체크
-        if (!pet.agent.isStopped &&
-            (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+
+        // agent 속성 접근은 0.2초 주기로 제한 (JobTempAlloc 방지)
+        movementCheckTimer += Time.deltaTime;
+        if (movementCheckTimer >= MOVEMENT_CHECK_INTERVAL)
         {
-            HandleMovement();
+            movementCheckTimer = 0f;
+
+            // 현재 이동 중이라면 목표 지점 도착 여부 체크
+            if (!pet.agent.isStopped &&
+                (currentBehaviorState == BehaviorState.Walking || currentBehaviorState == BehaviorState.Running))
+            {
+                HandleMovement();
+            }
         }
-        
+
         // 다음 행동을 결정할 시간이 되었는지 체크
         if (behaviorTimer >= nextBehaviorChange)
         {
             DecideNextBehavior();
         }
-        
-        // 선택 상탌가 아닐 때만 회전 처리
-        if (!pet.State.IsSelected && pet.movementController != null)
-        {
-            pet.movementController.HandleRotation();
-        }
+
+        // HandleRotation()은 PetMovementController.Update()에서 이미 처리하므로 제거
     }
     
     public override void Stop()
@@ -530,18 +542,31 @@ public class WanderActivity : PetActivityAdapter
     }
     
     /// <summary>
+    /// 캐시된 펫 리스트를 반환합니다 (2초마다 갱신).
+    /// </summary>
+    private static PetController[] GetCachedPets()
+    {
+        if (cachedAllPets == null || Time.time - lastPetCacheTime > PET_CACHE_INTERVAL)
+        {
+            cachedAllPets = GameObject.FindObjectsOfType<PetController>();
+            lastPetCacheTime = Time.time;
+        }
+        return cachedAllPets;
+    }
+
+    /// <summary>
     /// 가장 가까운 다른 펫을 찾습니다.
     /// </summary>
     private PetController FindNearestOtherPet(float maxDistance)
     {
-        PetController[] allPets = GameObject.FindObjectsOfType<PetController>();
+        PetController[] allPets = GetCachedPets();
         PetController nearest = null;
         float nearestDistance = maxDistance;
-        
+
         foreach (var otherPet in allPets)
         {
-            if (otherPet == pet) continue;
-            
+            if (otherPet == null || otherPet == pet) continue;
+
             float distance = Vector3.Distance(pet.transform.position, otherPet.transform.position);
             if (distance < nearestDistance)
             {
@@ -549,7 +574,7 @@ public class WanderActivity : PetActivityAdapter
                 nearest = otherPet;
             }
         }
-        
+
         return nearest;
     }
     

@@ -27,6 +27,28 @@ public class PetMovementController : PetControllerBase
     private const int MAX_STUCK_POSITIONS = 5; // 기억할 막힌 위치 최대 개수
     private const float STUCK_POSITION_AVOID_RADIUS = 3f; // 막힌 위치 회피 반경
 
+    // NavMesh Area 캐싱 - JobTempAlloc 방지
+    private static int cachedWaterArea = -2; // -2 = 미초기화, -1 = 없음
+
+    // agent.updateRotation 캐싱
+    private bool cachedUpdateRotation = true;
+
+    // CheckIfStuck 주기 제어
+    private float stuckCheckTimer = 0f;
+    private const float STUCK_CHECK_INTERVAL = 0.5f;
+
+    /// <summary>
+    /// Water NavMesh Area 인덱스를 캐시에서 가져옵니다.
+    /// </summary>
+    public static int GetWaterAreaCached()
+    {
+        if (cachedWaterArea == -2)
+        {
+            cachedWaterArea = NavMesh.GetAreaFromName("Water");
+        }
+        return cachedWaterArea;
+    }
+
     // === 초기화 ===
     protected override void OnInitialize()
     {
@@ -37,7 +59,14 @@ public class PetMovementController : PetControllerBase
     private void Update()
     {
         HandleRotation();
-        CheckIfStuck();
+
+        // 막힘 감지는 0.5초 주기로 실행 (JobTempAlloc 방지)
+        stuckCheckTimer += Time.deltaTime;
+        if (stuckCheckTimer >= STUCK_CHECK_INTERVAL)
+        {
+            stuckCheckTimer = 0f;
+            CheckIfStuck();
+        }
     }
 
     // === 공용 유틸리티 메서드들 (다른 곳에서 호출됨) ===
@@ -71,22 +100,18 @@ public class PetMovementController : PetControllerBase
             }
         }
         
-        // NavMeshAgent 자동 회전 설정
-        if (shouldDisableAutoRotation)
+        // NavMeshAgent 자동 회전 설정 - 캐싱으로 중복 쓰기 방지 (JobTempAlloc 방지)
+        if (shouldDisableAutoRotation && cachedUpdateRotation)
         {
             // 선택/홀딩/모이기 상태에서는 수동 제어
-            if (agent.updateRotation)
-            {
-                agent.updateRotation = false;
-            }
+            agent.updateRotation = false;
+            cachedUpdateRotation = false;
         }
-        else
+        else if (!shouldDisableAutoRotation && !cachedUpdateRotation)
         {
             // 그 외 모든 상태에서는 NavMeshAgent가 자동 회전
-            if (!agent.updateRotation)
-            {
-                agent.updateRotation = true;
-            }
+            agent.updateRotation = true;
+            cachedUpdateRotation = true;
         }
         
         // 펫 모델이 본체와 동기화되도록 보장 (항상 수행)
@@ -192,7 +217,7 @@ public class PetMovementController : PetControllerBase
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
             return;
 
-        int waterArea = NavMesh.GetAreaFromName("Water");
+        int waterArea = GetWaterAreaCached(); // 캐시된 값 사용 (JobTempAlloc 방지)
         int mask;
 
         // 물/육지 선호도에 따른 영역 마스크 설정
