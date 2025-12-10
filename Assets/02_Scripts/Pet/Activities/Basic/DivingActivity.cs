@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using PetAIProperties = PetTraits;
+using InTheEgg.Constants;
 
 /// <summary>
 /// 펫의 다이빙 활동을 제어하는 클래스
@@ -80,8 +81,9 @@ public class DivingActivity : PetActivityAdapter
         if (state.IsHolding || state.IsSelected || state.IsGathering)
             return false;
             
-        // 4. 욕구 상태 체크: 배고프거나 졸리면 다이빙 안 함
-        if (needs.Hunger > 70f || needs.Sleepiness > 70f)
+        // 4. 욕구 상태 체크: 배고프거나 졸리면 다이빙 안 함 (60/60 임계값)
+        if (needs.Hunger >= EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD ||
+            needs.Sleepiness >= EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_THRESHOLD)
             return false;
             
         // 5. 쿨다운 체크 - CooldownManager 사용
@@ -640,6 +642,13 @@ public class DivingActivity : PetActivityAdapter
         if (currentDiver == pet)
         {
             currentDiver = null;
+        }
+
+        // 다이빙 활동 후 욕구 증가
+        if (pet.Needs != null)
+        {
+            pet.Needs.IncreaseHunger(EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_INCREASE);
+            pet.Needs.IncreaseSleepiness(EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_INCREASE);
         }
     }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using PetAIProperties = PetTraits;
+using InTheEgg.Constants;
 
 /// <summary>
 /// Playful 성격의 펫이 나비 파티클과 상호작용하여 놀이하는 활동
@@ -51,8 +52,7 @@ public class ButterflyPlayActivity : PetActivityAdapter
     private const float CIRCLE_RADIUS = 2f;             // 나비 주변 회전 반경
     private const float CIRCLE_ANGULAR_SPEED = 60f;     // 회전 속도 (도/초)
     private const float CIRCLE_DURATION = 3f;           // 나비 주변 회전 시간
-    private const float HUNGER_THRESHOLD = 70f;         // 배고픔 임계값
-    private const float SLEEPINESS_THRESHOLD = 80f;     // 졸림 임계값
+    // 욕구 임계값은 EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD / SLEEPINESS_THRESHOLD 사용
 
     public override string Name => "ButterflyPlay";
     public override bool IsInterruptible => true;
@@ -87,6 +87,12 @@ public class ButterflyPlayActivity : PetActivityAdapter
 
         // 플레이어가 제어 중이거나 다른 중요한 활동 중이면 불가능
         if (state.IsHolding || state.IsSelected || state.IsExhausted)
+            return false;
+
+        // 욕구 체크: 배고프거나 졸리면 나비 놀이 안함 (60/60 임계값)
+        if (needs != null &&
+            (needs.Hunger >= EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD ||
+             needs.Sleepiness >= EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_THRESHOLD))
             return false;
 
         // 쿨다운 체크 - CooldownManager 사용
@@ -126,8 +132,10 @@ public class ButterflyPlayActivity : PetActivityAdapter
     public override float GetPriority(PetState state, PetNeeds needs)
     {
         // 최적화: CanStart() 중복 호출 제거
-        // 기본 욕구가 급한 경우 완전히 차단
-        if (needs != null && (needs.Hunger > HUNGER_THRESHOLD || needs.Sleepiness > SLEEPINESS_THRESHOLD))
+        // 기본 욕구가 급한 경우 완전히 차단 (60/60 임계값)
+        if (needs != null &&
+            (needs.Hunger >= EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD ||
+             needs.Sleepiness >= EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_THRESHOLD))
         {
             return 0f; // 배고프거나 졸리면 나비와 놀지 않음
         }
@@ -292,6 +300,13 @@ public class ButterflyPlayActivity : PetActivityAdapter
         if (animationController != null)
         {
             animationController.StopContinuousAnimation();
+        }
+
+        // 나비 놀이 활동 후 욕구 증가
+        if (pet.Needs != null)
+        {
+            pet.Needs.IncreaseHunger(EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_INCREASE);
+            pet.Needs.IncreaseSleepiness(EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_INCREASE);
         }
 
         // Happy 감정은 코루틴에서 이미 표시됨 (정상 완료 시)

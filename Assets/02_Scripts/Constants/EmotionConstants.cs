@@ -191,5 +191,72 @@ namespace InTheEgg.Constants
         /// WanderActivity: 배회 우선순위
         /// </summary>
         public const float PRIORITY_WANDER = 0.1f;
+
+        // ===== 펫 상호작용 욕구 임계값 =====
+
+        /// <summary>
+        /// 일반 펫 상호작용 (Chase, Fight, WalkTogether 등) 배고픔 임계값
+        /// 이 값 이상이면 상호작용 불가
+        /// </summary>
+        public const float PET_INTERACTION_HUNGER_THRESHOLD = 50f;
+
+        /// <summary>
+        /// 일반 펫 상호작용 졸림 임계값
+        /// </summary>
+        public const float PET_INTERACTION_SLEEPINESS_THRESHOLD = 50f;
+
+        /// <summary>
+        /// PersonalityReaction (가벼운 상호작용) 배고픔 임계값
+        /// </summary>
+        public const float PERSONALITY_REACTION_HUNGER_THRESHOLD = 70f;
+
+        /// <summary>
+        /// PersonalityReaction 졸림 임계값
+        /// </summary>
+        public const float PERSONALITY_REACTION_SLEEPINESS_THRESHOLD = 70f;
+
+        // ===== 환경 상호작용 욕구 임계값 =====
+
+        /// <summary>
+        /// 환경 상호작용 (나비놀이, 다이빙, 환경모이기) 배고픔 임계값
+        /// </summary>
+        public const float ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD = 60f;
+
+        /// <summary>
+        /// 환경 상호작용 졸림 임계값
+        /// </summary>
+        public const float ENVIRONMENT_INTERACTION_SLEEPINESS_THRESHOLD = 60f;
+
+        // ===== 상호작용 후 욕구 증가량 =====
+
+        /// <summary>
+        /// 일반 펫 상호작용 후 배고픔 증가량
+        /// </summary>
+        public const float PET_INTERACTION_HUNGER_INCREASE = 5f;
+
+        /// <summary>
+        /// 일반 펫 상호작용 후 졸림 증가량
+        /// </summary>
+        public const float PET_INTERACTION_SLEEPINESS_INCREASE = 5f;
+
+        /// <summary>
+        /// PersonalityReaction (가벼운 상호작용) 후 배고픔 증가량
+        /// </summary>
+        public const float PERSONALITY_REACTION_HUNGER_INCREASE = 1f;
+
+        /// <summary>
+        /// PersonalityReaction 후 졸림 증가량
+        /// </summary>
+        public const float PERSONALITY_REACTION_SLEEPINESS_INCREASE = 1f;
+
+        /// <summary>
+        /// 환경 상호작용 후 배고픔 증가량
+        /// </summary>
+        public const float ENVIRONMENT_INTERACTION_HUNGER_INCREASE = 3f;
+
+        /// <summary>
+        /// 환경 상호작용 후 졸림 증가량
+        /// </summary>
+        public const float ENVIRONMENT_INTERACTION_SLEEPINESS_INCREASE = 3f;
     }
 }

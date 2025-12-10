@@ -156,11 +156,34 @@ public class PersonalityReactionInteraction : BasePetInteraction
 
     public override bool CanInteract(PetController pet1, PetController pet2)
     {
+        // 욕구 체크: PersonalityReaction은 가벼운 상호작용이므로 임계값이 높음 (70/70)
+        if (pet1.Needs != null &&
+            (pet1.Needs.Hunger >= EmotionConstants.PERSONALITY_REACTION_HUNGER_THRESHOLD ||
+             pet1.Needs.Sleepiness >= EmotionConstants.PERSONALITY_REACTION_SLEEPINESS_THRESHOLD))
+        {
+            return false;
+        }
+        if (pet2.Needs != null &&
+            (pet2.Needs.Hunger >= EmotionConstants.PERSONALITY_REACTION_HUNGER_THRESHOLD ||
+             pet2.Needs.Sleepiness >= EmotionConstants.PERSONALITY_REACTION_SLEEPINESS_THRESHOLD))
+        {
+            return false;
+        }
+
         // PersonalityReactionInteraction은 모든 펫 조합에서 가능
         // 이미 상호작용 중이거나 홀딩 중인지는 BasePetInteraction에서 체크함
-        // 따라서 여기서는 항상 true를 반환하여 성격 상호작용을 허용
         return true;
     }
+
+    /// <summary>
+    /// PersonalityReaction은 가벼운 상호작용이므로 배고픔 증가량이 적음
+    /// </summary>
+    protected override float GetHungerIncrease() => EmotionConstants.PERSONALITY_REACTION_HUNGER_INCREASE;
+
+    /// <summary>
+    /// PersonalityReaction은 가벼운 상호작용이므로 졸림 증가량이 적음
+    /// </summary>
+    protected override float GetSleepinessIncrease() => EmotionConstants.PERSONALITY_REACTION_SLEEPINESS_INCREASE;
 
     protected override IEnumerator PerformInteraction(PetController pet1, PetController pet2)
     {

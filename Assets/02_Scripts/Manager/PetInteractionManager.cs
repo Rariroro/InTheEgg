@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using InTheEgg.Constants;
 
 // 펫 종류를 구분하는 열거형 - 총 60종류의 펫 타입 정의
 public enum PetType
@@ -162,6 +163,15 @@ public class PetInteractionManager : MonoBehaviour
         {
             if (enableDebugLogs)
                 Debug.Log($"[Manager] ❌ 쿨타임 중: {pet1.petName}={IsOnCooldown(pet1)}, {pet2.petName}={IsOnCooldown(pet2)}");
+            return;
+        }
+
+        // 일반 펫 상호작용 욕구 체크 (50/50 임계값)
+        // PersonalityReaction은 FindSuitableInteraction 이후에 별도 체크
+        if (IsNeedsTooHighForInteraction(pet1) || IsNeedsTooHighForInteraction(pet2))
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 욕구 과다: {pet1.petName}(H:{pet1.Needs?.Hunger:F0},S:{pet1.Needs?.Sleepiness:F0}), {pet2.petName}(H:{pet2.Needs?.Hunger:F0},S:{pet2.Needs?.Sleepiness:F0})");
             return;
         }
 
@@ -556,6 +566,16 @@ public class PetInteractionManager : MonoBehaviour
                 pet.petName);
         }
         return false;
+    }
+
+    /// <summary>
+    /// 펫의 욕구가 일반 펫 상호작용 임계값(50/50)을 초과하는지 확인
+    /// </summary>
+    private bool IsNeedsTooHighForInteraction(PetController pet)
+    {
+        if (pet.Needs == null) return false;
+        return pet.Needs.Hunger >= EmotionConstants.PET_INTERACTION_HUNGER_THRESHOLD ||
+               pet.Needs.Sleepiness >= EmotionConstants.PET_INTERACTION_SLEEPINESS_THRESHOLD;
     }
 
 

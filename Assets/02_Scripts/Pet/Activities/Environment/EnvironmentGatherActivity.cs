@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using InTheEgg.Constants;
 
 /// <summary>
 /// 펫이 환경에 이끌려 모이는 활동 (환경 스폰 시 축하 행동)
@@ -29,7 +30,18 @@ public class EnvironmentGatherActivity : PetActivityAdapter
     public override bool CanStart(PetState state, PetNeeds needs)
     {
         // 환경에 이끌리는 상태일 때만 시작 가능
-        return pet.State.IsAttractedToEnvironment;
+        if (!pet.State.IsAttractedToEnvironment)
+            return false;
+
+        // 욕구 체크: 배고프거나 졸리면 환경 모이기 참여 안함 (60/60 임계값)
+        if (needs != null &&
+            (needs.Hunger >= EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_THRESHOLD ||
+             needs.Sleepiness >= EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_THRESHOLD))
+        {
+            return false;
+        }
+
+        return true;
     }
     
     public override float GetPriority(PetState state, PetNeeds needs)
@@ -129,6 +141,13 @@ public class EnvironmentGatherActivity : PetActivityAdapter
         {
             pet.StopCoroutine(celebrationCoroutine);
             celebrationCoroutine = null;
+        }
+
+        // 환경 모이기 활동 후 욕구 증가
+        if (pet.Needs != null)
+        {
+            pet.Needs.IncreaseHunger(EmotionConstants.ENVIRONMENT_INTERACTION_HUNGER_INCREASE);
+            pet.Needs.IncreaseSleepiness(EmotionConstants.ENVIRONMENT_INTERACTION_SLEEPINESS_INCREASE);
         }
     }
     

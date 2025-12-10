@@ -52,7 +52,7 @@ public class ExhaustedActivity : PetActivityAdapter
         isTryingToEat = false;
         searchTimer = 0f;
         
-        Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 주변의 음식을 찾습니다.");
+        Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 움직일 수 없습니다.");
 
         // 기존의 모든 행동 중지
         pet.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
@@ -63,22 +63,25 @@ public class ExhaustedActivity : PetActivityAdapter
             pet.movementController.StopMovement();
         }
         
-        // 즉시 음식 탐색 시도
-        AttemptToEat();
+        // 음식 탐색 시도 제거 (그냥 누워있기)
+        // AttemptToEat();
         
-        // 음식을 찾지 못했다면, 탈진 상태를 표시
-        if (!isTryingToEat)
+        // 탈진 상태 표시 (Rest 애니메이션 + 음식 생각 감정)
+        animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+        
+        // 식성에 따른 음식 생각 감정 표시
+        EmotionType foodEmotion = GetRandomFoodEmotionByDiet();
+        if (pet.emotionController != null)
         {
-            animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
-            if (pet.emotionController != null)
-            {
-                pet.emotionController.ShowEmotion(EmotionType.Hungry, 5f);
-            }
+            pet.emotionController.ShowEmotion(foodEmotion, 999f); // 지속적으로 표시
         }
     }
     
     public override void Update()
     {
+        // 탈진 상태에서는 아무것도 하지 않고 누워있음
+        // 음식 탐색 로직 제거됨
+        /*
         if (isTryingToEat)
         {
             // 음식을 찾아 이동 중이거나 먹는 중인 경우
@@ -94,6 +97,7 @@ public class ExhaustedActivity : PetActivityAdapter
                 AttemptToEat();
             }
         }
+        */
     }
     
     public override void Stop()
@@ -143,5 +147,40 @@ public class ExhaustedActivity : PetActivityAdapter
         {
             isTryingToEat = false;
         }
+    }
+
+    /// <summary>
+    /// 펫의 식성에 따른 랜덤 음식 감정 선택 (EatActivity와 동일한 로직)
+    /// </summary>
+    private EmotionType GetRandomFoodEmotionByDiet()
+    {
+        var diet = pet.diet;
+        var foodEmotions = new System.Collections.Generic.List<EmotionType>();
+
+        // 식성에 따라 가능한 음식 감정 추가
+        if ((diet & PetTraits.DietaryFlags.Meat) != 0)
+            foodEmotions.Add(EmotionType.Thought_Food_Meat);
+
+        if ((diet & PetTraits.DietaryFlags.Fish) != 0)
+            foodEmotions.Add(EmotionType.Thought_Food_Fish);
+
+        if ((diet & PetTraits.DietaryFlags.Grass) != 0)
+            foodEmotions.Add(EmotionType.Thought_Food_Grass);
+
+        if ((diet & PetTraits.DietaryFlags.SeedsAndGrains) != 0)
+            foodEmotions.Add(EmotionType.Thought_Food_Grain);
+
+        if ((diet & PetTraits.DietaryFlags.FruitsAndVegetables) != 0)
+        {
+            foodEmotions.Add(EmotionType.Thought_Food_Fruit);
+            foodEmotions.Add(EmotionType.Thought_Food_Vegetable);
+        }
+
+        // 식성이 없거나 매칭되는 음식 감정이 없으면 기본 Hungry 반환
+        if (foodEmotions.Count == 0)
+            return EmotionType.Hungry;
+
+        // 랜덤으로 하나 선택
+        return foodEmotions[Random.Range(0, foodEmotions.Count)];
     }
 }

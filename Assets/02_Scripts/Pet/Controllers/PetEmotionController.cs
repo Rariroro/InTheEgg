@@ -178,7 +178,11 @@ public class PetEmotionController : MonoBehaviour
         {
             case PetStatus.Emergency:
                 // 긴급 상태일 때 경고 이모티콘
-                ShowEmotion(EmotionType.Scared, EmotionConstants.DURATION_SHORT);
+                // 단, 탈진(Exhausted) 상태일 때는 ExhaustedActivity에서 별도로 감정을 처리하므로 여기서는 무시
+                if (!petController.State.IsExhausted)
+                {
+                    ShowEmotion(EmotionType.Scared, EmotionConstants.DURATION_SHORT);
+                }
                 break;
             // case PetStatus.Interacting:
             //     // 상호작용 시작 시 기쁨 이모티콘

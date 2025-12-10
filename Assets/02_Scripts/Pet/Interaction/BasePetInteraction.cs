@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using InTheEgg.Constants;
 
 
 // 기본 상호작용 추상 클래스
@@ -21,6 +22,18 @@ public abstract class BasePetInteraction : MonoBehaviour
     /// 기본값: 50
     /// </summary>
     public virtual int Priority => 50;
+
+    /// <summary>
+    /// 상호작용 완료 후 배고픔 증가량
+    /// 서브클래스에서 오버라이드하여 다른 값 사용 가능
+    /// </summary>
+    protected virtual float GetHungerIncrease() => EmotionConstants.PET_INTERACTION_HUNGER_INCREASE;
+
+    /// <summary>
+    /// 상호작용 완료 후 졸림 증가량
+    /// 서브클래스에서 오버라이드하여 다른 값 사용 가능
+    /// </summary>
+    protected virtual float GetSleepinessIncrease() => EmotionConstants.PET_INTERACTION_SLEEPINESS_INCREASE;
 
     // 상호작용 중인 펫들 추적 (정리 보장용)
     protected PetController activePet1;
@@ -325,6 +338,21 @@ public abstract class BasePetInteraction : MonoBehaviour
         
         if (pet1 != null && pet1.State.IsInteracting) SafeResumePet(pet1);
         if (pet2 != null && pet2.State.IsInteracting) SafeResumePet(pet2);
+
+        // ✅ 상호작용 완료 후 욕구 증가
+        float hungerIncrease = GetHungerIncrease();
+        float sleepinessIncrease = GetSleepinessIncrease();
+
+        if (pet1 != null && pet1.Needs != null)
+        {
+            pet1.Needs.IncreaseHunger(hungerIncrease);
+            pet1.Needs.IncreaseSleepiness(sleepinessIncrease);
+        }
+        if (pet2 != null && pet2.Needs != null)
+        {
+            pet2.Needs.IncreaseHunger(hungerIncrease);
+            pet2.Needs.IncreaseSleepiness(sleepinessIncrease);
+        }
 
         // ✅ 상호작용 종료 시 쿨타임 시작
         if (CooldownManager.Instance != null)

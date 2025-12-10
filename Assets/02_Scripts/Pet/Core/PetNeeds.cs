@@ -206,7 +206,8 @@ public class PetNeeds
     /// </summary>
     private void UpdateAffection()
     {
-        // 배고픔에 따른 친밀도 감소
+        // 배고픔에 따른 친밀도 감소 로직 제거됨 (사용자 요청)
+        /*
         if (hunger >= hungerThresholdForAffectionDecrease)
         {
             float affectionDecreaseRate = affectionDecreaseRateWhenHungry * (hunger / 100f);
@@ -225,6 +226,7 @@ public class PetNeeds
                 }
             }
         }
+        */
     }
     
     /// <summary>
@@ -234,14 +236,44 @@ public class PetNeeds
     {
         float previousHunger = hunger;
         hunger = Mathf.Clamp(hunger - amount, 0f, 100f);
-        
+
         if (hunger != previousHunger)
         {
             OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
             PetDebug.LogNeedChange(petController.petName, "Hunger", previousHunger, hunger);
         }
     }
-    
+
+    /// <summary>
+    /// 배고픔 증가 (상호작용 등)
+    /// </summary>
+    public void IncreaseHunger(float amount)
+    {
+        float previousHunger = hunger;
+        hunger = Mathf.Clamp(hunger + amount, 0f, 100f);
+
+        if (hunger != previousHunger)
+        {
+            OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
+            PetDebug.LogNeedChange(petController.petName, "Hunger", previousHunger, hunger);
+        }
+    }
+
+    /// <summary>
+    /// 졸림 증가 (상호작용 등)
+    /// </summary>
+    public void IncreaseSleepiness(float amount)
+    {
+        float previousSleepiness = sleepiness;
+        sleepiness = Mathf.Clamp(sleepiness + amount, 0f, 100f);
+
+        if (sleepiness != previousSleepiness)
+        {
+            OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
+            PetDebug.LogNeedChange(petController.petName, "Sleepiness", previousSleepiness, sleepiness);
+        }
+    }
+
     /// <summary>
     /// 졸림 리셋 (수면 완료)
     /// </summary>
