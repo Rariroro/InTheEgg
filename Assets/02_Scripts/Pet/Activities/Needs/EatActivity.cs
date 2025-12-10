@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 using System.Collections;
 using InTheEgg.Constants;
 
@@ -256,13 +257,17 @@ public class EatActivity : PetActivityAdapter
     {
         if (pet.agent == null || !pet.agent.enabled || !pet.agent.isOnNavMesh)
             return;
-            
+
         // 현재 탐색 범위에 맞춰 랜덤 목적지 설정
         float currentRadius = CalculateSearchRadius();
         Vector3 randomDirection = Random.insideUnitSphere * currentRadius;
         randomDirection += pet.transform.position;
-        
-        if (UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out UnityEngine.AI.NavMeshHit hit, currentRadius, UnityEngine.AI.NavMesh.AllAreas))
+
+        Profiler.BeginSample("EatActivity.WanderToFindFood.NavMesh");
+        bool found = UnityEngine.AI.NavMesh.SamplePosition(randomDirection, out UnityEngine.AI.NavMeshHit hit, currentRadius, UnityEngine.AI.NavMesh.AllAreas);
+        Profiler.EndSample();
+
+        if (found)
         {
             currentWanderTarget = hit.position;
             pet.agent.SetDestination(currentWanderTarget);

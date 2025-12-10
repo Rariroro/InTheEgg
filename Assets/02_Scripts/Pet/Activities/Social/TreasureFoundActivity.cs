@@ -55,7 +55,12 @@ public class TreasureFoundActivity : PetActivityAdapter
     // 축하 점프 설정
     private const float CELEBRATION_JUMP_DURATION = 2f;
     private const float CELEBRATION_WAIT_TIME = 2f;
-    
+
+    // NavMeshAgent 원래 설정 저장
+    private int originalAvoidancePriority;
+    private ObstacleAvoidanceType originalObstacleAvoidanceType;
+    private float originalRadius;
+
     public override string Name => "TreasureFound";
     public override bool IsInterruptible => false; // 보물 수집까지 중단 불가
     
@@ -110,11 +115,16 @@ public class TreasureFoundActivity : PetActivityAdapter
                 agent.speed = pet.Movement.walkSpeed * CARRY_SPEED_MULTIPLIER;
                 agent.angularSpeed = pet.Movement.angularSpeed * ANGULAR_SPEED_MULTIPLIER;
                 agent.acceleration = pet.Movement.acceleration * ACCELERATION_MULTIPLIER;
-                
+
+                // 원래 설정 저장
+                originalAvoidancePriority = agent.avoidancePriority;
+                originalObstacleAvoidanceType = agent.obstacleAvoidanceType;
+                originalRadius = agent.radius;
+
                 // 다른 펫들을 통과할 수 있도록 설정
-                agent.avoidancePriority = 10;  // 높은 우선순위 (기본값 50)
-                agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.NoObstacleAvoidance;
-                agent.radius = agent.radius * 0.5f;  // 충돌 반경 축소
+                agent.avoidancePriority = 10;  // 높은 우선순위
+                agent.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+                agent.radius = originalRadius * 0.5f;  // 충돌 반경 축소
             }
             
             // 대기 위치로 이동 시작
@@ -185,9 +195,9 @@ public class TreasureFoundActivity : PetActivityAdapter
             agent.acceleration = pet.Movement.acceleration;
             
             // 충돌 회피 설정 원래대로 복구
-            agent.avoidancePriority = 50;  // 기본값으로 복구
-            agent.obstacleAvoidanceType = UnityEngine.AI.ObstacleAvoidanceType.HighQualityObstacleAvoidance;
-            agent.radius = 0.5f;  // 기본 반경으로 복구 (일반적인 펫 크기)
+            agent.avoidancePriority = originalAvoidancePriority;
+            agent.obstacleAvoidanceType = originalObstacleAvoidanceType;
+            agent.radius = originalRadius;
         }
         
         // 애니메이션 정상화

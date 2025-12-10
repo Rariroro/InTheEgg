@@ -976,10 +976,12 @@ public abstract class BasePetInteraction : MonoBehaviour
         public float originalSpeed;
         public float originalAcceleration;
         public bool agentUpdateRotation;
+        public ObstacleAvoidanceType originalObstacleAvoidanceType;
+        public float originalRadius;
+        public int originalAvoidancePriority;
 
         public PetOriginalState(PetController pet)
         {
-            // ★★★ 수정 시작 ★★★
             // agent가 활성화되고 NavMesh 위에 있을 때만 상태를 읽어옵니다.
             if (pet.agent != null && pet.agent.enabled && pet.agent.isOnNavMesh)
             {
@@ -987,6 +989,9 @@ public abstract class BasePetInteraction : MonoBehaviour
                 originalSpeed = pet.agent.speed;
                 originalAcceleration = pet.agent.acceleration;
                 agentUpdateRotation = pet.agent.updateRotation;
+                originalObstacleAvoidanceType = pet.agent.obstacleAvoidanceType;
+                originalRadius = pet.agent.radius;
+                originalAvoidancePriority = pet.agent.avoidancePriority;
             }
             else
             {
@@ -995,9 +1000,11 @@ public abstract class BasePetInteraction : MonoBehaviour
                 originalSpeed = pet.baseSpeed; // PetController에 저장된 기본 속도 사용
                 originalAcceleration = pet.baseAcceleration; // PetController에 저장된 기본 가속도 사용
                 agentUpdateRotation = true;
+                originalObstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+                originalRadius = 0.5f;
+                originalAvoidancePriority = 50;
                 Debug.LogWarning($"[PetOriginalState] {pet.petName}의 NavMeshAgent가 준비되지 않아 기본값으로 상태를 초기화합니다.");
             }
-            // ★★★ 수정 끝 ★★★
         }
 
         // 원래 상태 복원
@@ -1009,6 +1016,9 @@ public abstract class BasePetInteraction : MonoBehaviour
                 pet.agent.speed = originalSpeed;
                 pet.agent.acceleration = originalAcceleration;
                 pet.agent.updateRotation = agentUpdateRotation;
+                pet.agent.obstacleAvoidanceType = originalObstacleAvoidanceType;
+                pet.agent.radius = originalRadius;
+                pet.agent.avoidancePriority = originalAvoidancePriority;
             }
         }
     }

@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 using PetAIProperties = PetTraits;
 public class PetFeedingController : PetControllerBase
 {
@@ -37,7 +38,13 @@ public class PetFeedingController : PetControllerBase
     private Vector3 lastFeedingAreaPosition;
     private float feedingAreaWaitTimer = 0f;
     private const float FEEDING_AREA_WAIT_TIMEOUT = 5f; // 5초 대기 후 타겟 포기
-    private const float MOVE_AWAY_DISTANCE = 8f; // 먹은 후 이동 거리
+    private const float MOVE_AWAY_DISTANCE = 20f; // 먹은 후 이동 거리
+
+    // NavMeshAgent 회피 우선순위 설정
+    private const int SEEKING_FOOD_PRIORITY = 15;  // 먹으러 가는 중
+    private const int EATING_PRIORITY = 5;          // 먹고 있는 중 / 나가는 중
+    private int originalAvoidancePriority;
+    private bool hasModifiedPriority = false;
 
     protected override void OnInitialize()
     {
@@ -140,8 +147,11 @@ public class PetFeedingController : PetControllerBase
         // NavMesh에 없으면 재배치 시도
         if (!petController.agent.isOnNavMesh)
         {
+            Profiler.BeginSample("PetFeeding.NavMesh.SamplePosition");
             UnityEngine.AI.NavMeshHit hit;
-            if (UnityEngine.AI.NavMesh.SamplePosition(petController.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+            bool found = UnityEngine.AI.NavMesh.SamplePosition(petController.transform.position, out hit, 5f, UnityEngine.AI.NavMesh.AllAreas);
+            Profiler.EndSample();
+            if (found)
             {
                 petController.agent.Warp(hit.position);
         // Debug.Log($"[Feeding] {petController.petName}: NavMesh로 재배치 성공");
@@ -155,22 +165,30 @@ public class PetFeedingController : PetControllerBase
 
         // 탐색 반경 결정
         float radius = searchRadius > 0 ? searchRadius : detectionRadius;
-        
+
+        Profiler.BeginSample("PetFeeding.OverlapSphere.FoodItem");
         Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, foodItemLayer);
+        Profiler.EndSample();
         // Debug.Log($"[Feeding] {petController.petName}: {foodColliders.Length}개의 음식 아이템 발견 (반경 {radius}m)");
+
+        Profiler.BeginSample("PetFeeding.FindClosestMatchingFood");
         GameObject nearestFood = FindClosestMatchingFood(foodColliders);
+        Profiler.EndSample();
 
         if (nearestFood != null)
         {
             ResetPetStateForSeeking();
             targetFood = nearestFood;
-            petController.agent.SetDestination(targetFood.transform.position); 
+            petController.agent.SetDestination(targetFood.transform.position);
             petController.ResumeMovement();
+            SetSeekingPriority();
         // Debug.Log($"[Feeding] {petController.petName}: 음식 {nearestFood.name}을(를) 향해 이동 시작");
             return;
         }
-        
+
+        Profiler.BeginSample("PetFeeding.OverlapSphere.FeedingArea");
         Collider[] areaColliders = Physics.OverlapSphere(transform.position, radius, feedingAreaLayer);
+        Profiler.EndSample();
         // Debug.Log($"[Feeding] {petController.petName}: {areaColliders.Length}개의 피딩 에어리어 발견 (반경 {radius}m)");
         GameObject nearestArea = FindClosestMatchingFood(areaColliders);
 
@@ -180,6 +198,7 @@ public class PetFeedingController : PetControllerBase
             targetFeedingArea = nearestArea;
             petController.agent.SetDestination(nearestArea.transform.position);
             petController.ResumeMovement();
+            SetSeekingPriority();
         // Debug.Log($"[Feeding] {petController.petName}: 피딩 에어리어 {nearestArea.name}을(를) 향해 이동 시작");
         }
         else
@@ -328,7 +347,8 @@ public class PetFeedingController : PetControllerBase
     {
         isEating = true;
         petController.StopMovement();
-        
+        SetEatingPriority();  // 먹는 중 우선순위 설정
+
         // 터치/홀드 상태가 되면 즉시 중단
         if (petController.State.IsHolding || petController.State.IsSelected)
         {
@@ -391,6 +411,7 @@ public class PetFeedingController : PetControllerBase
 
         targetFood = null;
         isEating = false;
+        RestoreOriginalPriority();  // 우선순위 복구
         petController.ResumeMovement();
         petController.SetRandomDestination();
     }
@@ -399,6 +420,7 @@ public class PetFeedingController : PetControllerBase
     {
         isEating = true;
         petController.StopMovement();
+        SetEatingPriority();  // 먹는 중 우선순위 설정
 
         // FeedingArea 위치 저장 (나중에 이동할 때 사용)
         if (targetFeedingArea != null)
@@ -501,6 +523,7 @@ public class PetFeedingController : PetControllerBase
         }
 
         isEating = false; // 이제 Activity 전환 허용
+        RestoreOriginalPriority();  // 우선순위 복구
     }
 
     /// <summary>
@@ -567,18 +590,22 @@ public class PetFeedingController : PetControllerBase
 
 public bool IsFoodInRange(float radius)
 {
+    Profiler.BeginSample("PetFeeding.IsFoodInRange.FoodItem");
     Collider[] foodColliders = Physics.OverlapSphere(transform.position, radius, foodItemLayer);
+    Profiler.EndSample();
     if (FindClosestMatchingFood(foodColliders) != null)
     {
-        return true; 
+        return true;
     }
-    
+
+    Profiler.BeginSample("PetFeeding.IsFoodInRange.FeedingArea");
     Collider[] areaColliders = Physics.OverlapSphere(transform.position, radius, feedingAreaLayer);
+    Profiler.EndSample();
     if (FindClosestMatchingFood(areaColliders) != null)
     {
-        return true; 
+        return true;
     }
-    
+
     return false;
 }
    public void CancelFeeding()
@@ -587,7 +614,8 @@ public bool IsFoodInRange(float radius)
     isEating = false;
     targetFood = null;
     targetFeedingArea = null;
-    
+    RestoreOriginalPriority();  // 우선순위 복구
+
     if (petController.agent != null && petController.agent.enabled && petController.agent.isOnNavMesh)
     {
         if (petController.agent.isStopped)
@@ -596,4 +624,49 @@ public bool IsFoodInRange(float radius)
         }
     }
 }
+
+    #region NavMeshAgent Priority Management
+
+    /// <summary>
+    /// 먹으러 가는 중 우선순위 설정 (priority 15)
+    /// </summary>
+    private void SetSeekingPriority()
+    {
+        if (petController.agent == null || !petController.agent.enabled) return;
+        if (!hasModifiedPriority)
+        {
+            originalAvoidancePriority = petController.agent.avoidancePriority;
+            hasModifiedPriority = true;
+        }
+        petController.agent.avoidancePriority = SEEKING_FOOD_PRIORITY;
+    }
+
+    /// <summary>
+    /// 먹고 있는 중 / 나가는 중 우선순위 설정 (priority 5)
+    /// </summary>
+    private void SetEatingPriority()
+    {
+        if (petController.agent == null || !petController.agent.enabled) return;
+        if (!hasModifiedPriority)
+        {
+            originalAvoidancePriority = petController.agent.avoidancePriority;
+            hasModifiedPriority = true;
+        }
+        petController.agent.avoidancePriority = EATING_PRIORITY;
+    }
+
+    /// <summary>
+    /// 원래 우선순위로 복구
+    /// </summary>
+    private void RestoreOriginalPriority()
+    {
+        if (petController.agent == null || !petController.agent.enabled) return;
+        if (hasModifiedPriority)
+        {
+            petController.agent.avoidancePriority = originalAvoidancePriority;
+            hasModifiedPriority = false;
+        }
+    }
+
+    #endregion
 }
