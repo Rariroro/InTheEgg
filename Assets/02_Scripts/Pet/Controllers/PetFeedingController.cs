@@ -528,8 +528,8 @@ public class PetFeedingController : PetControllerBase
     {
         MoveAwayFromFeedingArea();
 
-        // 이동 완료까지 대기 (최대 3초)
-        float timeout = 3f;
+        // 이동 완료까지 대기 (최대 10초)
+        float timeout = 10f;
         while (timeout > 0f)
         {
             if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
