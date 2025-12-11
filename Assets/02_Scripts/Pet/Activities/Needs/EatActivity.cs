@@ -36,6 +36,10 @@ public class EatActivity : PetActivityAdapter
     private float foodEmotionChangeInterval; // 음식 감정 변경 주기
     private bool wasEating = false; // 이전 프레임에 먹고 있었는지 (먹기 시작 감지용)
     private Coroutine happyEmotionCoroutine; // Happy 감정 코루틴
+
+    // 탈진 상태 (배고픔 100) 속도 감소
+    private bool isExhausted = false;
+    private const float EXHAUSTED_SPEED_MULTIPLIER = 0.3f; // 30% 속도
     
     public override string Name => "Eat";
     public override bool IsInterruptible => !isEatingHoney; // 꿀을 먹는 중에만 중단 불가
@@ -112,6 +116,13 @@ public class EatActivity : PetActivityAdapter
         searchFailureCount = 0; // 탐색 실패 횟수 초기화
         wasEating = false;
         happyEmotionCoroutine = null;
+
+        // 배고픔 100 이상이면 탈진 상태 - 속도 감소
+        if (pet.Needs.Hunger >= 100f && pet.agent != null)
+        {
+            isExhausted = true;
+            pet.agent.speed = pet.baseSpeed * EXHAUSTED_SPEED_MULTIPLIER;
+        }
 
         // 감정 1단계: 음식 생각 감정 시작
         StartFoodThoughtEmotion();
@@ -248,6 +259,13 @@ public class EatActivity : PetActivityAdapter
         isWandering = false;
         isEatingHoney = false; // 꿀 먹기 상태 초기화
         wasEating = false;
+
+        // 탈진 상태였다면 속도 복구
+        if (isExhausted && pet.agent != null)
+        {
+            pet.agent.speed = pet.baseSpeed;
+            isExhausted = false;
+        }
     }
     
     /// <summary>

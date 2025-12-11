@@ -12,11 +12,23 @@ public class ExhaustedActivity : PetActivityAdapter
     private float searchTimer = 0f;
     private const float FOOD_SEARCH_INTERVAL = 1.0f; // 1초마다 주변 음식 재탐색
     private bool isTryingToEat = false; // 음식을 발견하고 먹으러 가는 중인지 여부
-    
+    private bool wasEating = false; // 이전 프레임에 먹고 있었는지 (먹기 시작 감지용)
+
     private const int REST_ANIMATION_INDEX = 5; // 휴식 애니메이션 인덱스
     
     public override string Name => "Exhausted";
     public override bool IsInterruptible => false; // 탈진 상태는 중단 불가
+
+    // 배고픔이 100 미만으로 떨어지면 탈진 상태 종료
+    public override bool IsComplete
+    {
+        get
+        {
+            float hunger = pet.Needs?.Hunger ?? -1f;
+            Debug.Log($"[ExhaustedActivity] {pet.petName}: IsComplete 체크 - Hunger={hunger}, Result={hunger < 100f}");
+            return pet.Needs != null && pet.Needs.Hunger < 100f;
+        }
+    }
     
     public ExhaustedActivity(PetController petController) : base(petController)
     {
@@ -50,6 +62,7 @@ public class ExhaustedActivity : PetActivityAdapter
         // ★ [Phase 4] PetState를 통한 상태 업데이트
         pet.State.SetEmergencyState(exhausted: true);
         isTryingToEat = false;
+        wasEating = false;
         searchTimer = 0f;
         
         Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 힘겹게 음식을 찾습니다.");
@@ -87,8 +100,24 @@ public class ExhaustedActivity : PetActivityAdapter
     {
         if (isTryingToEat)
         {
+            // 타임아웃 등으로 타겟이 사라졌는지 체크 (상태 동기화)
+            if (feedingController == null || !feedingController.IsEatingOrSeeking())
+            {
+                isTryingToEat = false;
+                return;
+            }
+
+            // 먹기 시작 감지 - Hungry 감정 표시
+            bool isEating = feedingController.IsEating();
+            if (isEating && !wasEating)
+            {
+                // 먹기 시작
+                pet.ShowEmotion(EmotionType.Hungry, 999f);
+            }
+            wasEating = isEating;
+
             // 음식을 찾아 이동 중이거나 먹는 중인 경우
-            feedingController?.UpdateMovementToFood();
+            feedingController.UpdateMovementToFood();
         }
         else
         {

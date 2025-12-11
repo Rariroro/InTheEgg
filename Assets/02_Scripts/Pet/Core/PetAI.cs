@@ -52,8 +52,8 @@ public class PetAI : MonoBehaviour
         // Needs Activities
         availableActivities.Add(new EatActivity(petController, feedingController));
         availableActivities.Add(new SleepActivity(petController, sleepingController));
-        availableActivities.Add(new ExhaustedActivity(petController));
-        
+        // ExhaustedActivity 제거 - EatActivity에서 배고픔 100일 때 속도 감소로 대체
+
         // Emergency Activities
         availableActivities.Add(new BeeEscapeActivity(petController));
         

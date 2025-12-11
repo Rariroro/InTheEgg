@@ -37,7 +37,7 @@ public class PetFeedingController : PetControllerBase
     // FeedingArea 병목 해결을 위한 변수들
     private float feedingAreaWaitTimer = 0f;
     private const float FEEDING_AREA_WAIT_TIMEOUT = 5f; // 5초 대기 후 타겟 포기
-    private const float MOVE_AWAY_DISTANCE = 20f; // 먹은 후 이동 거리
+    private const float MOVE_AWAY_DISTANCE = 30f; // 먹은 후 이동 거리
 
     // 블랙리스트: 바로 직전에 실패한 FeedingArea만 제외
     private GameObject lastFailedFeedingArea = null;
@@ -482,7 +482,13 @@ public class PetFeedingController : PetControllerBase
         {
             petController.Needs.SetHunger(0f); // 폴백
         }
-        
+
+        // 탈진 상태였다면 즉시 속도 복구
+        if (petController.agent != null && petController.agent.speed < petController.baseSpeed)
+        {
+            petController.agent.speed = petController.baseSpeed;
+        }
+
         // 환경 음식 섭취시 친밀도 증가
         float affectionIncrease = UnityEngine.Random.Range(petController.GetEnvironmentFoodAffectionMin(), petController.GetEnvironmentFoodAffectionMax());
         
@@ -589,6 +595,14 @@ public class PetFeedingController : PetControllerBase
     public bool IsEatingOrSeeking()
     {
         return isEating || (targetFood != null) || (targetFeedingArea != null);
+    }
+
+    /// <summary>
+    /// 현재 먹기 애니메이션 중인지 확인
+    /// </summary>
+    public bool IsEating()
+    {
+        return isEating;
     }
 
     private void ResetPetStateForSeeking()
