@@ -103,6 +103,7 @@ public class PetTreeClimbingController : PetControllerBase
             }
 
             // 3. 나무 내려오기
+            yield return new WaitForSeconds(0.5f); // 애니메이션 꼬임 방지 (Rest -> Idle -> Walk 전환 시간 확보)
             yield return StartCoroutine(ClimbDownTree());
 
             // 4. 모든 상태 초기화

@@ -103,6 +103,19 @@ public class PetAnimationController : PetControllerBase
             return;
         }
 
+        // ★★★ 추가: 나무 오르기/내려오기 중(수동 이동)일 때는 속도를 1로 고정 ★★★
+        var treeClimbingController = petController.GetComponent<PetTreeClimbingController>();
+        if (treeClimbingController != null && treeClimbingController.IsSearchingForTree())
+        {
+            // agent가 꺼져있어서 velocity가 0이 나오더라도 애니메이션은 계속 재생되어야 함
+            if (petController.animator != null && petController.animator.speed != 1f)
+            {
+                petController.animator.speed = 1f;
+                cachedAnimatorSpeed = 1f;
+            }
+            return;
+        }
+
         if (petController.animator != null && petController.agent != null)
         {
             // GetInteger 제거 - 캐시된 값 사용으로 JobTempAlloc 방지
