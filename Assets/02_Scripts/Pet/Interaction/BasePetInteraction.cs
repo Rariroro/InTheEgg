@@ -213,6 +213,7 @@ public abstract class BasePetInteraction : MonoBehaviour
         }
     }
 
+
     /// <summary>
     /// 외부에서 상호작용을 강제 종료할 때 호출합니다.
     /// PetInputController.ForceStopInteraction()에서 StopAllCoroutines() 전에 호출됩니다.

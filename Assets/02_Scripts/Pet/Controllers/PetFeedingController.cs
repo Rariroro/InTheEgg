@@ -13,7 +13,7 @@ public class PetFeedingController : PetControllerBase
     // 탐색 및 상태 관련 변수
     private float detectionRadius = 100f;
     private float eatingDistance = 4f;
-    private float feedingAreaDistance = 2f;
+    private float feedingAreaDistance = 3.5f;  // 2m → 3.5m로 증가 (병목 상황에서 먹기 가능하도록)
     private bool isEating = false;
 
     // 타이머 및 간격 변수
@@ -35,10 +35,15 @@ public class PetFeedingController : PetControllerBase
     // ★★★ 여기까지 추가 ★★★
 
     // FeedingArea 병목 해결을 위한 변수들
-    private Vector3 lastFeedingAreaPosition;
     private float feedingAreaWaitTimer = 0f;
     private const float FEEDING_AREA_WAIT_TIMEOUT = 5f; // 5초 대기 후 타겟 포기
     private const float MOVE_AWAY_DISTANCE = 20f; // 먹은 후 이동 거리
+
+    // 블랙리스트: 바로 직전에 실패한 FeedingArea만 제외
+    private GameObject lastFailedFeedingArea = null;
+
+    // 마지막 FeedingArea 위치 (먹은 후 이동에 사용)
+    private Vector3 lastFeedingAreaPosition;
 
     // NavMeshAgent 회피 우선순위 설정
     private const int SEEKING_FOOD_PRIORITY = 15;  // 먹으러 가는 중
@@ -213,14 +218,12 @@ public class PetFeedingController : PetControllerBase
         float nearestDistSqr = float.MaxValue;
         Vector3 myPos = transform.position;
 
-        // 디버그: 펫의 현재 식성 출력
-        if (colliders.Length > 0)
-        {
-        // Debug.Log($"[Feeding] {petController.petName}의 식성: {petController.diet} ({PetTraits.GetDietaryDescription(petController.diet)})");
-        }
-
         foreach (var col in colliders)
         {
+            // 블랙리스트 체크: 바로 직전에 실패한 FeedingArea는 제외
+            if (col.gameObject == lastFailedFeedingArea)
+                continue;
+
             PetAIProperties.DietaryFlags foodType = PetAIProperties.DietaryFlags.None;
             FoodItem foodItem = col.GetComponent<FoodItem>();
             if (foodItem != null) foodType = foodItem.foodType;
@@ -230,9 +233,6 @@ public class PetFeedingController : PetControllerBase
                 if (feedingArea != null) foodType = feedingArea.foodType;
             }
 
-            // 디버그: 발견된 음식 타입 출력
-        // Debug.Log($"[Feeding] 발견된 음식: {col.name}, 타입: {foodType} ({PetTraits.GetDietaryDescription(foodType)})");
-
             if ((petController.diet & foodType) != 0)
             {
                 float distSqr = (col.transform.position - myPos).sqrMagnitude;
@@ -240,14 +240,16 @@ public class PetFeedingController : PetControllerBase
                 {
                     nearestSource = col.gameObject;
                     nearestDistSqr = distSqr;
-        // Debug.Log($"[Feeding] {petController.petName}이(가) 먹을 수 있는 음식 발견: {col.name}");
                 }
             }
-            else
-            {
-        // Debug.Log($"[Feeding] {petController.petName}은(는) {col.name}을(를) 먹을 수 없음 (식성 불일치)");
-            }
         }
+
+        // 새로운 타겟을 찾았으면 블랙리스트 해제 (다음번에 다시 선택 가능)
+        if (nearestSource != null && nearestSource != lastFailedFeedingArea)
+        {
+            lastFailedFeedingArea = null;
+        }
+
         return nearestSource;
     }
 
@@ -282,7 +284,7 @@ public class PetFeedingController : PetControllerBase
         if (targetFood != null)
         {
             float actualDistance = Vector3.Distance(petController.transform.position, targetFood.transform.position);
-        
+
             if (actualDistance < eatingDistance && !petController.agent.pathPending)
             {
                 StartCoroutine(EatFoodCoroutine());
@@ -324,21 +326,33 @@ public class PetFeedingController : PetControllerBase
         if (petController.agent == null || !petController.agent.enabled) return;
 
         float actualDistance = Vector3.Distance(petController.transform.position, targetFeedingArea.transform.position);
+        bool pathPending = petController.agent.pathPending;
+        float remainingDist = petController.agent.remainingDistance;
+        float velocity = petController.agent.velocity.magnitude;
 
-        // 먹기 거리(2m)와 3배(6m) 사이에서 대기 중인 경우 - 다른 펫에게 막힌 상태
-        if (actualDistance >= feedingAreaDistance && actualDistance < feedingAreaDistance * 3f)
+        // NavMeshAgent가 멈춘 상태인지 체크 (경로 문제 포함)
+        bool hasPathProblem = float.IsInfinity(remainingDist) || float.IsNaN(remainingDist);
+        bool agentStopped = !pathPending && (remainingDist < 0.5f || velocity < 0.1f || hasPathProblem);
+
+        // 타임아웃 조건: Agent가 멈춘 상태에서만 체크
+        // - 거리 상관없이 Agent가 멈추면 막힌 것으로 판단
+        // - 걸어오는 중인 펫은 타임아웃 대상 아님
+        bool shouldCheckTimeout = agentStopped;
+
+        if (shouldCheckTimeout)
         {
             feedingAreaWaitTimer += Time.deltaTime;
             if (feedingAreaWaitTimer >= FEEDING_AREA_WAIT_TIMEOUT)
             {
-                // 타임아웃: 현재 FeedingArea 포기
+                // 타임아웃: 현재 FeedingArea를 블랙리스트에 추가하고 포기
+                lastFailedFeedingArea = targetFeedingArea;
                 targetFeedingArea = null;
                 feedingAreaWaitTimer = 0f;
-                // Debug.Log($"[Feeding] {petController.petName}: FeedingArea 접근 타임아웃 - 다른 음식 탐색");
             }
         }
         else
         {
+            // 먹기 거리 이내이고 아직 움직이는 중이면 타이머 리셋
             feedingAreaWaitTimer = 0f;
         }
     }
