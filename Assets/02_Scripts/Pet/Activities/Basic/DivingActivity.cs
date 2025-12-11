@@ -38,6 +38,10 @@ public class DivingActivity : PetActivityAdapter
     private const float SPOT_ARRIVAL_DISTANCE = 2f;
     /// <summary>다이빙 지점까지 최대 허용 거리 (50유닛)</summary>
     private const float MAX_DISTANCE_TO_WATER = 50f;
+    /// <summary>다이빙 중 회피 우선순위 (낮을수록 높은 우선순위)</summary>
+    private const int DIVING_AVOIDANCE_PRIORITY = 10;
+    /// <summary>원래 회피 우선순위 저장</summary>
+    private int originalAvoidancePriority;
 
     // ===== 점프 애니메이션 관련 변수들 =====
     /// <summary>점프 시작 위치</summary>
@@ -218,7 +222,9 @@ public class DivingActivity : PetActivityAdapter
             pet.agent.updateRotation = true;   // 회전 업데이트 활성화
             pet.agent.ResetPath();             // 기존 경로 초기화
 
-
+            // 회피 우선순위 설정 (다이빙 중인 펫이 배회 펫에게 방해받지 않도록)
+            originalAvoidancePriority = pet.agent.avoidancePriority;
+            pet.agent.avoidancePriority = DIVING_AVOIDANCE_PRIORITY;
         }
         else
         {
@@ -621,7 +627,13 @@ public class DivingActivity : PetActivityAdapter
         // 상태 플래그 초기화
         isMovingToSpot = false;
         isDiving = false;
-        
+
+        // 회피 우선순위 복원
+        if (pet.agent != null && pet.agent.enabled)
+        {
+            pet.agent.avoidancePriority = originalAvoidancePriority;
+        }
+
         // NavMesh 에이전트 복구 (들려있지 않은 경우)
         if (!pet.State.IsHolding && pet.agent != null && !pet.agent.enabled)
         {

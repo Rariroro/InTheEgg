@@ -85,7 +85,7 @@ MonoBehaviour:
     name: Buddy
     type: 15
     personality: 3
-    diet: 50
+    diet: 58
     habitat: 1
     size: 0
     treeClimbChance: 0.1
@@ -143,8 +143,8 @@ MonoBehaviour:
     hunger: 0
     sleepiness: 0
     affection: 50
-    hungerIncreaseRate: 0.3
-    sleepinessIncreaseRate: 0.1
+    hungerIncreaseRate: 3
+    sleepinessIncreaseRate: 1
     affectionDecreaseRateWhenHungry: 0.2
     hungerThresholdForAffectionDecrease: 80
     lowAffectionThreshold: 30

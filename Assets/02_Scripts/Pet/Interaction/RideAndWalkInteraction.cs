@@ -22,8 +22,8 @@ public class RideAndWalkInteraction : BasePetInteraction
     private const float NAVMESH_SEARCH_RADIUS_SMALL = 3f;
     private const float ARRIVAL_THRESHOLD = 1.5f;
 
-    // NavMeshAgent 설정
-    private const int RIDER_AVOIDANCE_PRIORITY = 99;
+    // NavMeshAgent 설정 - 라이더는 마운트(10)보다 낮지만 배회 펫(20+)보다 높은 우선순위
+    private const int RIDER_AVOIDANCE_PRIORITY = 15;
     #endregion
 
     [Header("크기별 만남 거리 설정")]

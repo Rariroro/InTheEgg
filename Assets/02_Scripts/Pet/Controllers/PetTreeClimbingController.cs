@@ -395,10 +395,10 @@ private void ShowTreeEmotionByPersonality()
 
             petController.GetComponent<PetAnimationController>()?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Jump);
 
-            // ... (나무 오르는 Lerp 로직) ...
+            // 나무의 X, Z 좌표를 사용하여 정확한 위치로 올라가기
             float treeHeight = CalculateTreeHeight(tree);
             float climbTargetHeight = CalculateClimbPosition(tree, treeHeight);
-            Vector3 climbTarget = new Vector3(transform.position.x, transform.position.y + climbTargetHeight, transform.position.z);
+            Vector3 climbTarget = new Vector3(tree.position.x, tree.position.y + climbTargetHeight, tree.position.z);
 
             float elapsed = 0f;
             float moveTime = 3f;

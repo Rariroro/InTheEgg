@@ -638,11 +638,11 @@ public class TurtleRabbitRace : BasePetInteraction
     private IEnumerator SlowDownAndSleep(PetController fastPet)
     {
         if (!IsAgentSafelyReady(fastPet)) yield break;
-        // ★★★ 수정: 잠들기 직전에 회피 우선순위를 최하위로 변경 ★★★
+        // 잠들기 직전에 회피 우선순위를 낮춰서 파트너(10)보다는 낮지만 배회 펫(20+)보다는 높게 설정
         fastPetOriginalPriority = fastPet.agent.avoidancePriority; // 원래 우선순위 저장
-        fastPet.agent.avoidancePriority = 99; // 길을 막지 않도록 우선순위 최하위(99)로 설정
+        fastPet.agent.avoidancePriority = 15; // 파트너(10)의 길을 막지 않으면서 배회 펫(20+)에게는 방해받지 않음
 
-        Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 99로 낮춥니다. (길막 방지)");
+        Debug.Log($"[Race] {fastPet.petName}의 회피 우선순위를 15로 설정합니다. (파트너 길막 방지)");
 
         // 경주 속도 사용 (현재 agent.speed가 아닌 설정된 경주 속도)
         float currentSpeed = fastPet.baseSpeed * fastPetStartSpeedMultiplier;

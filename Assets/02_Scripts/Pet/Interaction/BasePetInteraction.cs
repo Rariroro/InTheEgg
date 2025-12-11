@@ -40,6 +40,11 @@ public abstract class BasePetInteraction : MonoBehaviour
     protected PetController activePet2;
     private bool isInteractionActive = false;
 
+    // 상호작용 중 회피 우선순위 (낮을수록 높은 우선순위 - 다른 펫이 비켜감)
+    private const int INTERACTION_AVOIDANCE_PRIORITY = 10;
+    private int pet1OriginalAvoidancePriority;
+    private int pet2OriginalAvoidancePriority;
+
     // ▼▼▼ [수정] 인스펙터에서 상호작용 시작 거리를 조절할 수 있는 변수 추가 ▼▼▼
     [Header("Common Interaction Settings")]
     [Tooltip("상호작용 시작 시 펫들이 유지할 기본 거리입니다.")]
@@ -103,6 +108,18 @@ public abstract class BasePetInteraction : MonoBehaviour
         // 이동 중지
         pet1.StopMovement();
         pet2.StopMovement();
+
+        // 회피 우선순위 설정 (상호작용 중인 펫이 배회 펫에게 방해받지 않도록)
+        if (pet1.agent != null && pet1.agent.enabled)
+        {
+            pet1OriginalAvoidancePriority = pet1.agent.avoidancePriority;
+            pet1.agent.avoidancePriority = INTERACTION_AVOIDANCE_PRIORITY;
+        }
+        if (pet2.agent != null && pet2.agent.enabled)
+        {
+            pet2OriginalAvoidancePriority = pet2.agent.avoidancePriority;
+            pet2.agent.avoidancePriority = INTERACTION_AVOIDANCE_PRIORITY;
+        }
 
         // ★ 기존 Activity 중단 (환경 상호작용 등과의 간섭 방지)
         if (pet1.AI != null) pet1.AI.ForceStopCurrentActivity();
@@ -244,6 +261,16 @@ public abstract class BasePetInteraction : MonoBehaviour
             // ★ 자식 클래스의 고유 리소스 정리 먼저 호출
             OnForceCleanup();
 
+            // 회피 우선순위 복원
+            if (activePet1 != null && activePet1.agent != null && activePet1.agent.enabled)
+            {
+                activePet1.agent.avoidancePriority = pet1OriginalAvoidancePriority;
+            }
+            if (activePet2 != null && activePet2.agent != null && activePet2.agent.enabled)
+            {
+                activePet2.agent.avoidancePriority = pet2OriginalAvoidancePriority;
+            }
+
             // EndInteraction 호출하지 않고 직접 정리
             if (activePet1 != null && activePet1.State.IsInteracting)
             {
@@ -337,6 +364,16 @@ public abstract class BasePetInteraction : MonoBehaviour
             return;
         }
         
+        // 회피 우선순위 복원
+        if (pet1 != null && pet1.agent != null && pet1.agent.enabled)
+        {
+            pet1.agent.avoidancePriority = pet1OriginalAvoidancePriority;
+        }
+        if (pet2 != null && pet2.agent != null && pet2.agent.enabled)
+        {
+            pet2.agent.avoidancePriority = pet2OriginalAvoidancePriority;
+        }
+
         if (pet1 != null && pet1.State.IsInteracting) SafeResumePet(pet1);
         if (pet2 != null && pet2.State.IsInteracting) SafeResumePet(pet2);
 
