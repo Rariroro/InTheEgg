@@ -158,6 +158,15 @@ public class PetInteractionManager : MonoBehaviour
             return;
         }
 
+        // 펫이 플레이어 제어 상태인지 체크 (IsHolding, IsSelected)
+        if (pet1.State.IsHolding || pet1.State.IsSelected ||
+            pet2.State.IsHolding || pet2.State.IsSelected)
+        {
+            if (enableDebugLogs)
+                Debug.Log($"[Manager] ❌ 플레이어 제어 중: {pet1.petName}(H:{pet1.State.IsHolding},S:{pet1.State.IsSelected}), {pet2.petName}(H:{pet2.State.IsHolding},S:{pet2.State.IsSelected})");
+            return;
+        }
+
         // 개별 펫 쿨타임 체크
         if (IsOnCooldown(pet1) || IsOnCooldown(pet2))
         {
@@ -166,22 +175,35 @@ public class PetInteractionManager : MonoBehaviour
             return;
         }
 
-        // 일반 펫 상호작용 욕구 체크 (50/50 임계값)
-        // PersonalityReaction은 FindSuitableInteraction 이후에 별도 체크
-        if (IsNeedsTooHighForInteraction(pet1) || IsNeedsTooHighForInteraction(pet2))
-        {
-            if (enableDebugLogs)
-                Debug.Log($"[Manager] ❌ 욕구 과다: {pet1.petName}(H:{pet1.Needs?.Hunger:F0},S:{pet1.Needs?.Sleepiness:F0}), {pet2.petName}(H:{pet2.Needs?.Hunger:F0},S:{pet2.Needs?.Sleepiness:F0})");
-            return;
-        }
-
-        // 적합한 상호작용 찾기
+        // 적합한 상호작용 찾기 (욕구 체크는 상호작용 타입 확인 후 진행)
         BasePetInteraction suitableInteraction = FindSuitableInteraction(pet1, pet2);
         if (suitableInteraction == null)
         {
             if (enableDebugLogs)
                 Debug.Log($"[Manager] ❌ 적합한 상호작용 없음: {pet1.petName}({pet1.PetType}) ↔ {pet2.petName}({pet2.PetType})");
             return;
+        }
+
+        // 상호작용 타입에 따른 욕구 체크
+        if (suitableInteraction.IsPriorityInteraction)
+        {
+            // PersonalityReaction: 70/70 임계값
+            if (IsNeedsTooHighForPersonalityReaction(pet1) || IsNeedsTooHighForPersonalityReaction(pet2))
+            {
+                if (enableDebugLogs)
+                    Debug.Log($"[Manager] ❌ 욕구 과다 (PersonalityReaction 70/70): {pet1.petName}(H:{pet1.Needs?.Hunger:F0},S:{pet1.Needs?.Sleepiness:F0}), {pet2.petName}(H:{pet2.Needs?.Hunger:F0},S:{pet2.Needs?.Sleepiness:F0})");
+                return;
+            }
+        }
+        else
+        {
+            // 일반 상호작용: 50/50 임계값
+            if (IsNeedsTooHighForInteraction(pet1) || IsNeedsTooHighForInteraction(pet2))
+            {
+                if (enableDebugLogs)
+                    Debug.Log($"[Manager] ❌ 욕구 과다 (일반 50/50): {pet1.petName}(H:{pet1.Needs?.Hunger:F0},S:{pet1.Needs?.Sleepiness:F0}), {pet2.petName}(H:{pet2.Needs?.Hunger:F0},S:{pet2.Needs?.Sleepiness:F0})");
+                return;
+            }
         }
 
         if (enableDebugLogs)
@@ -576,6 +598,16 @@ public class PetInteractionManager : MonoBehaviour
         if (pet.Needs == null) return false;
         return pet.Needs.Hunger >= EmotionConstants.PET_INTERACTION_HUNGER_THRESHOLD ||
                pet.Needs.Sleepiness >= EmotionConstants.PET_INTERACTION_SLEEPINESS_THRESHOLD;
+    }
+
+    /// <summary>
+    /// 펫의 욕구가 PersonalityReaction 임계값(70/70)을 초과하는지 확인
+    /// </summary>
+    private bool IsNeedsTooHighForPersonalityReaction(PetController pet)
+    {
+        if (pet.Needs == null) return false;
+        return pet.Needs.Hunger >= EmotionConstants.PERSONALITY_REACTION_HUNGER_THRESHOLD ||
+               pet.Needs.Sleepiness >= EmotionConstants.PERSONALITY_REACTION_SLEEPINESS_THRESHOLD;
     }
 
 

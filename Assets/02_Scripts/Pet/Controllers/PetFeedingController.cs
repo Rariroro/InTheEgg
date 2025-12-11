@@ -527,7 +527,7 @@ public class PetFeedingController : PetControllerBase
     }
 
     /// <summary>
-    /// FeedingArea에서 벗어나도록 반대 방향으로 이동합니다.
+    /// FeedingArea에서 벗어나도록 랜덤 방향으로 이동합니다.
     /// 병목 현상을 방지하기 위해 먹은 후 호출됩니다.
     /// </summary>
     private void MoveAwayFromFeedingArea()
@@ -535,15 +535,13 @@ public class PetFeedingController : PetControllerBase
         if (petController.agent == null || !petController.agent.enabled || !petController.agent.isOnNavMesh)
             return;
 
-        // FeedingArea 반대 방향 계산
-        Vector3 awayDirection = (petController.transform.position - lastFeedingAreaPosition).normalized;
-        if (awayDirection.sqrMagnitude < 0.01f)
-            awayDirection = Random.insideUnitSphere;
-        awayDirection.y = 0;
-        awayDirection.Normalize();
+        // 랜덤 방향 계산 (펫들이 다양한 방향으로 흩어지도록)
+        Vector3 randomDirection = Random.insideUnitSphere;
+        randomDirection.y = 0;
+        randomDirection.Normalize();
 
         // 지정 거리만큼 떨어진 위치로 이동
-        Vector3 targetPos = petController.transform.position + awayDirection * MOVE_AWAY_DISTANCE;
+        Vector3 targetPos = petController.transform.position + randomDirection * MOVE_AWAY_DISTANCE;
         if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit hit, 10f, UnityEngine.AI.NavMesh.AllAreas))
         {
             petController.agent.SetDestination(hit.position);
