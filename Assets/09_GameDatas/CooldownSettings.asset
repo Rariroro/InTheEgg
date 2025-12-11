@@ -32,5 +32,5 @@ MonoBehaviour:
     multiplier: 0.9
   - personality: 0
     multiplier: 1.1
-  debugIgnoreCooldowns: 0
+  debugIgnoreCooldowns: 1
   debugFixedCooldown: 1

@@ -52,7 +52,7 @@ public class ExhaustedActivity : PetActivityAdapter
         isTryingToEat = false;
         searchTimer = 0f;
         
-        Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 움직일 수 없습니다.");
+        Debug.LogWarning($"[ExhaustedActivity] {pet.petName}: 배고픔으로 탈진. 힘겹게 음식을 찾습니다.");
 
         // 기존의 모든 행동 중지
         pet.GetComponent<PetMovementController>()?.ForceStopCurrentBehavior();
@@ -63,11 +63,17 @@ public class ExhaustedActivity : PetActivityAdapter
             pet.movementController.StopMovement();
         }
         
-        // 음식 탐색 시도 제거 (그냥 누워있기)
-        // AttemptToEat();
+        // 이동 속도 감소 (평소의 30%)
+        if (pet.agent != null)
+        {
+            pet.agent.speed = pet.baseSpeed * 0.3f;
+        }
+
+        // 즉시 음식 탐색 시도
+        AttemptToEat();
         
-        // 탈진 상태 표시 (Rest 애니메이션 + 음식 생각 감정)
-        animController?.SetContinuousAnimation(PetAnimationController.PetAnimationType.Rest);
+        // 탈진 상태 표시 (음식 생각 감정)
+        // 애니메이션은 이동 시 Walk, 정지 시 Idle이 자동으로 나오므로 Rest 강제 설정 제거
         
         // 식성에 따른 음식 생각 감정 표시
         EmotionType foodEmotion = GetRandomFoodEmotionByDiet();
@@ -79,9 +85,6 @@ public class ExhaustedActivity : PetActivityAdapter
     
     public override void Update()
     {
-        // 탈진 상태에서는 아무것도 하지 않고 누워있음
-        // 음식 탐색 로직 제거됨
-        /*
         if (isTryingToEat)
         {
             // 음식을 찾아 이동 중이거나 먹는 중인 경우
@@ -97,7 +100,6 @@ public class ExhaustedActivity : PetActivityAdapter
                 AttemptToEat();
             }
         }
-        */
     }
     
     public override void Stop()
@@ -123,6 +125,12 @@ public class ExhaustedActivity : PetActivityAdapter
         {
             pet.movementController.ResumeMovement();
         }
+
+        // 이동 속도 복구
+        if (pet.agent != null)
+        {
+            pet.agent.speed = pet.baseSpeed;
+        }
     }
     
     /// <summary>
@@ -136,7 +144,7 @@ public class ExhaustedActivity : PetActivityAdapter
         if (feedingController != null && feedingController.TryStartFeedingSequence())
         {
             isTryingToEat = true;
-            animController?.StopContinuousAnimation(); // 휴식 애니메이션 중지
+            animController?.StopContinuousAnimation(); // 혹시 재생 중인 애니메이션 중지
             if (pet.emotionController != null)
         {
             pet.emotionController.HideEmotion();
