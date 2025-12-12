@@ -143,6 +143,19 @@ public class EatActivity : PetActivityAdapter
     
     public override void Update()
     {
+        // 배고픔 100 이상 체크 (인스펙터 변경 즉시 반영)
+        if (pet.Needs.Hunger >= 100f && !isExhausted && pet.agent != null)
+        {
+            isExhausted = true;
+            pet.agent.speed = pet.baseSpeed * EXHAUSTED_SPEED_MULTIPLIER;
+        }
+        // 배고픔 100 미만으로 내려가면 속도 복구
+        else if (pet.Needs.Hunger < 100f && isExhausted && pet.agent != null)
+        {
+            isExhausted = false;
+            pet.agent.speed = pet.baseSpeed;
+        }
+
         // 음식 생각 감정 변경 타이머 업데이트 (음식 찾는 중에만)
         if (!feedingController.IsEatingOrSeeking())
         {
