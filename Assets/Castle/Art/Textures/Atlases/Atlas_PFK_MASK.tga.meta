@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 267f7c374edcb7e43a2357a4ba6946f0
+AssetOrigin:
+  serializedVersion: 1
+  productId: 298128
+  packageName: Fantasy Kingdom in Unity 6 | URP
+  packageVersion: 1.0
+  assetPath: Assets/Art/Textures/Atlases/Atlas_PFK_MASK.tga
+  uploadId: 703470
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -106,6 +113,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 512
+    resizeAlgorithm: 0
+    textureFormat: 50
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 1
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites: []
@@ -128,10 +148,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 298128
-  packageName: Fantasy Kingdom in Unity 6 | URP
-  packageVersion: 1.0
-  assetPath: Assets/Art/Textures/Atlases/Atlas_PFK_MASK.tga
-  uploadId: 703470
