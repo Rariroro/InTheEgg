@@ -324,6 +324,12 @@ public class ToastNotificationManager : MonoBehaviour
 
     private void EnqueueNotification(ToastNotificationItem item)
     {
+        // 로딩 중에는 토스트 표시 안 함
+        if (LoadingManager.Instance != null && !LoadingManager.Instance.IsLoadingComplete)
+        {
+            return;
+        }
+
         // 중복 체크만 수행
         if (IsDuplicate(item))
         {
