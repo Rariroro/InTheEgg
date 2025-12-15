@@ -1093,6 +1093,39 @@ namespace LegendaryPet
             return legendaryPets.FindAll(pet => pet.PetType == type);
         }
         
+        #region 세션 관리
+
+        /// <summary>
+        /// 새 세션을 위해 상태 리셋 (FlutterModeManager에서 호출)
+        /// </summary>
+        public void ResetForNewSession()
+        {
+            Debug.Log("[LegendaryPetManager] 새 세션을 위해 상태 리셋");
+
+            // 모든 레전드 펫 제거
+            RemoveAllLegendaryPets();
+
+            // 대기 중인 선물 제거
+            foreach (var gift in pendingGifts.Keys.ToList())
+            {
+                if (gift != null) Destroy(gift);
+            }
+            pendingGifts.Clear();
+
+            // 바닥 효과 제거
+            foreach (var effect in giftGroundEffects.Values.ToList())
+            {
+                if (effect != null) Destroy(effect);
+            }
+            giftGroundEffects.Clear();
+
+            // 플래그 리셋
+            currentLegendSpawnIndex = 0;
+            isSpawningSequentially = false;
+        }
+
+        #endregion
+
         // 선물 개수 반환 (PetManager와 동일한 인터페이스)
         public int GetPendingGiftCount() => pendingGifts.Count;
 

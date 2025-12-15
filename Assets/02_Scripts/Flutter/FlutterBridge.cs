@@ -57,10 +57,32 @@ public class FlutterBridge : MonoBehaviour
 
     private void OnApplicationPause(bool pauseStatus)
     {
-        if (pauseStatus && FlutterModeManager.Instance?.IsFlutterMode == true)
+        if (pauseStatus)
         {
-            // 백그라운드 전환 시 즉시 친밀도 동기화
-            SendSyncIntimacy(false);
+            // 백그라운드 전환 시 친밀도 동기화
+            if (FlutterModeManager.Instance?.IsFlutterMode == true)
+            {
+                SendSyncIntimacy(false);
+            }
+        }
+        else
+        {
+            // ★ 앱 재개 시 (재진입) - READY 재전송
+            Debug.Log("[FlutterBridge] 앱 재개 감지 - READY 재전송");
+            ResetForNewSession();
+            SendUnityReady();
+            isUnityReady = true;
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus && !isUnityReady)
+        {
+            // 포커스 획득 시 Unity가 준비되지 않았으면 READY 전송
+            Debug.Log("[FlutterBridge] 포커스 획득 - READY 전송");
+            SendUnityReady();
+            isUnityReady = true;
         }
     }
 
@@ -97,6 +119,46 @@ public class FlutterBridge : MonoBehaviour
 
         Debug.Log($"[FlutterBridge] READY 전송: {json}");
         SendToFlutter.Send(json);
+    }
+
+    /// <summary>
+    /// Flutter 화면이 (재)진입했을 때 호출되는 메서드
+    /// flutter_embed_unity가 이 메서드를 호출함
+    /// 사용법: sendToUnity("FlutterManager", "OnScreenEntered", jsonString)
+    /// </summary>
+    public void OnScreenEntered(string jsonMessage)
+    {
+        Debug.Log($"[FlutterBridge] SCREEN_ENTERED 수신: {jsonMessage}");
+
+        // 새 세션을 위해 상태 리셋
+        ResetForNewSession();
+
+        // READY 재전송 → Flutter가 INIT_GAME을 보내도록 함
+        SendUnityReady();
+        isUnityReady = true;
+    }
+
+    /// <summary>
+    /// 새 세션을 위해 상태 리셋
+    /// </summary>
+    private void ResetForNewSession()
+    {
+        Debug.Log("[FlutterBridge] 새 세션을 위해 상태 리셋");
+
+        // 상태 리셋
+        isUnityReady = false;
+        spawnedPets.Clear();
+        messageQueue?.Clear();
+
+        // FlutterModeManager도 리셋
+        FlutterModeManager.Instance?.ResetForNewSession();
+
+        // 친밀도 동기화 코루틴 정리 (새 INIT_GAME 후 다시 시작됨)
+        if (intimacySyncCoroutine != null)
+        {
+            StopCoroutine(intimacySyncCoroutine);
+            intimacySyncCoroutine = null;
+        }
     }
 
     /// <summary>

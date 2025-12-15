@@ -2,6 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// [DEPRECATED] 이 클래스는 더 이상 사용되지 않습니다.
+/// 펫 스폰이 자동화되어 버튼 방식이 폐기되었습니다.
+/// PetManager가 Flutter 모드와 PetChoice 모드 모두에서 자동으로 펫을 스폰합니다.
+/// 씬에서 이 컴포넌트가 붙은 오브젝트를 비활성화하거나 삭제하세요.
+/// </summary>
+[System.Obsolete("PetSpawnButton is deprecated. Pet spawning is now automatic in PetManager.")]
 public class PetSpawnButton : MonoBehaviour
 {
     [Header("UI 컴포넌트")]
@@ -12,80 +19,22 @@ public class PetSpawnButton : MonoBehaviour
     public string defaultButtonText = "펫 스폰";
     public string completedButtonText = "스폰 완료";
 
-    private PetManager petManager;
-
     private void Start()
     {
-        // PetManager 찾기
-        petManager = FindObjectOfType<PetManager>();
+        // 이 컴포넌트는 deprecated됨 - 자동으로 비활성화
+        Debug.LogWarning("[PetSpawnButton] 이 컴포넌트는 더 이상 사용되지 않습니다. 펫 스폰이 자동화되었습니다. 이 오브젝트를 삭제하세요.");
 
-        if (petManager == null)
-        {
-            Debug.LogError("[PetSpawnButton] PetManager를 찾을 수 없습니다!");
-            if (spawnButton != null)
-                spawnButton.interactable = false;
-            return;
-        }
-
-        // 버튼 클릭 이벤트 등록
         if (spawnButton != null)
         {
-            spawnButton.onClick.AddListener(OnSpawnButtonClicked);
+            spawnButton.interactable = false;
         }
 
-        // 초기 버튼 상태 업데이트
-        UpdateButtonState();
-    }
-
-    private void Update()
-    {
-        // 매 프레임 버튼 상태 업데이트
-        if (petManager != null)
-        {
-            UpdateButtonState();
-        }
-    }
-
-    private void OnSpawnButtonClicked()
-    {
-        if (petManager != null && petManager.CanSpawnNextPet())
-        {
-            petManager.SpawnNextPet();
-            UpdateButtonState();
-        }
-    }
-
-    private void UpdateButtonState()
-    {
-        if (petManager == null || spawnButton == null) return;
-
-        int totalPets = petManager.GetTotalPetCount();
-        int spawnedPets = petManager.GetCurrentSpawnIndex();
-
-        // 버튼 활성화 상태 설정
-        bool canSpawn = petManager.CanSpawnNextPet();
-        spawnButton.interactable = canSpawn;
-
-        // 버튼 텍스트 업데이트
         if (buttonText != null)
         {
-            if (spawnedPets >= totalPets)
-            {
-                buttonText.text = completedButtonText;
-            }
-            else
-            {
-                buttonText.text = $"{defaultButtonText} ({spawnedPets}/{totalPets})";
-            }
+            buttonText.text = "자동 스폰";
         }
-    }
 
-    private void OnDestroy()
-    {
-        // 버튼 이벤트 해제
-        if (spawnButton != null)
-        {
-            spawnButton.onClick.RemoveListener(OnSpawnButtonClicked);
-        }
+        // 오브젝트 비활성화
+        gameObject.SetActive(false);
     }
 }

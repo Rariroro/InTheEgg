@@ -36,9 +36,55 @@ public class PetManager : MonoBehaviour
     // 다음에 사용할 스폰 스팟 인덱스
     private int nextSpawnSpotIndex = 0;
 
-    // 순차 스폰을 위한 변수들
-    private int currentSpawnIndex = 0;
-    private bool isSpawningSequentially = false;
+    // 스폰 진행 중 플래그 (중복 스폰 방지)
+    private bool isSpawning = false;
+
+    // 스폰 완료 플래그 (한 세션에서 한 번만 스폰)
+    private bool hasSpawnedPets = false;
+
+    #region 세션 관리
+
+    /// <summary>
+    /// 새 세션을 위해 상태 리셋 (FlutterModeManager에서 호출)
+    /// </summary>
+    public void ResetForNewSession()
+    {
+        Debug.Log("[PetManager] 새 세션을 위해 상태 리셋");
+
+        // 기존 펫/Egg 제거
+        ClearAllPetsAndGifts();
+
+        // 플래그 리셋
+        isSpawning = false;
+        hasSpawnedPets = false;
+
+        // 스폰 스팟 초기화
+        InitializeSpawnSpots();
+    }
+
+    /// <summary>
+    /// 모든 펫과 Egg 제거
+    /// </summary>
+    private void ClearAllPetsAndGifts()
+    {
+        // 대기 중인 Egg 제거
+        foreach (var gift in pendingGifts.Keys)
+        {
+            if (gift != null) Destroy(gift);
+        }
+        pendingGifts.Clear();
+
+        // 스폰된 펫 제거
+        var pets = FindObjectsOfType<PetController>();
+        foreach (var pet in pets)
+        {
+            if (pet != null) Destroy(pet.gameObject);
+        }
+
+        Debug.Log($"[PetManager] 기존 펫/Egg 모두 제거됨");
+    }
+
+    #endregion
 
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
     public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
@@ -58,143 +104,182 @@ public class PetManager : MonoBehaviour
         return gifts;
     }
 
-    // 순차 스폰을 위한 public 메서드들
-    public int GetTotalPetCount()
-    {
-        if (PetSelectionManager.Instance != null)
-            return PetSelectionManager.Instance.selectedPetIds.Count;
-        return 0;
-    }
-
-    public int GetCurrentSpawnIndex()
-    {
-        return currentSpawnIndex;
-    }
-
-    public bool CanSpawnNextPet()
-    {
-        if (PetSelectionManager.Instance == null) return false;
-        return isSpawningSequentially && currentSpawnIndex < PetSelectionManager.Instance.selectedPetIds.Count;
-    }
-
-    // 다음 펫을 하나 스폰하는 메서드 (UI 버튼에서 호출)
-    public void SpawnNextPet()
-    {
-        if (!CanSpawnNextPet())
-        {
-            Debug.LogWarning("더 이상 스폰할 펫이 없습니다.");
-            return;
-        }
-
-        string petId = PetSelectionManager.Instance.selectedPetIds[currentSpawnIndex];
-
-        // 최초 등장 펫인지 확인
-        if (PetSelectionManager.Instance.IsPetFirstAppearance(petId))
-        {
-            // 최초 등장 펫은 선물로 스폰
-            SpawnGiftForPet(petId);
-        }
-        else
-        {
-            // 일반 펫은 바로 스폰
-            SpawnPet(petId, false);
-        }
-
-        currentSpawnIndex++;
-        Debug.Log($"펫 스폰: {petId} ({currentSpawnIndex}/{PetSelectionManager.Instance.selectedPetIds.Count})");
-    }
-
     // 터치 처리 최적화를 위한 변수
     private float lastTouchTime;
     private const float TOUCH_COOLDOWN = 0.1f;
 
     private void Start()
-{
-    // 스폰 스팟 초기화
-    InitializeSpawnSpots();
-
-    // EnvironmentManager가 환경 스폰과 NavMesh 베이크를 완료할 때까지 기다린 후 펫 스폰
-    StartCoroutine(WaitForEnvironmentAndSpawnPets());
-}
-
-// 새로 추가: 환경 준비 완료까지 기다리는 코루틴
-private IEnumerator WaitForEnvironmentAndSpawnPets()
-{
-    // EnvironmentManager 찾기
-    EnvironmentManager environmentManager = FindObjectOfType<EnvironmentManager>();
-
-    if (environmentManager != null)
     {
-        // EnvironmentManager가 초기화를 완료할 때까지 대기
-        yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
-    }
-    else
-    {
-        Debug.LogWarning("EnvironmentManager를 찾을 수 없습니다. 기본 대기 시간 적용");
-        // EnvironmentManager가 없으면 기본 대기 시간
-        yield return new WaitForSeconds(3f);
-    }
+        // 스폰 스팟 초기화
+        InitializeSpawnSpots();
 
-    // 추가 안전 대기
-    yield return new WaitForSeconds(1f);
-
-    // Flutter 모드인 경우: Flutter 데이터로 펫 스폰
-    if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
-    {
-        Debug.Log("[PetManager] Flutter 모드로 펫 스폰 시작");
-        yield return StartCoroutine(SpawnPetsFromFlutterData());
-    }
-    // PetChoice를 거친 경우: 순차 스폰 모드
-    else if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
-    {
-        isSpawningSequentially = true;
-        currentSpawnIndex = 0;
-        Debug.Log($"펫 스폰 준비 완료. 총 {PetSelectionManager.Instance.selectedPetIds.Count}마리의 펫을 스폰할 수 있습니다.");
-    }
-    // PetVillage에서 바로 시작한 경우: 모든 펫 자동 스폰
-    else
-    {
-        Debug.LogWarning("선택된 펫이 없습니다. 모든 펫을 스폰합니다.");
-        SpawnAllPets();
-    }
-}
-
-/// <summary>
-/// Flutter 데이터로 펫 스폰 (Flutter 모드 전용)
-/// </summary>
-private IEnumerator SpawnPetsFromFlutterData()
-{
-    var gameData = FlutterModeManager.Instance.GameData;
-    if (gameData?.pets == null || gameData.pets.Count == 0)
-    {
-        Debug.LogWarning("[PetManager] Flutter 데이터에 펫이 없습니다.");
-        yield break;
-    }
-
-    foreach (var petData in gameData.pets)
-    {
-        if (petData.isSpawned)
+        // Flutter 데이터 수신 이벤트 구독 (씬 로드 후에 INIT_GAME이 와도 동작)
+        if (FlutterModeManager.Instance != null)
         {
-            // 직접 스폰 (이미 스폰된 상태)
-            GameObject pet = SpawnPetWithFlutterData(petData.petCardId, petData.petIntimacy, false);
-            if (pet != null)
-            {
-                Debug.Log($"[PetManager] Flutter 펫 스폰: {petData.petCardId} (친밀도: {petData.petIntimacy})");
-            }
+            FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
+        }
+
+        // EnvironmentManager가 환경 스폰과 NavMesh 베이크를 완료할 때까지 기다린 후 펫 스폰
+        StartCoroutine(WaitForEnvironmentAndSpawnPets());
+    }
+
+    /// <summary>
+    /// Flutter에서 INIT_GAME 수신 시 호출 (씬 로드 후에 데이터가 와도 동작)
+    /// </summary>
+    private void OnFlutterDataReceived()
+    {
+        Debug.Log("[PetManager] OnFlutterDataReceived 이벤트 수신");
+        if (!isSpawning && !hasSpawnedPets)
+        {
+            StartCoroutine(SpawnPetsFromFlutterData());
         }
         else
         {
-            // Egg로 스폰 (firstAppearance)
-            SpawnGiftForPet(petData.petCardId);
-            Debug.Log($"[PetManager] Flutter 펫 Egg 스폰: {petData.petCardId}");
+            Debug.Log($"[PetManager] 스폰 건너뜀 (isSpawning={isSpawning}, hasSpawnedPets={hasSpawnedPets})");
+        }
+    }
+
+    // 환경 준비 완료까지 기다리는 코루틴
+    private IEnumerator WaitForEnvironmentAndSpawnPets()
+    {
+        // EnvironmentManager 찾기
+        EnvironmentManager environmentManager = FindObjectOfType<EnvironmentManager>();
+
+        if (environmentManager != null)
+        {
+            // EnvironmentManager가 초기화를 완료할 때까지 대기
+            yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
+        }
+        else
+        {
+            Debug.LogWarning("EnvironmentManager를 찾을 수 없습니다. 기본 대기 시간 적용");
+            // EnvironmentManager가 없으면 기본 대기 시간
+            yield return new WaitForSeconds(3f);
         }
 
-        yield return new WaitForSeconds(0.1f);
-    }
-}
+        // 추가 안전 대기
+        yield return new WaitForSeconds(1f);
 
-/// <summary>
-/// Flutter 데이터와 함께 펫 스폰 (친밀도 초기화 포함)
+        // 이미 스폰 완료된 경우 건너뜀
+        if (hasSpawnedPets)
+        {
+            Debug.Log("[PetManager] 이미 스폰 완료됨 - 건너뜀");
+            yield break;
+        }
+
+        // Flutter 모드: 이미 데이터가 있으면 스폰
+        if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+        {
+            Debug.Log("[PetManager] Flutter 모드 - Egg/펫 자동 생성");
+            yield return StartCoroutine(SpawnPetsFromFlutterData());
+        }
+        // PetChoice 모드: 자동 스폰 (버튼 없이)
+        else if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
+        {
+            Debug.Log($"[PetManager] PetChoice 모드 - {PetSelectionManager.Instance.selectedPetIds.Count}마리 자동 스폰");
+            yield return StartCoroutine(SpawnPetsFromSelectionManager());
+        }
+        // PetVillage에서 바로 시작한 경우: 모든 펫 자동 스폰
+        else
+        {
+            Debug.LogWarning("선택된 펫이 없습니다. 모든 펫을 스폰합니다.");
+            SpawnAllPets();
+            hasSpawnedPets = true;
+        }
+    }
+
+    /// <summary>
+    /// PetSelectionManager 데이터로 펫 스폰 (PetChoice 모드)
+    /// </summary>
+    private IEnumerator SpawnPetsFromSelectionManager()
+    {
+        isSpawning = true;
+
+        int spawnedCount = 0;
+        int eggCount = 0;
+
+        foreach (string petId in PetSelectionManager.Instance.selectedPetIds)
+        {
+            bool isFirstAppearance = PetSelectionManager.Instance.IsPetFirstAppearance(petId);
+
+            if (isFirstAppearance)
+            {
+                SpawnGiftForPet(petId);
+                eggCount++;
+            }
+            else
+            {
+                SpawnPet(petId, false);
+                spawnedCount++;
+            }
+
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        Debug.Log($"[PetManager] PetChoice 모드 스폰 완료. 직접 스폰: {spawnedCount}마리, Egg 생성: {eggCount}마리");
+        isSpawning = false;
+        hasSpawnedPets = true;
+    }
+
+    /// <summary>
+    /// Flutter 데이터로 펫 스폰 (Flutter 모드 전용)
+    /// isSpawned=true → 직접 스폰
+    /// isSpawned=false → Egg 생성 (유저가 터치하면 스폰)
+    /// </summary>
+    private IEnumerator SpawnPetsFromFlutterData()
+    {
+        // 이미 스폰 완료된 경우 즉시 반환
+        if (hasSpawnedPets)
+        {
+            Debug.Log("[PetManager] SpawnPetsFromFlutterData - 이미 스폰 완료됨, 건너뜀");
+            yield break;
+        }
+
+        // 즉시 플래그 설정하여 중복 호출 방지
+        isSpawning = true;
+        hasSpawnedPets = true;
+
+        var gameData = FlutterModeManager.Instance.GameData;
+        if (gameData?.pets == null || gameData.pets.Count == 0)
+        {
+            Debug.LogWarning("[PetManager] Flutter 데이터에 펫이 없습니다.");
+            isSpawning = false;
+            yield break;
+        }
+
+        int spawnedCount = 0;
+        int eggCount = 0;
+
+        foreach (var petData in gameData.pets)
+        {
+            if (petData.isSpawned)
+            {
+                // 이미 스폰된 펫은 바로 생성
+                GameObject pet = SpawnPetWithFlutterData(petData.petCardId, petData.petIntimacy, false);
+                if (pet != null)
+                {
+                    Debug.Log($"[PetManager] Flutter 펫 직접 스폰: {petData.petCardId} (친밀도: {petData.petIntimacy})");
+                    spawnedCount++;
+                }
+            }
+            else
+            {
+                // firstAppearance 펫은 Egg로 생성 (유저가 터치해서 스폰)
+                SpawnGiftForPet(petData.petCardId);
+                Debug.Log($"[PetManager] Flutter 펫 Egg 생성: {petData.petCardId}");
+                eggCount++;
+            }
+
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        Debug.Log($"[PetManager] Flutter 모드 스폰 완료. 직접 스폰: {spawnedCount}마리, Egg 생성: {eggCount}마리");
+        isSpawning = false;
+        // hasSpawnedPets는 메서드 시작 시 이미 true로 설정됨
+    }
+
+    /// <summary>
+    /// Flutter 데이터와 함께 펫 스폰 (친밀도 초기화 포함)
 /// </summary>
 private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool withFirstAppearanceEffect)
 {
@@ -956,6 +1041,12 @@ private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool with
     
     private void OnDestroy()
     {
+        // 이벤트 구독 해제
+        if (FlutterModeManager.Instance != null)
+        {
+            FlutterModeManager.Instance.OnFlutterDataReceived -= OnFlutterDataReceived;
+        }
+
         // 정리 작업
         pendingGifts.Clear();
     }

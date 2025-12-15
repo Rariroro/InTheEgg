@@ -230,6 +230,33 @@ public class FlutterModeManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 새 세션을 위해 상태 리셋 (FlutterBridge에서 호출)
+    /// </summary>
+    public void ResetForNewSession()
+    {
+        isFlutterMode = false;
+        isInitialized = false;
+        gameData = null;
+        petIntimacyCache.Clear();
+
+        // PetManager도 리셋 (기존 펫/Egg 제거 및 플래그 초기화)
+        var petManager = FindObjectOfType<PetManager>();
+        if (petManager != null)
+        {
+            petManager.ResetForNewSession();
+        }
+
+        // LegendaryPetManager도 리셋
+        var legendaryPetManager = FindObjectOfType<LegendaryPetManager>();
+        if (legendaryPetManager != null)
+        {
+            legendaryPetManager.ResetForNewSession();
+        }
+
+        Debug.Log("[FlutterModeManager] 새 세션을 위해 상태 리셋됨");
+    }
+
+    /// <summary>
     /// Flutter ID로 음식 타입 변환 헬퍼
     /// </summary>
     public static string GetFoodIdFromType(string foodType)
