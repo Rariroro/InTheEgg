@@ -420,6 +420,20 @@ public class PetFeedingController : PetControllerBase
 
         if (targetFood != null)
         {
+            // [Flutter 모드] 음식 사용 알림
+            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+            {
+                FoodItem foodItem = targetFood.GetComponent<FoodItem>();
+                if (foodItem != null)
+                {
+                    string foodType = GetFoodTypeString(foodItem.foodType);
+                    if (!string.IsNullOrEmpty(foodType))
+                    {
+                        FlutterBridge.Instance?.SendFoodUsedByType(foodType, 1);
+                    }
+                }
+            }
+
             Destroy(targetFood);
         }
 
@@ -428,6 +442,21 @@ public class PetFeedingController : PetControllerBase
         RestoreOriginalPriority();  // 우선순위 복구
         petController.ResumeMovement();
         petController.SetRandomDestination();
+    }
+
+    /// <summary>
+    /// DietaryFlags를 Flutter 음식 타입 문자열로 변환
+    /// </summary>
+    private string GetFoodTypeString(PetAIProperties.DietaryFlags foodType)
+    {
+        // 단일 플래그만 체크 (복수 플래그인 경우 첫 번째 매칭)
+        if ((foodType & PetAIProperties.DietaryFlags.Meat) != 0) return "meat";
+        if ((foodType & PetAIProperties.DietaryFlags.Fish) != 0) return "fish";
+        if ((foodType & PetAIProperties.DietaryFlags.FruitsAndVegetables) != 0) return "fruit";
+        if ((foodType & PetAIProperties.DietaryFlags.Grass) != 0) return "Grass";
+        if ((foodType & PetAIProperties.DietaryFlags.SeedsAndGrains) != 0) return "Grain";
+        if ((foodType & PetAIProperties.DietaryFlags.Honey) != 0) return "hay"; // 꿀벌집 → hay 매핑
+        return null;
     }
 
     private IEnumerator EatAtAreaCoroutine()

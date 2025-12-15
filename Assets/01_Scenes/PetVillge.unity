@@ -77142,6 +77142,7 @@ Transform:
   - {fileID: 1819018885}
   - {fileID: 1549711008}
   - {fileID: 392364046}
+  - {fileID: 1690993945}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1365257205
@@ -91301,6 +91302,73 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 9093877506556160515, guid: fb217816eb63b4149ac06f58d2a05889, type: 3}
   m_PrefabInstance: {fileID: 1690722849}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1690993944
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1690993945}
+  - component: {fileID: 1690993947}
+  - component: {fileID: 1690993946}
+  m_Layer: 0
+  m_Name: FlutterManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1690993945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1690993944}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1361253149}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1690993946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1690993944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ff47cc53a6ff453790ade8220bfcc1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isFlutterMode: 0
+  isInitialized: 0
+--- !u!114 &1690993947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1690993944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f7fd47e817734df6ae41630fb7057f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  intimacySyncInterval: 30
+  flutterDataTimeout: 3
+  retryDelays:
+  - 3
+  - 5
+  - 10
+  - 20
+  - 30
 --- !u!1001 &1691511302
 PrefabInstance:
   m_ObjectHideFlags: 0

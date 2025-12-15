@@ -460,7 +460,175 @@ Unity에서 이벤트 발생
 
 ---
 
-## 8. 요약
+## 8. Unity 구현 가이드 (flutter_embed_unity)
+
+> **중요**: Flutter 측 구현이 완료되었습니다. Unity에서 아래 사항을 구현해야 합니다.
+
+### 8.1 필수 설정
+
+**패키지**: Unity Package Manager에서 `flutter_embed_unity` Unity 모듈 설치
+
+### 8.2 FlutterBridge GameObject 생성
+
+Unity 씬에 빈 GameObject를 생성하고 이름을 **`FlutterManager`**로 설정합니다.
+
+```csharp
+// FlutterBridge.cs - 이 스크립트를 FlutterManager GameObject에 연결
+using UnityEngine;
+using FlutterEmbedUnity;
+
+public class FlutterBridge : MonoBehaviour
+{
+    // Flutter에서 INIT_GAME 메시지를 받을 때 호출됨
+    public void OnInitGame(string jsonMessage)
+    {
+        Debug.Log("Received INIT_GAME: " + jsonMessage);
+
+        // JSON 파싱 후 게임 초기화
+        var message = JsonUtility.FromJson<InitGameMessage>(jsonMessage);
+        GameManager.Instance.InitializeGame(message.data);
+    }
+}
+```
+
+### 8.3 Flutter로 메시지 전송
+
+```csharp
+// Unity → Flutter 메시지 전송 예시
+using FlutterEmbedUnity;
+
+public class UnityToFlutterMessenger
+{
+    // READY 메시지 전송 (Unity 로딩 완료 시)
+    public static void SendReady()
+    {
+        var message = new { type = "READY", data = new { } };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // PET_SPAWNED 메시지 전송
+    public static void SendPetSpawned(string petCardId)
+    {
+        var message = new {
+            type = "PET_SPAWNED",
+            data = new { petCardId = petCardId, isSpawned = true }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // LEGEND_PET_SPAWNED 메시지 전송
+    public static void SendLegendPetSpawned(string petCardId)
+    {
+        var message = new {
+            type = "LEGEND_PET_SPAWNED",
+            data = new { petCardId = petCardId, isSpawned = true }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // ENV_ITEM_SPAWNED 메시지 전송
+    public static void SendEnvItemSpawned(string id)
+    {
+        var message = new {
+            type = "ENV_ITEM_SPAWNED",
+            data = new { id = id, isSpawned = true }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // FOOD_USED 메시지 전송
+    public static void SendFoodUsed(string id, int usedQuantity)
+    {
+        var message = new {
+            type = "FOOD_USED",
+            data = new { id = id, usedQuantity = usedQuantity }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // SYNC_INTIMACY 메시지 전송 (30초마다 + 백그라운드 전환 시)
+    public static void SendSyncIntimacy(List<PetIntimacyData> pets)
+    {
+        var message = new {
+            type = "SYNC_INTIMACY",
+            data = new { pets = pets }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+
+    // GAME_EXIT 메시지 전송
+    public static void SendGameExit(List<PetIntimacyData> pets)
+    {
+        var message = new {
+            type = "GAME_EXIT",
+            data = new { pets = pets }
+        };
+        SendToFlutter.Send(JsonUtility.ToJson(message));
+    }
+}
+
+[System.Serializable]
+public class PetIntimacyData
+{
+    public string petCardId;
+    public int petIntimacy;
+}
+```
+
+### 8.4 Unity 생명주기 처리
+
+```csharp
+// 백그라운드 전환 감지
+void OnApplicationPause(bool pauseStatus)
+{
+    if (pauseStatus)
+    {
+        // 앱이 백그라운드로 전환될 때 즉시 동기화
+        UnityToFlutterMessenger.SendSyncIntimacy(GetAllPetIntimacyData());
+    }
+}
+
+// 앱 종료 감지
+void OnApplicationQuit()
+{
+    UnityToFlutterMessenger.SendGameExit(GetAllPetIntimacyData());
+}
+```
+
+### 8.5 게임 초기화 흐름
+
+```
+1. Unity 씬 로드 완료
+2. SendToFlutter.Send({"type":"READY"}) 전송
+3. Flutter가 INIT_GAME 전송
+4. FlutterManager.OnInitGame() 호출됨
+5. JSON 파싱 후 펫/아이템 생성
+6. 게임 시작
+```
+
+### 8.6 메시지 타입 상수
+
+| type 문자열 | 방향 | 설명 |
+|-------------|------|------|
+| `READY` | Unity → Flutter | Unity 로딩 완료 |
+| `INIT_GAME` | Flutter → Unity | 게임 초기화 데이터 |
+| `PET_SPAWNED` | Unity → Flutter | 일반 펫 스폰 |
+| `LEGEND_PET_SPAWNED` | Unity → Flutter | 레전드 펫 스폰 |
+| `ENV_ITEM_SPAWNED` | Unity → Flutter | 환경 아이템 스폰 |
+| `FOOD_USED` | Unity → Flutter | 음식 사용 |
+| `SYNC_INTIMACY` | Unity → Flutter | 친밀도 동기화 |
+| `GAME_EXIT` | Unity → Flutter | 게임 종료 |
+
+### 8.7 주의사항
+
+- **GameObject 이름**: 반드시 `FlutterManager`로 설정 (Flutter에서 이 이름으로 호출)
+- **메서드 이름**: `OnInitGame` (Flutter에서 이 메서드로 INIT_GAME 전송)
+- **JSON 형식**: 모든 메시지는 `{ "type": "...", "data": { ... } }` 형식
+- **READY 메시지**: Unity 로딩 완료 후 반드시 전송해야 Flutter가 INIT_GAME을 보냄
+
+---
+
+## 9. 요약
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -498,3 +666,4 @@ Unity에서 이벤트 발생
 | 2025-12-13 | 1.0 | 초안 작성 |
 | 2025-12-13 | 1.1 | ID 매칭 테이블 간소화, JSON 메시지 포맷 추가 |
 | 2025-12-13 | 1.2 | 수치 범위 추가 (친밀도, 배고픔, 졸림: 0~100) |
+| 2025-12-14 | 1.3 | Unity 구현 가이드 추가 (FlutterBridge, SendToFlutter, 생명주기 처리) |

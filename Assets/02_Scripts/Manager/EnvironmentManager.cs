@@ -131,8 +131,29 @@ public class EnvironmentManager : MonoBehaviour
         // 초기화 시작
         IsInitializationComplete = false;
 
-        // EnvironmentSelectionManager가 존재하는지 확인
-        if (EnvironmentSelectionManager.Instance != null &&
+        // Flutter 모드 대기 및 초기화
+        StartCoroutine(InitializeWithFlutterCheck());
+    }
+
+    /// <summary>
+    /// Flutter 데이터 대기 후 초기화 진행
+    /// </summary>
+    private IEnumerator InitializeWithFlutterCheck()
+    {
+        // FlutterBridge가 있으면 Flutter 데이터 대기
+        if (FlutterBridge.Instance != null)
+        {
+            yield return StartCoroutine(FlutterBridge.Instance.WaitForFlutterDataOrTimeout());
+        }
+
+        // Flutter 모드인 경우
+        if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+        {
+            Debug.Log("[EnvironmentManager] Flutter 모드로 환경 스폰 시작");
+            StartCoroutine(WaitForTerrainManagerAndSpawn());
+        }
+        // PetChoice를 거친 경우 (EnvironmentSelectionManager에 데이터가 있음)
+        else if (EnvironmentSelectionManager.Instance != null &&
             EnvironmentSelectionManager.Instance.selectedEnvironmentIds.Count > 0)
         {
             // 선택된 환경이 있는 경우
@@ -411,6 +432,12 @@ public class EnvironmentManager : MonoBehaviour
 
         // 환경 스폰 (코루틴으로 실행하고 완료 대기)
         yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
+
+        // ★ Flutter 모드일 때 환경 스폰 알림 전송
+        if (FlutterModeManager.Instance?.IsFlutterMode == true)
+        {
+            FlutterBridge.Instance?.SendEnvItemSpawned(environmentId);
+        }
 
         // ★ 선물로 나온 환경도 펫 유인
         GameObject spawnedEnv = spawnedEnvironments[spawnedEnvironments.Count - 1];

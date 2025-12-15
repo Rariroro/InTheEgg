@@ -138,8 +138,14 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     // 추가 안전 대기
     yield return new WaitForSeconds(1f);
 
+    // Flutter 모드인 경우: Flutter 데이터로 펫 스폰
+    if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+    {
+        Debug.Log("[PetManager] Flutter 모드로 펫 스폰 시작");
+        yield return StartCoroutine(SpawnPetsFromFlutterData());
+    }
     // PetChoice를 거친 경우: 순차 스폰 모드
-    if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
+    else if (PetSelectionManager.Instance != null && PetSelectionManager.Instance.selectedPetIds.Count > 0)
     {
         isSpawningSequentially = true;
         currentSpawnIndex = 0;
@@ -151,6 +157,92 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
         Debug.LogWarning("선택된 펫이 없습니다. 모든 펫을 스폰합니다.");
         SpawnAllPets();
     }
+}
+
+/// <summary>
+/// Flutter 데이터로 펫 스폰 (Flutter 모드 전용)
+/// </summary>
+private IEnumerator SpawnPetsFromFlutterData()
+{
+    var gameData = FlutterModeManager.Instance.GameData;
+    if (gameData?.pets == null || gameData.pets.Count == 0)
+    {
+        Debug.LogWarning("[PetManager] Flutter 데이터에 펫이 없습니다.");
+        yield break;
+    }
+
+    foreach (var petData in gameData.pets)
+    {
+        if (petData.isSpawned)
+        {
+            // 직접 스폰 (이미 스폰된 상태)
+            GameObject pet = SpawnPetWithFlutterData(petData.petCardId, petData.petIntimacy, false);
+            if (pet != null)
+            {
+                Debug.Log($"[PetManager] Flutter 펫 스폰: {petData.petCardId} (친밀도: {petData.petIntimacy})");
+            }
+        }
+        else
+        {
+            // Egg로 스폰 (firstAppearance)
+            SpawnGiftForPet(petData.petCardId);
+            Debug.Log($"[PetManager] Flutter 펫 Egg 스폰: {petData.petCardId}");
+        }
+
+        yield return new WaitForSeconds(0.1f);
+    }
+}
+
+/// <summary>
+/// Flutter 데이터와 함께 펫 스폰 (친밀도 초기화 포함)
+/// </summary>
+private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool withFirstAppearanceEffect)
+{
+    if (!petId.StartsWith("pet_") || petId.Length < 7)
+    {
+        Debug.LogError($"[PetManager] 잘못된 펫 ID 형식: {petId}");
+        return null;
+    }
+
+    string numberPart = petId.Substring(4);
+    if (!int.TryParse(numberPart, out int petIndex))
+    {
+        Debug.LogError($"[PetManager] 펫 ID 파싱 오류: {petId}");
+        return null;
+    }
+
+    petIndex = petIndex - 1;
+    if (petIndex < 0 || petIndex >= petPrefabs.Length)
+    {
+        Debug.LogError($"[PetManager] 유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
+        return null;
+    }
+
+    Vector3 spawnPosition = GetNextSpawnPosition();
+    spawnPosition.y += 0.5f;
+    Quaternion rotation = Quaternion.Euler(0, 180, 0);
+
+    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
+
+    // 친밀도 설정
+    PetController controller = pet.GetComponent<PetController>();
+    if (controller != null && controller.Needs != null)
+    {
+        controller.Needs.SetAffection(intimacy);
+
+        // FlutterBridge에 펫 등록 (친밀도 동기화용)
+        if (FlutterBridge.Instance != null)
+        {
+            FlutterBridge.Instance.RegisterSpawnedPet(petId, controller);
+        }
+    }
+
+    if (withFirstAppearanceEffect)
+    {
+        ApplyFirstAppearanceEffect(pet);
+    }
+
+    return pet;
 }
     // 스폰 스팟 초기화
     private void InitializeSpawnSpots()
@@ -509,7 +601,7 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
     {
         // 선물 위치 저장
         Vector3 giftPosition = gift.transform.position;
-        
+
         // 지면 높이 확인
         RaycastHit groundHit;
         if (Physics.Raycast(giftPosition + Vector3.up * 10f, Vector3.down, out groundHit, 20f))
@@ -523,8 +615,8 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
 
         // 선물을 대기 목록에서 제거
         pendingGifts.Remove(gift);
-        
-        
+
+
         // 축하 효과 파티클 실행
         if (celebrationEffectPrefab != null)
         {
@@ -532,22 +624,90 @@ private IEnumerator WaitForEnvironmentAndSpawnPets()
             celebration.transform.localScale = Vector3.one * 3f;
             Destroy(celebration, 5f);
         }
-        
+
         // 불꽃놀이 효과
         if (fireworkPrefabs != null && fireworkPrefabs.Count > 0)
         {
             StartCoroutine(LaunchFireworks(gift.transform.position));
         }
-        
+
         // 선물 제거 애니메이션
         yield return StartCoroutine(RemoveGiftWithAnimation(gift));
-        
+
         // 잠시 대기
         yield return new WaitForSeconds(0.5f);
-        
+
         // 펫 스폰 - 선물이 있던 위치에 스폰
-        SpawnPetAtPosition(petId, giftPosition, true);
-        
+        GameObject spawnedPet = SpawnPetAtPositionWithReturn(petId, giftPosition, true);
+
+        // ★ Flutter 모드일 때 펫 스폰 알림 전송
+        if (FlutterModeManager.Instance?.IsFlutterMode == true)
+        {
+            PetController controller = spawnedPet?.GetComponent<PetController>();
+
+            // Flutter에서 받은 친밀도 적용
+            int intimacy = FlutterModeManager.Instance.GetPetIntimacy(petId);
+            if (controller != null && controller.Needs != null)
+            {
+                controller.Needs.SetAffection(intimacy);
+            }
+
+            FlutterBridge.Instance?.SendPetSpawned(petId, controller);
+        }
+    }
+
+    /// <summary>
+    /// 특정 위치에 펫을 스폰하고 GameObject 반환
+    /// </summary>
+    private GameObject SpawnPetAtPositionWithReturn(string petId, Vector3 position, bool withFirstAppearanceEffect)
+    {
+        if (!petId.StartsWith("pet_") || petId.Length < 7)
+        {
+            Debug.LogError($"잘못된 펫 ID 형식: {petId}");
+            return null;
+        }
+
+        string numberPart = petId.Substring(4);
+        if (!int.TryParse(numberPart, out int petIndex))
+        {
+            Debug.LogError($"펫 ID 형식 오류: {petId}");
+            return null;
+        }
+
+        petIndex = petIndex - 1;
+        if (petIndex < 0 || petIndex >= petPrefabs.Length)
+        {
+            Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
+            return null;
+        }
+
+        // NavMesh 위의 가장 가까운 유효한 위치 찾기
+        NavMeshHit hit;
+        Vector3 spawnPosition = position;
+
+        if (NavMesh.SamplePosition(position, out hit, 50f, NavMesh.AllAreas))
+        {
+            spawnPosition = hit.position;
+        }
+        else
+        {
+            Debug.LogWarning($"[PetManager] {petId}: 주어진 위치 근처에서 NavMesh를 찾을 수 없습니다.");
+            if (NavMesh.SamplePosition(Vector3.zero, out hit, 100f, NavMesh.AllAreas))
+            {
+                spawnPosition = hit.position;
+            }
+        }
+
+        spawnPosition.y += 0.5f;
+        Quaternion rotation = Quaternion.Euler(0, 180, 0);
+        GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
+
+        if (withFirstAppearanceEffect)
+        {
+            ApplyFirstAppearanceEffect(pet);
+        }
+
+        return pet;
     }
     
     private IEnumerator LaunchFireworks(Vector3 spawnCenter)

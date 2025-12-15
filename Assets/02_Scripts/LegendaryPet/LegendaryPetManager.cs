@@ -219,7 +219,7 @@ namespace LegendaryPet
         {
             // EnvironmentManager 찾기
             EnvironmentManager environmentManager = FindObjectOfType<EnvironmentManager>();
-            
+
             if (environmentManager != null)
             {
                 // EnvironmentManager가 초기화를 완료할 때까지 대기
@@ -231,12 +231,17 @@ namespace LegendaryPet
                 // EnvironmentManager가 없으면 기본 대기 시간
                 yield return new WaitForSeconds(3f);
             }
-            
+
             // 추가 안전 대기
             yield return new WaitForSeconds(1f);
 
+            // [Flutter 모드] Flutter 데이터로 레전드 펫 스폰
+            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+            {
+                yield return StartCoroutine(SpawnLegendaryPetsFromFlutterData());
+            }
             // PetChoice를 거친 경우: 순차 스폰 모드
-            if (LegendaryPetSelectionManager.Instance != null &&
+            else if (LegendaryPetSelectionManager.Instance != null &&
                 LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count > 0)
             {
                 isSpawningSequentially = true;
@@ -249,6 +254,47 @@ namespace LegendaryPet
                 Debug.LogWarning("[LegendaryPetManager] 선택된 레전드 펫이 없습니다. 모든 레전드 펫을 스폰합니다.");
                 SpawnAllLegendaryPets();
             }
+        }
+
+        /// <summary>
+        /// Flutter 데이터로 레전드 펫 스폰
+        /// </summary>
+        private IEnumerator SpawnLegendaryPetsFromFlutterData()
+        {
+            var gameData = FlutterModeManager.Instance.GameData;
+            if (gameData?.legendaryPets == null || gameData.legendaryPets.Count == 0)
+            {
+                Debug.Log("[LegendaryPetManager] Flutter 모드: 스폰할 레전드 펫이 없습니다.");
+                yield break;
+            }
+
+            Debug.Log($"[LegendaryPetManager] Flutter 모드: {gameData.legendaryPets.Count}마리의 레전드 펫 스폰 시작");
+
+            isSpawningSequentially = true;
+            currentLegendSpawnIndex = 0;
+
+            foreach (var legendData in gameData.legendaryPets)
+            {
+                if (string.IsNullOrEmpty(legendData.petCardId)) continue;
+
+                if (legendData.isSpawned)
+                {
+                    // 이미 스폰된 펫은 바로 스폰 (선물 없이)
+                    SpawnLegendaryPet(legendData.petCardId, false);
+                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 기존 레전드 펫 직접 스폰 - {legendData.petCardId}");
+                }
+                else
+                {
+                    // 최초 등장 레전드 펫은 선물로 스폰 (터치 대기)
+                    SpawnGiftForLegendaryPet(legendData.petCardId);
+                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 신규 레전드 펫 선물 생성 - {legendData.petCardId}");
+                }
+
+                currentLegendSpawnIndex++;
+                yield return new WaitForSeconds(firstAppearanceDelay);
+            }
+
+            Debug.Log($"[LegendaryPetManager] Flutter 모드: 레전드 펫 스폰 완료");
         }
         
         // 모든 레전드 펫을 스폰하는 메서드 (PetManager의 SpawnAllPets와 동일)
@@ -593,6 +639,12 @@ namespace LegendaryPet
 
             // B 좌표에서 펫 등장
             yield return StartCoroutine(SpawnLegendaryPetWithThreeStageSystem(legendaryPetId));
+
+            // [Flutter 모드] 레전드 펫 스폰 완료 알림
+            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
+            {
+                FlutterBridge.Instance?.SendLegendPetSpawned(legendaryPetId);
+            }
 
             Debug.Log($"[LegendaryPetManager] 3단계 스폰 완료: {legendaryPetId}");
         }
