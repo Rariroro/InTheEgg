@@ -16,7 +16,7 @@ public class LoadingManager : MonoBehaviour
     [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI progressText;
     [SerializeField] private TextMeshProUGUI tipText;
-    [SerializeField] private Image progressBar;
+    [SerializeField] private Slider progressSlider;
 
     [Header("설정")]
     [SerializeField] private float fadeOutDuration = 0.5f;
@@ -32,10 +32,50 @@ public class LoadingManager : MonoBehaviour
         "펫이 졸려하면 쉬게 해주세요."
     };
 
+    [Header("재미있는 로딩 메시지")]
+    [SerializeField] private float funMessageInterval = 3f; // 메시지 변경 주기
+    [SerializeField] private string[] funLoadingMessages = new string[]
+    {
+        // 토끼와 거북이 경주
+        "토끼와 거북이가 경주 준비 중...",
+        "거북이: 이번엔 내가 이긴다!",
+        "토끼가 낮잠 자는 사이 거북이 추월 중...",
+
+        // 같이 자기/쉬기
+        "판다가 대나무 베개 찾는 중...",
+        "코알라가 나무에서 꿈나라 여행 중...",
+        "나무늘보가... 천천히... 준비 중...",
+
+        // 쫓고 쫓기기
+        "여우가 토끼 놀래키러 숨는 중...",
+        "고양이가 쥐 역할 맡을 펫 물색 중...",
+
+        // 같이 걷기
+        "기린과 코끼리가 산책 코스 정하는 중...",
+        "양떼가 구름 모양 연습 중...",
+
+        // 포식자 사냥
+        "두더지가 숨을 곳 파는 중...",
+        "사자가 멋진 포즈 연습 중...",
+
+        // 특수 상호작용
+        "카멜레온이 배경색 고르는 중...",
+        "스컹크가 향수 테스트 중... (조심!)",
+        "낙타와 알파카 침 뱉기 연습 중...",
+
+        // 일반 준비
+        "펫들이 오늘의 역할 정하는 중...",
+        "먹이 배달 트럭 도착 대기 중...",
+        "펫 빌리지 청소 마무리 중...",
+        "오늘의 모험 준비 중...",
+        "펫들이 스트레칭하는 중..."
+    };
+
     private float loadingStartTime;
     private bool isLoadingComplete = false;
     private int totalPets = 0;
     private int loadedPets = 0;
+    private Coroutine funMessageCoroutine;
 
     private void Awake()
     {
@@ -65,6 +105,9 @@ public class LoadingManager : MonoBehaviour
 
         // 진행률 초기화
         UpdateProgress(0, 1);
+
+        // 재미있는 메시지 순환 시작
+        funMessageCoroutine = StartCoroutine(CycleFunMessages());
     }
 
     /// <summary>
@@ -98,21 +141,48 @@ public class LoadingManager : MonoBehaviour
 
     private void UpdateProgressUI()
     {
-        if (progressText != null)
+        if (progressSlider != null && totalPets > 0)
         {
-            if (totalPets > 0)
+            float fill = (float)loadedPets / totalPets;
+            progressSlider.value = fill;
+            Debug.Log($"[LoadingManager] 프로그레스: {loadedPets}/{totalPets} = {fill:P0}");
+        }
+    }
+
+    /// <summary>
+    /// 재미있는 로딩 메시지 순환
+    /// </summary>
+    private IEnumerator CycleFunMessages()
+    {
+        if (funLoadingMessages == null || funLoadingMessages.Length == 0)
+        {
+            // 메시지가 없으면 기본 텍스트 표시
+            if (progressText != null)
             {
-                progressText.text = $"펫 준비 중... {loadedPets}/{totalPets}";
+                progressText.text = "펫 준비 중...";
             }
-            else
-            {
-                progressText.text = "로딩 중...";
-            }
+            yield break;
         }
 
-        if (progressBar != null && totalPets > 0)
+        int lastIndex = -1;
+
+        while (!isLoadingComplete)
         {
-            progressBar.fillAmount = (float)loadedPets / totalPets;
+            // 이전과 다른 랜덤 메시지 선택
+            int newIndex;
+            do
+            {
+                newIndex = Random.Range(0, funLoadingMessages.Length);
+            } while (newIndex == lastIndex && funLoadingMessages.Length > 1);
+
+            lastIndex = newIndex;
+
+            if (progressText != null)
+            {
+                progressText.text = funLoadingMessages[newIndex];
+            }
+
+            yield return new WaitForSeconds(funMessageInterval);
         }
     }
 
@@ -135,6 +205,13 @@ public class LoadingManager : MonoBehaviour
         if (isLoadingComplete) return;
         isLoadingComplete = true;
 
+        // 재미있는 메시지 코루틴 정리
+        if (funMessageCoroutine != null)
+        {
+            StopCoroutine(funMessageCoroutine);
+            funMessageCoroutine = null;
+        }
+
         StartCoroutine(CompleteLoadingCoroutine());
     }
 
@@ -152,9 +229,9 @@ public class LoadingManager : MonoBehaviour
         {
             progressText.text = "완료!";
         }
-        if (progressBar != null)
+        if (progressSlider != null)
         {
-            progressBar.fillAmount = 1f;
+            progressSlider.value = 1f;
         }
 
         yield return new WaitForSeconds(0.3f);

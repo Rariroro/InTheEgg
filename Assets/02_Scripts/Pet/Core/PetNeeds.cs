@@ -16,6 +16,7 @@ public class PetNeeds
         Affection
     }
     
+    
     [Header("욕구 상태 (실시간 값)")]
     [Range(0, 100)]
     [SerializeField] private float hunger = 0f;       // 배고픔 (0-100)
