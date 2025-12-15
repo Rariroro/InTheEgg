@@ -243,8 +243,11 @@ public class PetManager : MonoBehaviour
         else
         {
             Debug.LogWarning("선택된 펫이 없습니다. 모든 펫을 스폰합니다.");
-            SpawnAllPets();
+            yield return StartCoroutine(SpawnAllPetsCoroutine());
             hasSpawnedPets = true;
+
+            // 로딩 완료 알림
+            NotifyLoadingComplete();
         }
     }
 
@@ -257,6 +260,10 @@ public class PetManager : MonoBehaviour
 
         int spawnedCount = 0;
         int eggCount = 0;
+        int totalPets = PetSelectionManager.Instance.selectedPetIds.Count;
+
+        // 로딩 매니저에 총 펫 수 알림
+        LoadingManager.Instance?.SetTotalPets(totalPets);
 
         foreach (string petId in PetSelectionManager.Instance.selectedPetIds)
         {
@@ -273,12 +280,18 @@ public class PetManager : MonoBehaviour
                 spawnedCount++;
             }
 
+            // 로딩 진행률 업데이트
+            LoadingManager.Instance?.OnPetLoaded();
+
             yield return new WaitForSeconds(0.1f);
         }
 
         Debug.Log($"[PetManager] PetChoice 모드 스폰 완료. 직접 스폰: {spawnedCount}마리, Egg 생성: {eggCount}마리");
         isSpawning = false;
         hasSpawnedPets = true;
+
+        // 로딩 완료 알림
+        NotifyLoadingComplete();
     }
 
     /// <summary>
@@ -304,11 +317,16 @@ public class PetManager : MonoBehaviour
         {
             Debug.LogWarning("[PetManager] Flutter 데이터에 펫이 없습니다.");
             isSpawning = false;
+            NotifyLoadingComplete();
             yield break;
         }
 
         int spawnedCount = 0;
         int eggCount = 0;
+        int totalPets = gameData.pets.Count;
+
+        // 로딩 매니저에 총 펫 수 알림
+        LoadingManager.Instance?.SetTotalPets(totalPets);
 
         foreach (var petData in gameData.pets)
         {
@@ -330,12 +348,17 @@ public class PetManager : MonoBehaviour
                 eggCount++;
             }
 
+            // 로딩 진행률 업데이트
+            LoadingManager.Instance?.OnPetLoaded();
+
             yield return new WaitForSeconds(0.1f);
         }
 
         Debug.Log($"[PetManager] Flutter 모드 스폰 완료. 직접 스폰: {spawnedCount}마리, Egg 생성: {eggCount}마리");
         isSpawning = false;
-        // hasSpawnedPets는 메서드 시작 시 이미 true로 설정됨
+
+        // 로딩 완료 알림
+        NotifyLoadingComplete();
     }
 
     /// <summary>
@@ -944,8 +967,11 @@ public class PetManager : MonoBehaviour
     }
 
     // 기존 메서드들...
-    private void SpawnAllPets()
+    private IEnumerator SpawnAllPetsCoroutine()
     {
+        int totalPets = Mathf.Min(petPrefabs.Length, maxPets);
+        LoadingManager.Instance?.SetTotalPets(totalPets);
+
         for (int i = 0; i < petPrefabs.Length && i < maxPets; i++)
         {
             if (petPrefabs[i] != null)
@@ -955,6 +981,11 @@ public class PetManager : MonoBehaviour
                 // 180도 회전하여 카메라를 향하도록 스폰
                 Quaternion rotation = Quaternion.Euler(0, 180, 0);
                 GameObject pet = Instantiate(petPrefabs[i], randomPosition, rotation);
+
+                // 로딩 진행률 업데이트
+                LoadingManager.Instance?.OnPetLoaded();
+
+                yield return new WaitForSeconds(0.1f);
             }
         }
     }
@@ -1029,6 +1060,15 @@ public class PetManager : MonoBehaviour
         return transform.position;
     }
     
+    /// <summary>
+    /// 로딩 완료 알림 (LoadingManager에 전달)
+    /// </summary>
+    private void NotifyLoadingComplete()
+    {
+        LoadingManager.Instance?.OnLoadingComplete();
+        Debug.Log("[PetManager] 로딩 완료 알림 전송");
+    }
+
     private void OnDestroy()
     {
         // 이벤트 구독 해제

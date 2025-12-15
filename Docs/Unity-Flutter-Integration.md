@@ -312,17 +312,20 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 
 30초마다 또는 게임 종료 시 전송합니다.
 
+> **v1.9 최적화**: 변경된 친밀도만 전송합니다. 60마리 펫 중 5마리만 친밀도가 변경되었다면 5마리 데이터만 전송됩니다. 변경된 펫이 없으면 전송하지 않습니다.
+
 ```json
 {
   "type": "SYNC_INTIMACY",
   "data": {
     "pets": [
-      { "petCardId": "pet_001", "petIntimacy": 75 },
-      { "petCardId": "pet_002", "petIntimacy": 30 }
+      { "petCardId": "pet_001", "petIntimacy": 75 }
     ]
   }
 }
 ```
+
+> **Flutter 측 처리**: 수신된 펫 데이터만 업데이트하면 됩니다. 전체 펫 목록이 아니라 변경분만 전송되므로, 기존 데이터에 덮어쓰기 방식으로 처리하세요.
 
 ---
 
@@ -339,6 +342,21 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
       { "petCardId": "pet_002", "petIntimacy": 30 }
     ]
   }
+}
+```
+
+---
+
+### Unity → Flutter: LOADING_COMPLETE
+
+펫 스폰이 완료되어 게임 화면이 준비되었을 때 전송합니다.
+
+> **v2.0 추가**: Flutter에서 로딩 화면(오버레이)을 표시하고, 이 메시지를 받으면 로딩 화면을 제거하여 완성된 펫빌리지를 보여줄 수 있습니다.
+
+```json
+{
+  "type": "LOADING_COMPLETE",
+  "data": {}
 }
 ```
 
@@ -464,233 +482,13 @@ Unity에서 이벤트 발생
 | FOOD_USED | 3초, 5초, 10초... | 무제한 | 네트워크 복구까지 대기 |
 | SYNC_INTIMACY | 다음 30초 주기 | 자동 | 다음 주기에 최신 값 전송 |
 
-### 게임 재시작 시 동기화
-
-```
-게임 시작
-    │
-    ├─ 로컬 큐에 미전송 이벤트 있음?
-    │
-    ├─ 있음 → 먼저 전송 시도 → 성공 후 게임 시작
-    │
-    └─ 없음 → 바로 게임 시작
-```
-
 ---
 
-## 8. Unity 구현 가이드 (flutter_embed_unity)
-
-> **중요**: Flutter 측 구현이 완료되었습니다. Unity에서 아래 사항을 구현해야 합니다.
-
-### 8.1 필수 설정
-
-**패키지**: Unity Package Manager에서 `flutter_embed_unity` Unity 모듈 설치
-
-### 8.2 FlutterBridge GameObject 생성
-
-Unity 씬에 빈 GameObject를 생성하고 이름을 **`FlutterManager`**로 설정합니다.
-
-```csharp
-// FlutterBridge.cs - 이 스크립트를 FlutterManager GameObject에 연결
-using UnityEngine;
-using FlutterEmbedUnity;
-
-public class FlutterBridge : MonoBehaviour
-{
-    // Flutter 화면이 (재)진입했을 때 호출됨
-    // ⚠️ 반드시 READY를 재전송해야 함!
-    public void OnScreenEntered(string jsonMessage)
-    {
-        Debug.Log("Flutter screen entered - sending READY");
-
-        // READY 메시지 재전송 → Flutter가 INIT_GAME을 보냄
-        UnityToFlutterMessenger.SendReady();
-    }
-
-    // Flutter에서 INIT_GAME 메시지를 받을 때 호출됨
-    public void OnInitGame(string jsonMessage)
-    {
-        Debug.Log("Received INIT_GAME: " + jsonMessage);
-
-        // JSON 파싱 후 게임 초기화
-        var message = JsonUtility.FromJson<InitGameMessage>(jsonMessage);
-        GameManager.Instance.InitializeGame(message.data);
-    }
-}
-```
-
-### 8.3 Flutter로 메시지 전송
-
-```csharp
-// Unity → Flutter 메시지 전송 예시
-using FlutterEmbedUnity;
-
-public class UnityToFlutterMessenger
-{
-    // READY 메시지 전송 (Unity 로딩 완료 시)
-    public static void SendReady()
-    {
-        var message = new { type = "READY", data = new { } };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // PET_SPAWNED 메시지 전송
-    public static void SendPetSpawned(string petCardId)
-    {
-        var message = new {
-            type = "PET_SPAWNED",
-            data = new { petCardId = petCardId, isSpawned = true }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // LEGEND_PET_SPAWNED 메시지 전송
-    public static void SendLegendPetSpawned(string petCardId)
-    {
-        var message = new {
-            type = "LEGEND_PET_SPAWNED",
-            data = new { petCardId = petCardId, isSpawned = true }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // ENV_ITEM_SPAWNED 메시지 전송
-    public static void SendEnvItemSpawned(string id)
-    {
-        var message = new {
-            type = "ENV_ITEM_SPAWNED",
-            data = new { id = id, isSpawned = true }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // FOOD_USED 메시지 전송
-    public static void SendFoodUsed(string id, int usedQuantity)
-    {
-        var message = new {
-            type = "FOOD_USED",
-            data = new { id = id, usedQuantity = usedQuantity }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // SYNC_INTIMACY 메시지 전송 (30초마다 + 백그라운드 전환 시)
-    public static void SendSyncIntimacy(List<PetIntimacyData> pets)
-    {
-        var message = new {
-            type = "SYNC_INTIMACY",
-            data = new { pets = pets }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-
-    // GAME_EXIT 메시지 전송
-    public static void SendGameExit(List<PetIntimacyData> pets)
-    {
-        var message = new {
-            type = "GAME_EXIT",
-            data = new { pets = pets }
-        };
-        SendToFlutter.Send(JsonUtility.ToJson(message));
-    }
-}
-
-[System.Serializable]
-public class PetIntimacyData
-{
-    public string petCardId;
-    public int petIntimacy;
-}
-```
-
-### 8.4 Unity 생명주기 처리
-
-```csharp
-// 백그라운드 전환 감지
-void OnApplicationPause(bool pauseStatus)
-{
-    if (pauseStatus)
-    {
-        // 앱이 백그라운드로 전환될 때 즉시 동기화
-        UnityToFlutterMessenger.SendSyncIntimacy(GetAllPetIntimacyData());
-    }
-}
-
-// 앱 종료 감지
-void OnApplicationQuit()
-{
-    UnityToFlutterMessenger.SendGameExit(GetAllPetIntimacyData());
-}
-```
-
-### 8.5 게임 초기화 흐름
-
-#### 최초 진입 시
-```
-1. Unity 씬 로드 완료
-2. Flutter가 SCREEN_ENTERED 전송
-3. Unity가 OnScreenEntered에서 READY 전송
-4. Flutter가 INIT_GAME 전송
-5. FlutterManager.OnInitGame() 호출됨
-6. JSON 파싱 후 펫/아이템 생성
-7. 게임 시작
-```
-
-#### 화면 재진입 시 (핵심!)
-
-**방법 A: SCREEN_ENTERED 수신 성공 시**
-```
-1. Flutter 화면이 다시 mount됨
-2. Flutter가 SCREEN_ENTERED 전송
-3. Unity가 OnScreenEntered에서 READY 재전송
-4. Flutter가 최신 데이터로 INIT_GAME 전송
-5. FlutterManager.OnInitGame() 호출됨
-6. 기존 펫/아이템 상태 업데이트
-7. 게임 계속
-```
-
-**방법 B: SCREEN_ENTERED 드롭 시 (Unity가 아직 로드 안됨)**
-```
-1. Flutter 화면이 다시 mount됨
-2. Flutter가 SCREEN_ENTERED 전송 → "Dropped message: Unity is not loaded yet"
-3. Unity가 OnApplicationPause(false)에서 READY 재전송 ← 자동 복구!
-4. Flutter가 최신 데이터로 INIT_GAME 전송
-5. 이후 동일
-```
-
-> **v1.6 변경사항**: Flutter의 SCREEN_ENTERED가 Unity 로딩 완료 전에 도착하면 드롭됩니다.
-> 이 문제를 해결하기 위해 Unity가 `OnApplicationPause(false)` (앱 재개) 시점에 READY를 재전송합니다.
-> Flutter 측은 추가 변경 없이 기존 로직대로 READY 수신 시 INIT_GAME을 전송하면 됩니다.
-
-### 8.6 메시지 타입 상수
-
-| type 문자열 | 방향 | 설명 |
-|-------------|------|------|
-| `SCREEN_ENTERED` | Flutter → Unity | 화면 (재)진입 알림 |
-| `READY` | Unity → Flutter | Unity 준비 완료 (SCREEN_ENTERED에 대한 응답) |
-| `INIT_GAME` | Flutter → Unity | 게임 초기화 데이터 |
-| `PET_SPAWNED` | Unity → Flutter | 일반 펫 스폰 |
-| `LEGEND_PET_SPAWNED` | Unity → Flutter | 레전드 펫 스폰 |
-| `ENV_ITEM_SPAWNED` | Unity → Flutter | 환경 아이템 스폰 |
-| `FOOD_USED` | Unity → Flutter | 음식 사용 |
-| `SYNC_INTIMACY` | Unity → Flutter | 친밀도 동기화 |
-| `GAME_EXIT` | Unity → Flutter | 게임 종료 |
-
-### 8.7 주의사항
-
-- **GameObject 이름**: 반드시 `FlutterManager`로 설정 (Flutter에서 이 이름으로 호출)
-- **메서드 이름**: `OnScreenEntered`, `OnInitGame` (Flutter에서 이 메서드들로 메시지 전송)
-- **JSON 형식**: 모든 메시지는 `{ "type": "...", "data": { ... } }` 형식
-- **SCREEN_ENTERED 처리**: ⚠️ `OnScreenEntered`에서 반드시 READY를 재전송해야 함 (화면 재진입 시 데이터 동기화를 위해 필수!)
-- **READY 메시지**: `SCREEN_ENTERED`를 받을 때마다 전송해야 Flutter가 INIT_GAME을 보냄
-
----
-
-## 9. Flutter 구현 가이드
+## 8. Flutter 구현 가이드
 
 > **Flutter 개발자를 위한 섹션**입니다. Unity 메시지 수신/발신 처리 방법을 설명합니다.
 
-### 9.1 Unity로 메시지 전송
+### 8.1 Unity로 메시지 전송
 
 ```dart
 import 'package:flutter_embed_unity/flutter_embed_unity.dart';
@@ -736,7 +534,7 @@ void sendInitGame(GameData data) {
 }
 ```
 
-### 9.2 Unity 메시지 수신
+### 8.2 Unity 메시지 수신
 
 ```dart
 // Unity 메시지 리스너 등록
@@ -789,7 +587,7 @@ void setupUnityListener() {
 }
 ```
 
-### 9.3 화면 생명주기 처리
+### 8.3 화면 생명주기 처리
 
 ```dart
 class UnityGameScreen extends StatefulWidget {
@@ -817,7 +615,7 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 }
 ```
 
-### 9.4 isSpawned 필드 설명
+### 8.4 isSpawned 필드 설명
 
 | isSpawned 값 | Unity 동작 | Flutter 처리 |
 |--------------|------------|--------------|
@@ -826,7 +624,7 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 
 > **중요**: `isSpawned=false`인 펫은 Unity에서 Egg로 자동 생성됩니다. 유저가 Egg를 터치하면 펫이 스폰되고, Unity가 `PET_SPAWNED` 메시지를 전송합니다. Flutter는 이 메시지를 받아 서버에 `isSpawned=true`로 저장해야 합니다.
 
-### 9.5 주의사항
+### 8.5 주의사항
 
 1. **READY 메시지 대기**: `SCREEN_ENTERED` 전송 후 Unity의 `READY`를 기다린 뒤 `INIT_GAME` 전송
 2. **SCREEN_ENTERED 드롭 가능**: Unity 로드 전에 전송되면 드롭될 수 있음 → Unity가 `OnApplicationPause(false)`에서 `READY` 재전송하므로 문제없음
@@ -835,7 +633,7 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 
 ---
 
-## 10. 요약
+## 9. 요약
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -879,3 +677,5 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-15 | 1.6 | **재진입 문제 수정** - OnApplicationPause(false)에서 READY 재전송 (SCREEN_ENTERED 드롭 문제 해결) |
 | 2025-12-15 | 1.7 | **펫 스폰 방식 명확화** - Flutter 모드에서 isSpawned=false 펫은 Egg 자동 생성 (버튼 없음). Flutter 구현 가이드 추가 |
 | 2025-12-15 | 1.8 | **재진입 시 새 펫 적용 버그 수정** - PetManager.ResetForNewSession(), LegendaryPetManager.ResetForNewSession() 추가. FlutterModeManager에서 호출하여 hasSpawnedPets 플래그 리셋 및 기존 펫/Egg 제거 |
+| 2025-12-15 | 1.9 | **성능 최적화** - SYNC_INTIMACY 전송 시 변경된 친밀도만 전송하도록 개선 (60마리 중 5마리만 변경 시 5마리만 전송). LoadingManager 추가로 로딩 화면 지원 |
+| 2025-12-15 | 2.0 | **LOADING_COMPLETE 메시지 추가** - 펫 스폰 완료 후 Flutter에 알림. Flutter에서 로딩 오버레이 제거 타이밍으로 활용 가능 |

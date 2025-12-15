@@ -31,6 +31,9 @@ public class FlutterBridge : MonoBehaviour
     // 스폰된 펫 ID -> PetController 매핑 (친밀도 동기화용)
     private Dictionary<string, PetController> spawnedPets = new Dictionary<string, PetController>();
 
+    // 마지막 동기화 시점의 친밀도 (변경된 것만 전송하기 위함)
+    private Dictionary<string, int> lastSyncedIntimacy = new Dictionary<string, int>();
+
     private void Awake()
     {
         if (Instance == null)
@@ -148,6 +151,7 @@ public class FlutterBridge : MonoBehaviour
         // 상태 리셋
         isUnityReady = false;
         spawnedPets.Clear();
+        lastSyncedIntimacy.Clear();
         messageQueue?.Clear();
 
         // FlutterModeManager도 리셋
@@ -289,14 +293,14 @@ public class FlutterBridge : MonoBehaviour
     }
 
     /// <summary>
-    /// 친밀도 동기화 전송
+    /// 친밀도 동기화 전송 (변경된 펫만 전송하여 성능 최적화)
     /// </summary>
     public void SendSyncIntimacy(bool isGameExit = false)
     {
         if (!FlutterModeManager.Instance?.IsFlutterMode ?? true) return;
 
-        // 스폰된 펫들의 최신 친밀도 수집
-        var intimacyList = new List<PetIntimacyData>();
+        // 변경된 펫들의 친밀도만 수집
+        var changedPets = new List<PetIntimacyData>();
 
         foreach (var kvp in spawnedPets)
         {
@@ -304,24 +308,39 @@ public class FlutterBridge : MonoBehaviour
             {
                 int currentIntimacy = Mathf.RoundToInt(kvp.Value.Needs.Affection);
 
-                // FlutterModeManager 캐시도 업데이트
-                FlutterModeManager.Instance?.UpdatePetIntimacy(kvp.Key, currentIntimacy);
+                // 이전 동기화 값과 비교하여 변경된 것만 추가
+                bool hasChanged = !lastSyncedIntimacy.TryGetValue(kvp.Key, out int lastIntimacy)
+                                  || currentIntimacy != lastIntimacy;
 
-                intimacyList.Add(new PetIntimacyData
+                if (hasChanged || isGameExit)
                 {
-                    petCardId = kvp.Key,
-                    petIntimacy = currentIntimacy
-                });
+                    // FlutterModeManager 캐시도 업데이트
+                    FlutterModeManager.Instance?.UpdatePetIntimacy(kvp.Key, currentIntimacy);
+
+                    changedPets.Add(new PetIntimacyData
+                    {
+                        petCardId = kvp.Key,
+                        petIntimacy = currentIntimacy
+                    });
+
+                    // 마지막 동기화 값 업데이트
+                    lastSyncedIntimacy[kvp.Key] = currentIntimacy;
+                }
             }
         }
 
-        if (intimacyList.Count > 0)
+        // 변경된 게 있거나 게임 종료 시에만 전송
+        if (changedPets.Count > 0)
         {
-            var message = new SyncIntimacyMessage(intimacyList, isGameExit);
+            var message = new SyncIntimacyMessage(changedPets, isGameExit);
             SendMessageWithRetry(message, false); // 친밀도는 재시도 없음
 
             string messageType = isGameExit ? "GAME_EXIT" : "SYNC_INTIMACY";
-            Debug.Log($"[FlutterBridge] {messageType} 전송: {intimacyList.Count}마리");
+            Debug.Log($"[FlutterBridge] {messageType} 전송: {changedPets.Count}마리 (변경분만)");
+        }
+        else if (!isGameExit)
+        {
+            Debug.Log("[FlutterBridge] 친밀도 변경 없음 - 전송 스킵");
         }
     }
 
