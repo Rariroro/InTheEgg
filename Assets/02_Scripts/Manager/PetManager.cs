@@ -30,6 +30,10 @@ public class PetManager : MonoBehaviour
     // 대기 중인 선물들과 해당 펫 정보를 저장하는 딕셔너리
     private Dictionary<GameObject, string> pendingGifts = new Dictionary<GameObject, string>();
 
+    // Flutter petCardId → Prefab 매핑 (게임 시작 시 한 번만 구축)
+    private Dictionary<string, GameObject> petPrefabMap;
+    private bool isPrefabMapBuilt = false;
+
     // 스폰 스팟별 사용 카운트 (같은 스팟에 여러 펫이 스폰될 때 오프셋 계산용)
     private Dictionary<int, int> spawnSpotUsageCount = new Dictionary<int, int>();
 
@@ -87,7 +91,8 @@ public class PetManager : MonoBehaviour
     #endregion
 
     // UI에서 접근할 수 있도록 읽기 전용 프로퍼티 제공
-    public Dictionary<GameObject, string> PendingGifts => new Dictionary<GameObject, string>(pendingGifts);
+    // IReadOnlyDictionary로 반환하여 매번 새 Dictionary 인스턴스 생성 방지 (메모리 최적화)
+    public IReadOnlyDictionary<GameObject, string> PendingGifts => pendingGifts;
 
     // 선물 개수 반환
     public int GetPendingGiftCount() => pendingGifts.Count;
@@ -113,6 +118,9 @@ public class PetManager : MonoBehaviour
         // 스폰 스팟 초기화
         InitializeSpawnSpots();
 
+        // petCardId → Prefab 매핑 테이블 구축 (한 번만)
+        BuildPrefabMap();
+
         // Flutter 데이터 수신 이벤트 구독 (씬 로드 후에 INIT_GAME이 와도 동작)
         if (FlutterModeManager.Instance != null)
         {
@@ -121,6 +129,58 @@ public class PetManager : MonoBehaviour
 
         // EnvironmentManager가 환경 스폰과 NavMesh 베이크를 완료할 때까지 기다린 후 펫 스폰
         StartCoroutine(WaitForEnvironmentAndSpawnPets());
+    }
+
+    /// <summary>
+    /// petCardId → Prefab 매핑 테이블 구축 (게임 시작 시 한 번만)
+    /// PetType enum을 기준으로 매핑하므로 배열 순서에 의존하지 않음
+    /// </summary>
+    private void BuildPrefabMap()
+    {
+        if (isPrefabMapBuilt) return;
+
+        petPrefabMap = new Dictionary<string, GameObject>(petPrefabs.Length);
+
+        foreach (var prefab in petPrefabs)
+        {
+            if (prefab == null) continue;
+
+            var controller = prefab.GetComponent<PetController>();
+            if (controller != null && controller.Profile != null)
+            {
+                // PetType enum 값을 petCardId로 변환 (Turtle=0 → "pet_001")
+                int typeIndex = (int)controller.Profile.type;
+                string petCardId = $"pet_{(typeIndex + 1):D3}";
+
+                if (!petPrefabMap.ContainsKey(petCardId))
+                {
+                    petPrefabMap[petCardId] = prefab;
+                }
+                else
+                {
+                    Debug.LogWarning($"[PetManager] 중복된 petCardId: {petCardId} ({controller.Profile.type})");
+                }
+            }
+        }
+
+        isPrefabMapBuilt = true;
+        Debug.Log($"[PetManager] Prefab 매핑 완료: {petPrefabMap.Count}개");
+    }
+
+    /// <summary>
+    /// petCardId로 프리팹 조회 (O(1) 성능)
+    /// </summary>
+    private GameObject GetPrefabByPetCardId(string petCardId)
+    {
+        if (!isPrefabMapBuilt) BuildPrefabMap();
+
+        if (petPrefabMap.TryGetValue(petCardId, out GameObject prefab))
+        {
+            return prefab;
+        }
+
+        Debug.LogError($"[PetManager] 프리팹을 찾을 수 없음: {petCardId}");
+        return null;
     }
 
     /// <summary>
@@ -280,55 +340,44 @@ public class PetManager : MonoBehaviour
 
     /// <summary>
     /// Flutter 데이터와 함께 펫 스폰 (친밀도 초기화 포함)
-/// </summary>
-private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool withFirstAppearanceEffect)
-{
-    if (!petId.StartsWith("pet_") || petId.Length < 7)
+    /// Dictionary 매핑을 사용하여 petCardId로 프리팹 조회 (O(1))
+    /// </summary>
+    private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool withFirstAppearanceEffect)
     {
-        Debug.LogError($"[PetManager] 잘못된 펫 ID 형식: {petId}");
-        return null;
-    }
-
-    string numberPart = petId.Substring(4);
-    if (!int.TryParse(numberPart, out int petIndex))
-    {
-        Debug.LogError($"[PetManager] 펫 ID 파싱 오류: {petId}");
-        return null;
-    }
-
-    petIndex = petIndex - 1;
-    if (petIndex < 0 || petIndex >= petPrefabs.Length)
-    {
-        Debug.LogError($"[PetManager] 유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
-        return null;
-    }
-
-    Vector3 spawnPosition = GetNextSpawnPosition();
-    spawnPosition.y += 0.5f;
-    Quaternion rotation = Quaternion.Euler(0, 180, 0);
-
-    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
-
-    // 친밀도 설정
-    PetController controller = pet.GetComponent<PetController>();
-    if (controller != null && controller.Needs != null)
-    {
-        controller.Needs.SetAffection(intimacy);
-
-        // FlutterBridge에 펫 등록 (친밀도 동기화용)
-        if (FlutterBridge.Instance != null)
+        // Dictionary에서 프리팹 조회
+        GameObject prefab = GetPrefabByPetCardId(petId);
+        if (prefab == null)
         {
-            FlutterBridge.Instance.RegisterSpawnedPet(petId, controller);
+            Debug.LogError($"[PetManager] 프리팹을 찾을 수 없음: {petId}");
+            return null;
         }
-    }
 
-    if (withFirstAppearanceEffect)
-    {
-        ApplyFirstAppearanceEffect(pet);
-    }
+        Vector3 spawnPosition = GetNextSpawnPosition();
+        spawnPosition.y += 0.5f;
+        Quaternion rotation = Quaternion.Euler(0, 180, 0);
 
-    return pet;
-}
+        GameObject pet = Instantiate(prefab, spawnPosition, rotation);
+
+        // 친밀도 설정
+        PetController controller = pet.GetComponent<PetController>();
+        if (controller != null && controller.Needs != null)
+        {
+            controller.Needs.SetAffection(intimacy);
+
+            // FlutterBridge에 펫 등록 (친밀도 동기화용)
+            if (FlutterBridge.Instance != null)
+            {
+                FlutterBridge.Instance.RegisterSpawnedPet(petId, controller);
+            }
+        }
+
+        if (withFirstAppearanceEffect)
+        {
+            ApplyFirstAppearanceEffect(pet);
+        }
+
+        return pet;
+    }
     // 스폰 스팟 초기화
     private void InitializeSpawnSpots()
     {
@@ -399,124 +448,73 @@ private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool with
         }
     }
 
-    // 특정 위치에 펫을 스폰하는 메서드
+    /// <summary>
+    /// 특정 위치에 펫을 스폰하는 메서드
+    /// Dictionary 매핑을 사용하여 petCardId로 프리팹 조회 (O(1))
+    /// </summary>
     private void SpawnPetAtPosition(string petId, Vector3 position, bool withFirstAppearanceEffect)
     {
-        // 펫 ID 형식: "pet_001", "pet_002", ... 에서 숫자 부분 추출
-        if (petId.StartsWith("pet_") && petId.Length >= 7)
+        // Dictionary에서 프리팹 조회
+        GameObject prefab = GetPrefabByPetCardId(petId);
+        if (prefab == null)
         {
-            string numberPart = petId.Substring(4); // "001", "002", ...
-            if (int.TryParse(numberPart, out int petIndex))
-            {
-                // 인덱스는 0부터 시작하므로 1을 빼줌
-                petIndex = petIndex - 1;
-                
-                // 유효한 인덱스인지 확인
-                if (petIndex >= 0 && petIndex < petPrefabs.Length)
-                {
-                    // NavMesh 위의 가장 가까운 유효한 위치 찾기
-                    NavMeshHit hit;
-                    Vector3 spawnPosition = position;
-                    
-                    // 더 넓은 범위에서 NavMesh 위치 찾기
-                    if (NavMesh.SamplePosition(position, out hit, 50f, NavMesh.AllAreas))
-                    {
-                        spawnPosition = hit.position;
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[PetManager] {petId}: 주어진 위치 근처에서 NavMesh를 찾을 수 없습니다. 대체 위치 시도 중...");
-                        
-                        // 스폰 중심점에서 다시 시도
-                        if (NavMesh.SamplePosition(Vector3.zero, out hit, 100f, NavMesh.AllAreas))
-                        {
-                            spawnPosition = hit.position;
-                        }
-                        else
-                        {
-                            Debug.LogError($"[PetManager] {petId}: NavMesh를 전혀 찾을 수 없습니다!");
-                        }
-                    }
-                    
-                    // 약간 위에서 스폰하여 지면에 확실히 닿도록 함
-                    spawnPosition.y += 0.5f;
+            Debug.LogError($"[PetManager] 프리팹을 찾을 수 없음: {petId}");
+            return;
+        }
 
-                    // 180도 회전하여 카메라를 향하도록 스폰
-                    Quaternion rotation = Quaternion.Euler(0, 180, 0);
-                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
+        // NavMesh 위의 가장 가까운 유효한 위치 찾기
+        NavMeshHit hit;
+        Vector3 spawnPosition = position;
 
-                    if (withFirstAppearanceEffect)
-                    {
-                        // 최초 등장 효과 적용
-                        ApplyFirstAppearanceEffect(pet);
-                    }
-                    else
-                    {
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"펫 ID 형식 오류: {petId}");
-            }
+        if (NavMesh.SamplePosition(position, out hit, 50f, NavMesh.AllAreas))
+        {
+            spawnPosition = hit.position;
         }
         else
         {
-            Debug.LogError($"잘못된 펫 ID 형식: {petId}");
+            Debug.LogWarning($"[PetManager] {petId}: 주어진 위치 근처에서 NavMesh를 찾을 수 없습니다. 대체 위치 시도 중...");
+            if (NavMesh.SamplePosition(Vector3.zero, out hit, 100f, NavMesh.AllAreas))
+            {
+                spawnPosition = hit.position;
+            }
+            else
+            {
+                Debug.LogError($"[PetManager] {petId}: NavMesh를 전혀 찾을 수 없습니다!");
+            }
+        }
+
+        spawnPosition.y += 0.5f;
+        Quaternion rotation = Quaternion.Euler(0, 180, 0);
+        GameObject pet = Instantiate(prefab, spawnPosition, rotation);
+
+        if (withFirstAppearanceEffect)
+        {
+            ApplyFirstAppearanceEffect(pet);
         }
     }
 
-    // 펫을 스폰하는 메서드 (효과 옵션 추가)
+    /// <summary>
+    /// 펫을 스폰하는 메서드 (효과 옵션 추가)
+    /// Dictionary 매핑을 사용하여 petCardId로 프리팹 조회 (O(1))
+    /// </summary>
     private void SpawnPet(string petId, bool withFirstAppearanceEffect)
     {
-        // 펫 ID 형식: "pet_001", "pet_002", ... 에서 숫자 부분 추출
-        if (petId.StartsWith("pet_") && petId.Length >= 7)
+        // Dictionary에서 프리팹 조회
+        GameObject prefab = GetPrefabByPetCardId(petId);
+        if (prefab == null)
         {
-            string numberPart = petId.Substring(4); // "001", "002", ...
-            if (int.TryParse(numberPart, out int petIndex))
-            {
-                // 인덱스는 0부터 시작하므로 1을 빼줌
-                petIndex = petIndex - 1;
-
-                // 유효한 인덱스인지 확인
-                if (petIndex >= 0 && petIndex < petPrefabs.Length)
-                {
-                    // 스폰 위치 결정
-                    Vector3 spawnPosition = GetNextSpawnPosition();
-
-                    // 약간 위에서 스폰하여 지면에 확실히 닿도록 함
-                    spawnPosition.y += 0.5f;
-
-                    // 180도 회전하여 카메라를 향하도록 스폰
-                    Quaternion rotation = Quaternion.Euler(0, 180, 0);
-                    GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
-
-                    if (withFirstAppearanceEffect)
-                    {
-                        // 최초 등장 효과 적용
-                        ApplyFirstAppearanceEffect(pet);
-                    }
-                    else
-                    {
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"펫 ID 형식 오류: {petId}");
-            }
+            Debug.LogError($"[PetManager] 프리팹을 찾을 수 없음: {petId}");
+            return;
         }
-        else
+
+        Vector3 spawnPosition = GetNextSpawnPosition();
+        spawnPosition.y += 0.5f;
+        Quaternion rotation = Quaternion.Euler(0, 180, 0);
+        GameObject pet = Instantiate(prefab, spawnPosition, rotation);
+
+        if (withFirstAppearanceEffect)
         {
-            Debug.LogError($"잘못된 펫 ID 형식: {petId}");
+            ApplyFirstAppearanceEffect(pet);
         }
     }
 
@@ -743,26 +741,15 @@ private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool with
 
     /// <summary>
     /// 특정 위치에 펫을 스폰하고 GameObject 반환
+    /// Dictionary 매핑을 사용하여 petCardId로 프리팹 조회 (O(1))
     /// </summary>
     private GameObject SpawnPetAtPositionWithReturn(string petId, Vector3 position, bool withFirstAppearanceEffect)
     {
-        if (!petId.StartsWith("pet_") || petId.Length < 7)
+        // Dictionary에서 프리팹 조회
+        GameObject prefab = GetPrefabByPetCardId(petId);
+        if (prefab == null)
         {
-            Debug.LogError($"잘못된 펫 ID 형식: {petId}");
-            return null;
-        }
-
-        string numberPart = petId.Substring(4);
-        if (!int.TryParse(numberPart, out int petIndex))
-        {
-            Debug.LogError($"펫 ID 형식 오류: {petId}");
-            return null;
-        }
-
-        petIndex = petIndex - 1;
-        if (petIndex < 0 || petIndex >= petPrefabs.Length)
-        {
-            Debug.LogError($"유효하지 않은 펫 인덱스: {petIndex}, ID: {petId}");
+            Debug.LogError($"[PetManager] 프리팹을 찾을 수 없음: {petId}");
             return null;
         }
 
@@ -785,7 +772,7 @@ private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool with
 
         spawnPosition.y += 0.5f;
         Quaternion rotation = Quaternion.Euler(0, 180, 0);
-        GameObject pet = Instantiate(petPrefabs[petIndex], spawnPosition, rotation);
+        GameObject pet = Instantiate(prefab, spawnPosition, rotation);
 
         if (withFirstAppearanceEffect)
         {
@@ -936,10 +923,13 @@ private GameObject SpawnPetWithFlutterData(string petId, int intimacy, bool with
         }
         finally
         {
-            // Material 인스턴스 정리 (메모리 누수 방지)
-            // 주의: 실제로는 Material이 Renderer에 의해 관리되므로
-            // 여기서 Destroy하면 안됨. Renderer가 파괴될 때 자동 정리됨.
-            // 하지만 리스트는 정리해야 함
+            // Material 인스턴스 명시적 해제 (메모리 누수 방지)
+            // 중요: renderer.material 접근 시 Unity가 새 Material 인스턴스를 생성하며,
+            // 이는 자동으로 정리되지 않으므로 명시적으로 Destroy 해야 함
+            foreach (var mat in createdMaterials)
+            {
+                if (mat != null) Destroy(mat);
+            }
             createdMaterials.Clear();
             originalEmissions.Clear();
         }

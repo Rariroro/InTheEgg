@@ -139,7 +139,8 @@ namespace LegendaryPet
         public event LegendaryPetEvent OnLegendaryPetRemoved;
         
         // 프로퍼티
-        public List<LegendaryPetController> LegendaryPets => new List<LegendaryPetController>(legendaryPets);
+        // IReadOnlyList로 반환하여 매번 새 List 인스턴스 생성 방지 (메모리 최적화)
+        public IReadOnlyList<LegendaryPetController> LegendaryPets => legendaryPets;
         public int CurrentLegendaryPetCount => legendaryPets.Count;
         public bool CanSpawnMore => legendaryPets.Count < maxLegendaryPets;
         
