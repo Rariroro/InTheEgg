@@ -347,18 +347,11 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 
 ---
 
-### Unity → Flutter: LOADING_COMPLETE
+### ~~Unity → Flutter: LOADING_COMPLETE~~ (삭제됨)
 
-펫 스폰이 완료되어 게임 화면이 준비되었을 때 전송합니다.
-
-> **v2.0 추가**: Flutter에서 로딩 화면(오버레이)을 표시하고, 이 메시지를 받으면 로딩 화면을 제거하여 완성된 펫빌리지를 보여줄 수 있습니다.
-
-```json
-{
-  "type": "LOADING_COMPLETE",
-  "data": {}
-}
-```
+> **v2.1 삭제**: Unity에서 자체 로딩화면을 구현했으므로 이 메시지는 더 이상 사용하지 않습니다.
+>
+> ~~**Unity 측 조치 필요**: `LOADING_COMPLETE` 메시지 전송 코드를 삭제해주세요.~~ ✅ 완료
 
 ---
 
@@ -680,3 +673,4 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-15 | 1.8 | **재진입 시 새 펫 적용 버그 수정** - PetManager.ResetForNewSession(), LegendaryPetManager.ResetForNewSession() 추가. FlutterModeManager에서 호출하여 hasSpawnedPets 플래그 리셋 및 기존 펫/Egg 제거 |
 | 2025-12-15 | 1.9 | **성능 최적화** - SYNC_INTIMACY 전송 시 변경된 친밀도만 전송하도록 개선 (60마리 중 5마리만 변경 시 5마리만 전송). LoadingManager 추가로 로딩 화면 지원 |
 | 2025-12-15 | 2.0 | **LOADING_COMPLETE 메시지 추가** - 펫 스폰 완료 후 Flutter에 알림. Flutter에서 로딩 오버레이 제거 타이밍으로 활용 가능 |
+| 2025-12-15 | 2.1 | **LOADING_COMPLETE 메시지 삭제** - Unity 자체 로딩화면 구현으로 불필요. Flutter 로딩 오버레이도 제거. **Unity 측: LOADING_COMPLETE 전송 코드 삭제 필요** |
