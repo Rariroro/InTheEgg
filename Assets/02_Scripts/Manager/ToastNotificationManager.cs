@@ -62,6 +62,7 @@ public class ToastNotificationManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             Initialize();
         }

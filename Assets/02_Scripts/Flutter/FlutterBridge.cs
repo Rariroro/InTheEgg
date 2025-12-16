@@ -39,6 +39,7 @@ public class FlutterBridge : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             messageQueue = new FlutterMessageQueue(retryDelays);
         }

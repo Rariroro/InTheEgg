@@ -153,6 +153,7 @@ namespace LegendaryPet
             }
 
             instance = this;
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
             applicationIsQuitting = false;
 
@@ -698,25 +699,30 @@ namespace LegendaryPet
             // 180도 회전하여 카메라를 향하도록 스폰
             Quaternion rotation = Quaternion.Euler(0, 180, 0);
 
-            // 직접 목표 위치에서 생성 (메모리 오류 방지)
-            GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], appearPos, rotation);
-
-            // NavMeshAgent 안전하게 비활성화
-            NavMeshAgent spawnedAgent = legendObject.GetComponent<NavMeshAgent>();
-            if (spawnedAgent != null && spawnedAgent.enabled)
+            // NavMeshAgent 에러 방지: 프리팹의 NavMeshAgent를 먼저 비활성화
+            GameObject prefab = legendaryPetPrefabs[legendIndex];
+            NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
+            bool wasAgentEnabled = false;
+            if (prefabAgent != null && prefabAgent.enabled)
             {
-                // 메모리 오류 방지: 컴포넌트 완전 비활성화 전 상태 확인
-                try
-                {
-                    spawnedAgent.updatePosition = false;
-                    spawnedAgent.updateRotation = false;
-                    spawnedAgent.updateUpAxis = false;
-                    spawnedAgent.enabled = false;
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogWarning($"[LegendaryPetManager] NavMeshAgent 비활성화 중 오류: {e.Message}");
-                }
+                wasAgentEnabled = true;
+                prefabAgent.enabled = false;
+            }
+
+            // 직접 목표 위치에서 생성 (NavMeshAgent 비활성화 상태로)
+            GameObject legendObject = Instantiate(prefab, appearPos, rotation);
+
+            // 프리팹 원래 상태 복원
+            if (wasAgentEnabled && prefabAgent != null)
+            {
+                prefabAgent.enabled = true;
+            }
+
+            // 생성된 오브젝트의 NavMeshAgent도 비활성화 유지
+            NavMeshAgent spawnedAgent = legendObject.GetComponent<NavMeshAgent>();
+            if (spawnedAgent != null)
+            {
+                spawnedAgent.enabled = false;
             }
 
             LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
