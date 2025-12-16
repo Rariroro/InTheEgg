@@ -294,7 +294,7 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 
 ### Unity → Flutter: FOOD_USED
 
-음식 사용 시 전송합니다.
+음식을 맵에 놓을 때 전송합니다. (펫이 먹을 때가 아님)
 
 ```json
 {
@@ -389,7 +389,7 @@ Unity 게임
     │ ─── 즉시 전송 (되돌릴 수 없는 이벤트) ─▶ Flutter로 전송
     │     • Egg 터치 → PET_SPAWNED / LEGEND_PET_SPAWNED
     │     • 선물상자 터치 → ENV_ITEM_SPAWNED
-    │     • 음식 사용 → FOOD_USED
+    │     • 음식을 맵에 놓음 → FOOD_USED
     │
     │ ─── 30초마다 ───────────────────────────▶ SYNC_INTIMACY
     │
@@ -424,7 +424,7 @@ Flutter 앱
 |--------|--------|------|
 | Egg 터치 | PET_SPAWNED / LEGEND_PET_SPAWNED | 즉시 |
 | 선물상자 터치 | ENV_ITEM_SPAWNED | 즉시 |
-| 음식 사용 | FOOD_USED | 즉시 |
+| 음식을 맵에 놓음 | FOOD_USED | 즉시 |
 | 30초 주기 | SYNC_INTIMACY | 주기적 |
 | 백그라운드 전환 | SYNC_INTIMACY | 즉시 |
 | 게임 종료 | GAME_EXIT | 즉시 |
@@ -445,7 +445,7 @@ Flutter 앱
 
 되돌릴 수 없는 이벤트는 전송 실패 시 심각한 문제:
 - Egg 깨짐 → 서버에는 아직 Egg 상태
-- 음식 사용 → 서버에는 수량 그대로
+- 음식을 맵에 놓음 → 서버에는 수량 그대로
 
 **해결책: 로컬 큐 + 재시도**
 
@@ -561,7 +561,7 @@ void setupUnityListener() {
         break;
 
       case 'FOOD_USED':
-        // 음식 사용됨 → 수량 감소
+        // 음식을 맵에 놓음 → 수량 감소
         final foodId = data['data']['id'];
         final usedQty = data['data']['usedQuantity'];
         decreaseFoodQuantity(foodId, usedQty);
@@ -640,7 +640,7 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 │  2. 즉시 동기화 (Flutter로)                         │
 │     • Egg → 펫/레전드 펫 스폰                       │
 │     • 선물상자 → 환경 아이템 스폰                   │
-│     • 음식 아이템 사용                              │
+│     • 음식을 맵에 배치                              │
 │                                                     │
 │  3. 주기적 동기화                                   │
 │     • 친밀도: 30초마다 + 게임 종료 시               │
