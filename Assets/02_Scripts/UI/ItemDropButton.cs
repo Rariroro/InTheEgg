@@ -234,6 +234,9 @@ public class ItemDropButton : MonoBehaviour
             rb.AddTorque(Random.insideUnitSphere * dropForce, ForceMode.Impulse);
         }
         
+        // Flutter에 아이템 사용 알림 (맵에 놓을 때)
+        FlutterBridge.Instance?.SendFoodUsedByType(currentItemType, 1);
+
         // 개수 차감 및 UI 업데이트
         itemCounts[currentItemType]--;
         UpdateItemButton(currentItemType);

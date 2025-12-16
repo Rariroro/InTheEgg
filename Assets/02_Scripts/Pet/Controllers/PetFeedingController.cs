@@ -420,20 +420,7 @@ public class PetFeedingController : PetControllerBase
 
         if (targetFood != null)
         {
-            // [Flutter 모드] 음식 사용 알림
-            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
-            {
-                FoodItem foodItem = targetFood.GetComponent<FoodItem>();
-                if (foodItem != null)
-                {
-                    string foodType = GetFoodTypeString(foodItem.foodType);
-                    if (!string.IsNullOrEmpty(foodType))
-                    {
-                        FlutterBridge.Instance?.SendFoodUsedByType(foodType, 1);
-                    }
-                }
-            }
-
+            // 음식 사용 알림은 ItemDropButton.DropItem()에서 맵에 놓을 때 전송
             Destroy(targetFood);
         }
 
