@@ -72,21 +72,20 @@ public class ItemDropButton : MonoBehaviour
             itemButtonContainer.gameObject.SetActive(false);
         }
 
-        // Flutter 연동 환경인지 체크 (FlutterModeManager가 존재하면 Flutter 빌드)
+        // Flutter 모드인 경우 이벤트 구독
         if (FlutterModeManager.Instance != null)
         {
-            // Flutter 환경: 이벤트 구독 (데이터가 오면 로드)
             FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
-
-            // 이미 초기화되어 있으면 바로 로드 (늦게 Start된 경우)
-            if (FlutterModeManager.Instance.IsInitialized)
-            {
-                LoadItemsFromSelectionManager();
-            }
         }
-        else
+
+        // 아이템 로드: Flutter 모드가 아니거나, Flutter 모드이면서 이미 초기화된 경우
+        // PetChoice에서 선택한 아이템도 ItemSelectionManager에 저장되어 있으므로 항상 로드 시도
+        bool isFlutterModeWaitingForData = FlutterModeManager.Instance != null
+                                           && FlutterModeManager.Instance.IsFlutterMode
+                                           && !FlutterModeManager.Instance.IsInitialized;
+
+        if (!isFlutterModeWaitingForData)
         {
-            // 순수 Unity 빌드 모드: 기존 로직 (PetChoice 씬에서 선택한 데이터 사용)
             LoadItemsFromSelectionManager();
         }
 
