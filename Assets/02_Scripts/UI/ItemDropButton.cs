@@ -72,7 +72,60 @@ public class ItemDropButton : MonoBehaviour
             itemButtonContainer.gameObject.SetActive(false);
         }
 
-        // ItemSelectionManager에서 아이템 정보 가져오기
+        // Flutter 연동 환경인지 체크 (FlutterModeManager가 존재하면 Flutter 빌드)
+        if (FlutterModeManager.Instance != null)
+        {
+            // Flutter 환경: 이벤트 구독 (데이터가 오면 로드)
+            FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
+
+            // 이미 초기화되어 있으면 바로 로드 (늦게 Start된 경우)
+            if (FlutterModeManager.Instance.IsInitialized)
+            {
+                LoadItemsFromSelectionManager();
+            }
+        }
+        else
+        {
+            // 순수 Unity 빌드 모드: 기존 로직 (PetChoice 씬에서 선택한 데이터 사용)
+            LoadItemsFromSelectionManager();
+        }
+
+        // 초기 가방 상태 업데이트
+        UpdateBagState();
+
+        if (feedbackText != null)
+        {
+            feedbackText.gameObject.SetActive(false);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (FlutterModeManager.Instance != null)
+        {
+            FlutterModeManager.Instance.OnFlutterDataReceived -= OnFlutterDataReceived;
+        }
+    }
+
+    private void OnFlutterDataReceived()
+    {
+        LoadItemsFromSelectionManager();
+    }
+
+    private void LoadItemsFromSelectionManager()
+    {
+        // 기존 버튼들 제거 (중복 방지)
+        foreach (var button in itemButtons.Values)
+        {
+            if (button != null)
+            {
+                Destroy(button.gameObject);
+            }
+        }
+        itemButtons.Clear();
+        itemCounts.Clear();
+
+        // 새로 로드
         if (ItemSelectionManager.Instance != null)
         {
             foreach (var item in ItemSelectionManager.Instance.selectedItems)
@@ -84,14 +137,7 @@ public class ItemDropButton : MonoBehaviour
                 }
             }
         }
-
-        // 초기 가방 상태 업데이트
         UpdateBagState();
-
-        if (feedbackText != null)
-        {
-            feedbackText.gameObject.SetActive(false);
-        }
     }
 
     void CreateItemButton(string itemType, int count)
