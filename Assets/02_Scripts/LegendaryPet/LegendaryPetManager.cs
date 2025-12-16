@@ -241,13 +241,11 @@ namespace LegendaryPet
             {
                 yield return StartCoroutine(SpawnLegendaryPetsFromFlutterData());
             }
-            // PetChoice를 거친 경우: 순차 스폰 모드
+            // PetChoice를 거친 경우: 자동 스폰
             else if (LegendaryPetSelectionManager.Instance != null &&
                 LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count > 0)
             {
-                isSpawningSequentially = true;
-                currentLegendSpawnIndex = 0;
-                Debug.Log($"[LegendaryPetManager] 레전드펫 스폰 준비 완료. 총 {LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count}마리의 레전드펫을 스폰할 수 있습니다.");
+                yield return StartCoroutine(SpawnLegendaryPetsFromPetChoice());
             }
             // PetVillage에서 바로 시작한 경우: 모든 레전드 펫 자동 스폰
             else
@@ -297,7 +295,41 @@ namespace LegendaryPet
 
             Debug.Log($"[LegendaryPetManager] Flutter 모드: 레전드 펫 스폰 완료");
         }
-        
+
+        /// <summary>
+        /// PetChoice에서 선택한 레전드 펫 스폰
+        /// </summary>
+        private IEnumerator SpawnLegendaryPetsFromPetChoice()
+        {
+            var legendIds = LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds;
+
+            Debug.Log($"[LegendaryPetManager] PetChoice 모드: {legendIds.Count}마리의 레전드 펫 스폰 시작");
+
+            isSpawningSequentially = true;
+            currentLegendSpawnIndex = 0;
+
+            foreach (var legendId in legendIds)
+            {
+                bool isFirstAppearance = LegendaryPetSelectionManager.Instance.IsLegendaryPetFirstAppearance(legendId);
+
+                if (isFirstAppearance)
+                {
+                    SpawnGiftForLegendaryPet(legendId);
+                    Debug.Log($"[LegendaryPetManager] PetChoice 모드: 신규 레전드 펫 선물 생성 - {legendId}");
+                }
+                else
+                {
+                    SpawnLegendaryPet(legendId, false);
+                    Debug.Log($"[LegendaryPetManager] PetChoice 모드: 기존 레전드 펫 직접 스폰 - {legendId}");
+                }
+
+                currentLegendSpawnIndex++;
+                yield return new WaitForSeconds(firstAppearanceDelay);
+            }
+
+            Debug.Log($"[LegendaryPetManager] PetChoice 모드: 레전드 펫 스폰 완료");
+        }
+
         // 모든 레전드 펫을 스폰하는 메서드 (PetManager의 SpawnAllPets와 동일)
         private void SpawnAllLegendaryPets()
         {
