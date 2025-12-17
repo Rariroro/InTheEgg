@@ -428,17 +428,43 @@ Flutter 앱
     ▼
 ```
 
-### 게임 종료할 때
+### 게임 종료/백그라운드 전환 시 (v3.2 수정)
 
 ```
 Unity 게임
     │
-    │ 1. 배고픔/졸림 → PlayerPrefs에 저장
-    │ 2. GAME_EXIT 전송
+    │ OnApplicationPause(true) 감지
+    │
+    │ 1. 친밀도 동기화 (SYNC_INTIMACY)
+    │ 2. CleanupForExit() 호출
+    │    - 모든 상호작용 코루틴 중지 및 제거
+    │    - 모든 펫 코루틴 중지 및 제거
+    │    - 모든 레전드 펫 제거
+    │ 3. 배고픔/졸림 → PlayerPrefs에 저장
     ▼
 Flutter 앱
     │
     │ 서버에 저장
+    ▼
+```
+
+### 게임 재진입 시 (v3.1, v3.2 수정)
+
+```
+Flutter 앱
+    │
+    │ 1. SCREEN_ENTERED 전송
+    ▼
+Unity 게임
+    │
+    │ 2. OnApplicationPause(false) 감지
+    │    - ResetForNewSession() (이미 깨끗한 상태)
+    │    - READY 재전송
+    │
+    │ 3. READY 수신 후 INIT_GAME 전송 (Flutter)
+    │
+    │ 4. EnvironmentManager 초기화 대기 (NavMesh 베이크)
+    │ 5. 펫 스폰 시작 (NavMesh 준비 완료 후)
     ▼
 ```
 
@@ -720,3 +746,5 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-17 | 2.6 | **Flutter INIT_GAME 중복 전송 방지 구현** - `PlaygroundViewModel`에 `_hasSentInitGame` 플래그 추가. Unity가 READY를 2번 보내도 INIT_GAME은 1번만 전송됨. `onScreenEntered()`에서 플래그 리셋하여 재진입 시 정상 동작 |
 | 2025-12-17 | 2.7 | **Flutter 타이밍 이슈 수정** - v2.6의 플래그를 `await _sendInitGameData()` **전에** 설정하도록 변경. 기존: await 후 설정 → 두 번째 READY가 await 중에 도착하면 중복 전송. 수정: await 전에 즉시 설정 → 완벽한 중복 방지 |
 | 2025-12-17 | 3.0 | **코인 동기화 시스템 추가** - `INIT_GAME`에 `coins` 필드 추가 (Flutter → Unity). `COIN_EARNED` 메시지 추가 (Unity → Flutter). 코인을 Flutter 서버에서 관리하여 크로스 플랫폼 데이터 보존. ✅ Flutter 완료. ✅ Unity 완료. |
+| 2025-12-17 | 3.1 | **NavMesh 초기화 타이밍 수정** - Flutter 모드에서 펫 스폰 전 NavMesh 베이크 완료 대기 로직 추가. "Failed to create agent because there is no valid NavMesh" 에러 해결. `PetManager.WaitForEnvironmentAndSpawnFromFlutter()` 추가 |
+| 2025-12-17 | 3.2 | **Unity 나가기 시 정리 로직 추가** - `FlutterBridge.CleanupForExit()` 추가. Unity 백그라운드 전환 시 모든 펫/상호작용 정리 후 Destroy. 재진입 시 MissingReferenceException 방지 |

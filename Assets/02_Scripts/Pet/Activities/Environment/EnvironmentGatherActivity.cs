@@ -85,29 +85,29 @@ public class EnvironmentGatherActivity : PetActivityAdapter
             }
         }
         
-        if (agent != null && agent.enabled)
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.speed = pet.baseSpeed * SPEED_MULTIPLIER;
             agent.acceleration = pet.baseAcceleration * SPEED_MULTIPLIER;
             agent.SetDestination(pet.State.EnvironmentTargetPosition);
             agent.isStopped = false;
-            
-            if (pet.animator) 
+
+            if (pet.animator)
                 pet.animator.SetInteger("animation", 2); // 달리기 애니메이션
         }
     }
-    
+
     public override void Update()
     {
         if (!isGathering) return;
-        
+
         if (pet.movementController != null)
         {
             pet.movementController.HandleRotation();
         }
-        
+
         // 도착 체크 (거리를 넉넉하게 2.5f로 설정)
-        if (agent != null && agent.enabled && !agent.pathPending && agent.remainingDistance <= 2.5f)
+        if (agent != null && agent.enabled && agent.isOnNavMesh && !agent.pathPending && agent.remainingDistance <= 2.5f)
         {
             isGathering = false; // 더 이상 이동 업데이트는 하지 않음
             celebrationCoroutine = pet.StartCoroutine(CelebrateArrivalCoroutine());

@@ -191,12 +191,45 @@ public class PetManager : MonoBehaviour
         Debug.Log("[PetManager] OnFlutterDataReceived 이벤트 수신");
         if (!isSpawning && !hasSpawnedPets)
         {
-            StartCoroutine(SpawnPetsFromFlutterData());
+            StartCoroutine(WaitForEnvironmentAndSpawnFromFlutter());
         }
         else
         {
             Debug.Log($"[PetManager] 스폰 건너뜀 (isSpawning={isSpawning}, hasSpawnedPets={hasSpawnedPets})");
         }
+    }
+
+    /// <summary>
+    /// Flutter 모드에서 EnvironmentManager 초기화 완료 후 펫 스폰
+    /// </summary>
+    private IEnumerator WaitForEnvironmentAndSpawnFromFlutter()
+    {
+        // EnvironmentManager의 초기화 완료 대기
+        EnvironmentManager environmentManager = EnvironmentManager.Instance ?? FindObjectOfType<EnvironmentManager>();
+
+        if (environmentManager != null)
+        {
+            Debug.Log("[PetManager] Flutter 모드 - EnvironmentManager 초기화 대기 중...");
+            yield return new WaitUntil(() => environmentManager.IsInitializationComplete);
+            Debug.Log("[PetManager] Flutter 모드 - EnvironmentManager 초기화 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[PetManager] EnvironmentManager를 찾을 수 없습니다. 기본 대기 시간 적용");
+            yield return new WaitForSeconds(3f);
+        }
+
+        // 추가 안전 대기 (NavMesh 베이크 직후 안정화)
+        yield return new WaitForSeconds(0.5f);
+
+        // 이미 스폰 완료된 경우 건너뜀
+        if (hasSpawnedPets)
+        {
+            Debug.Log("[PetManager] Flutter 모드 - 이미 스폰 완료됨");
+            yield break;
+        }
+
+        yield return StartCoroutine(SpawnPetsFromFlutterData());
     }
 
     // 환경 준비 완료까지 기다리는 코루틴

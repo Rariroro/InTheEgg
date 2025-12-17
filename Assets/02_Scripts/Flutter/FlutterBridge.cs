@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using FlutterIntegration;
+using LegendaryPet;
 
 /// <summary>
 /// Flutter와의 양방향 통신을 관리하는 브릿지 클래스
@@ -68,6 +69,9 @@ public class FlutterBridge : MonoBehaviour
             {
                 SendSyncIntimacy(false);
             }
+
+            // 나갈 때 모든 오브젝트 정리
+            CleanupForExit();
         }
         else
         {
@@ -77,6 +81,49 @@ public class FlutterBridge : MonoBehaviour
             SendUnityReady();
             isUnityReady = true;
         }
+    }
+
+    /// <summary>
+    /// Unity 나갈 때 모든 오브젝트 정리 (코루틴 중지 후 파괴)
+    /// </summary>
+    private void CleanupForExit()
+    {
+        Debug.Log("[FlutterBridge] Unity 나가기 - 오브젝트 정리 시작");
+
+        // 1. 모든 상호작용 중지 및 제거
+        var interactions = FindObjectsOfType<BasePetInteraction>();
+        foreach (var interaction in interactions)
+        {
+            if (interaction != null)
+            {
+                interaction.StopAllCoroutines();
+                Destroy(interaction.gameObject);
+            }
+        }
+
+        // 2. 모든 펫 코루틴 중지 및 제거
+        var pets = FindObjectsOfType<PetController>();
+        foreach (var pet in pets)
+        {
+            if (pet != null)
+            {
+                pet.StopAllCoroutines();
+                Destroy(pet.gameObject);
+            }
+        }
+
+        // 3. 모든 레전드 펫 제거
+        var legendaryPets = FindObjectsOfType<LegendaryPetController>();
+        foreach (var pet in legendaryPets)
+        {
+            if (pet != null)
+            {
+                pet.StopAllCoroutines();
+                Destroy(pet.gameObject);
+            }
+        }
+
+        Debug.Log("[FlutterBridge] Unity 나가기 - 오브젝트 정리 완료");
     }
 
     private void OnApplicationFocus(bool hasFocus)
