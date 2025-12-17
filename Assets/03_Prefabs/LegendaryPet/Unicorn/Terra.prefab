@@ -541,7 +541,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   petType: 2
-  petName: Legendary Pet
+  petName: Terra
   traits:
     moveSpeed: 0
     glowIntensity: 0

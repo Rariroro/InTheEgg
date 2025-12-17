@@ -909,7 +909,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   petType: 0
-  petName: Legendary Pet
+  petName: Amber
   traits:
     moveSpeed: 0
     glowIntensity: 0

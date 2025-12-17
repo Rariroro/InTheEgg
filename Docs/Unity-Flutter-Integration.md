@@ -675,4 +675,4 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-15 | 2.0 | **LOADING_COMPLETE 메시지 추가** - 펫 스폰 완료 후 Flutter에 알림. Flutter에서 로딩 오버레이 제거 타이밍으로 활용 가능 |
 | 2025-12-15 | 2.1 | **LOADING_COMPLETE 메시지 삭제** - Unity 자체 로딩화면 구현으로 불필요. Flutter 로딩 오버레이도 제거. **Unity 측: LOADING_COMPLETE 전송 코드 삭제 필요** |
 | 2025-12-17 | 2.2 | **레전드 펫 petCardId 매칭 버그 수정** - Flutter에서 Unity로 레전드 펫 전송 시 `petCardId`에 타임스탬프가 포함되던 버그 수정 (예: `pet_legend_011_1734567890123` → `pet_legend_011`). 이제 Unity 프리팹 매칭이 정상 동작함 |
-| 2025-12-17 | 2.3 | **레전드 펫 프리팹 매칭 방식 개선** - 기존: 배열 인덱스 기반 (순서 의존) → 개선: petName 기반 Dictionary 매핑 (일반 펫과 동일한 방식). 인스펙터에서 프리팹 순서가 바뀌어도 정상 매칭됨 |
+| 2025-12-17 | 2.3 | **레전드 펫 프리팹 매칭 방식 개선** - 기존: 배열 인덱스 기반 (순서 의존) → 개선: petName 기반 Dictionary 매핑. **중요: 각 레전드 펫 프리팹의 Inspector에서 `petName` 필드를 해당 이름(Dream, Ocean, Snow 등)으로 설정해야 함** |

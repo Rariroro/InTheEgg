@@ -1790,7 +1790,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   petType: 0
-  petName: Legendary Pet
+  petName: Cloud
   traits:
     moveSpeed: 0
     glowIntensity: 0
