@@ -102,6 +102,10 @@ namespace LegendaryPet
         // 실행 중인 비행 코루틴들을 관리하는 리스트 (메모리 누수 방지)
         private List<Coroutine> flyingCoroutines = new List<Coroutine>();
 
+        // Flutter petCardId → Prefab 매핑 (게임 시작 시 한 번만 구축)
+        private Dictionary<string, GameObject> legendaryPetPrefabMap;
+        private bool isPrefabMapBuilt = false;
+
         // 순차 스폰을 위한 변수들
         private int currentLegendSpawnIndex = 0;
         private bool isSpawningSequentially = false;
@@ -168,6 +172,9 @@ namespace LegendaryPet
         
         private void Start()
         {
+            // petCardId → Prefab 매핑 테이블 구축 (한 번만)
+            BuildPrefabMap();
+
             // Flutter 데이터 수신 이벤트 구독 (PetManager와 동일한 패턴)
             if (FlutterModeManager.Instance != null)
             {
@@ -176,6 +183,123 @@ namespace LegendaryPet
 
             // PetManager와 동일하게 환경 준비 완료 후 스폰
             StartCoroutine(WaitForEnvironmentAndSpawnLegendaryPets());
+        }
+
+        /// <summary>
+        /// petCardId → Prefab 매핑 테이블 구축 (게임 시작 시 한 번만)
+        /// petName을 기준으로 매핑하므로 배열 순서에 의존하지 않음
+        /// </summary>
+        private void BuildPrefabMap()
+        {
+            if (isPrefabMapBuilt) return;
+            if (legendaryPetPrefabs == null || legendaryPetPrefabs.Length == 0) return;
+
+            legendaryPetPrefabMap = new Dictionary<string, GameObject>(legendaryPetPrefabs.Length);
+
+            // petName → petCardId 매핑 (문서 기준)
+            // 유니콘 시리즈 (001-010)
+            var nameToIdMap = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase)
+            {
+                { "Terra", "pet_legend_001" },
+                { "Mint", "pet_legend_002" },
+                { "Rose", "pet_legend_003" },
+                { "Shadow", "pet_legend_004" },
+                { "Twin", "pet_legend_005" },
+                { "Dream", "pet_legend_006" },
+                { "Prism", "pet_legend_007" },
+                { "Night", "pet_legend_008" },
+                { "Sky", "pet_legend_009" },
+                { "Pure", "pet_legend_010" },
+                // 드래곤 시리즈 (011-021)
+                { "Ocean", "pet_legend_011" },
+                { "Spring", "pet_legend_012" },
+                { "Peach", "pet_legend_013" },
+                { "Cloud", "pet_legend_014" },
+                { "Volcano", "pet_legend_015" },
+                { "Amber", "pet_legend_016" },
+                { "Blossom", "pet_legend_017" },
+                { "Star", "pet_legend_018" },
+                { "Storm", "pet_legend_019" },
+                { "Sunset", "pet_legend_020" },
+                { "Snow", "pet_legend_021" }
+            };
+
+            foreach (var prefab in legendaryPetPrefabs)
+            {
+                if (prefab == null) continue;
+
+                var controller = prefab.GetComponent<LegendaryPetController>();
+                if (controller != null)
+                {
+                    string petName = controller.PetName;
+
+                    // petName으로 petCardId 찾기
+                    if (nameToIdMap.TryGetValue(petName, out string petCardId))
+                    {
+                        if (!legendaryPetPrefabMap.ContainsKey(petCardId))
+                        {
+                            legendaryPetPrefabMap[petCardId] = prefab;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[LegendaryPetManager] 중복된 petCardId: {petCardId} ({petName})");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[LegendaryPetManager] 매핑되지 않은 petName: {petName}");
+                    }
+                }
+            }
+
+            isPrefabMapBuilt = true;
+            Debug.Log($"[LegendaryPetManager] Prefab 매핑 완료: {legendaryPetPrefabMap.Count}개");
+        }
+
+        /// <summary>
+        /// petCardId로 프리팹 조회 (O(1) 성능)
+        /// </summary>
+        private GameObject GetPrefabByPetCardId(string petCardId)
+        {
+            if (!isPrefabMapBuilt) BuildPrefabMap();
+
+            // pet_legend_XXX_timestamp 형식에서 기본 ID 추출
+            string baseId = ExtractBasePetCardId(petCardId);
+
+            if (legendaryPetPrefabMap != null && legendaryPetPrefabMap.TryGetValue(baseId, out GameObject prefab))
+            {
+                return prefab;
+            }
+
+            Debug.LogError($"[LegendaryPetManager] 프리팹을 찾을 수 없음: {petCardId} (baseId: {baseId})");
+            return null;
+        }
+
+        /// <summary>
+        /// petCardId에서 기본 ID 추출 (타임스탬프 제거)
+        /// 예: "pet_legend_011_1734567890123" → "pet_legend_011"
+        /// </summary>
+        private string ExtractBasePetCardId(string petCardId)
+        {
+            if (string.IsNullOrEmpty(petCardId)) return petCardId;
+
+            // pet_legend_XXX 형식 확인
+            if (petCardId.StartsWith("pet_legend_"))
+            {
+                // "pet_legend_" 이후 문자열 추출
+                string afterPrefix = petCardId.Substring(11);
+
+                // 첫 번째 언더스코어 위치 찾기 (추가 접미사 분리)
+                int underscoreIndex = afterPrefix.IndexOf('_');
+                if (underscoreIndex > 0)
+                {
+                    // 숫자 부분만 추출
+                    string numberPart = afterPrefix.Substring(0, underscoreIndex);
+                    return $"pet_legend_{numberPart}";
+                }
+            }
+
+            return petCardId;
         }
 
         /// <summary>
@@ -486,18 +610,16 @@ namespace LegendaryPet
         // 레전드 펫 ID로 스폰 (새로운 ID 형식 지원)
         private void SpawnLegendaryPet(string legendaryPetId, bool withFirstAppearanceEffect)
         {
-            // 공통 헬퍼 메서드 사용으로 중복 코드 제거
-            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
-
-            // 유효한 인덱스인지 확인하고 스폰
-            if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
+            // Dictionary에서 프리팹 조회
+            GameObject prefab = GetPrefabByPetCardId(legendaryPetId);
+            if (prefab != null)
             {
                 Vector3 spawnPosition = GetRandomSpawnPosition();
                 SpawnLegendaryPetAtPosition(legendaryPetId, spawnPosition, withFirstAppearanceEffect);
             }
             else
             {
-                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 ID: {legendaryPetId} (인덱스: {legendIndex})");
+                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 ID: {legendaryPetId}");
             }
         }
         
@@ -510,88 +632,84 @@ namespace LegendaryPet
                 return;
             }
 
-            // 공통 헬퍼 메서드 사용으로 중복 코드 제거
-            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
-
-            // 유효한 인덱스인지 확인
-            if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
+            // Dictionary에서 프리팹 조회
+            GameObject prefab = GetPrefabByPetCardId(legendaryPetId);
+            if (prefab == null)
             {
-                // NavMesh 위의 가장 가까운 유효한 위치 찾기
-                NavMeshHit hit;
-                Vector3 spawnPosition = position;
+                Debug.LogError($"[LegendaryPetManager] 프리팹을 찾을 수 없음: {legendaryPetId}");
+                return;
+            }
 
-                if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))
-                {
-                    spawnPosition = hit.position;
-                }
-                else
-                {
-                    Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
-                }
+            // NavMesh 위의 가장 가까운 유효한 위치 찾기
+            NavMeshHit hit;
+            Vector3 spawnPosition = position;
 
-                // NavMeshAgent 비활성화 후 생성 (SpawnLegendaryPetWithThreeStageSystem와 동일한 패턴)
-                GameObject prefab = legendaryPetPrefabs[legendIndex];
-                NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
-                bool wasAgentEnabled = false;
-                if (prefabAgent != null && prefabAgent.enabled)
-                {
-                    wasAgentEnabled = true;
-                    prefabAgent.enabled = false;
-                }
-
-                // 180도 회전하여 카메라를 향하도록 스폰
-                Quaternion rotation = Quaternion.Euler(0, 180, 0);
-                GameObject legendObject = Instantiate(prefab, spawnPosition, rotation);
-
-                // 프리팹 원래 상태 복원
-                if (wasAgentEnabled && prefabAgent != null)
-                {
-                    prefabAgent.enabled = true;
-                }
-
-                LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
-
-                if (controller != null)
-                {
-                    // 즉시 초기화 호출 (애니메이터, traits 설정)
-                    controller.InitializeImmediate();
-
-                    // NavMeshAgent 활성화 및 배치
-                    NavMeshAgent agent = legendObject.GetComponent<NavMeshAgent>();
-                    if (agent != null)
-                    {
-                        agent.enabled = true;
-                        // NavMesh 위에 배치
-                        if (!agent.isOnNavMesh)
-                        {
-                            agent.Warp(spawnPosition);
-                        }
-                    }
-
-                    // 최초 등장 효과
-                    if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
-                    {
-                        GameObject effect = Instantiate(firstAppearanceEffectPrefab, spawnPosition, Quaternion.identity);
-                        if (Application.isPlaying)
-                        {
-                            Destroy(effect, 5f);
-                        }
-                    }
-
-                    Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
-                }
-                else
-                {
-                    Debug.LogError($"[LegendaryPetManager] {legendaryPetId}: LegendaryPetController를 찾을 수 없습니다");
-                    if (Application.isPlaying)
-                    {
-                        Destroy(legendObject);
-                    }
-                }
+            if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))
+            {
+                spawnPosition = hit.position;
             }
             else
             {
-                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 인덱스: {legendIndex} (ID: {legendaryPetId})");
+                Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
+            }
+
+            // NavMeshAgent 비활성화 후 생성 (SpawnLegendaryPetWithThreeStageSystem와 동일한 패턴)
+            NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
+            bool wasAgentEnabled = false;
+            if (prefabAgent != null && prefabAgent.enabled)
+            {
+                wasAgentEnabled = true;
+                prefabAgent.enabled = false;
+            }
+
+            // 180도 회전하여 카메라를 향하도록 스폰
+            Quaternion rotation = Quaternion.Euler(0, 180, 0);
+            GameObject legendObject = Instantiate(prefab, spawnPosition, rotation);
+
+            // 프리팹 원래 상태 복원
+            if (wasAgentEnabled && prefabAgent != null)
+            {
+                prefabAgent.enabled = true;
+            }
+
+            LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
+
+            if (controller != null)
+            {
+                // 즉시 초기화 호출 (애니메이터, traits 설정)
+                controller.InitializeImmediate();
+
+                // NavMeshAgent 활성화 및 배치
+                NavMeshAgent agent = legendObject.GetComponent<NavMeshAgent>();
+                if (agent != null)
+                {
+                    agent.enabled = true;
+                    // NavMesh 위에 배치
+                    if (!agent.isOnNavMesh)
+                    {
+                        agent.Warp(spawnPosition);
+                    }
+                }
+
+                // 최초 등장 효과
+                if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
+                {
+                    GameObject effect = Instantiate(firstAppearanceEffectPrefab, spawnPosition, Quaternion.identity);
+                    if (Application.isPlaying)
+                    {
+                        Destroy(effect, 5f);
+                    }
+                }
+
+                Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
+            }
+            else
+            {
+                Debug.LogError($"[LegendaryPetManager] {legendaryPetId}: LegendaryPetController를 찾을 수 없습니다");
+                if (Application.isPlaying)
+                {
+                    Destroy(legendObject);
+                }
             }
         }
         
@@ -724,10 +842,11 @@ namespace LegendaryPet
         // 3단계 스폰 시스템 코루틴
         private IEnumerator SpawnLegendaryPetWithThreeStageSystem(string legendaryPetId)
         {
-            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
-            if (legendIndex < 0 || legendIndex >= legendaryPetPrefabs.Length)
+            // Dictionary에서 프리팹 조회
+            GameObject prefab = GetPrefabByPetCardId(legendaryPetId);
+            if (prefab == null)
             {
-                Debug.LogError($"[LegendaryPetManager] 유효하지 않은 레전드 펫 인덱스: {legendIndex}");
+                Debug.LogError($"[LegendaryPetManager] 프리팹을 찾을 수 없음: {legendaryPetId}");
                 yield break;
             }
 
@@ -738,7 +857,6 @@ namespace LegendaryPet
             Quaternion rotation = Quaternion.Euler(0, 180, 0);
 
             // NavMeshAgent 에러 방지: 프리팹의 NavMeshAgent를 먼저 비활성화
-            GameObject prefab = legendaryPetPrefabs[legendIndex];
             NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
             bool wasAgentEnabled = false;
             if (prefabAgent != null && prefabAgent.enabled)
