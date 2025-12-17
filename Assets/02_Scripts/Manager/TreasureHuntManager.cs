@@ -184,6 +184,12 @@ public class TreasureHuntManager : MonoBehaviour
         {
             Debug.LogWarning("TreasureHuntManager: 보물 프리팹이 설정되지 않았습니다!");
         }
+
+        // v3.0: Flutter 데이터 수신 시 코인 재로드
+        if (FlutterModeManager.Instance != null)
+        {
+            FlutterModeManager.Instance.OnFlutterDataReceived += ReloadCoinsFromFlutter;
+        }
     }
     
     /// <summary>
@@ -596,6 +602,9 @@ public class TreasureHuntManager : MonoBehaviour
                 totalCoins += coins;
                 UpdateCoinUI();
 
+                // v3.0: Flutter로 코인 획득 알림
+                FlutterBridge.Instance?.SendCoinEarned(coins, totalCoins);
+
                 // 코인 이벤트 발생
                 OnCoinsCollected?.Invoke(coins);
             });
@@ -606,6 +615,9 @@ public class TreasureHuntManager : MonoBehaviour
             totalCoins += coins;
             UpdateCoinUI();
             ShowCoinFeedback(coins, treasurePosition);
+
+            // v3.0: Flutter로 코인 획득 알림
+            FlutterBridge.Instance?.SendCoinEarned(coins, totalCoins);
 
             // 코인 이벤트 발생
             OnCoinsCollected?.Invoke(coins);
@@ -933,6 +945,9 @@ public class TreasureHuntManager : MonoBehaviour
                     SaveCoins();
                     UpdateCoinUI();
 
+                    // v3.0: Flutter로 보너스 코인 획득 알림
+                    FlutterBridge.Instance?.SendCoinEarned(missionBonusCoins, totalCoins);
+
                     Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
                 });
             }
@@ -944,6 +959,9 @@ public class TreasureHuntManager : MonoBehaviour
                 // 코인 저장 및 UI 업데이트
                 SaveCoins();
                 UpdateCoinUI();
+
+                // v3.0: Flutter로 보너스 코인 획득 알림
+                FlutterBridge.Instance?.SendCoinEarned(missionBonusCoins, totalCoins);
 
                 Debug.Log($"보너스 코인 {missionBonusCoins}이(가) 적용되었습니다. 총 코인: {totalCoins}");
             }
@@ -1143,11 +1161,35 @@ public class TreasureHuntManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 코인 로드
+    /// 코인 로드 (v3.0: Flutter 모드 지원)
     /// </summary>
     private void LoadCoins()
     {
-        totalCoins = PlayerPrefs.GetInt("TotalCoins", 0);
+        // Flutter 모드면 Flutter에서 받은 코인값 사용
+        if (FlutterModeManager.Instance?.IsFlutterMode == true)
+        {
+            totalCoins = FlutterModeManager.Instance.InitialCoins;
+            Debug.Log($"[TreasureHuntManager] Flutter 코인 로드: {totalCoins}");
+        }
+        else
+        {
+            totalCoins = PlayerPrefs.GetInt("TotalCoins", 0);
+        }
+    }
+
+    /// <summary>
+    /// Flutter 데이터 수신 후 코인 재로드 (v3.0)
+    /// </summary>
+    public void ReloadCoinsFromFlutter()
+    {
+        if (FlutterModeManager.Instance?.IsFlutterMode == true)
+        {
+            totalCoins = FlutterModeManager.Instance.InitialCoins;
+            displayedCoins = totalCoins;
+            targetCoins = totalCoins;
+            UpdateCoinUI();
+            Debug.Log($"[TreasureHuntManager] Flutter 코인 재로드: {totalCoins}");
+        }
     }
     
     private void OnApplicationPause(bool pauseStatus)
@@ -1163,6 +1205,12 @@ public class TreasureHuntManager : MonoBehaviour
     private void OnDestroy()
     {
         SaveCoins();
+
+        // v3.0: Flutter 이벤트 구독 해제
+        if (FlutterModeManager.Instance != null)
+        {
+            FlutterModeManager.Instance.OnFlutterDataReceived -= ReloadCoinsFromFlutter;
+        }
 
         // 카운트 코루틴 정리
         if (countCoroutine != null)

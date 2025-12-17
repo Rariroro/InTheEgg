@@ -15,7 +15,7 @@ Flutter 앱에서 유저가 보유한 펫을 Unity 게임에서 플레이할 수
 
 | 데이터 종류 | 예시 | 저장 위치 | 비고 |
 |-------------|------|-----------|------|
-| **영구 데이터** | 펫 보유/친밀도/스폰여부, 아이템 보유/수량 | Flutter (서버) | 앱 삭제/기기 변경해도 유지 |
+| **영구 데이터** | 펫 보유/친밀도/스폰여부, 아이템 보유/수량, **코인** | Flutter (서버) | 앱 삭제/기기 변경해도 유지 |
 | **욕구 데이터** | 배고픔, 졸림 | Unity (PlayerPrefs) | 앱 삭제 시 리셋됨 (OK) |
 | **게임 데이터** | 펫 위치, 현재 행동 | Unity만 | 휘발성 (게임 종료 시 리셋) |
 
@@ -27,6 +27,7 @@ Flutter 앱에서 유저가 보유한 펫을 Unity 게임에서 플레이할 수
 | **레전드 펫** | petCardId, petName, isSpawned | 친밀도/욕구 없음, 먹이 불가 |
 | **환경 아이템** | id, isSpawned | 스폰 안 됨 = 선물상자, 위치는 고정 |
 | **음식 아이템** | id, quantity | 게임에서 사용 시 수량 감소 |
+| **코인** | coins | 게임에서 획득 시 Flutter로 전송 |
 
 ### 수치 범위
 
@@ -35,6 +36,7 @@ Flutter 앱에서 유저가 보유한 펫을 Unity 게임에서 플레이할 수
 | **친밀도 (petIntimacy)** | 0 ~ 100 | 0 | 일반 펫만 해당 |
 | **배고픔 (hunger)** | 0 ~ 100 | 50 | Unity PlayerPrefs 저장 |
 | **졸림 (sleepy)** | 0 ~ 100 | 50 | Unity PlayerPrefs 저장 |
+| **코인 (coins)** | 0 ~ ∞ | 0 | Flutter 서버 저장 |
 
 ---
 
@@ -203,6 +205,7 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 {
   "type": "INIT_GAME",
   "data": {
+    "coins": 1500,
     "pets": [
       {
         "petCardId": "pet_001",
@@ -241,6 +244,8 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
   }
 }
 ```
+
+> **v3.0 추가**: `coins` 필드가 추가되었습니다. Unity는 이 값을 초기 코인으로 사용합니다.
 
 ---
 
@@ -305,6 +310,29 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
   }
 }
 ```
+
+---
+
+### Unity → Flutter: COIN_EARNED
+
+보물찾기에서 코인을 획득할 때 전송합니다. (보물 발견 시, 미션 완료 보너스 시)
+
+```json
+{
+  "type": "COIN_EARNED",
+  "data": {
+    "amount": 30,
+    "totalCoins": 1530
+  }
+}
+```
+
+| 필드 | 설명 |
+|------|------|
+| `amount` | 이번에 획득한 코인 |
+| `totalCoins` | 획득 후 총 코인 |
+
+> **Flutter 측 처리**: `totalCoins` 값으로 서버의 코인을 업데이트하세요. 누적 방식이 아닌 덮어쓰기 방식입니다.
 
 ---
 
@@ -425,6 +453,7 @@ Flutter 앱
 | Egg 터치 | PET_SPAWNED / LEGEND_PET_SPAWNED | 즉시 |
 | 선물상자 터치 | ENV_ITEM_SPAWNED | 즉시 |
 | 음식을 맵에 놓음 | FOOD_USED | 즉시 |
+| 코인 획득 | COIN_EARNED | 즉시 |
 | 30초 주기 | SYNC_INTIMACY | 주기적 |
 | 백그라운드 전환 | SYNC_INTIMACY | 즉시 |
 | 게임 종료 | GAME_EXIT | 즉시 |
@@ -473,6 +502,7 @@ Unity에서 이벤트 발생
 | LEGEND_PET_SPAWNED | 3초, 5초, 10초... | 무제한 | 네트워크 복구까지 대기 |
 | ENV_ITEM_SPAWNED | 3초, 5초, 10초... | 무제한 | 네트워크 복구까지 대기 |
 | FOOD_USED | 3초, 5초, 10초... | 무제한 | 네트워크 복구까지 대기 |
+| COIN_EARNED | 3초, 5초, 10초... | 무제한 | 네트워크 복구까지 대기 |
 | SYNC_INTIMACY | 다음 30초 주기 | 자동 | 다음 주기에 최신 값 전송 |
 
 ---
@@ -500,6 +530,7 @@ void sendInitGame(GameData data) {
   final message = jsonEncode({
     "type": "INIT_GAME",
     "data": {
+      "coins": data.coins,  // v3.0 추가
       "pets": data.pets.map((p) => {
         "petCardId": p.id,
         "petName": p.name,
@@ -565,6 +596,12 @@ void setupUnityListener() {
         final foodId = data['data']['id'];
         final usedQty = data['data']['usedQuantity'];
         decreaseFoodQuantity(foodId, usedQty);
+        break;
+
+      case 'COIN_EARNED':  // v3.0 추가
+        // 코인 획득 → 서버에 totalCoins 저장
+        final totalCoins = data['data']['totalCoins'];
+        updateUserCoins(totalCoins);
         break;
 
       case 'SYNC_INTIMACY':
@@ -635,12 +672,14 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 │                                                     │
 │  1. 저장 위치                                       │
 │     • Flutter (서버): 친밀도, 스폰 여부, 아이템 수량│
+│     • Flutter (서버): 코인 (v3.0 추가)              │
 │     • Unity (PlayerPrefs): 배고픔, 졸림             │
 │                                                     │
 │  2. 즉시 동기화 (Flutter로)                         │
 │     • Egg → 펫/레전드 펫 스폰                       │
 │     • 선물상자 → 환경 아이템 스폰                   │
 │     • 음식을 맵에 배치                              │
+│     • 코인 획득 (v3.0 추가)                         │
 │                                                     │
 │  3. 주기적 동기화                                   │
 │     • 친밀도: 30초마다 + 게임 종료 시               │
@@ -679,3 +718,5 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-17 | 2.4 | **환경 아이템 스폰 버그 수정** - EnvironmentManager.ResetForNewSession() 추가. 재진입 시 환경 선물상자가 안 뜨던 문제 해결. FlutterModeManager에서 EnvironmentManager 리셋 및 스폰 트리거 추가 |
 | 2025-12-17 | 2.5 | **INIT_GAME 중복 전송 문제 발견 및 수정** - Unity가 READY를 2번 전송(OnApplicationPause + Start)하여 Flutter가 INIT_GAME을 2번 전송하는 문제. **Unity 측**: EnvironmentManager에 `isSpawningEnvironments` 플래그 추가로 중복 스폰 방지. ~~**Flutter 측 수정 필요**: INIT_GAME 전송 시 중복 방지 플래그 추가 권장 (`_hasSentInitGame`)~~ ✅ 완료 (v2.6) |
 | 2025-12-17 | 2.6 | **Flutter INIT_GAME 중복 전송 방지 구현** - `PlaygroundViewModel`에 `_hasSentInitGame` 플래그 추가. Unity가 READY를 2번 보내도 INIT_GAME은 1번만 전송됨. `onScreenEntered()`에서 플래그 리셋하여 재진입 시 정상 동작 |
+| 2025-12-17 | 2.7 | **Flutter 타이밍 이슈 수정** - v2.6의 플래그를 `await _sendInitGameData()` **전에** 설정하도록 변경. 기존: await 후 설정 → 두 번째 READY가 await 중에 도착하면 중복 전송. 수정: await 전에 즉시 설정 → 완벽한 중복 방지 |
+| 2025-12-17 | 3.0 | **코인 동기화 시스템 추가** - `INIT_GAME`에 `coins` 필드 추가 (Flutter → Unity). `COIN_EARNED` 메시지 추가 (Unity → Flutter). 코인을 Flutter 서버에서 관리하여 크로스 플랫폼 데이터 보존. ✅ Flutter 완료. ✅ Unity 완료. |

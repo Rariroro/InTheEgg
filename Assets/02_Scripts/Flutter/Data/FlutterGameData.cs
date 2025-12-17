@@ -19,6 +19,7 @@ namespace FlutterIntegration
     [Serializable]
     public class FlutterGameData
     {
+        public int coins;  // v3.0: 유저의 초기 코인
         public List<FlutterPetData> pets;
         public List<FlutterLegendaryPetData> legendaryPets;
         public List<FlutterEnvironmentData> environmentItems;

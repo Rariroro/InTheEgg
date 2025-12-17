@@ -22,10 +22,14 @@ public class FlutterModeManager : MonoBehaviour
     // 펫 ID -> 친밀도 매핑 (빠른 조회용)
     private Dictionary<string, int> petIntimacyCache = new Dictionary<string, int>();
 
+    // v3.0: Flutter에서 받은 초기 코인값
+    private int initialCoins = 0;
+
     // 프로퍼티
     public bool IsFlutterMode => isFlutterMode;
     public bool IsInitialized => isInitialized;
     public FlutterGameData GameData => gameData;
+    public int InitialCoins => initialCoins;  // v3.0: 초기 코인 조회
 
     // 이벤트
     public event Action OnFlutterDataReceived;
@@ -59,6 +63,9 @@ public class FlutterModeManager : MonoBehaviour
         isFlutterMode = true;
         isInitialized = true;
 
+        // v3.0: 초기 코인값 저장
+        initialCoins = data.coins;
+
         // 친밀도 캐시 구축
         BuildIntimacyCache();
 
@@ -66,6 +73,7 @@ public class FlutterModeManager : MonoBehaviour
         PopulateSelectionManagers();
 
         Debug.Log($"[FlutterModeManager] Flutter 모드 초기화 완료. " +
+                  $"코인: {initialCoins}, " +
                   $"펫: {data.pets?.Count ?? 0}, " +
                   $"레전드: {data.legendaryPets?.Count ?? 0}, " +
                   $"환경: {data.environmentItems?.Count ?? 0}, " +
@@ -245,6 +253,7 @@ public class FlutterModeManager : MonoBehaviour
         isInitialized = false;
         gameData = null;
         petIntimacyCache.Clear();
+        initialCoins = 0;  // v3.0: 코인 리셋
 
         // PetManager도 리셋 (기존 펫/Egg 제거 및 플래그 초기화)
         var petManager = FindObjectOfType<PetManager>();

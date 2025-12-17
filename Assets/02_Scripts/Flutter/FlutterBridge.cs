@@ -294,6 +294,21 @@ public class FlutterBridge : MonoBehaviour
     }
 
     /// <summary>
+    /// 코인 획득 알림 (v3.0)
+    /// </summary>
+    /// <param name="amount">이번에 획득한 코인</param>
+    /// <param name="totalCoins">획득 후 총 코인</param>
+    public void SendCoinEarned(int amount, int totalCoins)
+    {
+        if (!FlutterModeManager.Instance?.IsFlutterMode ?? true) return;
+
+        var message = new CoinEarnedMessage(amount, totalCoins);
+        SendMessageWithRetry(message, true);  // 재시도 포함
+
+        Debug.Log($"[FlutterBridge] COIN_EARNED 전송: +{amount}, 총 {totalCoins}");
+    }
+
+    /// <summary>
     /// 친밀도 동기화 전송 (변경된 펫만 전송하여 성능 최적화)
     /// </summary>
     public void SendSyncIntimacy(bool isGameExit = false)

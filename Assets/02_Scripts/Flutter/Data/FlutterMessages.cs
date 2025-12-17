@@ -126,6 +126,29 @@ namespace FlutterIntegration
 
     #endregion
 
+    #region COIN_EARNED - 코인 획득 시
+
+    [Serializable]
+    public class CoinEarnedMessage : FlutterOutboundMessage
+    {
+        public CoinEarnedData data;
+
+        public CoinEarnedMessage(int amount, int totalCoins)
+        {
+            type = "COIN_EARNED";
+            data = new CoinEarnedData { amount = amount, totalCoins = totalCoins };
+        }
+    }
+
+    [Serializable]
+    public class CoinEarnedData
+    {
+        public int amount;      // 이번에 획득한 코인
+        public int totalCoins;  // 획득 후 총 코인
+    }
+
+    #endregion
+
     #region SYNC_INTIMACY / GAME_EXIT - 친밀도 동기화
 
     [Serializable]
