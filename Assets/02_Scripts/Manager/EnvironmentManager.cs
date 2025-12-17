@@ -146,11 +146,12 @@ public class EnvironmentManager : MonoBehaviour
             yield return StartCoroutine(FlutterBridge.Instance.WaitForFlutterDataOrTimeout());
         }
 
-        // Flutter 모드인 경우
+        // Flutter 모드인 경우 - FlutterModeManager.InitializeWithFlutterData()에서 StartSpawnWithFlutterData() 호출하므로 여기서는 스킵
         if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
         {
-            Debug.Log("[EnvironmentManager] Flutter 모드로 환경 스폰 시작");
-            StartCoroutine(WaitForTerrainManagerAndSpawn());
+            Debug.Log("[EnvironmentManager] Flutter 모드 - FlutterModeManager에서 스폰 트리거 대기");
+            // 여기서 직접 스폰하지 않음! FlutterModeManager.InitializeWithFlutterData()에서 StartSpawnWithFlutterData() 호출함
+            yield break;
         }
         // PetChoice를 거친 경우 (EnvironmentSelectionManager에 데이터가 있음)
         else if (EnvironmentSelectionManager.Instance != null &&
@@ -528,6 +529,11 @@ public class EnvironmentManager : MonoBehaviour
     {
         List<string> selectedIds = EnvironmentSelectionManager.Instance.selectedEnvironmentIds;
 
+        // ★ 디버깅: 스폰 시작 로그
+        Debug.Log($"[EnvironmentManager] ========== 환경 스폰 시작 ==========");
+        Debug.Log($"[EnvironmentManager] 선택된 환경 수: {selectedIds.Count}");
+        Debug.Log($"[EnvironmentManager] 현재 스폰된 환경 수: {spawnedEnvironments.Count}");
+        Debug.Log($"[EnvironmentManager] 대기 중인 선물 수: {pendingGifts.Count}");
 
         // 일반 환경과 최초 등장 환경을 분리
         List<string> normalEnvironments = new List<string>();
@@ -540,10 +546,12 @@ public class EnvironmentManager : MonoBehaviour
                 if (EnvironmentSelectionManager.Instance.IsEnvironmentFirstAppearance(environmentId))
                 {
                     firstAppearanceEnvironments.Add(environmentId);
+                    Debug.Log($"[EnvironmentManager] 최초 등장 환경(선물): {environmentId}");
                 }
                 else
                 {
                     normalEnvironments.Add(environmentId);
+                    Debug.Log($"[EnvironmentManager] 일반 환경: {environmentId}");
                 }
             }
 
@@ -584,8 +592,13 @@ public class EnvironmentManager : MonoBehaviour
             SpawnGiftForEnvironment(environmentId);
             yield return new WaitForSeconds(giftSpawnDelay);
         }
-        IsInitializationComplete = true;
 
+        // ★ 디버깅: 스폰 완료 로그
+        Debug.Log($"[EnvironmentManager] ========== 환경 스폰 완료 ==========");
+        Debug.Log($"[EnvironmentManager] 최종 스폰된 환경 수: {spawnedEnvironments.Count}");
+        Debug.Log($"[EnvironmentManager] 최종 대기 중인 선물 수: {pendingGifts.Count}");
+
+        IsInitializationComplete = true;
     }
 
     private void SpawnGiftForEnvironment(string environmentId)
@@ -902,5 +915,71 @@ public class EnvironmentManager : MonoBehaviour
 
         // 나비 참조 정리
         flowersEnvironmentButterflies.Clear();
+    }
+
+    /// <summary>
+    /// 새 세션을 위해 상태 리셋 (FlutterModeManager에서 호출)
+    /// 기존 선물과 환경을 제거하고 초기화 상태를 리셋하여 새 INIT_GAME 데이터로 재스폰 가능하게 함
+    /// </summary>
+    public void ResetForNewSession()
+    {
+        Debug.Log("[EnvironmentManager] 새 세션을 위해 상태 리셋");
+
+        // 모든 실행 중인 코루틴 정지
+        StopAllCoroutines();
+
+        // 대기 중인 선물 제거
+        foreach (var gift in pendingGifts.Keys)
+        {
+            if (gift != null)
+            {
+                Destroy(gift);
+            }
+        }
+        pendingGifts.Clear();
+
+        // 스폰된 환경 제거
+        foreach (var env in spawnedEnvironments)
+        {
+            if (env != null)
+            {
+                Destroy(env);
+            }
+        }
+        spawnedEnvironments.Clear();
+
+        // 나비 참조 정리
+        flowersEnvironmentButterflies.Clear();
+
+        // 초기화 완료 플래그 리셋 - 이제 다시 초기화 가능
+        IsInitializationComplete = false;
+        isSpawningEnvironments = false;
+
+        Debug.Log("[EnvironmentManager] 상태 리셋 완료 - 새 데이터로 재초기화 대기");
+    }
+
+    // 스폰 진행 중 플래그 (중복 호출 방지)
+    private bool isSpawningEnvironments = false;
+
+    /// <summary>
+    /// Flutter 데이터 수신 후 환경 스폰 시작 (외부에서 호출 가능)
+    /// </summary>
+    public void StartSpawnWithFlutterData()
+    {
+        if (IsInitializationComplete)
+        {
+            Debug.Log("[EnvironmentManager] 이미 초기화 완료 상태 - 스킵");
+            return;
+        }
+
+        if (isSpawningEnvironments)
+        {
+            Debug.Log("[EnvironmentManager] 이미 스폰 진행 중 - 스킵");
+            return;
+        }
+
+        isSpawningEnvironments = true;
+        Debug.Log("[EnvironmentManager] Flutter 데이터로 환경 스폰 시작");
+        StartCoroutine(WaitForTerrainManagerAndSpawn());
     }
 }

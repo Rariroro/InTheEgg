@@ -72,6 +72,12 @@ public class FlutterModeManager : MonoBehaviour
                   $"음식: {data.foodItems?.Count ?? 0}");
 
         OnFlutterDataReceived?.Invoke();
+
+        // EnvironmentManager에게 Flutter 데이터로 스폰 시작 요청
+        if (EnvironmentManager.Instance != null)
+        {
+            EnvironmentManager.Instance.StartSpawnWithFlutterData();
+        }
     }
 
     /// <summary>
@@ -252,6 +258,12 @@ public class FlutterModeManager : MonoBehaviour
         if (legendaryPetManager != null)
         {
             legendaryPetManager.ResetForNewSession();
+        }
+
+        // EnvironmentManager도 리셋
+        if (EnvironmentManager.Instance != null)
+        {
+            EnvironmentManager.Instance.ResetForNewSession();
         }
 
         Debug.Log("[FlutterModeManager] 새 세션을 위해 상태 리셋됨");
