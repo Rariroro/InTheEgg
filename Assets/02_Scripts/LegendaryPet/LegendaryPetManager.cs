@@ -186,11 +186,46 @@ namespace LegendaryPet
             Debug.Log("[LegendaryPetManager] OnFlutterDataReceived 이벤트 수신");
             if (!isSpawningSequentially && !hasSpawnedLegendaryPets)
             {
-                StartCoroutine(SpawnLegendaryPetsFromFlutterData());
+                StartCoroutine(WaitForNavMeshAndSpawnFromFlutter());
             }
             else
             {
                 Debug.Log($"[LegendaryPetManager] 스폰 건너뜀 (isSpawningSequentially={isSpawningSequentially}, hasSpawnedLegendaryPets={hasSpawnedLegendaryPets})");
+            }
+        }
+
+        /// <summary>
+        /// NavMesh가 준비될 때까지 대기 후 Flutter 데이터로 스폰
+        /// </summary>
+        private IEnumerator WaitForNavMeshAndSpawnFromFlutter()
+        {
+            // NavMesh가 준비될 때까지 대기
+            float timeout = 10f;
+            float elapsed = 0f;
+
+            Debug.Log("[LegendaryPetManager] NavMesh 준비 대기 중...");
+
+            while (elapsed < timeout)
+            {
+                NavMeshHit hit;
+                if (NavMesh.SamplePosition(Vector3.zero, out hit, 200f, NavMesh.AllAreas))
+                {
+                    Debug.Log("[LegendaryPetManager] NavMesh 준비 완료 - 스폰 시작");
+                    break;
+                }
+                elapsed += 0.5f;
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning("[LegendaryPetManager] NavMesh 대기 타임아웃 - 그래도 스폰 시도");
+            }
+
+            // 이미 다른 경로에서 스폰을 시작했는지 다시 체크
+            if (!isSpawningSequentially && !hasSpawnedLegendaryPets)
+            {
+                yield return StartCoroutine(SpawnLegendaryPetsFromFlutterData());
             }
         }
         
@@ -293,6 +328,14 @@ namespace LegendaryPet
         /// </summary>
         private IEnumerator SpawnLegendaryPetsFromFlutterData()
         {
+            // 중복 스폰 방지 - 시작 시점에 즉시 체크 및 플래그 설정
+            if (hasSpawnedLegendaryPets)
+            {
+                Debug.Log("[LegendaryPetManager] Flutter 모드: 이미 스폰 완료/진행 중 - 건너뜀");
+                yield break;
+            }
+            hasSpawnedLegendaryPets = true;  // 시작 시점에 설정하여 다른 경로에서 중복 스폰 방지
+
             var gameData = FlutterModeManager.Instance.GameData;
             if (gameData?.legendaryPets == null || gameData.legendaryPets.Count == 0)
             {
@@ -326,7 +369,7 @@ namespace LegendaryPet
                 yield return new WaitForSeconds(firstAppearanceDelay);
             }
 
-            hasSpawnedLegendaryPets = true;
+            // hasSpawnedLegendaryPets는 이미 시작 시점에 true로 설정됨
             isSpawningSequentially = false;
             Debug.Log($"[LegendaryPetManager] Flutter 모드: 레전드 펫 스폰 완료");
         }
@@ -476,8 +519,8 @@ namespace LegendaryPet
                 // NavMesh 위의 가장 가까운 유효한 위치 찾기
                 NavMeshHit hit;
                 Vector3 spawnPosition = position;
-                
-                if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))  // 50f → 100f 확대
+
+                if (NavMesh.SamplePosition(position, out hit, 100f, NavMesh.AllAreas))
                 {
                     spawnPosition = hit.position;
                 }
@@ -486,14 +529,45 @@ namespace LegendaryPet
                     Debug.LogWarning($"[LegendaryPetManager] {legendaryPetId}: NavMesh 위치를 찾을 수 없습니다.");
                 }
 
+                // NavMeshAgent 비활성화 후 생성 (SpawnLegendaryPetWithThreeStageSystem와 동일한 패턴)
+                GameObject prefab = legendaryPetPrefabs[legendIndex];
+                NavMeshAgent prefabAgent = prefab.GetComponent<NavMeshAgent>();
+                bool wasAgentEnabled = false;
+                if (prefabAgent != null && prefabAgent.enabled)
+                {
+                    wasAgentEnabled = true;
+                    prefabAgent.enabled = false;
+                }
+
                 // 180도 회전하여 카메라를 향하도록 스폰
                 Quaternion rotation = Quaternion.Euler(0, 180, 0);
-                // 레전드 펫 스폰
-                GameObject legendObject = Instantiate(legendaryPetPrefabs[legendIndex], spawnPosition, rotation);
+                GameObject legendObject = Instantiate(prefab, spawnPosition, rotation);
+
+                // 프리팹 원래 상태 복원
+                if (wasAgentEnabled && prefabAgent != null)
+                {
+                    prefabAgent.enabled = true;
+                }
+
                 LegendaryPetController controller = legendObject.GetComponent<LegendaryPetController>();
-                
+
                 if (controller != null)
                 {
+                    // 즉시 초기화 호출 (애니메이터, traits 설정)
+                    controller.InitializeImmediate();
+
+                    // NavMeshAgent 활성화 및 배치
+                    NavMeshAgent agent = legendObject.GetComponent<NavMeshAgent>();
+                    if (agent != null)
+                    {
+                        agent.enabled = true;
+                        // NavMesh 위에 배치
+                        if (!agent.isOnNavMesh)
+                        {
+                            agent.Warp(spawnPosition);
+                        }
+                    }
+
                     // 최초 등장 효과
                     if (withFirstAppearanceEffect && firstAppearanceEffectPrefab != null)
                     {
@@ -504,7 +578,7 @@ namespace LegendaryPet
                         }
                     }
 
-        // Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
+                    Debug.Log($"[LegendaryPetManager] {legendaryPetId} 스폰 완료 - 위치: {spawnPosition}");
                 }
                 else
                 {

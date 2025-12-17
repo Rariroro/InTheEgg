@@ -674,3 +674,4 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-15 | 1.9 | **성능 최적화** - SYNC_INTIMACY 전송 시 변경된 친밀도만 전송하도록 개선 (60마리 중 5마리만 변경 시 5마리만 전송). LoadingManager 추가로 로딩 화면 지원 |
 | 2025-12-15 | 2.0 | **LOADING_COMPLETE 메시지 추가** - 펫 스폰 완료 후 Flutter에 알림. Flutter에서 로딩 오버레이 제거 타이밍으로 활용 가능 |
 | 2025-12-15 | 2.1 | **LOADING_COMPLETE 메시지 삭제** - Unity 자체 로딩화면 구현으로 불필요. Flutter 로딩 오버레이도 제거. **Unity 측: LOADING_COMPLETE 전송 코드 삭제 필요** |
+| 2025-12-17 | 2.2 | **레전드 펫 petCardId 매칭 버그 수정** - Flutter에서 Unity로 레전드 펫 전송 시 `petCardId`에 타임스탬프가 포함되던 버그 수정 (예: `pet_legend_011_1734567890123` → `pet_legend_011`). 이제 Unity 프리팹 매칭이 정상 동작함 |
