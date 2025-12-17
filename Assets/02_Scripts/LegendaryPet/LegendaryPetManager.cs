@@ -106,6 +106,9 @@ namespace LegendaryPet
         private int currentLegendSpawnIndex = 0;
         private bool isSpawningSequentially = false;
 
+        // 스폰 완료 플래그 (중복 스폰 방지)
+        private bool hasSpawnedLegendaryPets = false;
+
         // 터치 처리 최적화를 위한 변수
         private float lastTouchTime;
         private const float TOUCH_COOLDOWN = 0.1f;
@@ -165,8 +168,30 @@ namespace LegendaryPet
         
         private void Start()
         {
+            // Flutter 데이터 수신 이벤트 구독 (PetManager와 동일한 패턴)
+            if (FlutterModeManager.Instance != null)
+            {
+                FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
+            }
+
             // PetManager와 동일하게 환경 준비 완료 후 스폰
             StartCoroutine(WaitForEnvironmentAndSpawnLegendaryPets());
+        }
+
+        /// <summary>
+        /// Flutter에서 INIT_GAME 수신 시 호출 (씬 로드 후에 데이터가 와도 동작)
+        /// </summary>
+        private void OnFlutterDataReceived()
+        {
+            Debug.Log("[LegendaryPetManager] OnFlutterDataReceived 이벤트 수신");
+            if (!isSpawningSequentially && !hasSpawnedLegendaryPets)
+            {
+                StartCoroutine(SpawnLegendaryPetsFromFlutterData());
+            }
+            else
+            {
+                Debug.Log($"[LegendaryPetManager] 스폰 건너뜀 (isSpawningSequentially={isSpawningSequentially}, hasSpawnedLegendaryPets={hasSpawnedLegendaryPets})");
+            }
         }
         
         private void Update()
@@ -237,6 +262,13 @@ namespace LegendaryPet
             // 추가 안전 대기
             yield return new WaitForSeconds(1f);
 
+            // 이미 스폰 완료된 경우 건너뜀
+            if (hasSpawnedLegendaryPets)
+            {
+                Debug.Log("[LegendaryPetManager] 이미 스폰 완료됨 - 건너뜀");
+                yield break;
+            }
+
             // [Flutter 모드] Flutter 데이터로 레전드 펫 스폰
             if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
             {
@@ -294,6 +326,8 @@ namespace LegendaryPet
                 yield return new WaitForSeconds(firstAppearanceDelay);
             }
 
+            hasSpawnedLegendaryPets = true;
+            isSpawningSequentially = false;
             Debug.Log($"[LegendaryPetManager] Flutter 모드: 레전드 펫 스폰 완료");
         }
 
@@ -409,43 +443,8 @@ namespace LegendaryPet
         // 레전드 펫 ID로 스폰 (새로운 ID 형식 지원)
         private void SpawnLegendaryPet(string legendaryPetId, bool withFirstAppearanceEffect)
         {
-            int legendIndex = -1;
-
-            // pet_legend_XXX 형식 지원 (주요 형식)
-            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
-            {
-                string numberPart = legendaryPetId.Substring(11);  // "pet_legend_" 이후 부분
-                if (int.TryParse(numberPart, out int number))
-                {
-                    legendIndex = number - 1;  // pet_legend_001 = 인덱스 0
-                }
-            }
-            // 기존 형식도 지원 (하위 호환성)
-            else if (legendaryPetId.StartsWith("unicorn"))
-            {
-                string numberPart = legendaryPetId.Replace("unicorn", "");
-                if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
-                {
-                    legendIndex = unicornNumber - 1; // 유니콘은 인덱스 0-4
-                }
-            }
-            else if (legendaryPetId.StartsWith("dragon"))
-            {
-                string numberPart = legendaryPetId.Replace("dragon", "");
-                if (int.TryParse(numberPart, out int dragonNumber) && dragonNumber >= 1 && dragonNumber <= 5)
-                {
-                    legendIndex = dragonNumber + 4; // 드래곤은 인덱스 5-9
-                }
-            }
-            // 기존 ID 형식도 지원: "legend_001", "legend_002", ...
-            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
-            {
-                string numberPart = legendaryPetId.Substring(7);
-                if (int.TryParse(numberPart, out int number))
-                {
-                    legendIndex = number - 1;
-                }
-            }
+            // 공통 헬퍼 메서드 사용으로 중복 코드 제거
+            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
 
             // 유효한 인덱스인지 확인하고 스폰
             if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
@@ -467,45 +466,10 @@ namespace LegendaryPet
                 Debug.LogWarning($"[LegendaryPetManager] 최대 레전드 펫 수({maxLegendaryPets})에 도달했습니다");
                 return;
             }
-            
-            int legendIndex = -1;
 
-            // pet_legend_XXX 형식 지원 (주요 형식)
-            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
-            {
-                string numberPart = legendaryPetId.Substring(11);  // "pet_legend_" 이후 부분
-                if (int.TryParse(numberPart, out int number))
-                {
-                    legendIndex = number - 1;  // pet_legend_001 = 인덱스 0
-                }
-            }
-            // 기존 형식도 지원 (하위 호환성)
-            else if (legendaryPetId.StartsWith("unicorn"))
-            {
-                string numberPart = legendaryPetId.Replace("unicorn", "");
-                if (int.TryParse(numberPart, out int unicornNumber) && unicornNumber >= 1 && unicornNumber <= 5)
-                {
-                    legendIndex = unicornNumber - 1;
-                }
-            }
-            else if (legendaryPetId.StartsWith("dragon"))
-            {
-                string numberPart = legendaryPetId.Replace("dragon", "");
-                if (int.TryParse(numberPart, out int dragonNumber) && dragonNumber >= 1 && dragonNumber <= 5)
-                {
-                    legendIndex = dragonNumber + 4;
-                }
-            }
-            // 기존 ID 형식도 지원
-            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
-            {
-                string numberPart = legendaryPetId.Substring(7);
-                if (int.TryParse(numberPart, out int number))
-                {
-                    legendIndex = number - 1;
-                }
-            }
-            
+            // 공통 헬퍼 메서드 사용으로 중복 코드 제거
+            int legendIndex = GetLegendaryPetIndex(legendaryPetId);
+
             // 유효한 인덱스인지 확인
             if (legendIndex >= 0 && legendIndex < legendaryPetPrefabs.Length)
             {
@@ -980,16 +944,24 @@ namespace LegendaryPet
         // 레전드 펫 인덱스 가져오기 헬퍼 메서드
         private int GetLegendaryPetIndex(string legendaryPetId)
         {
-            // pet_legend_XXX 형식 지원
-            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
+            // pet_legend_XXX 형식 지원 (pet_legend_006_test_12345... 형식도 지원)
+            if (legendaryPetId.StartsWith("pet_legend_"))
             {
-                string numberPart = legendaryPetId.Substring(11);
+                // "pet_legend_" 이후 문자열 추출
+                string afterPrefix = legendaryPetId.Substring(11);  // "006_test_..." 또는 "006"
+
+                // 첫 번째 언더스코어 위치 찾기 (추가 접미사 분리)
+                int underscoreIndex = afterPrefix.IndexOf('_');
+                string numberPart = underscoreIndex > 0
+                    ? afterPrefix.Substring(0, underscoreIndex)  // "006"
+                    : afterPrefix;                                // 언더스코어 없으면 전체
+
                 if (int.TryParse(numberPart, out int number))
                 {
-                    return number - 1;
+                    return number - 1;  // pet_legend_001 = 인덱스 0
                 }
             }
-            // 기존 형식들도 지원
+            // 기존 형식들도 지원 (하위 호환성)
             else if (legendaryPetId.StartsWith("unicorn"))
             {
                 string numberPart = legendaryPetId.Replace("unicorn", "");
@@ -1006,9 +978,15 @@ namespace LegendaryPet
                     return dragonNumber + 4;
                 }
             }
-            else if (legendaryPetId.StartsWith("legend_") && legendaryPetId.Length >= 10)
+            else if (legendaryPetId.StartsWith("legend_"))
             {
-                string numberPart = legendaryPetId.Substring(7);
+                // "legend_" 이후 문자열에서 숫자만 추출
+                string afterPrefix = legendaryPetId.Substring(7);
+                int underscoreIndex = afterPrefix.IndexOf('_');
+                string numberPart = underscoreIndex > 0
+                    ? afterPrefix.Substring(0, underscoreIndex)
+                    : afterPrefix;
+
                 if (int.TryParse(numberPart, out int number))
                 {
                     return number - 1;
@@ -1161,6 +1139,7 @@ namespace LegendaryPet
             // 플래그 리셋
             currentLegendSpawnIndex = 0;
             isSpawningSequentially = false;
+            hasSpawnedLegendaryPets = false;
         }
 
         #endregion
@@ -1509,6 +1488,12 @@ namespace LegendaryPet
         
         private void OnDestroy()
         {
+            // Flutter 이벤트 구독 해제
+            if (FlutterModeManager.Instance != null)
+            {
+                FlutterModeManager.Instance.OnFlutterDataReceived -= OnFlutterDataReceived;
+            }
+
             // 모든 코루틴 즉시 정지 (메모리 누수 방지)
             StopAllCoroutines();
 
