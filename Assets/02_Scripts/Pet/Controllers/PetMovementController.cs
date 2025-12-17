@@ -165,7 +165,7 @@ public class PetMovementController : PetControllerBase
         }
         catch (System.Exception e)
         {
-            PetDebug.LogWarning($"{petController.petName}: StopMovement 실패 - {e.Message}", petController);
+            Debug.LogWarning($"[Pet Warning] {petController.petName}: StopMovement 실패 - {e.Message}", petController);
         }
     }
 
@@ -182,7 +182,7 @@ public class PetMovementController : PetControllerBase
         }
         catch (System.Exception e)
         {
-            PetDebug.LogWarning($"{petController.petName}: ResumeMovement 실패 - {e.Message}", petController);
+            Debug.LogWarning($"[Pet Warning] {petController.petName}: ResumeMovement 실패 - {e.Message}", petController);
         }
     }
     

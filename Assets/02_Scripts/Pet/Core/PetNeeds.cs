@@ -223,7 +223,7 @@ public class PetNeeds
                 if (affection <= lowAffectionThreshold && previousAffection > lowAffectionThreshold)
                 {
                     OnEmotionRequired?.Invoke(EmotionType.Sad);
-                    PetDebug.Log($"{petController.petName}의 친밀도가 낮아졌습니다: {affection:F1}", petController);
+                    Debug.Log($"[Pet] {petController.petName}의 친밀도가 낮아졌습니다: {affection:F1}", petController);
                 }
             }
         }
@@ -241,7 +241,7 @@ public class PetNeeds
         if (hunger != previousHunger)
         {
             OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
-            PetDebug.LogNeedChange(petController.petName, "Hunger", previousHunger, hunger);
+            Debug.Log($"[Pet Needs] {petController.petName}: Hunger {previousHunger:F1} → {hunger:F1}");
         }
     }
 
@@ -256,7 +256,7 @@ public class PetNeeds
         if (hunger != previousHunger)
         {
             OnNeedChanged?.Invoke(NeedType.Hunger, hunger);
-            PetDebug.LogNeedChange(petController.petName, "Hunger", previousHunger, hunger);
+            Debug.Log($"[Pet Needs] {petController.petName}: Hunger {previousHunger:F1} → {hunger:F1}");
         }
     }
 
@@ -271,7 +271,7 @@ public class PetNeeds
         if (sleepiness != previousSleepiness)
         {
             OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
-            PetDebug.LogNeedChange(petController.petName, "Sleepiness", previousSleepiness, sleepiness);
+            Debug.Log($"[Pet Needs] {petController.petName}: Sleepiness {previousSleepiness:F1} → {sleepiness:F1}");
         }
     }
 
@@ -283,7 +283,7 @@ public class PetNeeds
         sleepiness = 0f;
         sleepyEmotionTimer = 0f;
         OnNeedChanged?.Invoke(NeedType.Sleepiness, sleepiness);
-        PetDebug.Log($"{petController.petName}이(가) 충분히 잠을 잤습니다.", petController);
+        Debug.Log($"[Pet] {petController.petName}이(가) 충분히 잠을 잤습니다.", petController);
     }
     
     /// <summary>
@@ -304,7 +304,7 @@ public class PetNeeds
                 OnEmotionRequired?.Invoke(EmotionType.Happy);
             }
             
-            PetDebug.LogNeedChange(petController.petName, "Affection", previousAffection, affection);
+            Debug.Log($"[Pet Needs] {petController.petName}: Affection {previousAffection:F1} → {affection:F1}");
         }
     }
     

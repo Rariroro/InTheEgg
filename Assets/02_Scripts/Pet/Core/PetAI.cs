@@ -67,7 +67,7 @@ public class PetAI : MonoBehaviour
         availableActivities.Add(new EnvironmentGatherActivity(petController));
         availableActivities.Add(new ButterflyPlayActivity(petController));
         
-        // PetDebug.Log($"{petController.petName}: {availableActivities.Count}개의 활동 등록 완료", this);
+        Debug.Log($"[Pet] {petController.petName}: {availableActivities.Count}개의 활동 등록 완료", this);
     }
     
     private void Update()
@@ -137,7 +137,7 @@ public class PetAI : MonoBehaviour
             // 현재 활동 중단
             if (currentActivity != null)
             {
-                // PetDebug.LogActivityChange(petController.petName, currentActivity.Name, "None");
+                Debug.Log($"[Pet Activity] {petController.petName}: {currentActivity.Name} → None");
                 currentActivity.Stop();
             }
             
@@ -145,7 +145,7 @@ public class PetAI : MonoBehaviour
             currentActivity = bestActivity;
             if (currentActivity != null)
             {
-                // PetDebug.LogActivityChange(petController.petName, currentActivity?.Name ?? "None", bestActivity.Name, highestPriority);
+                Debug.Log($"[Pet Activity] {petController.petName}: {currentActivity?.Name ?? "None"} → {bestActivity.Name} (Priority: {highestPriority:F1})");
                 currentActivity.Start();
             }
         }
@@ -158,7 +158,7 @@ public class PetAI : MonoBehaviour
     {
         if (currentActivity != null)
         {
-            // PetDebug.LogActivityChange(petController.petName, currentActivity.Name, "None");
+            Debug.Log($"[Pet Activity] {petController.petName}: {currentActivity.Name} → None");
             currentActivity.Stop();
             currentActivity = null;
         }
@@ -182,7 +182,7 @@ public class PetAI : MonoBehaviour
         
         // 새 활동 시작
         currentActivity = activity;
-        // PetDebug.LogActivityChange(petController.petName, currentActivity?.Name ?? "None", activity.Name);
+        Debug.Log($"[Pet Activity] {petController.petName}: {currentActivity?.Name ?? "None"} → {activity.Name}");
         currentActivity.Start();
     }
     

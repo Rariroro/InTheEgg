@@ -139,7 +139,7 @@ public class PetState
     {
         if (!CanTransition(currentStatus, newStatus))
         {
-            PetDebug.LogWarning($"{currentStatus}에서 {newStatus}로 전환할 수 없습니다.");
+            Debug.LogWarning($"[Pet Warning] {currentStatus}에서 {newStatus}로 전환할 수 없습니다.");
             return false;
         }
 
@@ -147,7 +147,7 @@ public class PetState
         currentStatus = newStatus;
         OnStatusChanged?.Invoke(previousStatus, newStatus);
 
-        PetDebug.LogStateChange("Pet", previousStatus.ToString(), newStatus.ToString());
+        Debug.Log($"[Pet State] {ownerPet?.petName ?? "Pet"}: {previousStatus} → {newStatus}");
         return true;
     }
     
@@ -467,7 +467,7 @@ public class PetState
             if (currentStatus == PetStatus.Emergency && !isExhausted)
             {
                 TrySetStatus(PetStatus.Idle);
-                PetDebug.Log($"벌 공격 종료 - Emergency → Idle 전환");
+                Debug.Log($"[Pet] 벌 공격 종료 - Emergency → Idle 전환");
             }
         }
     }
