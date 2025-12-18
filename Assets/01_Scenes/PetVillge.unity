@@ -24383,17 +24383,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8367480723914091591, guid: e5c813eb00436a048b146184e85d0edc, type: 3}
   m_PrefabInstance: {fileID: 402327242}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &404289315 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2902512279985730073, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &413124896
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -34908,17 +34897,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2369365955410639867, guid: aef195728bcc7354cae3e15a8be13b3c, type: 3}
   m_PrefabInstance: {fileID: 610677631}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &611074227 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5151046082372442378, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &612818886
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -54153,22 +54131,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bdbb02ed7e539c04aba77a7527e31d38, type: 3}
---- !u!1 &968380222 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8000635327106757526, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &968380224 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3131497588019100624, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 968380222}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &969540625
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -75637,17 +75599,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4f844cffade50ed4c9ca062ae86d2ea8, type: 3}
---- !u!114 &1306364477 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5283477557201229669, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
-  m_PrefabInstance: {fileID: 965292260029740788}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1308623988
 GameObject:
   m_ObjectHideFlags: 0
@@ -84036,45 +83987,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b0df79b121544df3bde268b5ccce8d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loadingScreen: {fileID: 968380222}
-  backgroundImage: {fileID: 968380224}
-  progressText: {fileID: 611074227}
-  tipText: {fileID: 1306364477}
-  progressSlider: {fileID: 404289315}
-  fadeOutDuration: 0.5
-  minLoadingTime: 2
-  loadingTips:
-  - "\uD3AB\uC744 \uC4F0\uB2E4\uB4EC\uC73C\uBA74 \uCE5C\uBC00\uB3C4\uAC00 \uC62C\uB77C\uAC00\uC694!"
-  - "\uBC30\uACE0\uD508 \uD3AB\uC5D0\uAC8C \uC74C\uC2DD\uC744 \uC918\uBCF4\uC138\uC694."
-  - "\uD3AB\uB4E4\uC740 \uC11C\uB85C \uB180\uAE30\uB3C4 \uD574\uC694."
-  - "Egg\uB97C \uD130\uCE58\uD558\uBA74 \uC0C8 \uD3AB\uC774 \uB098\uC640\uC694!"
-  - "\uD3AB\uC774 \uC878\uB824\uD558\uBA74 \uC26C\uAC8C \uD574\uC8FC\uC138\uC694."
-  funMessageInterval: 1.5
-  funLoadingMessages:
-  - "\uD1A0\uB07C\uC640 \uAC70\uBD81\uC774\uAC00 \uACBD\uC8FC \uC900\uBE44 \uC911..."
-  - "\uAC70\uBD81\uC774: \uC774\uBC88\uC5D4 \uB0B4\uAC00 \uC774\uAE34\uB2E4!"
-  - "\uD1A0\uB07C\uAC00 \uB0AE\uC7A0 \uC790\uB294 \uC0AC\uC774 \uAC70\uBD81\uC774
-    \uCD94\uC6D4 \uC911..."
-  - "\uD310\uB2E4\uAC00 \uB300\uB098\uBB34 \uBCA0\uAC1C \uCC3E\uB294 \uC911..."
-  - "\uCF54\uC54C\uB77C\uAC00 \uB098\uBB34\uC5D0\uC11C \uAFC8\uB098\uB77C \uC5EC\uD589
-    \uC911..."
-  - "\uB098\uBB34\uB298\uBCF4\uAC00... \uCC9C\uCC9C\uD788... \uC900\uBE44 \uC911..."
-  - "\uC5EC\uC6B0\uAC00 \uD1A0\uB07C \uB180\uB798\uD0A4\uB7EC \uC228\uB294 \uC911..."
-  - "\uACE0\uC591\uC774\uAC00 \uC950 \uC5ED\uD560 \uB9E1\uC744 \uD3AB \uBB3C\uC0C9
-    \uC911..."
-  - "\uAE30\uB9B0\uACFC \uCF54\uB07C\uB9AC\uAC00 \uC0B0\uCC45 \uCF54\uC2A4 \uC815\uD558\uB294
-    \uC911..."
-  - "\uC591\uB5BC\uAC00 \uAD6C\uB984 \uBAA8\uC591 \uC5F0\uC2B5 \uC911..."
-  - "\uB450\uB354\uC9C0\uAC00 \uC228\uC744 \uACF3 \uD30C\uB294 \uC911..."
-  - "\uC0AC\uC790\uAC00 \uBA4B\uC9C4 \uD3EC\uC988 \uC5F0\uC2B5 \uC911..."
-  - "\uCE74\uBA5C\uB808\uC628\uC774 \uBC30\uACBD\uC0C9 \uACE0\uB974\uB294 \uC911..."
-  - "\uC2A4\uCEF9\uD06C\uAC00 \uD5A5\uC218 \uD14C\uC2A4\uD2B8 \uC911... (\uC870\uC2EC!)"
-  - "\uB099\uD0C0\uC640 \uC54C\uD30C\uCE74 \uCE68 \uBC49\uAE30 \uC5F0\uC2B5 \uC911..."
-  - "\uD3AB\uB4E4\uC774 \uC624\uB298\uC758 \uC5ED\uD560 \uC815\uD558\uB294 \uC911..."
-  - "\uBA39\uC774 \uBC30\uB2EC \uD2B8\uB7ED \uB3C4\uCC29 \uB300\uAE30 \uC911..."
-  - "\uD3AB \uBE4C\uB9AC\uC9C0 \uCCAD\uC18C \uB9C8\uBB34\uB9AC \uC911..."
-  - "\uC624\uB298\uC758 \uBAA8\uD5D8 \uC900\uBE44 \uC911..."
-  - "\uD3AB\uB4E4\uC774 \uC2A4\uD2B8\uB808\uCE6D\uD558\uB294 \uC911..."
 --- !u!1001 &1536125754
 PrefabInstance:
   m_ObjectHideFlags: 0

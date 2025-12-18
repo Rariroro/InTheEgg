@@ -152,6 +152,22 @@ namespace FlutterIntegration
 
     #endregion
 
+    #region LOADING_COMPLETE - 로딩 완료 알림
+
+    /// <summary>
+    /// 로딩 완료 메시지 - Flutter에 게임 시작 가능 알림
+    /// </summary>
+    [Serializable]
+    public class LoadingCompleteMessage : FlutterOutboundMessage
+    {
+        public LoadingCompleteMessage()
+        {
+            type = "LOADING_COMPLETE";
+        }
+    }
+
+    #endregion
+
     #region SYNC_INTIMACY / GAME_EXIT - 친밀도 동기화
 
     [Serializable]

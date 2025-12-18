@@ -1,81 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
-using TMPro;
 
 /// <summary>
-/// 게임 로딩 화면 관리
-/// Canvas를 통해 로딩 중에는 게임 화면을 가리고, 로딩 완료 시 페이드 아웃
+/// 게임 로딩 완료 알림 관리
+/// Flutter로 로딩 화면이 이동되어, 이제 완료 신호만 전송
 /// </summary>
 public class LoadingManager : MonoBehaviour
 {
     public static LoadingManager Instance { get; private set; }
 
-    [Header("UI 참조")]
-    [SerializeField] private GameObject loadingScreen;
-    [SerializeField] private Image backgroundImage;
-    [SerializeField] private TextMeshProUGUI progressText;
-    [SerializeField] private TextMeshProUGUI tipText;
-    [SerializeField] private Slider progressSlider;
-
-    [Header("설정")]
-    [SerializeField] private float fadeOutDuration = 0.5f;
-    [SerializeField] private float minLoadingTime = 2f; // 최소 로딩 시간 (너무 빠르면 어색)
-
-    [Header("로딩 팁")]
-    [SerializeField] private string[] loadingTips = new string[]
-    {
-        "펫을 쓰다듬으면 친밀도가 올라가요!",
-        "배고픈 펫에게 음식을 줘보세요.",
-        "펫들은 서로 놀기도 해요.",
-        "Egg를 터치하면 새 펫이 나와요!",
-        "펫이 졸려하면 쉬게 해주세요."
-    };
-
-    [Header("재미있는 로딩 메시지")]
-    [SerializeField] private float funMessageInterval = 3f; // 메시지 변경 주기
-    [SerializeField] private string[] funLoadingMessages = new string[]
-    {
-        // 토끼와 거북이 경주
-        "토끼와 거북이가 경주 준비 중...",
-        "거북이: 이번엔 내가 이긴다!",
-        "토끼가 낮잠 자는 사이 거북이 추월 중...",
-
-        // 같이 자기/쉬기
-        "판다가 대나무 베개 찾는 중...",
-        "코알라가 나무에서 꿈나라 여행 중...",
-        "나무늘보가... 천천히... 준비 중...",
-
-        // 쫓고 쫓기기
-        "여우가 토끼 놀래키러 숨는 중...",
-        "고양이가 쥐 역할 맡을 펫 물색 중...",
-
-        // 같이 걷기
-        "기린과 코끼리가 산책 코스 정하는 중...",
-        "양떼가 구름 모양 연습 중...",
-
-        // 포식자 사냥
-        "두더지가 숨을 곳 파는 중...",
-        "사자가 멋진 포즈 연습 중...",
-
-        // 특수 상호작용
-        "카멜레온이 배경색 고르는 중...",
-        "스컹크가 향수 테스트 중... (조심!)",
-        "낙타와 알파카 침 뱉기 연습 중...",
-
-        // 일반 준비
-        "펫들이 오늘의 역할 정하는 중...",
-        "먹이 배달 트럭 도착 대기 중...",
-        "펫 빌리지 청소 마무리 중...",
-        "오늘의 모험 준비 중...",
-        "펫들이 스트레칭하는 중..."
-    };
-
-    private float loadingStartTime;
     private bool isLoadingComplete = false;
-    private int totalPets = 0;
-    private int loadedPets = 0;
-    private Coroutine funMessageCoroutine;
 
     private void Awake()
     {
@@ -90,199 +23,31 @@ public class LoadingManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // 로딩 시작
-        loadingStartTime = Time.time;
-
-        if (loadingScreen != null)
-        {
-            loadingScreen.SetActive(true);
-        }
-
-        // 랜덤 팁 표시
-        ShowRandomTip();
-
-        // 진행률 초기화
-        UpdateProgress(0, 1);
-
-        // 재미있는 메시지 순환 시작
-        funMessageCoroutine = StartCoroutine(CycleFunMessages());
-    }
-
     /// <summary>
-    /// 로딩할 총 펫 수 설정
-    /// </summary>
-    public void SetTotalPets(int total)
-    {
-        totalPets = total;
-        loadedPets = 0;
-        UpdateProgressUI();
-    }
-
-    /// <summary>
-    /// 펫 로딩 진행률 업데이트
-    /// </summary>
-    public void OnPetLoaded()
-    {
-        loadedPets++;
-        UpdateProgressUI();
-    }
-
-    /// <summary>
-    /// 진행률 직접 설정 (0~1)
-    /// </summary>
-    public void UpdateProgress(int current, int total)
-    {
-        loadedPets = current;
-        totalPets = total;
-        UpdateProgressUI();
-    }
-
-    private void UpdateProgressUI()
-    {
-        if (progressSlider != null && totalPets > 0)
-        {
-            float fill = (float)loadedPets / totalPets;
-            progressSlider.value = fill;
-            Debug.Log($"[LoadingManager] 프로그레스: {loadedPets}/{totalPets} = {fill:P0}");
-        }
-    }
-
-    /// <summary>
-    /// 재미있는 로딩 메시지 순환
-    /// </summary>
-    private IEnumerator CycleFunMessages()
-    {
-        if (funLoadingMessages == null || funLoadingMessages.Length == 0)
-        {
-            // 메시지가 없으면 기본 텍스트 표시
-            if (progressText != null)
-            {
-                progressText.text = "펫 준비 중...";
-            }
-            yield break;
-        }
-
-        int lastIndex = -1;
-
-        while (!isLoadingComplete)
-        {
-            // 이전과 다른 랜덤 메시지 선택
-            int newIndex;
-            do
-            {
-                newIndex = Random.Range(0, funLoadingMessages.Length);
-            } while (newIndex == lastIndex && funLoadingMessages.Length > 1);
-
-            lastIndex = newIndex;
-
-            if (progressText != null)
-            {
-                progressText.text = funLoadingMessages[newIndex];
-            }
-
-            yield return new WaitForSeconds(funMessageInterval);
-        }
-    }
-
-    /// <summary>
-    /// 랜덤 팁 표시
-    /// </summary>
-    private void ShowRandomTip()
-    {
-        if (tipText != null && loadingTips != null && loadingTips.Length > 0)
-        {
-            tipText.text = loadingTips[Random.Range(0, loadingTips.Length)];
-        }
-    }
-
-    /// <summary>
-    /// 로딩 완료 - 페이드 아웃 후 로딩 화면 숨김
+    /// 로딩 완료 - Flutter에 알림 전송
     /// </summary>
     public void OnLoadingComplete()
     {
         if (isLoadingComplete) return;
         isLoadingComplete = true;
 
-        // 재미있는 메시지 코루틴 정리
-        if (funMessageCoroutine != null)
-        {
-            StopCoroutine(funMessageCoroutine);
-            funMessageCoroutine = null;
-        }
+        // Flutter에 로딩 완료 알림
+        FlutterBridge.Instance?.SendLoadingComplete();
 
-        StartCoroutine(CompleteLoadingCoroutine());
-    }
-
-    private IEnumerator CompleteLoadingCoroutine()
-    {
-        // 최소 로딩 시간 보장 (너무 빠르면 어색함)
-        float elapsed = Time.time - loadingStartTime;
-        if (elapsed < minLoadingTime)
-        {
-            yield return new WaitForSeconds(minLoadingTime - elapsed);
-        }
-
-        // 진행률 100% 표시
-        if (progressText != null)
-        {
-            progressText.text = "완료!";
-        }
-        if (progressSlider != null)
-        {
-            progressSlider.value = 1f;
-        }
-
-        yield return new WaitForSeconds(0.3f);
-
-        // 페이드 아웃
-        yield return StartCoroutine(FadeOut());
-
-        // 로딩 화면 비활성화
-        if (loadingScreen != null)
-        {
-            loadingScreen.SetActive(false);
-        }
-
-        Debug.Log("[LoadingManager] 로딩 완료, 게임 시작");
-    }
-
-    private IEnumerator FadeOut()
-    {
-        if (backgroundImage == null)
-        {
-            yield break;
-        }
-
-        Color startColor = backgroundImage.color;
-        float elapsed = 0f;
-
-        while (elapsed < fadeOutDuration)
-        {
-            elapsed += Time.deltaTime;
-            float alpha = Mathf.Lerp(1f, 0f, elapsed / fadeOutDuration);
-            backgroundImage.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
-            yield return null;
-        }
-
-        backgroundImage.color = new Color(startColor.r, startColor.g, startColor.b, 0f);
-    }
-
-    /// <summary>
-    /// 로딩 화면 즉시 숨기기 (테스트용)
-    /// </summary>
-    public void HideImmediately()
-    {
-        if (loadingScreen != null)
-        {
-            loadingScreen.SetActive(false);
-        }
-        isLoadingComplete = true;
+        Debug.Log("[LoadingManager] 로딩 완료, Flutter에 알림 전송");
     }
 
     /// <summary>
     /// 로딩이 완료되었는지 확인
     /// </summary>
     public bool IsLoadingComplete => isLoadingComplete;
+
+    /// <summary>
+    /// 새 세션을 위해 상태 리셋
+    /// </summary>
+    public void ResetForNewSession()
+    {
+        isLoadingComplete = false;
+        Debug.Log("[LoadingManager] 상태 리셋");
+    }
 }

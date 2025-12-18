@@ -295,9 +295,6 @@ public class PetManager : MonoBehaviour
         int eggCount = 0;
         int totalPets = PetSelectionManager.Instance.selectedPetIds.Count;
 
-        // 로딩 매니저에 총 펫 수 알림
-        LoadingManager.Instance?.SetTotalPets(totalPets);
-
         foreach (string petId in PetSelectionManager.Instance.selectedPetIds)
         {
             bool isFirstAppearance = PetSelectionManager.Instance.IsPetFirstAppearance(petId);
@@ -312,9 +309,6 @@ public class PetManager : MonoBehaviour
                 SpawnPet(petId, false);
                 spawnedCount++;
             }
-
-            // 로딩 진행률 업데이트
-            LoadingManager.Instance?.OnPetLoaded();
 
             yield return new WaitForSeconds(0.1f);
         }
@@ -356,10 +350,6 @@ public class PetManager : MonoBehaviour
 
         int spawnedCount = 0;
         int eggCount = 0;
-        int totalPets = gameData.pets.Count;
-
-        // 로딩 매니저에 총 펫 수 알림
-        LoadingManager.Instance?.SetTotalPets(totalPets);
 
         foreach (var petData in gameData.pets)
         {
@@ -380,9 +370,6 @@ public class PetManager : MonoBehaviour
                 Debug.Log($"[PetManager] Flutter 펫 Egg 생성: {petData.petCardId}");
                 eggCount++;
             }
-
-            // 로딩 진행률 업데이트
-            LoadingManager.Instance?.OnPetLoaded();
 
             yield return new WaitForSeconds(0.1f);
         }
@@ -987,9 +974,6 @@ public class PetManager : MonoBehaviour
     // 기존 메서드들...
     private IEnumerator SpawnAllPetsCoroutine()
     {
-        int totalPets = Mathf.Min(petPrefabs.Length, maxPets);
-        LoadingManager.Instance?.SetTotalPets(totalPets);
-
         for (int i = 0; i < petPrefabs.Length && i < maxPets; i++)
         {
             if (petPrefabs[i] != null)
@@ -999,9 +983,6 @@ public class PetManager : MonoBehaviour
                 // 180도 회전하여 카메라를 향하도록 스폰
                 Quaternion rotation = Quaternion.Euler(0, 180, 0);
                 GameObject pet = Instantiate(petPrefabs[i], randomPosition, rotation);
-
-                // 로딩 진행률 업데이트
-                LoadingManager.Instance?.OnPetLoaded();
 
                 yield return new WaitForSeconds(0.1f);
             }

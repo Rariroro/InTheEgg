@@ -356,6 +356,18 @@ public class FlutterBridge : MonoBehaviour
     }
 
     /// <summary>
+    /// 로딩 완료 알림 - Flutter에 게임 시작 가능 알림
+    /// </summary>
+    public void SendLoadingComplete()
+    {
+        var message = new LoadingCompleteMessage();
+        string json = message.ToJson();
+
+        Debug.Log($"[FlutterBridge] LOADING_COMPLETE 전송: {json}");
+        SendToFlutter.Send(json);
+    }
+
+    /// <summary>
     /// 친밀도 동기화 전송 (변경된 펫만 전송하여 성능 최적화)
     /// </summary>
     public void SendSyncIntimacy(bool isGameExit = false)
