@@ -15,6 +15,18 @@ public class CameraController : MonoBehaviour
     public float minZ = -500f;  // 최소 Z 좌표
     public float maxZ = 500f;   // 최대 Z 좌표
 
+    [Header("더블탭 줌")]
+    public float doubleTapZoomFOV = 25f;  // 더블탭 시 줌인할 FOV
+    public float doubleTapZoomDuration = 0.3f;  // 줌 애니메이션 시간
+    private float lastTapTime = 0f;
+    private const float DOUBLE_TAP_THRESHOLD = 0.3f;  // 더블탭 인식 시간 간격
+    private Vector2 lastTapPosition;
+    private const float TAP_POSITION_THRESHOLD = 50f;  // 같은 위치로 인식할 거리
+    private bool isZoomedIn = false;  // 현재 줌인 상태인지
+    private float preZoomFOV;  // 줌인 전 FOV 저장
+    private Vector3 preZoomPosition;  // 줌인 전 카메라 위치 저장
+    private Coroutine doubleTapZoomCoroutine;
+
     [Header("카메라 애니메이션 잠금")]
     private bool isCameraAnimating = false;
 
@@ -71,6 +83,14 @@ public class CameraController : MonoBehaviour
 
         if (Input.touchCount == 1)
         {
+            Touch touch = Input.GetTouch(0);
+
+            // 터치가 끝났을 때 더블탭 체크
+            if (touch.phase == TouchPhase.Ended)
+            {
+                CheckDoubleTap(touch.position);
+            }
+
             // 펫을 들고 있지 않을 때만 카메라 이동
             if (!isPetHolding)
             {
@@ -113,6 +133,9 @@ public class CameraController : MonoBehaviour
             // Debug.Log("HandleEditorInput :2");
 
             isDragging = false;
+
+            // 마우스 버튼을 뗄 때 더블클릭 체크
+            CheckDoubleTap(Input.mousePosition);
         }
 
         // 펫이 들려있는 동안 isDragging을 false로 유지
@@ -276,6 +299,145 @@ public class CameraController : MonoBehaviour
     public void UnlockCamera()
     {
         isCameraAnimating = false;
+    }
+
+    /// <summary>
+    /// 더블탭/더블클릭 감지 및 줌 토글
+    /// </summary>
+    /// <param name="tapPosition">탭/클릭 위치 (스크린 좌표)</param>
+    private void CheckDoubleTap(Vector2 tapPosition)
+    {
+        float currentTime = Time.time;
+
+        // 이전 탭과의 시간 차이 및 위치 차이 확인
+        if (currentTime - lastTapTime < DOUBLE_TAP_THRESHOLD &&
+            Vector2.Distance(tapPosition, lastTapPosition) < TAP_POSITION_THRESHOLD)
+        {
+            // 더블탭 감지됨
+            OnDoubleTap(tapPosition);
+            lastTapTime = 0f;  // 다음 더블탭을 위해 초기화
+        }
+        else
+        {
+            // 첫 번째 탭으로 기록
+            lastTapTime = currentTime;
+            lastTapPosition = tapPosition;
+        }
+    }
+
+    /// <summary>
+    /// 더블탭 시 줌 토글 실행
+    /// </summary>
+    /// <param name="tapPosition">탭 위치 (스크린 좌표)</param>
+    private void OnDoubleTap(Vector2 tapPosition)
+    {
+        if (childCamera == null) return;
+
+        // 이미 줌 애니메이션 중이면 무시
+        if (doubleTapZoomCoroutine != null)
+        {
+            StopCoroutine(doubleTapZoomCoroutine);
+        }
+
+        if (isZoomedIn)
+        {
+            // 줌아웃: 이전 상태로 복원
+            doubleTapZoomCoroutine = StartCoroutine(DoubleTapZoomCoroutine(preZoomPosition, preZoomFOV));
+            isZoomedIn = false;
+        }
+        else
+        {
+            // 줌인: 탭한 위치를 중심으로
+            preZoomFOV = childCamera.fieldOfView;
+            preZoomPosition = transform.position;
+
+            // 탭한 위치를 월드 좌표로 변환
+            Vector3 targetWorldPosition = GetWorldPositionFromScreenPoint(tapPosition);
+
+            doubleTapZoomCoroutine = StartCoroutine(DoubleTapZoomCoroutine(targetWorldPosition, doubleTapZoomFOV));
+            isZoomedIn = true;
+        }
+    }
+
+    /// <summary>
+    /// 스크린 좌표를 카메라 이동 목표 위치로 변환 (탭한 지점이 화면 중앙에 오도록)
+    /// </summary>
+    private Vector3 GetWorldPositionFromScreenPoint(Vector2 screenPoint)
+    {
+        if (childCamera == null) return transform.position;
+
+        // 탭한 지점의 레이
+        Ray tapRay = childCamera.ScreenPointToRay(screenPoint);
+
+        // 지면(Y=0)과의 교차점 계산
+        Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
+        if (groundPlane.Raycast(tapRay, out float tapDistance))
+        {
+            Vector3 tapHitPoint = tapRay.GetPoint(tapDistance);
+
+            // 화면 중앙의 레이
+            Ray centerRay = childCamera.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f));
+            if (groundPlane.Raycast(centerRay, out float centerDistance))
+            {
+                Vector3 centerHitPoint = centerRay.GetPoint(centerDistance);
+
+                // 현재 카메라 위치에서 화면 중앙이 바라보는 지점까지의 오프셋
+                Vector3 currentCameraToCenter = centerHitPoint - transform.position;
+
+                // 탭한 지점이 화면 중앙에 오려면, 탭 지점에서 이 오프셋만큼 뒤로 가야 함
+                Vector3 targetCameraPosition = tapHitPoint - currentCameraToCenter;
+
+                // 카메라 Y축은 유지
+                targetCameraPosition.y = transform.position.y;
+
+                return targetCameraPosition;
+            }
+        }
+
+        return transform.position;
+    }
+
+    /// <summary>
+    /// 더블탭 줌 애니메이션 코루틴
+    /// </summary>
+    private IEnumerator DoubleTapZoomCoroutine(Vector3 targetPosition, float targetFOV)
+    {
+        LockCamera();
+
+        Vector3 startPosition = transform.position;
+        float startFOV = childCamera.fieldOfView;
+
+        // 위치 제한 적용
+        Vector3 clampedTarget = targetPosition;
+        if (limitCameraMovement)
+        {
+            clampedTarget.x = Mathf.Clamp(clampedTarget.x, minX, maxX);
+            clampedTarget.z = Mathf.Clamp(clampedTarget.z, minZ, maxZ);
+        }
+
+        // FOV 제한 적용
+        targetFOV = Mathf.Clamp(targetFOV, maxZoom, minZoom);
+
+        float elapsed = 0f;
+        while (elapsed < doubleTapZoomDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / doubleTapZoomDuration;
+
+            // EaseOutQuad 커브 적용 (부드러운 감속)
+            float smoothT = 1f - (1f - t) * (1f - t);
+
+            transform.position = Vector3.Lerp(startPosition, clampedTarget, smoothT);
+            childCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, smoothT);
+
+            yield return null;
+        }
+
+        transform.position = clampedTarget;
+        childCamera.fieldOfView = targetFOV;
+
+        UnlockCamera();
+        doubleTapZoomCoroutine = null;
     }
 
     /// <summary>

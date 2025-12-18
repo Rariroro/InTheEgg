@@ -277,6 +277,12 @@ public class FlutterModeManager : MonoBehaviour
             EnvironmentManager.Instance.ResetForNewSession();
         }
 
+        // LoadingManager도 리셋 (isLoadingComplete 플래그 초기화)
+        if (LoadingManager.Instance != null)
+        {
+            LoadingManager.Instance.ResetForNewSession();
+        }
+
         Debug.Log("[FlutterModeManager] 새 세션을 위해 상태 리셋됨");
     }
 
