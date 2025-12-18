@@ -474,19 +474,24 @@ namespace LegendaryPet
 
             foreach (var legendData in gameData.legendaryPets)
             {
-                if (string.IsNullOrEmpty(legendData.petCardId)) continue;
+                // v3.5: legendaryPetId만 사용 (petCardId 제거)
+                if (string.IsNullOrEmpty(legendData.legendaryPetId)) continue;
+
+                // v3.5: 프리팹 매칭용 기본 ID 추출
+                string basePetCardId = legendData.GetBasePetCardId();
 
                 if (legendData.isSpawned)
                 {
                     // 이미 스폰된 펫은 바로 스폰 (선물 없이)
-                    SpawnLegendaryPet(legendData.petCardId, false);
-                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 기존 레전드 펫 직접 스폰 - {legendData.petCardId}");
+                    SpawnLegendaryPet(basePetCardId, false);
+                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 기존 레전드 펫 직접 스폰 - {legendData.legendaryPetId}");
                 }
                 else
                 {
                     // 최초 등장 레전드 펫은 선물로 스폰 (터치 대기)
-                    SpawnGiftForLegendaryPet(legendData.petCardId);
-                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 신규 레전드 펫 선물 생성 - {legendData.petCardId}");
+                    // v3.5: legendaryPetId를 저장하여 스폰 완료 시 Flutter에 반환
+                    SpawnGiftForLegendaryPet(basePetCardId, legendData.legendaryPetId);
+                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 신규 레전드 펫 선물 생성 - {legendData.legendaryPetId}");
                 }
 
                 currentLegendSpawnIndex++;
@@ -714,12 +719,16 @@ namespace LegendaryPet
         }
         
         // 선물로 레전드 펫 스폰 (3단계 시스템 적용)
-        private void SpawnGiftForLegendaryPet(string legendaryPetId)
+        // v3.4: uniqueId 파라미터 추가 - Flutter에 반환할 전체 ID
+        private void SpawnGiftForLegendaryPet(string petCardId, string uniqueId = null)
         {
+            // uniqueId가 없으면 petCardId 사용 (하위 호환)
+            string idForFlutter = !string.IsNullOrEmpty(uniqueId) ? uniqueId : petCardId;
+
             if (giftPrefab == null)
             {
                 Debug.LogWarning("[LegendaryPetManager] 선물 프리팹이 설정되지 않았습니다. 직접 스폰합니다.");
-                SpawnLegendaryPet(legendaryPetId, true);
+                SpawnLegendaryPet(petCardId, true);
                 return;
             }
 
@@ -748,10 +757,10 @@ namespace LegendaryPet
             Coroutine rotationCoroutine = StartCoroutine(RotateGift(gift));
             giftRotationCoroutines[gift] = rotationCoroutine;
 
-            // 선물 딕셔너리에 추가
-            pendingGifts.Add(gift, legendaryPetId);
+            // 선물 딕셔너리에 추가 - v3.4: 전체 ID 저장
+            pendingGifts.Add(gift, idForFlutter);
 
-            Debug.Log($"[LegendaryPetManager] {legendaryPetId}를 위한 선물 생성 - A좌표: {giftPosition}");
+            Debug.Log($"[LegendaryPetManager] {idForFlutter}를 위한 선물 생성 - A좌표: {giftPosition}");
         }
 
         // 선물 회전 애니메이션 코루틴

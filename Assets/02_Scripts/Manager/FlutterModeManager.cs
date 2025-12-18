@@ -134,10 +134,12 @@ public class FlutterModeManager : MonoBehaviour
             LegendaryPetSelectionManager.Instance.ClearSelectedLegendaryPets();
             foreach (var legendPet in gameData.legendaryPets)
             {
-                LegendaryPetSelectionManager.Instance.AddLegendaryPet(legendPet.petCardId);
+                // v3.5: petCardId 제거, legendaryPetId에서 기본 ID 추출
+                string basePetCardId = legendPet.GetBasePetCardId();
+                LegendaryPetSelectionManager.Instance.AddLegendaryPet(basePetCardId);
                 if (!legendPet.isSpawned)
                 {
-                    LegendaryPetSelectionManager.Instance.SetLegendaryPetFirstAppearance(legendPet.petCardId, true);
+                    LegendaryPetSelectionManager.Instance.SetLegendaryPetFirstAppearance(basePetCardId, true);
                 }
             }
             Debug.Log($"[FlutterModeManager] LegendaryPetSelectionManager 설정 완료: {gameData.legendaryPets.Count}마리");

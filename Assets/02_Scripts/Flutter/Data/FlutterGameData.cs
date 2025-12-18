@@ -58,24 +58,43 @@ namespace FlutterIntegration
 
     /// <summary>
     /// 레전드 펫 데이터 (pet_legend_001 ~ pet_legend_021)
+    /// v3.5: petCardId 제거, legendaryPetId만 사용
     /// </summary>
     [Serializable]
     public class FlutterLegendaryPetData
     {
-        public string petCardId;      // "pet_legend_001" ~ "pet_legend_021"
+        public string legendaryPetId; // "pet_legend_001_1734567890123" (전체 ID)
         public string petName;        // 영문 이름
         public bool isSpawned;        // true: 직접 스폰, false: Gift로 스폰
 
         /// <summary>
-        /// petCardId에서 배열 인덱스 추출 (pet_legend_001 -> 0)
+        /// legendaryPetId에서 프리팹 매칭용 기본 ID 추출
+        /// 예: "pet_legend_011_1734567890123" → "pet_legend_011"
+        /// </summary>
+        public string GetBasePetCardId()
+        {
+            if (string.IsNullOrEmpty(legendaryPetId)) return null;
+
+            // pet_legend_XXX_timestamp 형식에서 앞부분만 추출
+            // pet_legend_ (11자) + 숫자 3자 = 14자
+            if (legendaryPetId.StartsWith("pet_legend_") && legendaryPetId.Length >= 14)
+            {
+                return legendaryPetId.Substring(0, 14);
+            }
+            return legendaryPetId;
+        }
+
+        /// <summary>
+        /// legendaryPetId에서 배열 인덱스 추출 (pet_legend_011_xxx -> 10)
         /// </summary>
         public int GetPrefabIndex()
         {
-            if (string.IsNullOrEmpty(petCardId)) return -1;
+            string basePetCardId = GetBasePetCardId();
+            if (string.IsNullOrEmpty(basePetCardId)) return -1;
 
-            if (petCardId.StartsWith("pet_legend_") && petCardId.Length >= 14)
+            if (basePetCardId.StartsWith("pet_legend_") && basePetCardId.Length >= 14)
             {
-                string numberPart = petCardId.Substring(11);
+                string numberPart = basePetCardId.Substring(11, 3);
                 if (int.TryParse(numberPart, out int number))
                 {
                     return number - 1;

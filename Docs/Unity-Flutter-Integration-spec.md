@@ -24,7 +24,7 @@ Flutter 앱에서 유저가 보유한 펫을 Unity 게임에서 플레이할 수
 | 종류 | 속성 | 설명 |
 |------|------|------|
 | **펫** | petCardId, petName, petIntimacy, isSpawned | 스폰 안 된 펫은 Egg 상태 |
-| **레전드 펫** | petCardId, petName, isSpawned | 친밀도/욕구 없음, 먹이 불가 |
+| **레전드 펫** | legendaryPetId, petName, isSpawned | 친밀도/욕구 없음, 먹이 불가 (v3.5: petCardId 제거, legendaryPetId만 사용) |
 | **환경 아이템** | id, isSpawned | 스폰 안 됨 = 선물상자, 위치는 고정 |
 | **음식 아이템** | id, quantity | 게임에서 사용 시 수량 감소 |
 | **코인** | coins | 게임에서 획득 시 Flutter로 전송 |
@@ -222,7 +222,7 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
     ],
     "legendaryPets": [
       {
-        "petCardId": "pet_legend_011",
+        "legendaryPetId": "pet_legend_011_1734567890123",
         "petName": "Ocean (오션)",
         "isSpawned": false
       }
@@ -246,6 +246,10 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 ```
 
 > **v3.0 추가**: `coins` 필드가 추가되었습니다. Unity는 이 값을 초기 코인으로 사용합니다.
+>
+> **v3.5 변경**: `legendaryPets`에서 `petCardId` 필드 제거, `legendaryPetId`만 사용
+> - `legendaryPetId`: 전체 ID (예: `pet_legend_011_1734567890123`)
+> - Unity에서 프리팹 매칭 시 앞 14자(`pet_legend_011`)를 추출하여 사용
 
 ---
 
@@ -267,17 +271,21 @@ Flutter 화면이 (재)진입했을 때 전송합니다. **Unity는 이 메시�
 
 ### Unity → Flutter: LEGEND_PET_SPAWNED
 
-레전드 펫 Egg 터치 시 전송합니다.
+레전드 펫 Gift 터치 시 전송합니다.
 
 ```json
 {
   "type": "LEGEND_PET_SPAWNED",
   "data": {
-    "petCardId": "pet_legend_011",
+    "legendaryPetId": "pet_legend_011_1734567890123",
     "isSpawned": true
   }
 }
 ```
+
+> **v3.5 변경**: `petCardId` → `legendaryPetId`로 필드명 변경
+> - 전체 ID 형식 사용 (예: `pet_legend_011_1734567890123`)
+> - Flutter는 이 ID로 Firestore 문서를 직접 조회하여 `isSpawned` 업데이트
 
 ---
 
@@ -564,7 +572,7 @@ void sendInitGame(GameData data) {
         "isSpawned": p.isSpawned
       }).toList(),
       "legendaryPets": data.legendaryPets.map((p) => {
-        "petCardId": p.id,
+        "legendaryPetId": p.legendaryPetId, // v3.5: 전체 ID만 전송 (pet_legend_011_1734567890123)
         "petName": p.name,
         "isSpawned": p.isSpawned
       }).toList(),
@@ -606,9 +614,9 @@ void setupUnityListener() {
         break;
 
       case 'LEGEND_PET_SPAWNED':
-        // 레전드 펫 스폰됨
-        final petCardId = data['data']['petCardId'];
-        updateLegendPetSpawnStatus(petCardId, true);
+        // 레전드 펫 스폰됨 (v3.5: legendaryPetId 필드 사용)
+        final legendaryPetId = data['data']['legendaryPetId'];  // pet_legend_011_1734567890123
+        updateLegendPetSpawnStatus(legendaryPetId, true);
         break;
 
       case 'ENV_ITEM_SPAWNED':
@@ -749,3 +757,5 @@ class _UnityGameScreenState extends State<UnityGameScreen> {
 | 2025-12-17 | 3.1 | **NavMesh 초기화 타이밍 수정** - Flutter 모드에서 펫 스폰 전 NavMesh 베이크 완료 대기 로직 추가. "Failed to create agent because there is no valid NavMesh" 에러 해결. `PetManager.WaitForEnvironmentAndSpawnFromFlutter()` 추가 |
 | 2025-12-17 | 3.2 | **Unity 나가기 시 정리 로직 추가** - `FlutterBridge.CleanupForExit()` 추가. Unity 백그라운드 전환 시 모든 펫/상호작용 정리 후 Destroy. 재진입 시 MissingReferenceException 방지 |
 | 2025-12-18 | 3.3 | **Flutter 코드 안정성 개선** - (1) FOOD_USED 처리 시 아이템 미발견 시 크래시 대신 로그 처리. (2) Unity 메시지 파싱에 안전한 타입 변환 함수 추가 (`_safeParseInt`, `_safeParseString`, `_safeParseBool`). (3) 상태 업데이트 최적화 - 로컬 상태 즉시 업데이트 후 백그라운드 서버 저장 (fire-and-forget 패턴). (4) `LegendaryPetModel.basePetCardId` getter 추가로 ID 추출 로직 중앙화. (5) 디버그 로그를 `kDebugMode` 조건부로 변경하여 프로덕션 로그 정리 |
+| 2025-12-18 | 3.4 | **레전드 펫 개별 식별 시스템** - 같은 종류의 레전드 펫을 여러 마리 보유할 때 개별 구분 가능. (1) `INIT_GAME`의 `legendaryPets`에 `legendaryPetId` 필드 추가 (전체 ID, 예: `pet_legend_011_1734567890123`). (2) `LEGEND_PET_SPAWNED`에서 `petCardId`가 전체 ID 형식으로 변경. (3) Flutter `legendary_pet_view_model.dart`에서 전체 ID로 비교. (4) Unity `LegendaryPetManager.cs`에서 전체 ID 저장 및 반환. ✅ Flutter/Unity 양쪽 완료 |
+| 2025-12-18 | 3.5 | **레전드 펫 ID 단순화** - v3.4의 과잉 설계 수정. (1) `INIT_GAME`의 `legendaryPets`에서 `petCardId` 필드 제거, `legendaryPetId`만 전송. (2) `LEGEND_PET_SPAWNED`에서 필드명 `petCardId` → `legendaryPetId`로 변경. (3) Unity에서 프리팹 매칭 시 `legendaryPetId` 앞 14자 추출하여 사용 (`GetBasePetCardId()` 메서드). ✅ Flutter/Unity 양쪽 완료 |

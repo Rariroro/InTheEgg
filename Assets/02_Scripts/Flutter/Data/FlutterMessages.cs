@@ -59,22 +59,25 @@ namespace FlutterIntegration
 
     #region LEGEND_PET_SPAWNED - 레전드 펫 Gift 터치 시
 
+    /// <summary>
+    /// v3.5: petCardId → legendaryPetId로 변경 (전체 ID 사용)
+    /// </summary>
     [Serializable]
     public class LegendPetSpawnedMessage : FlutterOutboundMessage
     {
         public LegendPetSpawnedData data;
 
-        public LegendPetSpawnedMessage(string petCardId)
+        public LegendPetSpawnedMessage(string legendaryPetId)
         {
             type = "LEGEND_PET_SPAWNED";
-            data = new LegendPetSpawnedData { petCardId = petCardId, isSpawned = true };
+            data = new LegendPetSpawnedData { legendaryPetId = legendaryPetId, isSpawned = true };
         }
     }
 
     [Serializable]
     public class LegendPetSpawnedData
     {
-        public string petCardId;
+        public string legendaryPetId;  // v3.5: 전체 ID (pet_legend_011_1734567890123)
         public bool isSpawned;
     }
 
