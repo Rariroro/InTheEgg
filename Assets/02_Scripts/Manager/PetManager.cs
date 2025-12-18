@@ -922,73 +922,58 @@ public class PetManager : MonoBehaviour
         pet.transform.localScale = originalScale;
     }
 
-    // 글로우 효과 코루틴 (Material 인스턴스 관리 개선)
+    // 글로우 효과 코루틴
     private IEnumerator GlowEffect(GameObject pet)
     {
         Renderer[] renderers = pet.GetComponentsInChildren<Renderer>();
-        List<Material> createdMaterials = new List<Material>();
         Dictionary<Renderer, Color> originalEmissions = new Dictionary<Renderer, Color>();
-        bool hasEmissiveMaterial = false;
 
-        try
+        // 원본 Emission 색상 저장
+        foreach (Renderer renderer in renderers)
         {
-            // 머터리얼이 Emission을 지원하는지 확인 및 원본 색상 저장
-            foreach (Renderer renderer in renderers)
+            Material mat = renderer.material;
+            if (mat != null && mat.HasProperty("_EmissionColor"))
             {
-                // renderer.material 접근 시 Material 인스턴스가 생성됨
-                Material mat = renderer.material;
-                if (mat != null && mat.HasProperty("_EmissionColor"))
-                {
-                    createdMaterials.Add(mat);
-                    originalEmissions[renderer] = mat.GetColor("_EmissionColor");
-                    hasEmissiveMaterial = true;
-                }
+                originalEmissions[renderer] = mat.GetColor("_EmissionColor");
             }
+        }
 
-            if (hasEmissiveMaterial)
+        if (originalEmissions.Count > 0)
+        {
+            float duration = 2f;
+            float elapsed = 0f;
+            Color glowColor = Color.yellow * 2f; // 밝은 노란색
+
+            while (elapsed < duration && pet != null)
             {
-                float duration = 2f;
-                float elapsed = 0f;
-                Color glowColor = Color.yellow * 2f; // 밝은 노란색
+                elapsed += Time.deltaTime;
+                float intensity = Mathf.Sin(elapsed * Mathf.PI / duration);
 
-                while (elapsed < duration && pet != null)
-                {
-                    elapsed += Time.deltaTime;
-                    float intensity = Mathf.Sin(elapsed * Mathf.PI / duration);
-
-                    foreach (var kvp in originalEmissions)
-                    {
-                        if (kvp.Key != null && kvp.Key.material != null)
-                        {
-                            kvp.Key.material.SetColor("_EmissionColor", Color.Lerp(kvp.Value, glowColor, intensity));
-                        }
-                    }
-
-                    yield return null;
-                }
-
-                // 원래 색상으로 복원
                 foreach (var kvp in originalEmissions)
                 {
                     if (kvp.Key != null && kvp.Key.material != null)
                     {
-                        kvp.Key.material.SetColor("_EmissionColor", kvp.Value);
+                        kvp.Key.material.SetColor("_EmissionColor", Color.Lerp(kvp.Value, glowColor, intensity));
                     }
+                }
+
+                yield return null;
+            }
+
+            // 원래 색상으로 복원
+            foreach (var kvp in originalEmissions)
+            {
+                if (kvp.Key != null && kvp.Key.material != null)
+                {
+                    kvp.Key.material.SetColor("_EmissionColor", kvp.Value);
                 }
             }
         }
-        finally
-        {
-            // Material 인스턴스 명시적 해제 (메모리 누수 방지)
-            // 중요: renderer.material 접근 시 Unity가 새 Material 인스턴스를 생성하며,
-            // 이는 자동으로 정리되지 않으므로 명시적으로 Destroy 해야 함
-            foreach (var mat in createdMaterials)
-            {
-                if (mat != null) Destroy(mat);
-            }
-            createdMaterials.Clear();
-            originalEmissions.Clear();
-        }
+
+        // Note: Material 인스턴스는 Destroy하지 않음
+        // renderer.material 접근 시 생성된 인스턴스는 렌더러가 계속 사용하므로
+        // 삭제하면 Missing Material(핑크색)이 됨
+        // 펫 GameObject 삭제 시 함께 정리됨
     }
 
     // Ease Out Back 이징 함수 (새로 추가)
