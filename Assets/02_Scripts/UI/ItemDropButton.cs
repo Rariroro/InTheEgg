@@ -124,6 +124,19 @@ public class ItemDropButton : MonoBehaviour
         itemButtons.Clear();
         itemCounts.Clear();
 
+        // ItemSelectionManager가 없으면 동적 생성 (PetVillage 직접 시작 시)
+        if (ItemSelectionManager.Instance == null)
+        {
+            var go = new GameObject("ItemSelectionManager");
+            go.AddComponent<ItemSelectionManager>();
+
+            // PetVillage 직접 시작 시에만 기본 아이템 10개씩 제공
+            foreach (var item in ItemSelectionManager.Instance.selectedItems)
+            {
+                ItemSelectionManager.Instance.SetItemCount(item.itemType, 10);
+            }
+        }
+
         // 새로 로드
         if (ItemSelectionManager.Instance != null)
         {

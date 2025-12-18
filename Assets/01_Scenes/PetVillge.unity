@@ -9910,6 +9910,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: EmotionBubbleCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 5356437811321102288, guid: 47e8161fa11db4f7aac5240b6e9b1ec4, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6754047025420352737, guid: 47e8161fa11db4f7aac5240b6e9b1ec4, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
