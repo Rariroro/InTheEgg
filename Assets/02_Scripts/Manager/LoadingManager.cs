@@ -24,17 +24,14 @@ public class LoadingManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 로딩 완료 - Flutter에 알림 전송
+    /// 로딩 완료
     /// </summary>
     public void OnLoadingComplete()
     {
         if (isLoadingComplete) return;
         isLoadingComplete = true;
 
-        // Flutter에 로딩 완료 알림
-        FlutterBridge.Instance?.SendLoadingComplete();
-
-        Debug.Log("[LoadingManager] 로딩 완료, Flutter에 알림 전송");
+        Debug.Log("[LoadingManager] 로딩 완료");
     }
 
     /// <summary>

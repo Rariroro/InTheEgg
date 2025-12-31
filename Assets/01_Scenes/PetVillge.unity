@@ -24834,7 +24834,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 30
   m_Shadows:
-    m_Type: 1
+    m_Type: 0
     m_Resolution: 3
     m_CustomResolution: -1
     m_Strength: 0.7
@@ -91540,8 +91540,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ff47cc53a6ff453790ade8220bfcc1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isFlutterMode: 0
-  isInitialized: 0
 --- !u!114 &1690993947
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91554,14 +91552,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f7fd47e817734df6ae41630fb7057f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  intimacySyncInterval: 30
-  flutterDataTimeout: 3
-  retryDelays:
-  - 3
-  - 5
-  - 10
-  - 20
-  - 30
 --- !u!1001 &1691511302
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -119365,6 +119355,30 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 379.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 43.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1198990148236590813, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1208795282486768157, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -119503,6 +119517,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2592674342381228620, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
       propertyPath: m_PreserveAspect
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2596337333766089554, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2596337333766089554, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
@@ -119647,7 +119665,10 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7749242041435819031, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 456062844}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2634437544400929513, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 965292260029740792}
   m_SourcePrefab: {fileID: 100100000, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
 --- !u!114 &965292260029740789 stripped
 MonoBehaviour:
@@ -119671,6 +119692,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &965292260029740791 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2634437544400929513, guid: f4ef75575de724558a4a8f45fb9c6ed0, type: 3}
+  m_PrefabInstance: {fileID: 965292260029740788}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &965292260029740792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 965292260029740791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35c9b4d9223584cd9a252fedbd976725, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetSceneName: Playground
+  button: {fileID: 0}
 --- !u!205 &966381552351519921
 LODGroup:
   m_ObjectHideFlags: 0

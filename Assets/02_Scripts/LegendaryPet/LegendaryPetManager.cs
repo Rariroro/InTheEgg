@@ -175,12 +175,6 @@ namespace LegendaryPet
             // petCardId → Prefab 매핑 테이블 구축 (한 번만)
             BuildPrefabMap();
 
-            // Flutter 데이터 수신 이벤트 구독 (PetManager와 동일한 패턴)
-            if (FlutterModeManager.Instance != null)
-            {
-                FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
-            }
-
             // PetManager와 동일하게 환경 준비 완료 후 스폰
             StartCoroutine(WaitForEnvironmentAndSpawnLegendaryPets());
         }
@@ -302,56 +296,6 @@ namespace LegendaryPet
             return petCardId;
         }
 
-        /// <summary>
-        /// Flutter에서 INIT_GAME 수신 시 호출 (씬 로드 후에 데이터가 와도 동작)
-        /// </summary>
-        private void OnFlutterDataReceived()
-        {
-            Debug.Log("[LegendaryPetManager] OnFlutterDataReceived 이벤트 수신");
-            if (!isSpawningSequentially && !hasSpawnedLegendaryPets)
-            {
-                StartCoroutine(WaitForNavMeshAndSpawnFromFlutter());
-            }
-            else
-            {
-                Debug.Log($"[LegendaryPetManager] 스폰 건너뜀 (isSpawningSequentially={isSpawningSequentially}, hasSpawnedLegendaryPets={hasSpawnedLegendaryPets})");
-            }
-        }
-
-        /// <summary>
-        /// NavMesh가 준비될 때까지 대기 후 Flutter 데이터로 스폰
-        /// </summary>
-        private IEnumerator WaitForNavMeshAndSpawnFromFlutter()
-        {
-            // NavMesh가 준비될 때까지 대기
-            float timeout = 10f;
-            float elapsed = 0f;
-
-            Debug.Log("[LegendaryPetManager] NavMesh 준비 대기 중...");
-
-            while (elapsed < timeout)
-            {
-                NavMeshHit hit;
-                if (NavMesh.SamplePosition(Vector3.zero, out hit, 200f, NavMesh.AllAreas))
-                {
-                    Debug.Log("[LegendaryPetManager] NavMesh 준비 완료 - 스폰 시작");
-                    break;
-                }
-                elapsed += 0.5f;
-                yield return new WaitForSeconds(0.5f);
-            }
-
-            if (elapsed >= timeout)
-            {
-                Debug.LogWarning("[LegendaryPetManager] NavMesh 대기 타임아웃 - 그래도 스폰 시도");
-            }
-
-            // 이미 다른 경로에서 스폰을 시작했는지 다시 체크
-            if (!isSpawningSequentially && !hasSpawnedLegendaryPets)
-            {
-                yield return StartCoroutine(SpawnLegendaryPetsFromFlutterData());
-            }
-        }
         
         private void Update()
         {
@@ -428,13 +372,8 @@ namespace LegendaryPet
                 yield break;
             }
 
-            // [Flutter 모드] Flutter 데이터로 레전드 펫 스폰
-            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
-            {
-                yield return StartCoroutine(SpawnLegendaryPetsFromFlutterData());
-            }
             // PetChoice를 거친 경우: 자동 스폰
-            else if (LegendaryPetSelectionManager.Instance != null &&
+            if (LegendaryPetSelectionManager.Instance != null &&
                 LegendaryPetSelectionManager.Instance.selectedLegendaryPetIds.Count > 0)
             {
                 yield return StartCoroutine(SpawnLegendaryPetsFromPetChoice());
@@ -445,62 +384,6 @@ namespace LegendaryPet
                 Debug.LogWarning("[LegendaryPetManager] 선택된 레전드 펫이 없습니다. 모든 레전드 펫을 스폰합니다.");
                 SpawnAllLegendaryPets();
             }
-        }
-
-        /// <summary>
-        /// Flutter 데이터로 레전드 펫 스폰
-        /// </summary>
-        private IEnumerator SpawnLegendaryPetsFromFlutterData()
-        {
-            // 중복 스폰 방지 - 시작 시점에 즉시 체크 및 플래그 설정
-            if (hasSpawnedLegendaryPets)
-            {
-                Debug.Log("[LegendaryPetManager] Flutter 모드: 이미 스폰 완료/진행 중 - 건너뜀");
-                yield break;
-            }
-            hasSpawnedLegendaryPets = true;  // 시작 시점에 설정하여 다른 경로에서 중복 스폰 방지
-
-            var gameData = FlutterModeManager.Instance.GameData;
-            if (gameData?.legendaryPets == null || gameData.legendaryPets.Count == 0)
-            {
-                Debug.Log("[LegendaryPetManager] Flutter 모드: 스폰할 레전드 펫이 없습니다.");
-                yield break;
-            }
-
-            Debug.Log($"[LegendaryPetManager] Flutter 모드: {gameData.legendaryPets.Count}마리의 레전드 펫 스폰 시작");
-
-            isSpawningSequentially = true;
-            currentLegendSpawnIndex = 0;
-
-            foreach (var legendData in gameData.legendaryPets)
-            {
-                // v3.5: legendaryPetId만 사용 (petCardId 제거)
-                if (string.IsNullOrEmpty(legendData.legendaryPetId)) continue;
-
-                // v3.5: 프리팹 매칭용 기본 ID 추출
-                string basePetCardId = legendData.GetBasePetCardId();
-
-                if (legendData.isSpawned)
-                {
-                    // 이미 스폰된 펫은 바로 스폰 (선물 없이)
-                    SpawnLegendaryPet(basePetCardId, false);
-                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 기존 레전드 펫 직접 스폰 - {legendData.legendaryPetId}");
-                }
-                else
-                {
-                    // 최초 등장 레전드 펫은 선물로 스폰 (터치 대기)
-                    // v3.5: legendaryPetId를 저장하여 스폰 완료 시 Flutter에 반환
-                    SpawnGiftForLegendaryPet(basePetCardId, legendData.legendaryPetId);
-                    Debug.Log($"[LegendaryPetManager] Flutter 모드: 신규 레전드 펫 선물 생성 - {legendData.legendaryPetId}");
-                }
-
-                currentLegendSpawnIndex++;
-                yield return new WaitForSeconds(firstAppearanceDelay);
-            }
-
-            // hasSpawnedLegendaryPets는 이미 시작 시점에 true로 설정됨
-            isSpawningSequentially = false;
-            Debug.Log($"[LegendaryPetManager] Flutter 모드: 레전드 펫 스폰 완료");
         }
 
         /// <summary>
@@ -838,12 +721,6 @@ namespace LegendaryPet
 
             // B 좌표에서 펫 등장
             yield return StartCoroutine(SpawnLegendaryPetWithThreeStageSystem(legendaryPetId));
-
-            // [Flutter 모드] 레전드 펫 스폰 완료 알림
-            if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
-            {
-                FlutterBridge.Instance?.SendLegendPetSpawned(legendaryPetId);
-            }
 
             Debug.Log($"[LegendaryPetManager] 3단계 스폰 완료: {legendaryPetId}");
         }
@@ -1314,7 +1191,7 @@ namespace LegendaryPet
         #region 세션 관리
 
         /// <summary>
-        /// 새 세션을 위해 상태 리셋 (FlutterModeManager에서 호출)
+        /// 새 세션을 위해 상태 리셋
         /// </summary>
         public void ResetForNewSession()
         {
@@ -1689,12 +1566,6 @@ namespace LegendaryPet
         
         private void OnDestroy()
         {
-            // Flutter 이벤트 구독 해제
-            if (FlutterModeManager.Instance != null)
-            {
-                FlutterModeManager.Instance.OnFlutterDataReceived -= OnFlutterDataReceived;
-            }
-
             // 모든 코루틴 즉시 정지 (메모리 누수 방지)
             StopAllCoroutines();
 

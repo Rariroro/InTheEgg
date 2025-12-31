@@ -136,35 +136,22 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Flutter 데이터 대기 후 초기화 진행
+    /// 초기화 진행
     /// </summary>
     private IEnumerator InitializeWithFlutterCheck()
     {
-        // FlutterBridge가 있으면 Flutter 데이터 대기
-        if (FlutterBridge.Instance != null)
-        {
-            yield return StartCoroutine(FlutterBridge.Instance.WaitForFlutterDataOrTimeout());
-        }
-
-        // Flutter 모드인 경우 - FlutterModeManager.InitializeWithFlutterData()에서 StartSpawnWithFlutterData() 호출하므로 여기서는 스킵
-        if (FlutterModeManager.Instance != null && FlutterModeManager.Instance.IsFlutterMode)
-        {
-            Debug.Log("[EnvironmentManager] Flutter 모드 - FlutterModeManager에서 스폰 트리거 대기");
-            // 여기서 직접 스폰하지 않음! FlutterModeManager.InitializeWithFlutterData()에서 StartSpawnWithFlutterData() 호출함
-            yield break;
-        }
         // PetChoice를 거친 경우 (EnvironmentSelectionManager에 데이터가 있음)
-        else if (EnvironmentSelectionManager.Instance != null &&
+        if (EnvironmentSelectionManager.Instance != null &&
             EnvironmentSelectionManager.Instance.selectedEnvironmentIds.Count > 0)
         {
             // 선택된 환경이 있는 경우
-            StartCoroutine(WaitForTerrainManagerAndSpawn());
+            yield return StartCoroutine(WaitForTerrainManagerAndSpawn());
         }
         else
         {
             // 선택된 환경이 없거나 매니저가 없는 경우 (펫 빌리지 씬에서 직접 시작)
             Debug.LogWarning("EnvironmentSelectionManager가 없거나 선택된 환경이 없습니다. 기본 환경을 스폰합니다.");
-            StartCoroutine(SpawnDefaultEnvironments());
+            yield return StartCoroutine(SpawnDefaultEnvironments());
         }
     }
 
@@ -433,12 +420,6 @@ public class EnvironmentManager : MonoBehaviour
 
         // 환경 스폰 (코루틴으로 실행하고 완료 대기)
         yield return StartCoroutine(SpawnEnvironmentCoroutine(environmentId, true));
-
-        // ★ Flutter 모드일 때 환경 스폰 알림 전송
-        if (FlutterModeManager.Instance?.IsFlutterMode == true)
-        {
-            FlutterBridge.Instance?.SendEnvItemSpawned(environmentId);
-        }
 
         // ★ 선물로 나온 환경도 펫 유인
         GameObject spawnedEnv = spawnedEnvironments[spawnedEnvironments.Count - 1];
@@ -918,8 +899,8 @@ public class EnvironmentManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 새 세션을 위해 상태 리셋 (FlutterModeManager에서 호출)
-    /// 기존 선물과 환경을 제거하고 초기화 상태를 리셋하여 새 INIT_GAME 데이터로 재스폰 가능하게 함
+    /// 새 세션을 위해 상태 리셋
+    /// 기존 선물과 환경을 제거하고 초기화 상태를 리셋하여 재스폰 가능하게 함
     /// </summary>
     public void ResetForNewSession()
     {
@@ -953,33 +934,7 @@ public class EnvironmentManager : MonoBehaviour
 
         // 초기화 완료 플래그 리셋 - 이제 다시 초기화 가능
         IsInitializationComplete = false;
-        isSpawningEnvironments = false;
 
         Debug.Log("[EnvironmentManager] 상태 리셋 완료 - 새 데이터로 재초기화 대기");
-    }
-
-    // 스폰 진행 중 플래그 (중복 호출 방지)
-    private bool isSpawningEnvironments = false;
-
-    /// <summary>
-    /// Flutter 데이터 수신 후 환경 스폰 시작 (외부에서 호출 가능)
-    /// </summary>
-    public void StartSpawnWithFlutterData()
-    {
-        if (IsInitializationComplete)
-        {
-            Debug.Log("[EnvironmentManager] 이미 초기화 완료 상태 - 스킵");
-            return;
-        }
-
-        if (isSpawningEnvironments)
-        {
-            Debug.Log("[EnvironmentManager] 이미 스폰 진행 중 - 스킵");
-            return;
-        }
-
-        isSpawningEnvironments = true;
-        Debug.Log("[EnvironmentManager] Flutter 데이터로 환경 스폰 시작");
-        StartCoroutine(WaitForTerrainManagerAndSpawn());
     }
 }

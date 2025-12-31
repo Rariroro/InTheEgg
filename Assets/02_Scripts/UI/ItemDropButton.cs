@@ -72,22 +72,8 @@ public class ItemDropButton : MonoBehaviour
             itemButtonContainer.gameObject.SetActive(false);
         }
 
-        // Flutter 모드인 경우 이벤트 구독
-        if (FlutterModeManager.Instance != null)
-        {
-            FlutterModeManager.Instance.OnFlutterDataReceived += OnFlutterDataReceived;
-        }
-
-        // 아이템 로드: Flutter 모드가 아니거나, Flutter 모드이면서 이미 초기화된 경우
-        // PetChoice에서 선택한 아이템도 ItemSelectionManager에 저장되어 있으므로 항상 로드 시도
-        bool isFlutterModeWaitingForData = FlutterModeManager.Instance != null
-                                           && FlutterModeManager.Instance.IsFlutterMode
-                                           && !FlutterModeManager.Instance.IsInitialized;
-
-        if (!isFlutterModeWaitingForData)
-        {
-            LoadItemsFromSelectionManager();
-        }
+        // 아이템 로드
+        LoadItemsFromSelectionManager();
 
         // 초기 가방 상태 업데이트
         UpdateBagState();
@@ -96,19 +82,6 @@ public class ItemDropButton : MonoBehaviour
         {
             feedbackText.gameObject.SetActive(false);
         }
-    }
-
-    void OnDestroy()
-    {
-        if (FlutterModeManager.Instance != null)
-        {
-            FlutterModeManager.Instance.OnFlutterDataReceived -= OnFlutterDataReceived;
-        }
-    }
-
-    private void OnFlutterDataReceived()
-    {
-        LoadItemsFromSelectionManager();
     }
 
     private void LoadItemsFromSelectionManager()
@@ -245,9 +218,6 @@ public class ItemDropButton : MonoBehaviour
         {
             rb.AddTorque(Random.insideUnitSphere * dropForce, ForceMode.Impulse);
         }
-        
-        // Flutter에 아이템 사용 알림 (맵에 놓을 때)
-        FlutterBridge.Instance?.SendFoodUsedByType(currentItemType, 1);
 
         // 개수 차감 및 UI 업데이트
         itemCounts[currentItemType]--;
